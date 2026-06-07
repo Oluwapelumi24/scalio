@@ -1,0 +1,13 @@
+{
+  "name": "scalio",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace=apps/backend",
+    "dev:mobile": "npm run start --workspace=apps/mobile",
+    "dev:vendor-web": "npm run dev --workspace=apps/vendor-web"
+  }
+}

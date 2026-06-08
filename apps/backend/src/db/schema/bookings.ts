@@ -29,6 +29,10 @@ export const bookings = pgTable(
     paymentMode: text('payment_mode', { enum: paymentModeValues }).notNull(),
     amountDueKobo: integer('amount_due_kobo').notNull(),
     amountPaidKobo: integer('amount_paid_kobo').notNull().default(0),
+    // Set when a Paystack transaction is initialized for `deposit`/`full_prepayment`
+    // bookings — lets the webhook look the booking up by `data.reference`. Null for
+    // `pay_on_arrival` bookings, which skip Paystack entirely.
+    paystackReference: text('paystack_reference').unique(),
     cancellationReason: text('cancellation_reason'),
     // Token of the Redis slot lock held while this booking is active — lets
     // us safely compare-and-delete the lock from any later request, without

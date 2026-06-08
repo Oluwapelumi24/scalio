@@ -11,6 +11,8 @@ export class BookingController {
     return this.bookingService.createPendingBooking({
       vendorId: dto.vendorId,
       userId: dto.userId,
+      email: dto.email,
+      otpCode: dto.otpCode,
       staffId: dto.staffId ?? null,
       serviceIds: dto.serviceIds,
       scheduledAt: new Date(dto.scheduledAt),
@@ -21,7 +23,10 @@ export class BookingController {
   }
 
   @Post(':id/cancel')
-  cancel(@Param('id', ParseUUIDPipe) id: string, @Body('reason') reason?: string) {
+  cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('reason') reason?: string,
+  ) {
     return this.bookingService.cancelByCustomer(id, reason);
   }
 

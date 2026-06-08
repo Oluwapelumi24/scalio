@@ -1,4 +1,15 @@
-import { IsArray, IsDateString, IsIn, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsEmail,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  Min,
+} from 'class-validator';
 import { paymentModeValues } from '../../db/schema';
 
 export class CreateBookingDto {
@@ -7,6 +18,15 @@ export class CreateBookingDto {
 
   @IsUUID()
   userId!: string;
+
+  // PRD §4.1 step 7: email is verified at booking time via a one-time code
+  // requested through POST /auth/otp/request.
+  @IsEmail()
+  email!: string;
+
+  @IsString()
+  @Length(6, 6)
+  otpCode!: string;
 
   @IsOptional()
   @IsUUID()

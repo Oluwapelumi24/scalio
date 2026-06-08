@@ -93,11 +93,20 @@ export function ScheduleAppointmentScreen({ route, navigation }: Props) {
   const [requestingCode, setRequestingCode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Reset the previous day's results synchronously while rendering the new
+  // day, rather than via setState-in-effect (which would commit a stale frame
+  // first) — this is React's documented pattern for "adjusting state when a
+  // prop changes": https://react.dev/learn/you-might-not-need-an-effect
+  const [lastFetchedDayIndex, setLastFetchedDayIndex] = useState<number | null>(null);
+  if (lastFetchedDayIndex !== selectedDayIndex) {
+    setLastFetchedDayIndex(selectedDayIndex);
     setSlots(null);
     setSelectedSlot(null);
     setError(null);
+  }
+
+  useEffect(() => {
+    let cancelled = false;
 
     getAvailability(vendorId, toISODate(days[selectedDayIndex]), serviceIds)
       .then((result) => {

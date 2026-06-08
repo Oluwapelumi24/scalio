@@ -38,8 +38,9 @@ export function ServiceSelectionScreen({ route, navigation }: Props) {
   }
 
   function handleContinue() {
-    if (selectedIds.length === 0) return;
-    navigation.navigate('ScheduleAppointment', { vendorId, serviceIds: selectedIds });
+    if (selectedIds.length === 0 || !services) return;
+    const selected = services.filter((service) => selectedIds.includes(service.id));
+    navigation.navigate('ScheduleAppointment', { vendorId, services: selected });
   }
 
   return (

@@ -1,11 +1,51 @@
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { Linking, StyleSheet, Text, View, Pressable, Alert } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingConfirmation'>;
 
+function formatNaira(kobo: number): string {
+  return `₦${(kobo / 100).toLocaleString('en-NG')}`;
+}
+
+function reference(bookingId: string): string {
+  return bookingId.slice(0, 8).toUpperCase();
+}
+
+async function handlePayNow(authorizationUrl: string) {
+  try {
+    await Linking.openURL(authorizationUrl);
+  } catch {
+    Alert.alert('Could not open checkout', 'Please try again in a moment.');
+  }
+}
+
 export function BookingConfirmationScreen({ route, navigation }: Props) {
-  const { bookingId } = route.params;
+  const { booking, payment } = route.params;
+
+  if (payment) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.badge, styles.badgePending]}>
+          <Text style={styles.badgeMark}>₦</Text>
+        </View>
+
+        <Text style={styles.title}>Almost there — complete your payment</Text>
+        <Text style={styles.subtitle}>
+          We&apos;re holding your slot for the next 10 minutes while you pay{' '}
+          {formatNaira(booking.amountDueKobo)} via Paystack to confirm it.
+        </Text>
+        <Text style={styles.reference}>Booking reference: {reference(booking.id)}</Text>
+
+        <Pressable style={styles.cta} onPress={() => void handlePayNow(payment.authorizationUrl)}>
+          <Text style={styles.ctaLabel}>Pay now</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryCta} onPress={() => navigation.popToTop()}>
+          <Text style={styles.secondaryCtaLabel}>I&apos;ll pay later</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -15,15 +55,12 @@ export function BookingConfirmationScreen({ route, navigation }: Props) {
 
       <Text style={styles.title}>You&apos;re booked!</Text>
       <Text style={styles.subtitle}>
-        We&apos;ve held your slot for the next 10 minutes while it&apos;s confirmed. You&apos;ll get an SMS
-        and in-app confirmation shortly.
+        Your appointment is confirmed — pay when you arrive. We&apos;ll also send a confirmation to your
+        email.
       </Text>
-      <Text style={styles.reference}>Booking reference: {bookingId.slice(0, 8).toUpperCase()}</Text>
+      <Text style={styles.reference}>Booking reference: {reference(booking.id)}</Text>
 
-      <Pressable
-        style={styles.cta}
-        onPress={() => navigation.popToTop()}
-      >
+      <Pressable style={styles.cta} onPress={() => navigation.popToTop()}>
         <Text style={styles.ctaLabel}>Done</Text>
       </Pressable>
     </View>
@@ -46,6 +83,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+  },
+  badgePending: {
+    backgroundColor: '#b8860b',
   },
   badgeMark: {
     color: '#ffffff',
@@ -81,6 +121,17 @@ const styles = StyleSheet.create({
   ctaLabel: {
     color: '#ffffff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryCta: {
+    alignSelf: 'stretch',
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  secondaryCtaLabel: {
+    color: '#777777',
+    fontSize: 15,
     fontWeight: '600',
   },
 });

@@ -1,11 +1,49 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View, Pressable, Alert } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View, Pressable, TextInput, Alert } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
-import { createBooking, getAvailability } from '../lib/api';
+import { createBooking, getAvailability, requestOtp } from '../lib/api';
 import { getCurrentUser } from '../lib/session';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ScheduleAppointment'>;
+
+const PAYMENT_MODE_PRIORITY = {
+  pay_on_arrival: 0,
+  deposit: 1,
+  full_prepayment: 2,
+} as const;
+
+/**
+ * The client decides `paymentMode`/`amountDueKobo` (the backend just records
+ * what it's told). Selected services may carry different modes — e.g. one
+ * service requires a deposit, another is pay-on-arrival — so we take the most
+ * demanding mode across the selection and sum what's actually due upfront for
+ * each: full price for `full_prepayment`, the deposit cut for `deposit`,
+ * nothing for `pay_on_arrival`.
+ */
+function resolvePaymentDetails(services: Service[]): {
+  paymentMode: Service['paymentMode'];
+  amountDueKobo: number;
+} {
+  let paymentMode: Service['paymentMode'] = 'pay_on_arrival';
+  let amountDueKobo = 0;
+
+  for (const service of services) {
+    if (PAYMENT_MODE_PRIORITY[service.paymentMode] > PAYMENT_MODE_PRIORITY[paymentMode]) {
+      paymentMode = service.paymentMode;
+    }
+    if (service.paymentMode === 'full_prepayment') {
+      amountDueKobo += service.priceKobo;
+    } else if (service.paymentMode === 'deposit') {
+      amountDueKobo += Math.round((service.priceKobo * (service.depositPercent ?? 0)) / 100);
+    }
+  }
+
+  return { paymentMode, amountDueKobo };
+}
+
+const OTP_CODE_LENGTH = 6;
 
 function nextNDays(n: number): Date[] {
   const days: Date[] = [];
@@ -37,15 +75,23 @@ function timeLabel(isoDateTime: string): string {
 }
 
 export function ScheduleAppointmentScreen({ route, navigation }: Props) {
-  const { vendorId, serviceIds } = route.params;
+  const { vendorId, services } = route.params;
+  const serviceIds = useMemo(() => services.map((service) => service.id), [services]);
   const days = useMemo(() => nextNDays(30), []);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   const [slots, setSlots] = useState<string[] | null>(null);
   const [durationMinutes, setDurationMinutes] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // PRD §4.1 step 7: a verified one-time code gates booking creation. We send
+  // it to the signed-up user's email once they've picked a slot, then collect
+  // the code inline before submitting the booking.
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [requestingCode, setRequestingCode] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,26 +114,57 @@ export function ScheduleAppointmentScreen({ route, navigation }: Props) {
     };
   }, [vendorId, serviceIds, days, selectedDayIndex]);
 
-  async function handleConfirm() {
-    if (!selectedSlot || durationMinutes === null) return;
-
+  function requireSignedInUser() {
     const user = getCurrentUser();
     if (!user) {
       Alert.alert('Please sign in', 'Create an account before booking an appointment.');
       navigation.navigate('SignUp');
-      return;
+      return null;
     }
+    return user;
+  }
+
+  async function handleRequestCode() {
+    if (!selectedSlot || durationMinutes === null || requestingCode) return;
+
+    const user = requireSignedInUser();
+    if (!user) return;
+
+    setRequestingCode(true);
+    try {
+      await requestOtp(user.email);
+      setOtpSent(true);
+      setOtpCode('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Please try again.';
+      Alert.alert('Could not send verification code', message);
+    } finally {
+      setRequestingCode(false);
+    }
+  }
+
+  async function handleConfirm() {
+    if (!selectedSlot || durationMinutes === null || otpCode.trim().length !== OTP_CODE_LENGTH || submitting) return;
+
+    const user = requireSignedInUser();
+    if (!user) return;
+
+    const { paymentMode, amountDueKobo } = resolvePaymentDetails(services);
 
     setSubmitting(true);
     try {
-      const booking = await createBooking({
+      const result = await createBooking({
         vendorId,
         userId: user.id,
+        email: user.email,
+        otpCode: otpCode.trim(),
         serviceIds,
         scheduledAt: selectedSlot,
         durationMinutes,
+        paymentMode,
+        amountDueKobo,
       });
-      navigation.navigate('BookingConfirmation', { bookingId: booking.id });
+      navigation.navigate('BookingConfirmation', { booking: result.booking, payment: result.payment });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Please try a different time.';
       Alert.alert('Could not book this slot', message);
@@ -142,17 +219,47 @@ export function ScheduleAppointmentScreen({ route, navigation }: Props) {
         })}
       </View>
 
-      <Pressable
-        style={[styles.cta, (!selectedSlot || submitting) && styles.ctaDisabled]}
-        onPress={handleConfirm}
-        disabled={!selectedSlot || submitting}
-      >
-        {submitting ? (
-          <ActivityIndicator color="#ffffff" />
-        ) : (
-          <Text style={styles.ctaLabel}>{selectedSlot ? 'Confirm booking' : 'Pick a time'}</Text>
+      <View style={styles.footer}>
+        {otpSent && (
+          <View style={styles.otpField}>
+            <Text style={styles.label}>Enter the 6-digit code we emailed you</Text>
+            <TextInput
+              style={styles.otpInput}
+              value={otpCode}
+              onChangeText={(text) => setOtpCode(text.replace(/[^0-9]/g, '').slice(0, OTP_CODE_LENGTH))}
+              placeholder="123456"
+              keyboardType="number-pad"
+              maxLength={OTP_CODE_LENGTH}
+            />
+          </View>
         )}
-      </Pressable>
+
+        {!otpSent ? (
+          <Pressable
+            style={[styles.cta, (!selectedSlot || requestingCode) && styles.ctaDisabled]}
+            onPress={() => void handleRequestCode()}
+            disabled={!selectedSlot || requestingCode}
+          >
+            {requestingCode ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.ctaLabel}>{selectedSlot ? 'Send verification code' : 'Pick a time'}</Text>
+            )}
+          </Pressable>
+        ) : (
+          <Pressable
+            style={[styles.cta, (otpCode.trim().length !== OTP_CODE_LENGTH || submitting) && styles.ctaDisabled]}
+            onPress={() => void handleConfirm()}
+            disabled={otpCode.trim().length !== OTP_CODE_LENGTH || submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.ctaLabel}>Verify &amp; book</Text>
+            )}
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -240,8 +347,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111111',
   },
-  cta: {
+  footer: {
     marginTop: 'auto',
+  },
+  otpField: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333333',
+    marginBottom: 6,
+  },
+  otpInput: {
+    borderWidth: 1,
+    borderColor: '#dddddd',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 18,
+    letterSpacing: 4,
+    color: '#111111',
+  },
+  cta: {
     backgroundColor: '#111111',
     borderRadius: 12,
     paddingVertical: 16,

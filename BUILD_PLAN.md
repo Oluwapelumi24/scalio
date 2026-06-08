@@ -51,6 +51,18 @@ Update this file as phases complete (check items off, add notes on decisions/dev
       `createBooking`; `BookingConfirmationScreen` branches on whether a Paystack
       checkout is required (deposit/full_prepayment) vs. an immediate confirmation
       (pay_on_arrival), opening the checkout URL via `Linking.openURL`.
+- [x] Guest-first discovery flow (Chowdeck-style) — reworked the entry funnel to
+      `Onboarding (3-slide carousel) → InterestSelection → Home`, where Home is
+      browsable as a **guest** (search bar, category filter chips tied to the
+      interest taxonomy, a "Featured" row backed by a new `vendors.featured`
+      column, and the vendor list). `VendorSelectionScreen` was retired in favor
+      of `HomeScreen`. Onboarding completion + selected interests persist via
+      `@react-native-async-storage/async-storage` (`lib/preferences.ts`) so
+      returning users skip straight to Home. The auth gate stays exactly where
+      it already was — `requireSignedInUser()` in `ScheduleAppointmentScreen`
+      redirects guests to `SignUp` only when they try to book; `SignUpScreen`
+      now `goBack()`s to wherever the guest was (rather than resetting the
+      stack) so they don't lose their place mid-booking.
 - [x] Push notifications / booking reminders — backend: `expoPushToken` column on
       `users`, `@Global() PushModule`/`PushService` (POSTs to Expo's push API,
       swallows delivery errors), `BookingService` fires "booking confirmed"/

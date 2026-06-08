@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, boolean } from 'drizzle-orm/pg-core';
 
 export const vendors = pgTable('vendors', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -8,6 +8,8 @@ export const vendors = pgTable('vendors', {
   logoUrl: text('logo_url'),
   themeColor: text('theme_color'),
   averageDaysBetweenVisits: integer('average_days_between_visits'),
+  // Lets the mobile home screen surface a curated row of highlighted vendors.
+  featured: boolean('featured').default(false).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

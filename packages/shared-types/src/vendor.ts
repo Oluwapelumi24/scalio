@@ -6,6 +6,7 @@ export interface Vendor {
   logoUrl: string | null;
   themeColor: string | null;
   averageDaysBetweenVisits: number | null;
+  featured: boolean;
 }
 
 export interface Service {

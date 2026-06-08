@@ -35,7 +35,13 @@ export function SignUpScreen({ navigation }: Props) {
       const user = await signUp(name.trim(), email.trim());
       setCurrentUser(user);
       void registerForPushNotifications(user.id);
-      navigation.navigate('VendorSelection');
+      // Guests land here mid-flow (e.g. while booking) — return them to where
+      // they were rather than resetting to Home, so they don't lose their place.
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('Home');
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Please try again.';
       Alert.alert('Could not create your account', message);

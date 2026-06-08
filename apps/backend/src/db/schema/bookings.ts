@@ -1,5 +1,12 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, uuid, text, timestamp, integer, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  integer,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { vendors, staff, paymentModeValues } from './vendors';
 import { customers } from './customers';
 
@@ -13,17 +20,28 @@ export const bookingStatusValues = [
 ] as const;
 
 // Statuses that occupy a slot. Anything outside this set has released it.
-export const ACTIVE_BOOKING_STATUSES = ['pending_payment', 'confirmed'] as const;
+export const ACTIVE_BOOKING_STATUSES = [
+  'pending_payment',
+  'confirmed',
+] as const;
 
 export const bookings = pgTable(
   'bookings',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
-    customerId: uuid('customer_id').notNull().references(() => customers.id, { onDelete: 'restrict' }),
-    staffId: uuid('staff_id').references(() => staff.id, { onDelete: 'set null' }),
+    vendorId: uuid('vendor_id')
+      .notNull()
+      .references(() => vendors.id, { onDelete: 'cascade' }),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id, { onDelete: 'restrict' }),
+    staffId: uuid('staff_id').references(() => staff.id, {
+      onDelete: 'set null',
+    }),
     serviceIds: uuid('service_ids').array().notNull(),
-    status: text('status', { enum: bookingStatusValues }).notNull().default('pending_payment'),
+    status: text('status', { enum: bookingStatusValues })
+      .notNull()
+      .default('pending_payment'),
     scheduledAt: timestamp('scheduled_at', { withTimezone: true }).notNull(),
     durationMinutes: integer('duration_minutes').notNull(),
     paymentMode: text('payment_mode', { enum: paymentModeValues }).notNull(),
@@ -34,12 +52,19 @@ export const bookings = pgTable(
     // `pay_on_arrival` bookings, which skip Paystack entirely.
     paystackReference: text('paystack_reference').unique(),
     cancellationReason: text('cancellation_reason'),
+    // Set once the reminder cron has pushed an "appointment coming up"
+    // notification for this booking — guards against sending it twice.
+    reminderSentAt: timestamp('reminder_sent_at', { withTimezone: true }),
     // Token of the Redis slot lock held while this booking is active — lets
     // us safely compare-and-delete the lock from any later request, without
     // ever clobbering a different lock someone else has since acquired.
     lockToken: text('lock_token'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     // Postgres-level backstop for the Redis slot lock (PRD §9.3 step 5):

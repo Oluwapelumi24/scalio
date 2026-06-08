@@ -46,6 +46,14 @@ export function requestOtp(email: string): Promise<void> {
   });
 }
 
+/** Stores the Expo push token for this device once the user grants notification permission. */
+export function registerPushToken(userId: string, token: string): Promise<void> {
+  return request<void>('/auth/push-token', {
+    method: 'POST',
+    body: JSON.stringify({ userId, token }),
+  });
+}
+
 export function listVendors(): Promise<Vendor[]> {
   return request<Vendor[]>('/vendors');
 }

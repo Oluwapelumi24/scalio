@@ -14,6 +14,7 @@ import {
   PaystackService,
   type InitializeTransactionResult,
 } from '../payments/paystack.service';
+import { PushService } from '../notifications/push.service';
 import { SlotLockService } from './slot-lock.service';
 import {
   applyBookingEvent,
@@ -51,6 +52,7 @@ export class BookingService {
     private readonly slotLock: SlotLockService,
     private readonly otp: OtpService,
     private readonly paystack: PaystackService,
+    private readonly push: PushService,
   ) {}
 
   /**
@@ -131,6 +133,16 @@ export class BookingService {
           lockToken: lock.token,
         })
         .returning();
+
+      // pay_on_arrival skips Paystack and lands straight in `confirmed` —
+      // tell the customer right away rather than waiting on a webhook.
+      if (initialStatus === 'confirmed') {
+        await this.push.notifyCustomer(customerId, {
+          title: 'Booking confirmed',
+          body: `You're all set for ${formatScheduledAt(row.scheduledAt)}.`,
+        });
+      }
+
       return { booking: row, payment };
     } catch {
       // Postgres rejected it (unique index hit) — release the lock we just took.
@@ -310,10 +322,30 @@ export class BookingService {
       await this.slotLock.release({ key: lockKey, token: updated.lockToken });
     }
 
+    if (nextStatus === 'confirmed') {
+      await this.push.notifyCustomer(updated.customerId, {
+        title: 'Booking confirmed',
+        body: `You're all set for ${formatScheduledAt(updated.scheduledAt)}.`,
+      });
+    } else if (nextStatus === 'cancelled_by_vendor') {
+      await this.push.notifyCustomer(updated.customerId, {
+        title: 'Booking cancelled',
+        body: `Your appointment on ${formatScheduledAt(updated.scheduledAt)} was cancelled by the vendor.`,
+      });
+    }
+
     return updated;
   }
 }
 
 function toIsoMinute(date: Date): string {
   return date.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
+}
+
+function formatScheduledAt(date: Date): string {
+  return date.toLocaleString('en-US', {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }

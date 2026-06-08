@@ -48,6 +48,10 @@ function makeOtp() {
   return { verifyCode: jest.fn().mockResolvedValue(true) };
 }
 
+function makePush() {
+  return { notifyCustomer: jest.fn().mockResolvedValue(undefined) };
+}
+
 function makePaystack() {
   return {
     initializeTransaction: jest.fn().mockResolvedValue({
@@ -84,6 +88,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       otp.verifyCode.mockResolvedValue(false);
 
       const service = new BookingService(
@@ -91,6 +96,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.createPendingBooking(baseInput)).rejects.toThrow(
@@ -109,6 +115,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       slotLock.acquire.mockResolvedValue({
         key: 'slot:vendor-1:staff-1:2026-06-10T10:00',
@@ -118,6 +125,7 @@ describe('BookingService', () => {
         id: 'booking-1',
         status: 'confirmed',
         paystackReference: null,
+        scheduledAt: baseInput.scheduledAt,
       };
       db.insert.mockReturnValueOnce(insertResult([bookingRow]));
 
@@ -126,6 +134,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       const result = await service.createPendingBooking(baseInput);
 
@@ -146,6 +155,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       slotLock.acquire.mockResolvedValue({
         key: 'slot:vendor-1:staff-1:2026-06-10T10:00',
@@ -163,6 +173,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       const result = await service.createPendingBooking(depositInput);
 
@@ -193,6 +204,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       const lock = {
         key: 'slot:vendor-1:staff-1:2026-06-10T10:00',
@@ -208,6 +220,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.createPendingBooking(depositInput)).rejects.toThrow(
@@ -222,6 +235,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select
         .mockReturnValueOnce(selectResult([])) // no existing CRM customer
         .mockReturnValueOnce(
@@ -232,7 +246,13 @@ describe('BookingService', () => {
       db.insert
         .mockReturnValueOnce(insertResult([{ id: 'customer-1' }]))
         .mockReturnValueOnce(
-          insertResult([{ id: 'booking-1', status: 'pending_payment' }]),
+          insertResult([
+            {
+              id: 'booking-1',
+              status: 'pending_payment',
+              scheduledAt: baseInput.scheduledAt,
+            },
+          ]),
         );
       slotLock.acquire.mockResolvedValue({
         key: 'slot:vendor-1:staff-1:2026-06-10T10:00',
@@ -244,6 +264,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       await service.createPendingBooking(baseInput);
 
@@ -255,6 +276,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select
         .mockReturnValueOnce(selectResult([]))
         .mockReturnValueOnce(selectResult([]));
@@ -264,6 +286,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.createPendingBooking(baseInput)).rejects.toThrow(
@@ -277,6 +300,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       slotLock.acquire.mockResolvedValue(null);
 
@@ -285,6 +309,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.createPendingBooking(baseInput)).rejects.toThrow(
@@ -298,6 +323,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       const lock = {
         key: 'slot:vendor-1:staff-1:2026-06-10T10:00',
@@ -317,6 +343,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.createPendingBooking(baseInput)).rejects.toThrow(
@@ -343,6 +370,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       const updated = {
         ...current,
         status: 'cancelled_by_customer',
@@ -356,6 +384,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       const result = await service.cancelByCustomer(
         'booking-1',
@@ -374,6 +403,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       const updated = { ...current, status: 'confirmed', amountPaidKobo: 5000 };
       db.select.mockReturnValueOnce(selectResult([current]));
       db.update.mockReturnValueOnce(updateResult([updated]));
@@ -383,6 +413,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       await service.confirmPayment('booking-1', 5000);
 
@@ -394,6 +425,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       const completed = { ...current, status: 'completed' };
       db.select.mockReturnValueOnce(selectResult([completed]));
 
@@ -402,6 +434,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.markCompleted('booking-1')).rejects.toThrow(
@@ -415,6 +448,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([]));
 
       const service = new BookingService(
@@ -422,6 +456,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.markNoShow('booking-1')).rejects.toThrow(
@@ -434,6 +469,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([current]));
       db.update.mockReturnValueOnce(updateResult([])); // optimistic-concurrency WHERE matched nothing
 
@@ -442,6 +478,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(service.cancelByCustomer('booking-1')).rejects.toThrow(
@@ -469,6 +506,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       const updated = {
         ...pendingBooking,
         status: 'confirmed',
@@ -484,6 +522,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       const result = await service.confirmPaymentByReference(
         'paystack-ref-1',
@@ -498,6 +537,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       const confirmed = { ...pendingBooking, status: 'confirmed' };
       db.select.mockReturnValueOnce(selectResult([confirmed]));
 
@@ -506,6 +546,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       const result = await service.confirmPaymentByReference(
         'paystack-ref-1',
@@ -521,6 +562,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       const cancelled = { ...pendingBooking, status: 'cancelled_by_customer' };
       db.select
         .mockReturnValueOnce(selectResult([pendingBooking]))
@@ -532,6 +574,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       const result = await service.failPaymentByReference('paystack-ref-1');
 
@@ -547,6 +590,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       const alreadyCancelled = {
         ...pendingBooking,
         status: 'cancelled_by_customer',
@@ -558,6 +602,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
       const result = await service.failPaymentByReference('paystack-ref-1');
 
@@ -570,6 +615,7 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const otp = makeOtp();
       const paystack = makePaystack();
+      const push = makePush();
       db.select.mockReturnValueOnce(selectResult([]));
 
       const service = new BookingService(
@@ -577,6 +623,7 @@ describe('BookingService', () => {
         slotLock as any,
         otp as any,
         paystack as any,
+        push as any,
       );
 
       await expect(

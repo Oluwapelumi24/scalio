@@ -41,10 +41,26 @@ Update this file as phases complete (check items off, add notes on decisions/dev
       failure). Both are idempotent no-ops on retried Paystack deliveries.
 
 ## Phase 3 — Mobile app
-- [ ] Audit `src/lib/api.ts` and `src/lib/session.ts` (token refresh, error states)
-- [ ] Connect the 6 existing screens (Onboarding → SignUp → VendorSelection →
-      ServiceSelection → ScheduleAppointment → BookingConfirmation) to the live backend
-- [ ] Push notifications / booking reminders
+- [x] Audit `src/lib/api.ts` and `src/lib/session.ts` (token refresh, error states) —
+      `api.ts` was missing `requestOtp`/`createBooking`/payment-checkout types entirely;
+      `session.ts` is an intentional in-memory placeholder pending real token persistence.
+- [x] Connect the 6 existing screens (Onboarding → SignUp → VendorSelection →
+      ServiceSelection → ScheduleAppointment → BookingConfirmation) to the live backend —
+      `ScheduleAppointmentScreen` now resolves payment mode across mixed-mode service
+      selections (most-demanding-mode-wins), requests/verifies the email OTP, and calls
+      `createBooking`; `BookingConfirmationScreen` branches on whether a Paystack
+      checkout is required (deposit/full_prepayment) vs. an immediate confirmation
+      (pay_on_arrival), opening the checkout URL via `Linking.openURL`.
+- [x] Push notifications / booking reminders — backend: `expoPushToken` column on
+      `users`, `@Global() PushModule`/`PushService` (POSTs to Expo's push API,
+      swallows delivery errors), `BookingService` fires "booking confirmed"/
+      "booking cancelled" pushes on the relevant state transitions, and a
+      `BookingRemindersService` cron (`@Cron(EVERY_5_MINUTES)`) sends an "appointment
+      coming up" push ~60 minutes ahead using an atomic claim-before-send guard
+      (`reminderSentAt` column) to dedupe across concurrent runs. `POST /auth/push-token`
+      stores the device token. Mobile: installed `expo-notifications`/`expo-device`,
+      added `registerForPushNotifications()` (permission request + token fetch +
+      registration, best-effort/non-blocking) wired into `SignUpScreen` post sign-up.
 
 ## Phase 4 — Vendor-web (currently empty)
 - [ ] Scaffold the app (framework TBD)

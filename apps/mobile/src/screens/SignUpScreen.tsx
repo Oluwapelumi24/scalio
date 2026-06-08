@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { signUp } from '../lib/api';
 import { setCurrentUser } from '../lib/session';
+import { registerForPushNotifications } from '../lib/push';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -33,6 +34,7 @@ export function SignUpScreen({ navigation }: Props) {
     try {
       const user = await signUp(name.trim(), email.trim());
       setCurrentUser(user);
+      void registerForPushNotifications(user.id);
       navigation.navigate('VendorSelection');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Please try again.';

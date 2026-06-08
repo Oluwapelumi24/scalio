@@ -9,5 +9,11 @@ export const users = pgTable('users', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   phone: text('phone'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  // Set by the mobile app once the user grants notification permission — lets
+  // the backend push booking-status and reminder notifications via Expo's
+  // push API. Null until registered, or if the user never grants permission.
+  expoPushToken: text('expo_push_token'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });

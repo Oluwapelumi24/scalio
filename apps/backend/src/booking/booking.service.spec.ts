@@ -486,6 +486,88 @@ describe('BookingService', () => {
       );
       expect(slotLock.release).not.toHaveBeenCalled();
     });
+
+    it('404s rather than transitioning a booking that belongs to a different vendor', async () => {
+      const db = makeDb();
+      const slotLock = makeSlotLock();
+      const otp = makeOtp();
+      const paystack = makePaystack();
+      const push = makePush();
+      db.select.mockReturnValueOnce(selectResult([current])); // vendorId: 'vendor-1'
+
+      const service = new BookingService(
+        db as any,
+        slotLock as any,
+        otp as any,
+        paystack as any,
+        push as any,
+      );
+
+      await expect(
+        service.cancelByVendor('booking-1', 'vendor-2', 'no longer needed'),
+      ).rejects.toThrow(NotFoundException);
+      expect(db.update).not.toHaveBeenCalled();
+    });
+
+    it('transitions the booking when the vendorId matches its owner', async () => {
+      const db = makeDb();
+      const slotLock = makeSlotLock();
+      const otp = makeOtp();
+      const paystack = makePaystack();
+      const push = makePush();
+      const updated = {
+        ...current,
+        status: 'cancelled_by_vendor',
+        cancellationReason: 'staff unavailable',
+      };
+      db.select.mockReturnValueOnce(selectResult([current]));
+      db.update.mockReturnValueOnce(updateResult([updated]));
+
+      const service = new BookingService(
+        db as any,
+        slotLock as any,
+        otp as any,
+        paystack as any,
+        push as any,
+      );
+
+      const result = await service.cancelByVendor(
+        'booking-1',
+        'vendor-1',
+        'staff unavailable',
+      );
+
+      expect(result).toBe(updated);
+    });
+  });
+
+  describe('listForVendor', () => {
+    it('lists the vendor’s bookings newest-first, optionally filtered by status', async () => {
+      const db = makeDb();
+      const slotLock = makeSlotLock();
+      const otp = makeOtp();
+      const paystack = makePaystack();
+      const push = makePush();
+      const rows = [{ id: 'booking-2' }, { id: 'booking-1' }];
+      const orderBy = jest.fn(() => Promise.resolve(rows));
+      const where = jest.fn(() => ({ orderBy }));
+      const from = jest.fn(() => ({ where }));
+      db.select.mockReturnValueOnce({ from });
+
+      const service = new BookingService(
+        db as any,
+        slotLock as any,
+        otp as any,
+        paystack as any,
+        push as any,
+      );
+
+      const result = await service.listForVendor('vendor-1', 'confirmed');
+
+      expect(result).toBe(rows);
+      expect(where).toHaveBeenCalled();
+      expect(orderBy).toHaveBeenCalled();
+    });
   });
 
   describe('confirmPaymentByReference / failPaymentByReference (Paystack webhook)', () => {

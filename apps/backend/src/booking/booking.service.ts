@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
 import { bookings, customers, users } from '../db/schema';
 import { OtpService } from '../auth/otp.service';
@@ -242,18 +242,33 @@ export class BookingService {
     });
   }
 
-  async cancelByVendor(bookingId: string, reason?: string) {
+  /** `vendorId` scopes the action to a vendor-admin's own bookings — a mismatch 404s rather than leaking that the booking exists. */
+  async cancelByVendor(bookingId: string, vendorId?: string, reason?: string) {
     return this.transition(bookingId, 'VENDOR_CANCELLED', {
+      vendorId,
       cancellationReason: reason,
     });
   }
 
-  async markCompleted(bookingId: string) {
-    return this.transition(bookingId, 'MARKED_COMPLETED');
+  async markCompleted(bookingId: string, vendorId?: string) {
+    return this.transition(bookingId, 'MARKED_COMPLETED', { vendorId });
   }
 
-  async markNoShow(bookingId: string) {
-    return this.transition(bookingId, 'MARKED_NO_SHOW');
+  async markNoShow(bookingId: string, vendorId?: string) {
+    return this.transition(bookingId, 'MARKED_NO_SHOW', { vendorId });
+  }
+
+  /** Vendor-admin booking list, newest first — optionally narrowed by status. */
+  async listForVendor(vendorId: string, status?: BookingStatus) {
+    return this.db
+      .select()
+      .from(bookings)
+      .where(
+        status
+          ? and(eq(bookings.vendorId, vendorId), eq(bookings.status, status))
+          : eq(bookings.vendorId, vendorId),
+      )
+      .orderBy(desc(bookings.scheduledAt));
   }
 
   /**
@@ -264,13 +279,17 @@ export class BookingService {
   private async transition(
     bookingId: string,
     event: BookingEvent,
-    extra: { amountPaidKobo?: number; cancellationReason?: string } = {},
+    extra: {
+      vendorId?: string;
+      amountPaidKobo?: number;
+      cancellationReason?: string;
+    } = {},
   ) {
     const [current] = await this.db
       .select()
       .from(bookings)
       .where(eq(bookings.id, bookingId));
-    if (!current) {
+    if (!current || (extra.vendorId && current.vendorId !== extra.vendorId)) {
       throw new NotFoundException(`Booking ${bookingId} not found`);
     }
 

@@ -93,10 +93,44 @@ Update this file as phases complete (check items off, add notes on decisions/dev
       reveals whether an email is known), `POST /vendor-auth/accept-invite`,
       `POST /vendor-auth/login`, `GET /vendor-auth/me`. New env vars
       `VENDOR_JWT_SECRET`/`VENDOR_WEB_URL`. 14 new tests, 61/61 passing.
-- [ ] Vendor admin: schedule management, service/staff CRUD, booking calendar,
-      customer CRM view (visit count, lifetime value, no-show tracking) —
-      gate all of these behind `VendorAuthGuard`/`@CurrentStaff()` now that
-      the auth layer exists
+- [x] Vendor admin (backend) — new `vendor-admin/` module, every route gated
+      behind `VendorAuthGuard`/`@CurrentStaff()` and ownership-scoped to
+      `staff.vendorId` (cross-vendor access 404s rather than leaking
+      existence, mirroring the invite-enumeration protection):
+      - **Services CRUD**: `GET/POST /vendor-admin/services`,
+        `PATCH/DELETE /vendor-admin/services/:id`
+        (`VendorServicesService`/`VendorServicesController`)
+      - **Staff CRUD**: `GET/POST /vendor-admin/staff`,
+        `PATCH/DELETE /vendor-admin/staff/:id`
+        (`VendorStaffService`/`VendorStaffController`; creating a staff
+        member with an email auto-issues a `VendorAuthService.issueInvite`;
+        `list()` exposes `hasActivatedAccount` as a real boolean SQL
+        expression rather than the raw `passwordHash` column)
+      - **Schedule**: vendor-configurable weekly business hours
+        (`business_hours` table, atomic transactional swap via
+        `setBusinessHours`) and one-off `blackout_dates` — new schema file
+        `db/schema/schedule.ts`, migration `0006_eminent_storm.sql`.
+        `VendorService.getAvailability` now checks blackout dates first and
+        resolves vendor-configured hours via `resolveOpenHours`, threading
+        an additive `OpenHours` parameter through
+        `computeAvailableSlotOffsets` (default preserves existing tests).
+        Routes: `GET/PUT /vendor-admin/schedule/hours`,
+        `GET/POST /vendor-admin/schedule/blackout-dates`,
+        `DELETE /vendor-admin/schedule/blackout-dates/:id`
+        (`VendorScheduleService`/`VendorScheduleController`)
+      - **Booking calendar/management**: `BookingService` gained an optional
+        `vendorId` ownership-scoping parameter threaded through
+        `cancelByVendor`/`markCompleted`/`markNoShow`/`transition`, plus a
+        new `listForVendor(vendorId, status?)` (newest-first). Routes:
+        `GET /vendor-admin/bookings`,
+        `POST /vendor-admin/bookings/:id/{cancel,complete,no-show}`
+        (`VendorBookingsController`)
+      - **Customer CRM**: read-only list/detail plus notes editing —
+        `GET /vendor-admin/customers`, `GET /vendor-admin/customers/:id`,
+        `PATCH /vendor-admin/customers/:id/notes`
+        (`VendorCustomersService`/`VendorCustomersController`)
+      All wired together in `vendor-admin.module.ts` → `AppModule`. 36 new
+      tests, 92/92 passing.
 - [ ] Vendor-web frontend: login/accept-invite screens + dashboard shell that
       stores the JWT and calls the new `/vendor-auth/*` endpoints
 

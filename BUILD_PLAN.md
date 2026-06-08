@@ -62,8 +62,10 @@ Update this file as phases complete (check items off, add notes on decisions/dev
       added `registerForPushNotifications()` (permission request + token fetch +
       registration, best-effort/non-blocking) wired into `SignUpScreen` post sign-up.
 
-## Phase 4 — Vendor-web (currently empty)
-- [ ] Scaffold the app (framework TBD)
+## Phase 4 — Vendor-web
+- [x] Scaffold the app — Next.js (App Router, TypeScript, Tailwind, ESLint),
+      chosen for admin-dashboard ergonomics and to share `@scalio/shared-types`.
+      Dev server runs on port 3001 (3000 is the backend API).
 - [ ] Vendor admin: schedule management, service/staff CRUD, booking calendar,
       customer CRM view (visit count, lifetime value, no-show tracking)
 

@@ -12,6 +12,7 @@ import { PushModule } from './notifications/push.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { BookingModule } from './booking/booking.module';
 import { AuthModule } from './auth/auth.module';
+import { VendorAuthModule } from './vendor-auth/vendor-auth.module';
 import { VendorModule } from './vendor/vendor.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { VendorModule } from './vendor/vendor.module';
     PaystackModule,
     PushModule,
     AuthModule,
+    VendorAuthModule,
     VendorModule,
     BookingModule,
     PaymentsModule,

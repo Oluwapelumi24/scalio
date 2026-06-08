@@ -21,4 +21,15 @@ export class MailService {
       text: `Your Scalio verification code is ${code}. It expires in 10 minutes.`,
     });
   }
+
+  async sendVendorInviteEmail(to: string, businessName: string, acceptUrl: string): Promise<void> {
+    await this.resend.emails.send({
+      from:
+        this.config.get<string>('MAIL_FROM') ??
+        'Scalio <onboarding@resend.dev>',
+      to,
+      subject: `You've been invited to manage ${businessName} on Scalio`,
+      text: `You've been added as a team member for ${businessName} on Scalio. Set your password to finish setting up your account: ${acceptUrl}\n\nThis link expires in 7 days.`,
+    });
+  }
 }

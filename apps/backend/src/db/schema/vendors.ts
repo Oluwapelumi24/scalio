@@ -21,8 +21,12 @@ export const staff = pgTable('staff', {
   vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   phone: text('phone'),
-  email: text('email'),
+  email: text('email').unique(),
   role: text('role', { enum: staffRoleValues }).notNull(),
+  // Set once the staff member accepts their platform-issued invite and picks
+  // a password — null means the account exists but can't log in yet.
+  passwordHash: text('password_hash'),
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

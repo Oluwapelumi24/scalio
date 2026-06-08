@@ -78,8 +78,27 @@ Update this file as phases complete (check items off, add notes on decisions/dev
 - [x] Scaffold the app — Next.js (App Router, TypeScript, Tailwind, ESLint),
       chosen for admin-dashboard ergonomics and to share `@scalio/shared-types`.
       Dev server runs on port 3001 (3000 is the backend API).
+- [x] Vendor auth (backend) — per-staff login via the existing `staff` table
+      (reuses its `owner`/`manager`/`practitioner`/`front_desk` role enum),
+      platform-provisioned + invite-to-activate (no public signup). New
+      `vendor-auth/` module: `staff.passwordHash`/`lastLoginAt` columns
+      (migration `0005_demonic_magma.sql`), Redis-backed single-use invite
+      tokens (`VendorInviteService`, mirrors `OtpService`'s atomic
+      compare/get-and-delete pattern, 7-day TTL), `VendorAuthService`
+      (issueInvite/acceptInvite/login, bcrypt-hashed passwords), a
+      `vendor-jwt` Passport strategy + `VendorAuthGuard` + `@CurrentStaff()`
+      decorator that re-resolves the staff row on every request (so a
+      deactivated account loses access immediately, not just at token
+      expiry). Routes: `POST /vendor-auth/invite` (always 204s — never
+      reveals whether an email is known), `POST /vendor-auth/accept-invite`,
+      `POST /vendor-auth/login`, `GET /vendor-auth/me`. New env vars
+      `VENDOR_JWT_SECRET`/`VENDOR_WEB_URL`. 14 new tests, 61/61 passing.
 - [ ] Vendor admin: schedule management, service/staff CRUD, booking calendar,
-      customer CRM view (visit count, lifetime value, no-show tracking)
+      customer CRM view (visit count, lifetime value, no-show tracking) —
+      gate all of these behind `VendorAuthGuard`/`@CurrentStaff()` now that
+      the auth layer exists
+- [ ] Vendor-web frontend: login/accept-invite screens + dashboard shell that
+      stores the JWT and calls the new `/vendor-auth/*` endpoints
 
 ## Phase 5 — Notifications & ops
 - [ ] Email/SMS for booking confirmations, reminders, cancellations

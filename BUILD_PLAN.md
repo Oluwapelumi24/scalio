@@ -131,8 +131,28 @@ Update this file as phases complete (check items off, add notes on decisions/dev
         (`VendorCustomersService`/`VendorCustomersController`)
       All wired together in `vendor-admin.module.ts` → `AppModule`. 36 new
       tests, 92/92 passing.
-- [ ] Vendor-web frontend: login/accept-invite screens + dashboard shell that
-      stores the JWT and calls the new `/vendor-auth/*` endpoints
+- [x] Vendor-web frontend: login/accept-invite screens + dashboard shell (2026-06-09)
+      `apps/vendor-web/src/app/` — full App Router dashboard consuming all
+      `/vendor-auth/*` and `/vendor-admin/*` endpoints. JWT stored in httpOnly
+      `vendor_token` cookie (set/cleared in server actions). Auth guard in
+      `dashboard/layout.tsx` calls `GET /vendor-auth/me` on every load to
+      validate the session and get staff info for the sidebar. Route map:
+      - `/login` → email+password login with `useActionState` error display
+      - `/accept-invite?token=` → set-password form, auto-signs in on success
+      - `/dashboard` → redirects to `/dashboard/bookings`
+      - `/dashboard/bookings` → booking list with status filter tabs and
+        Cancel/Complete/No Show action buttons (`BookingActions` client component
+        using `useTransition`)
+      - `/dashboard/services` → services table + inline create form (delete per row)
+      - `/dashboard/staff` → staff table with invite-pending badges + inline create
+        (email field triggers the backend invite flow automatically)
+      - `/dashboard/schedule` → business hours grid (`ScheduleHoursForm` client
+        component with day toggle + time pickers) + blackout dates CRUD
+      - `/dashboard/customers` → customer list linking to detail pages
+      - `/dashboard/customers/[id]` → customer detail + notes editor
+      `src/lib/api.ts` → `apiFetch()` wrapper (no-store cache, typed ApiError)
+      `src/lib/session.ts` → `getToken/requireToken/setToken/clearToken`
+      (httpOnly cookie, 7-day maxAge). TypeScript clean, build passes (12 routes).
 
 ## Phase 5 — Notifications & ops
 - [ ] Email/SMS for booking confirmations, reminders, cancellations

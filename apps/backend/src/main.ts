@@ -6,6 +6,7 @@ async function bootstrap() {
   // rawBody is required to verify the Paystack webhook signature, which is
   // computed over the exact request bytes (see PaystackService.verifyWebhookSignature).
   const app = await NestFactory.create(AppModule, { rawBody: true });
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   await app.listen(process.env.PORT ?? 3000);
 }

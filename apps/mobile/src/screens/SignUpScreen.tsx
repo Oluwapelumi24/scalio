@@ -15,6 +15,7 @@ import type { RootStackParamList } from '../navigation/types';
 import { signUp } from '../lib/api';
 import { setCurrentUser } from '../lib/session';
 import { registerForPushNotifications } from '../lib/push';
+import { BackButton } from '../components/BackButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignUp'>;
 
@@ -40,7 +41,7 @@ export function SignUpScreen({ navigation }: Props) {
       if (navigation.canGoBack()) {
         navigation.goBack();
       } else {
-        navigation.navigate('Home');
+        navigation.navigate('Main');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Please try again.';
@@ -55,6 +56,8 @@ export function SignUpScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <BackButton onPress={() => navigation.goBack()} />
+
       <View style={styles.copy}>
         <Text style={styles.title}>Create your account</Text>
         <Text style={styles.subtitle}>Just your name and email — that&apos;s all we need to get started.</Text>
@@ -101,7 +104,6 @@ export function SignUpScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 64,
     backgroundColor: '#ffffff',
@@ -142,6 +144,7 @@ const styles = StyleSheet.create({
     color: '#111111',
   },
   cta: {
+    marginTop: 'auto',
     backgroundColor: '#111111',
     borderRadius: 12,
     paddingVertical: 16,

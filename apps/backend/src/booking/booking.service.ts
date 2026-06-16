@@ -3,13 +3,11 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { bookings, customers, users } from '../db/schema';
-import { OtpService } from '../auth/otp.service';
+import { bookings, customers, users, vendors } from '../db/schema';
 import {
   PaystackService,
   type InitializeTransactionResult,
@@ -21,28 +19,16 @@ import {
   BookingEvent,
   BookingStatus,
   InvalidBookingTransitionError,
-  isActiveStatus,
 } from './booking-state-machine';
-
-/** Modes that require collecting money up front, via Paystack, before the slot is confirmed. */
-const PAYMENT_MODES_REQUIRING_PAYSTACK = [
-  'deposit',
-  'full_prepayment',
-] as const;
 
 export interface CreatePendingBookingInput {
   vendorId: string;
   /** The signed-up app user booking this appointment — resolved/linked to a per-vendor CRM record. */
   userId: string;
-  /** Verified via POST /auth/otp/request + the code supplied here (PRD §4.1 step 7). */
-  email: string;
-  otpCode: string;
   staffId: string | null;
   serviceIds: string[];
   scheduledAt: Date;
   durationMinutes: number;
-  paymentMode: 'pay_on_arrival' | 'deposit' | 'full_prepayment';
-  amountDueKobo: number;
 }
 
 @Injectable()
@@ -50,32 +36,21 @@ export class BookingService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly slotLock: SlotLockService,
-    private readonly otp: OtpService,
     private readonly paystack: PaystackService,
     private readonly push: PushService,
   ) {}
 
   /**
-   * Step 1-2 of PRD §9.3: verify the one-time email code (PRD §4.1 step 7),
-   * acquire the Redis lock for this slot, then create the booking. The
-   * Postgres partial unique index is the backstop if Redis is unavailable or
-   * the lock already expired.
-   *
-   * `pay_on_arrival` bookings need no money up front, so they're created
-   * straight into `confirmed`. `deposit`/`full_prepayment` bookings start a
-   * Paystack transaction *before* the row is written — if Paystack is
-   * unreachable we'd rather fail the request than leave a `pending_payment`
-   * row with nothing to actually drive it to `confirmed`.
+   * Acquires the Redis lock for this slot, then creates the booking straight
+   * into `confirmed` with `pay_on_arrival` — no money or payment provider is
+   * involved at booking time. The Postgres partial unique index is the
+   * backstop if Redis is unavailable or the lock already expired. The
+   * customer can optionally upgrade to a deposit/full prepayment afterwards
+   * via `initiateBookingPayment`.
    */
   async createPendingBooking(input: CreatePendingBookingInput): Promise<{
     booking: typeof bookings.$inferSelect;
-    payment: InitializeTransactionResult | null;
   }> {
-    const verified = await this.otp.verifyCode(input.email, input.otpCode);
-    if (!verified) {
-      throw new UnauthorizedException('Invalid or expired verification code.');
-    }
-
     const customerId = await this.findOrCreateCrmCustomer(
       input.vendorId,
       input.userId,
@@ -93,29 +68,6 @@ export class BookingService {
       );
     }
 
-    const requiresPaystack = (
-      PAYMENT_MODES_REQUIRING_PAYSTACK as readonly string[]
-    ).includes(input.paymentMode);
-
-    let payment: InitializeTransactionResult | null = null;
-    let paystackReference: string | null = null;
-    let initialStatus: BookingStatus = 'confirmed';
-
-    if (requiresPaystack) {
-      paystackReference = randomUUID();
-      initialStatus = 'pending_payment';
-      try {
-        payment = await this.paystack.initializeTransaction({
-          email: input.email,
-          amountKobo: input.amountDueKobo,
-          reference: paystackReference,
-        });
-      } catch (err) {
-        await this.slotLock.release(lock);
-        throw err;
-      }
-    }
-
     try {
       const [row] = await this.db
         .insert(bookings)
@@ -124,35 +76,80 @@ export class BookingService {
           customerId,
           staffId: input.staffId,
           serviceIds: input.serviceIds,
-          status: initialStatus,
+          status: 'confirmed',
           scheduledAt: input.scheduledAt,
           durationMinutes: input.durationMinutes,
-          paymentMode: input.paymentMode,
-          amountDueKobo: input.amountDueKobo,
-          paystackReference,
+          paymentMode: 'pay_on_arrival',
+          amountDueKobo: 0,
+          paystackReference: null,
           lockToken: lock.token,
         })
         .returning();
 
-      // pay_on_arrival skips Paystack and lands straight in `confirmed` —
-      // tell the customer right away rather than waiting on a webhook.
-      if (initialStatus === 'confirmed') {
-        await this.push.notifyCustomer(customerId, {
-          title: 'Booking confirmed',
-          body: `You're all set for ${formatScheduledAt(row.scheduledAt)}.`,
-        });
-      }
+      await this.push.notifyCustomer(customerId, {
+        title: 'Booking confirmed',
+        body: `You're all set for ${formatScheduledAt(row.scheduledAt)}.`,
+      });
 
-      return { booking: row, payment };
+      return { booking: row };
     } catch {
       // Postgres rejected it (unique index hit) — release the lock we just took.
-      // Note: a Paystack transaction may already be initialized at this point;
-      // it simply expires unused since no booking will ever reference it.
       await this.slotLock.release(lock);
       throw new ConflictException(
         'This slot was just taken. Please pick another time.',
       );
     }
+  }
+
+  /**
+   * Lets a customer upgrade an already-`confirmed` (pay-on-arrival) booking to
+   * `deposit`/`full_prepayment` by starting a Paystack transaction. The
+   * booking stays `confirmed` regardless of how this payment turns out — it's
+   * an optional add-on, not a gate on the slot.
+   */
+  async initiateBookingPayment(
+    bookingId: string,
+    paymentMode: 'deposit' | 'full_prepayment',
+    amountDueKobo: number,
+  ): Promise<{
+    booking: typeof bookings.$inferSelect;
+    payment: InitializeTransactionResult;
+  }> {
+    const [row] = await this.db
+      .select({ booking: bookings, email: users.email })
+      .from(bookings)
+      .innerJoin(customers, eq(bookings.customerId, customers.id))
+      .innerJoin(users, eq(customers.userId, users.id))
+      .where(eq(bookings.id, bookingId));
+
+    if (!row) {
+      throw new NotFoundException(`Booking ${bookingId} not found`);
+    }
+    if (row.booking.status !== 'confirmed') {
+      throw new ConflictException(
+        `Booking ${bookingId} is not awaiting payment`,
+      );
+    }
+
+    const reference = randomUUID();
+    const payment = await this.paystack.initializeTransaction({
+      email: row.email,
+      amountKobo: amountDueKobo,
+      reference,
+    });
+
+    const [updated] = await this.db
+      .update(bookings)
+      .set({
+        paymentMode,
+        amountDueKobo,
+        paystackReference: reference,
+        updatedAt: new Date(),
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    return { booking: updated, payment };
   }
 
   /**
@@ -201,26 +198,48 @@ export class BookingService {
   }
 
   /**
-   * Resolves a `charge.success` webhook to its booking and confirms it.
-   * Paystack may deliver the same event more than once (their docs say so
-   * explicitly) — an already-`confirmed` booking is treated as a no-op
-   * rather than an error, so retried deliveries don't 409.
+   * Resolves a `charge.success` webhook to its booking. A `pending_payment`
+   * booking (legacy rows created before payment moved post-booking) is
+   * confirmed via the state machine as before. A booking that's already
+   * `confirmed` only gets here from an optional post-booking top-up payment —
+   * its `amountPaidKobo` is simply recorded. Paystack may deliver the same
+   * event more than once (their docs say so explicitly), so an event whose
+   * amount was already recorded is treated as a no-op.
    */
   async confirmPaymentByReference(reference: string, amountPaidKobo: number) {
     const booking = await this.findByPaystackReference(reference);
-    if (booking.status === 'confirmed') {
+    if (booking.status === 'pending_payment') {
+      return this.confirmPayment(booking.id, amountPaidKobo);
+    }
+    if (booking.amountPaidKobo >= amountPaidKobo) {
       return booking;
     }
-    return this.confirmPayment(booking.id, amountPaidKobo);
+    return this.recordPayment(booking.id, amountPaidKobo);
   }
 
-  /** Resolves a `charge.failed` webhook to its booking and releases the slot. Idempotent for the same reason as above. */
+  /**
+   * Resolves a `charge.failed` webhook to its booking and releases the slot —
+   * but only for `pending_payment` bookings (legacy rows where payment gated
+   * the booking itself). A booking that's already `confirmed` only gets here
+   * from a failed optional top-up payment, which must never cancel an
+   * already-secured booking, so it's a no-op.
+   */
   async failPaymentByReference(reference: string) {
     const booking = await this.findByPaystackReference(reference);
-    if (!isActiveStatus(booking.status)) {
+    if (booking.status !== 'pending_payment') {
       return booking;
     }
     return this.failOrExpirePayment(booking.id);
+  }
+
+  /** Records a successful post-booking top-up payment without touching `status`. */
+  private async recordPayment(bookingId: string, amountPaidKobo: number) {
+    const [updated] = await this.db
+      .update(bookings)
+      .set({ amountPaidKobo, updatedAt: new Date() })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+    return updated;
   }
 
   private async findByPaystackReference(reference: string) {
@@ -268,6 +287,17 @@ export class BookingService {
           ? and(eq(bookings.vendorId, vendorId), eq(bookings.status, status))
           : eq(bookings.vendorId, vendorId),
       )
+      .orderBy(desc(bookings.scheduledAt));
+  }
+
+  /** This app user's bookings across every vendor, newest first, with the vendor they're for. */
+  async listForUser(userId: string) {
+    return this.db
+      .select({ booking: bookings, vendor: vendors })
+      .from(bookings)
+      .innerJoin(customers, eq(bookings.customerId, customers.id))
+      .innerJoin(vendors, eq(bookings.vendorId, vendors.id))
+      .where(eq(customers.userId, userId))
       .orderBy(desc(bookings.scheduledAt));
   }
 

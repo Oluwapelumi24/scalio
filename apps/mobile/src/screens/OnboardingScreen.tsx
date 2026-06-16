@@ -9,8 +9,11 @@ import {
   View,
   Pressable,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
+import { spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
@@ -18,16 +21,19 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SLIDES = [
   {
-    title: 'Book your next appointment in seconds',
-    subtitle: 'Find your salon, pick a time that works for you, and we’ll handle the rest.',
+    title: 'Discover Trusted Businesses Around You',
+    subtitle: 'Find salons, spas, barbershops, wellness centres and more — all in one place.',
+    icon: 'compass' as const,
   },
   {
-    title: 'Discover trusted businesses near you',
-    subtitle: 'Browse salons, spas, and studios with real services, real prices, and real availability.',
+    title: 'Book in Seconds, Anytime',
+    subtitle: "Pick your service, choose a time that works, and you're done. It really is that easy.",
+    icon: 'calendar' as const,
   },
   {
-    title: 'Pay your way, every time',
-    subtitle: 'Pay on arrival, leave a deposit, or prepay in full — whatever the business and you prefer.',
+    title: 'Pay Your Way, Every Time',
+    subtitle: 'Pay on arrival, leave a deposit, or prepay in full — whatever works for you.',
+    icon: 'credit-card' as const,
   },
 ] as const;
 
@@ -50,7 +56,7 @@ export function OnboardingScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={['#0f0c29', '#302b63', '#24243e']} style={styles.container}>
       <ScrollView
         ref={scrollRef}
         horizontal
@@ -60,10 +66,11 @@ export function OnboardingScreen({ navigation }: Props) {
       >
         {SLIDES.map((slide) => (
           <View key={slide.title} style={[styles.slide, { width: SCREEN_WIDTH }]}>
-            <View style={styles.copy}>
-              <Text style={styles.title}>{slide.title}</Text>
-              <Text style={styles.subtitle}>{slide.subtitle}</Text>
+            <View style={styles.iconBadge}>
+              <Feather name={slide.icon} size={44} color="#ffffff" />
             </View>
+            <Text style={styles.title}>{slide.title}</Text>
+            <Text style={styles.subtitle}>{slide.subtitle}</Text>
           </View>
         ))}
       </ScrollView>
@@ -85,68 +92,77 @@ export function OnboardingScreen({ navigation }: Props) {
           </Pressable>
         )}
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   slide: {
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.xl,
     paddingTop: 120,
+    alignItems: 'flex-start',
   },
-  copy: {},
+  iconBadge: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xxl,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111111',
-    marginBottom: 12,
+    fontSize: 30,
+    fontWeight: typography.weight.bold,
+    color: '#ffffff',
+    marginBottom: spacing.md,
+    lineHeight: 38,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#555555',
-    lineHeight: 22,
+    fontSize: typography.size.lg,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 26,
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 64,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xxxl,
   },
   dots: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: spacing.xxl,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#dddddd',
-    marginRight: 8,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginRight: spacing.sm,
   },
   dotActive: {
-    backgroundColor: '#111111',
-    width: 20,
+    backgroundColor: '#ffffff',
+    width: 24,
   },
   cta: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
   },
   ctaLabel: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#0f0c29',
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
   },
   skip: {
-    marginTop: 16,
+    marginTop: spacing.lg,
     alignItems: 'center',
   },
   skipLabel: {
-    color: '#777777',
-    fontSize: 14,
-    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
   },
 });

@@ -7,6 +7,9 @@ export interface Vendor {
   themeColor: string | null;
   averageDaysBetweenVisits: number | null;
   featured: boolean;
+  address: string | null;
+  rating: number | null;
+  reviewCount: number | null;
 }
 
 export interface Service {

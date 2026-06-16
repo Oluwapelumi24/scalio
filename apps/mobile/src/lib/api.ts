@@ -17,7 +17,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(body?.message ?? `Request failed (${response.status})`);
   }
 
-  // e.g. POST /auth/otp/request responds 204 No Content — there's no body to parse.
+  // e.g. POST /auth/push-token responds 204 No Content — there's no body to parse.
   if (response.status === HTTP_NO_CONTENT) {
     return undefined as T;
   }
@@ -35,14 +35,6 @@ export function signUp(name: string, email: string): Promise<AppUser> {
   return request<AppUser>('/auth/signup', {
     method: 'POST',
     body: JSON.stringify({ name, email }),
-  });
-}
-
-/** Sends a 6-digit verification code to the given email (PRD §4.1 step 7). */
-export function requestOtp(email: string): Promise<void> {
-  return request<void>('/auth/otp/request', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
   });
 }
 
@@ -89,21 +81,14 @@ export interface PaymentCheckout {
 export interface CreateBookingInput {
   vendorId: string;
   userId: string;
-  email: string;
-  otpCode: string;
   serviceIds: string[];
   scheduledAt: string;
   durationMinutes: number;
   staffId?: string;
-  paymentMode: 'pay_on_arrival' | 'deposit' | 'full_prepayment';
-  amountDueKobo: number;
 }
 
 export interface CreateBookingResult {
   booking: Booking;
-  // Present only for `deposit` / `full_prepayment` bookings — open
-  // `authorizationUrl` to complete the Paystack checkout.
-  payment: PaymentCheckout | null;
 }
 
 export function createBooking(input: CreateBookingInput): Promise<CreateBookingResult> {
@@ -112,14 +97,37 @@ export function createBooking(input: CreateBookingInput): Promise<CreateBookingR
     body: JSON.stringify({
       vendorId: input.vendorId,
       userId: input.userId,
-      email: input.email,
-      otpCode: input.otpCode,
       staffId: input.staffId,
       serviceIds: input.serviceIds,
       scheduledAt: input.scheduledAt,
       durationMinutes: input.durationMinutes,
-      paymentMode: input.paymentMode,
-      amountDueKobo: input.amountDueKobo,
     }),
   });
+}
+
+export interface InitiateBookingPaymentResult {
+  booking: Booking;
+  payment: PaymentCheckout;
+}
+
+/** Upgrades an already-confirmed (pay-on-arrival) booking to a deposit or full prepayment via Paystack. */
+export function initiateBookingPayment(
+  bookingId: string,
+  paymentMode: 'deposit' | 'full_prepayment',
+  amountDueKobo: number,
+): Promise<InitiateBookingPaymentResult> {
+  return request<InitiateBookingPaymentResult>(`/bookings/${bookingId}/payment`, {
+    method: 'POST',
+    body: JSON.stringify({ paymentMode, amountDueKobo }),
+  });
+}
+
+export interface BookingWithVendor {
+  booking: Booking;
+  vendor: Vendor;
+}
+
+/** This user's bookings across every vendor, newest first. */
+export function listBookings(userId: string): Promise<BookingWithVendor[]> {
+  return request<BookingWithVendor[]>(`/bookings?userId=${encodeURIComponent(userId)}`);
 }

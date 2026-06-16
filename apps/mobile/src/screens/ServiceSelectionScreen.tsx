@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View, Pressable } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View, Pressable } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { listServices } from '../lib/api';
+import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { colors, radius, spacing, typography } from '../theme';
+import { BackButton } from '../components/BackButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ServiceSelection'>;
 
@@ -12,14 +16,14 @@ function formatNaira(kobo: number): string {
 }
 
 export function ServiceSelectionScreen({ route, navigation }: Props) {
-  const { vendorId } = route.params;
+  const { vendor } = route.params;
   const [services, setServices] = useState<Service[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    listServices(vendorId)
+    listServices(vendor.id)
       .then((result) => {
         if (!cancelled) setServices(result);
       })
@@ -29,7 +33,7 @@ export function ServiceSelectionScreen({ route, navigation }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [vendorId]);
+  }, [vendor.id]);
 
   function toggle(serviceId: string) {
     setSelectedIds((current) =>
@@ -37,27 +41,50 @@ export function ServiceSelectionScreen({ route, navigation }: Props) {
     );
   }
 
+  const selectedServices = useMemo(
+    () => services?.filter((service) => selectedIds.includes(service.id)) ?? [],
+    [services, selectedIds],
+  );
+
   function handleContinue() {
-    if (selectedIds.length === 0 || !services) return;
-    const selected = services.filter((service) => selectedIds.includes(service.id));
-    navigation.navigate('ScheduleAppointment', { vendorId, services: selected });
+    if (selectedServices.length === 0) return;
+    navigation.navigate('ScheduleAppointment', { vendor, services: selectedServices });
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select services</Text>
-      <Text style={styles.subtitle}>You can choose more than one.</Text>
-
-      {error && <Text style={styles.error}>{error}</Text>}
-      {!error && !services && <ActivityIndicator style={styles.loader} />}
-      {!error && services && services.length === 0 && (
-        <Text style={styles.empty}>This business hasn&apos;t listed any services yet.</Text>
-      )}
+      <BackButton onPress={() => navigation.goBack()} />
 
       <FlatList
+        style={styles.list}
         data={services ?? []}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          <>
+            <View style={styles.vendorHeader}>
+              <View style={styles.vendorImageWrap}>
+                <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.vendorImage} />
+                <View style={[styles.categoryBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
+                  <Feather name={getCategoryMeta(vendor.category).icon} size={12} color={colors.white} />
+                </View>
+              </View>
+              <View style={styles.vendorHeaderCopy}>
+                <Text style={styles.vendorName}>{vendor.businessName}</Text>
+                <Text style={styles.vendorCategory}>{vendor.category}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.title}>Select services</Text>
+            <Text style={styles.subtitle}>You can choose more than one.</Text>
+
+            {error && <Text style={styles.error}>{error}</Text>}
+            {!error && !services && <ActivityIndicator style={styles.loader} />}
+            {!error && services && services.length === 0 && (
+              <Text style={styles.empty}>This business hasn&apos;t listed any services yet.</Text>
+            )}
+          </>
+        }
         renderItem={({ item }) => {
           const selected = selectedIds.includes(item.id);
           return (
@@ -91,99 +118,145 @@ export function ServiceSelectionScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 64,
-    paddingBottom: 24,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxxl,
+    paddingBottom: spacing.xl,
+    backgroundColor: colors.background,
+  },
+  vendorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  vendorImageWrap: {
+    width: 64,
+    height: 64,
+    marginRight: spacing.md,
+    position: 'relative',
+  },
+  vendorImage: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.lg,
+    backgroundColor: colors.border,
+  },
+  categoryBadge: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    width: 22,
+    height: 22,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  vendorHeaderCopy: {
+    flex: 1,
+  },
+  vendorName: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
+    color: colors.primary,
+  },
+  vendorCategory: {
+    fontSize: typography.size.sm,
+    color: colors.textMuted,
+    marginTop: 2,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111111',
+    fontSize: typography.size.title,
+    fontWeight: typography.weight.bold,
+    color: colors.primary,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#777777',
+    fontSize: typography.size.base,
+    color: colors.textMuted,
     marginTop: 4,
     marginBottom: 20,
   },
   loader: {
-    marginTop: 24,
+    marginTop: spacing.xl,
   },
   error: {
-    color: '#b00020',
-    fontSize: 14,
-    marginBottom: 16,
+    color: colors.error,
+    fontSize: typography.size.base,
+    marginBottom: spacing.lg,
   },
   empty: {
-    color: '#777777',
-    fontSize: 14,
+    color: colors.textMuted,
+    fontSize: typography.size.base,
   },
   list: {
+    flex: 1,
+  },
+  listContent: {
     paddingBottom: 12,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#eeeeee',
-    borderRadius: 12,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     padding: 14,
     marginBottom: 10,
   },
   rowSelected: {
-    borderColor: '#111111',
+    borderColor: colors.primary,
     backgroundColor: '#fafafa',
   },
   checkbox: {
     width: 22,
     height: 22,
-    borderRadius: 6,
+    borderRadius: radius.sm,
     borderWidth: 1.5,
-    borderColor: '#cccccc',
+    borderColor: colors.disabled,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   checkboxSelected: {
-    borderColor: '#111111',
-    backgroundColor: '#111111',
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
   },
   checkboxMark: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
+    color: colors.white,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
   },
   rowCopy: {
     flex: 1,
+    marginRight: 8,
   },
   rowTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111111',
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
+    color: colors.primary,
   },
   rowSubtitle: {
-    fontSize: 13,
-    color: '#777777',
+    fontSize: typography.size.sm,
+    color: colors.textMuted,
     marginTop: 2,
   },
   rowPrice: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111111',
+    fontSize: typography.size.md,
+    fontWeight: typography.weight.semibold,
+    color: colors.primary,
   },
   cta: {
-    backgroundColor: '#111111',
-    borderRadius: 12,
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
     paddingVertical: 16,
     alignItems: 'center',
   },
   ctaDisabled: {
-    backgroundColor: '#cccccc',
+    backgroundColor: colors.disabled,
   },
   ctaLabel: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
   },
 });

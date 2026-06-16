@@ -1,12 +1,18 @@
 export const INTERESTS = [
   'Salon',
+  'Barbershop',
   'Nails',
-  'Lashes',
-  'Spa',
-  'Barbing',
-  'Massage',
+  'Wig & Hair Extensions',
   'Makeup',
-  'Brows',
+  'Spa',
+  'Massage',
+  'Fitness & Wellness',
+  'Healthcare',
+  'Lashes & Brows',
+  'Tutors & Coaching',
+  'Photography',
+  'Laundromat',
+  'Cleaning',
 ] as const;
 
 export type Interest = (typeof INTERESTS)[number];

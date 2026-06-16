@@ -12,8 +12,8 @@ export const customers = pgTable(
     // vendor enters manually with no app account.
     userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
     name: text('name').notNull(),
-    // Collected at booking time via OTP (PRD §4.1 step 7) — not required at
-    // sign-up, so this stays nullable until that step is wired up.
+    // Not required at sign-up, so this stays nullable until a vendor or the
+    // customer fills it in.
     phone: text('phone'),
     email: text('email'),
     visitCount: integer('visit_count').notNull().default(0),

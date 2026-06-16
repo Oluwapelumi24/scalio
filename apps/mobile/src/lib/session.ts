@@ -11,3 +11,7 @@ export function setCurrentUser(user: AppUser): void {
 export function getCurrentUser(): AppUser | null {
   return currentUser;
 }
+
+export function signOut(): void {
+  currentUser = null;
+}

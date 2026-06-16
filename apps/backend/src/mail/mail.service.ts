@@ -11,17 +11,6 @@ export class MailService {
     private readonly config: ConfigService,
   ) {}
 
-  async sendOtpEmail(to: string, code: string): Promise<void> {
-    await this.resend.emails.send({
-      from:
-        this.config.get<string>('MAIL_FROM') ??
-        'Scalio <onboarding@resend.dev>',
-      to,
-      subject: `${code} is your Scalio verification code`,
-      text: `Your Scalio verification code is ${code}. It expires in 10 minutes.`,
-    });
-  }
-
   async sendVendorInviteEmail(to: string, businessName: string, acceptUrl: string): Promise<void> {
     await this.resend.emails.send({
       from:

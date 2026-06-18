@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxxl,
+    paddingTop: 96,
     paddingBottom: spacing.xl,
   },
   title: {

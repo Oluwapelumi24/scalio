@@ -12,7 +12,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { CATEGORY_META } from '../lib/categories';
 import { INTERESTS } from '../lib/interests';
-import { setHasSeenOnboarding, setInterests } from '../lib/preferences';
+import { setInterests } from '../lib/preferences';
+import { BackButton } from '../components/BackButton';
 import { colors, radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InterestSelection'>;
@@ -35,14 +36,14 @@ export function InterestSelectionScreen({ navigation }: Props) {
   async function handleContinue() {
     if (selected.length === 0) return;
     await setInterests(selected);
-    await setHasSeenOnboarding();
-    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    navigation.navigate('LocationSetup');
   }
 
   const canContinue = selected.length > 0;
 
   return (
     <View style={styles.container}>
+      <BackButton onPress={() => navigation.goBack()} />
       <View style={styles.header}>
         <Text style={styles.title}>What are you into?</Text>
         <Text style={styles.subtitle}>
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingTop: spacing.xxxl,
+    paddingTop: 96,
   },
   header: {
     paddingHorizontal: spacing.xl,

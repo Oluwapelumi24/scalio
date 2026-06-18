@@ -45,13 +45,13 @@ export function BookingSuccessScreen({ route, navigation }: Props) {
       <View style={styles.actions}>
         <Pressable
           style={styles.primaryBtn}
-          onPress={() => navigation.navigate('Main')}
+          onPress={() => navigation.navigate('Main', { screen: 'Appointments' })}
         >
           <Text style={styles.primaryBtnLabel}>View my bookings</Text>
         </Pressable>
         <Pressable
           style={styles.secondaryBtn}
-          onPress={() => navigation.navigate('Main')}
+          onPress={() => navigation.navigate('Main', { screen: 'Home' })}
         >
           <Text style={styles.secondaryBtnLabel}>Continue exploring</Text>
         </Pressable>

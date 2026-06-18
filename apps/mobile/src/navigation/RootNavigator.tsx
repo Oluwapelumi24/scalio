@@ -4,9 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
-import { hasSeenOnboarding } from '../lib/preferences';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { OnboardingInfoScreen } from '../screens/OnboardingInfoScreen';
 import { InterestSelectionScreen } from '../screens/InterestSelectionScreen';
+import { LocationSetupScreen } from '../screens/LocationSetupScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import { SignUpScreen } from '../screens/SignUpScreen';
 import { VendorProfileScreen } from '../screens/VendorProfileScreen';
@@ -14,6 +15,9 @@ import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
 import { ScheduleAppointmentScreen } from '../screens/ScheduleAppointmentScreen';
 import { BookingConfirmationScreen } from '../screens/BookingConfirmationScreen';
 import { BookingSuccessScreen } from '../screens/BookingSuccessScreen';
+import { LaundryBookingScreen } from '../screens/LaundryBookingScreen';
+import { LaundryCheckoutScreen } from '../screens/LaundryCheckoutScreen';
+import { hasSeenOnboarding } from '../lib/preferences';
 import { typography } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,15 +42,9 @@ export function RootNavigator() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    hasSeenOnboarding()
-      .then((seen) => {
-        if (!cancelled) setInitialRoute(seen ? 'Main' : 'Onboarding');
-      })
-      .catch(() => {
-        if (!cancelled) setInitialRoute('Onboarding');
-      });
-    return () => { cancelled = true; };
+    hasSeenOnboarding().then((seen) => {
+      setInitialRoute(seen ? 'Main' : 'Onboarding');
+    });
   }, []);
 
   if (!initialRoute) {
@@ -57,7 +55,9 @@ export function RootNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="OnboardingInfo" component={OnboardingInfoScreen} />
         <Stack.Screen name="InterestSelection" component={InterestSelectionScreen} />
+        <Stack.Screen name="LocationSetup" component={LocationSetupScreen} />
         <Stack.Screen name="Main" component={MainTabNavigator} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="VendorProfile" component={VendorProfileScreen} />
@@ -71,6 +71,12 @@ export function RootNavigator() {
         <Stack.Screen
           name="BookingSuccess"
           component={BookingSuccessScreen}
+          options={{ gestureEnabled: false }}
+        />
+        <Stack.Screen name="LaundryBooking" component={LaundryBookingScreen} />
+        <Stack.Screen
+          name="LaundryCheckout"
+          component={LaundryCheckoutScreen}
           options={{ gestureEnabled: false }}
         />
       </Stack.Navigator>

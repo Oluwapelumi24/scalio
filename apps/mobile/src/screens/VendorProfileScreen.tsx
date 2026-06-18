@@ -40,7 +40,11 @@ export function VendorProfileScreen({ route, navigation }: Props) {
   }, [vendor.id]);
 
   function handleBook() {
-    navigation.navigate('ServiceSelection', { vendor });
+    if (vendor.category === 'Laundromat') {
+      navigation.navigate('LaundryBooking', { vendor });
+    } else {
+      navigation.navigate('ServiceSelection', { vendor });
+    }
   }
 
   return (
@@ -125,7 +129,9 @@ export function VendorProfileScreen({ route, navigation }: Props) {
           style={[styles.bookBtn, { backgroundColor: accentColor }]}
           onPress={handleBook}
         >
-          <Text style={styles.bookBtnLabel}>Book appointment</Text>
+          <Text style={styles.bookBtnLabel}>
+            {vendor.category === 'Laundromat' ? 'Place laundry order' : 'Book appointment'}
+          </Text>
         </Pressable>
       </View>
     </View>

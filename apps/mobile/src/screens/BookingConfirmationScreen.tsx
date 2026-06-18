@@ -8,6 +8,7 @@ import { initiateBookingPayment, type PaymentCheckout } from '../lib/api';
 import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
 import { amountForPaymentMode, PAYMENT_MODE_PRIORITY, resolveMinimumPaymentMode } from '../lib/payments';
 import { NO_SHOW_FEE_NOTICE, PAY_ON_ARRIVAL_CAVEAT } from '../lib/policy';
+import { BackButton } from '../components/BackButton';
 import { colors, radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingConfirmation'>;
@@ -40,14 +41,11 @@ export function BookingConfirmationScreen({ route, navigation }: Props) {
   const minMode = useMemo(() => resolveMinimumPaymentMode(services), [services]);
 
   const availableModes = useMemo(
-    () =>
-      PAYMENT_MODES.filter((mode) => PAYMENT_MODE_PRIORITY[mode] >= PAYMENT_MODE_PRIORITY[minMode]).sort(
-        (a, b) => PAYMENT_MODE_PRIORITY[a] - PAYMENT_MODE_PRIORITY[b],
-      ),
-    [minMode],
+    () => [...PAYMENT_MODES].sort((a, b) => PAYMENT_MODE_PRIORITY[a] - PAYMENT_MODE_PRIORITY[b]),
+    [],
   );
 
-  const effectiveMode = chosenMode && availableModes.includes(chosenMode) ? chosenMode : minMode;
+  const effectiveMode = chosenMode ?? minMode;
 
   async function handleContinueToPayment() {
     if (effectiveMode === 'pay_on_arrival' || submitting) return;
@@ -87,6 +85,9 @@ export function BookingConfirmationScreen({ route, navigation }: Props) {
   if (payment) {
     return (
       <View style={styles.container}>
+        <View style={styles.backRow}>
+          <BackButton onPress={() => navigation.goBack()} />
+        </View>
         {vendorHeader}
         <View style={styles.confirmationGroup}>
           <View style={[styles.badge, styles.badgePending]}>
@@ -119,6 +120,9 @@ export function BookingConfirmationScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.backRow}>
+        <BackButton onPress={() => navigation.goBack()} />
+      </View>
       {vendorHeader}
       <View style={styles.confirmationGroup}>
         <View style={styles.badge}>
@@ -198,11 +202,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  backRow: {
+    paddingTop: 96,
+    paddingHorizontal: spacing.xl,
+  },
   vendorHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: spacing.xxxl,
     paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.sm,
   },
   vendorImageWrap: {
     width: 56,

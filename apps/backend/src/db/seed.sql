@@ -74,12 +74,82 @@ CROSS JOIN (VALUES
 WHERE v.slug = x.slug
   AND NOT EXISTS (SELECT 1 FROM services s WHERE s.vendor_id = v.id AND s.name = x.name);
 
+-- Laundromat vendor
+INSERT INTO vendors (slug, business_name, category, logo_url, theme_color, average_days_between_visits, featured)
+VALUES ('true-wash', 'True Wash Laundromat', 'Laundromat', 'http://localhost:3000/true-wash.jpeg', '#00ACC1', 14, true)
+ON CONFLICT (slug) DO NOTHING;
+
+INSERT INTO services (vendor_id, name, duration_minutes, price_kobo, payment_mode, deposit_percent)
+SELECT v.id, x.name, x.duration_minutes, x.price_kobo, x.payment_mode, x.deposit_percent
+FROM vendors v
+CROSS JOIN (VALUES
+  ('Clothing Laundry', 120, 250000, 'pay_on_arrival', NULL::integer),
+  ('Duvet Laundry', 240, 400000, 'pay_on_arrival', NULL::integer)
+) AS x(name, duration_minutes, price_kobo, payment_mode, deposit_percent)
+WHERE v.slug = 'true-wash'
+  AND NOT EXISTS (SELECT 1 FROM services s WHERE s.vendor_id = v.id AND s.name = x.name);
+
+UPDATE vendors SET
+  address      = '12 Admiralty Way, Lekki Phase 1, Lagos',
+  rating       = 4.7,
+  review_count = 156
+WHERE slug = 'true-wash';
+
 -- Refresh vendor cover images to category-appropriate LoremFlickr photos (re-runnable)
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/hair,salon?lock=1' WHERE slug = 'glow-salon';
+UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/hair,salon,interior?lock=55' WHERE slug = 'glow-salon';
 UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/spa,wellness?lock=2' WHERE slug = 'serenity-spa';
 UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/nail,salon?lock=3' WHERE slug = 'polished-nails';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/eyelash?lock=4' WHERE slug = 'lash-loft';
+UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/lash,studio,beauty?lock=58' WHERE slug = 'lash-loft';
 UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/barber,hair?lock=5' WHERE slug = 'sharp-cuts';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/massage?lock=6' WHERE slug = 'zen-massage';
+UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/spa,candle,luxury?lock=17' WHERE slug = 'zen-massage';
 UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/makeup,cosmetics?lock=7' WHERE slug = 'glam-studio';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/eyebrow?lock=8' WHERE slug = 'brow-bar';
+UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/beauty,makeup,studio?lock=43' WHERE slug = 'brow-bar';
+
+-- Backfill addresses, ratings, and review counts (re-runnable)
+UPDATE vendors SET
+  address      = '14 Admiralty Way, Lekki Phase 1, Lagos',
+  rating       = 4.8,
+  review_count = 312
+WHERE slug = 'glow-salon';
+
+UPDATE vendors SET
+  address      = '7 Adeola Odeku Street, Victoria Island, Lagos',
+  rating       = 4.9,
+  review_count = 187
+WHERE slug = 'serenity-spa';
+
+UPDATE vendors SET
+  address      = '3 Isaac John Street, Ikeja GRA, Lagos',
+  rating       = 4.7,
+  review_count = 204
+WHERE slug = 'polished-nails';
+
+UPDATE vendors SET
+  address      = '22 Ozumba Mbadiwe Avenue, Victoria Island, Lagos',
+  rating       = 4.9,
+  review_count = 95
+WHERE slug = 'lash-loft';
+
+UPDATE vendors SET
+  address      = '5 Bode Thomas Street, Surulere, Lagos',
+  rating       = 4.6,
+  review_count = 431
+WHERE slug = 'sharp-cuts';
+
+UPDATE vendors SET
+  address      = '18 Ligali Ayorinde Street, Victoria Island, Lagos',
+  rating       = 4.8,
+  review_count = 143
+WHERE slug = 'zen-massage';
+
+UPDATE vendors SET
+  address      = '10 Akin Adesola Street, Victoria Island, Lagos',
+  rating       = 4.7,
+  review_count = 268
+WHERE slug = 'glam-studio';
+
+UPDATE vendors SET
+  address      = '31 Fola Osibo Road, Lekki Phase 1, Lagos',
+  rating       = 4.5,
+  review_count = 119
+WHERE slug = 'brow-bar';

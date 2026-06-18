@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
-export function BackButton({ onPress }: { onPress: () => void }) {
+export function BackButton({ onPress, color = '#111111' }: { onPress: () => void; color?: string }) {
   return (
     <Pressable onPress={onPress} style={styles.button} hitSlop={8}>
-      <Text style={styles.label}>‹ Back</Text>
+      <Text style={[styles.label, { color }]}>‹ Back</Text>
     </Pressable>
   );
 }
@@ -16,6 +16,5 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111111',
   },
 });

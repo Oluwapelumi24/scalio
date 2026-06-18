@@ -1,168 +1,247 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import {
+  Animated,
   Dimensions,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
+  Easing,
+  Image,
+  ImageSourcePropType,
+  Pressable,
   StyleSheet,
   Text,
   View,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Feather } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
-import { spacing, typography } from '../theme';
+import { radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: W, height: H } = Dimensions.get('window');
 
-const SLIDES = [
-  {
-    title: 'Discover Trusted Businesses Around You',
-    subtitle: 'Find salons, spas, barbershops, wellness centres and more — all in one place.',
-    icon: 'compass' as const,
-  },
-  {
-    title: 'Book in Seconds, Anytime',
-    subtitle: "Pick your service, choose a time that works, and you're done. It really is that easy.",
-    icon: 'calendar' as const,
-  },
-  {
-    title: 'Pay Your Way, Every Time',
-    subtitle: 'Pay on arrival, leave a deposit, or prepay in full — whatever works for you.',
-    icon: 'credit-card' as const,
-  },
-] as const;
+const IMAGES = {
+  spa: require('../../assets/onboarding/spa.jpg') as ImageSourcePropType,
+  salon: require('../../assets/onboarding/salon.jpg') as ImageSourcePropType,
+  nails: require('../../assets/onboarding/nails.jpg') as ImageSourcePropType,
+  fitness: require('../../assets/onboarding/fitness.jpg') as ImageSourcePropType,
+  laundromat: require('../../assets/onboarding/laundromat.jpg') as ImageSourcePropType,
+};
+
+const COL_GAP = 10;
+const MOSAIC_H = H * 0.58;
+const SIDE_IMG_H = (MOSAIC_H - COL_GAP) / 2;
+const CENTER_IMG_H = MOSAIC_H * 0.9;
+
+// Gentle float: slow sine-wave drift, much less motion than infinite scroll
+function useFloatAnim(amplitude: number, duration: number, delay = 0) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const run = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: -amplitude,
+            duration,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0,
+            duration,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start();
+    };
+
+    if (delay > 0) {
+      const id = setTimeout(run, delay);
+      return () => clearTimeout(id);
+    }
+    run();
+  }, [anim, amplitude, duration, delay]);
+
+  return anim;
+}
 
 export function OnboardingScreen({ navigation }: Props) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
-  const isLastSlide = activeIndex === SLIDES.length - 1;
-
-  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    setActiveIndex(index);
-  }
-
-  function handleNext() {
-    if (isLastSlide) {
-      navigation.navigate('InterestSelection');
-      return;
-    }
-    scrollRef.current?.scrollTo({ x: (activeIndex + 1) * SCREEN_WIDTH, animated: true });
-  }
+  const leftFloat = useFloatAnim(10, 5000, 0);
+  const centerFloat = useFloatAnim(7, 6000, 700);
+  const rightFloat = useFloatAnim(9, 5400, 1400);
 
   return (
-    <LinearGradient colors={['#0f0c29', '#302b63', '#24243e']} style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={handleScroll}
-      >
-        {SLIDES.map((slide) => (
-          <View key={slide.title} style={[styles.slide, { width: SCREEN_WIDTH }]}>
-            <View style={styles.iconBadge}>
-              <Feather name={slide.icon} size={44} color="#ffffff" />
-            </View>
-            <Text style={styles.title}>{slide.title}</Text>
-            <Text style={styles.subtitle}>{slide.subtitle}</Text>
-          </View>
-        ))}
-      </ScrollView>
+    <View style={styles.root}>
+      {/* Photo mosaic */}
+      <View style={styles.mosaicContainer}>
+        <View style={styles.mosaic}>
+          {/* Left column: 2 stacked images */}
+          <Animated.View style={[styles.sideCol, { transform: [{ translateY: leftFloat }] }]}>
+            <Image source={IMAGES.spa} style={styles.sideImg} resizeMode="cover" />
+            <Image source={IMAGES.nails} style={styles.sideImg} resizeMode="cover" />
+          </Animated.View>
 
-      <View style={styles.footer}>
-        <View style={styles.dots}>
-          {SLIDES.map((slide, index) => (
-            <View key={slide.title} style={[styles.dot, index === activeIndex && styles.dotActive]} />
-          ))}
+          {/* Center column: 1 large featured image, offset down */}
+          <Animated.View
+            style={[styles.centerCol, { marginTop: 32, transform: [{ translateY: centerFloat }] }]}
+          >
+            <Image source={IMAGES.salon} style={styles.centerImg} resizeMode="cover" />
+          </Animated.View>
+
+          {/* Right column: 2 stacked images, slight negative offset for stagger */}
+          <Animated.View
+            style={[styles.sideCol, { marginTop: -18, transform: [{ translateY: rightFloat }] }]}
+          >
+            <Image source={IMAGES.fitness} style={styles.sideImg} resizeMode="cover" />
+            <Image source={IMAGES.laundromat} style={styles.sideImg} resizeMode="cover" />
+          </Animated.View>
         </View>
 
-        <Pressable style={styles.cta} onPress={handleNext}>
-          <Text style={styles.ctaLabel}>{isLastSlide ? 'Get started' : 'Next'}</Text>
-        </Pressable>
-
-        {!isLastSlide && (
-          <Pressable style={styles.skip} onPress={() => navigation.navigate('InterestSelection')}>
-            <Text style={styles.skipLabel}>Skip</Text>
-          </Pressable>
-        )}
+        {/* Fade to white at bottom of mosaic */}
+        <LinearGradient
+          colors={['transparent', 'rgba(255,255,255,0.55)', '#ffffff']}
+          locations={[0.72, 0.9, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
       </View>
-    </LinearGradient>
+
+      {/* Bottom content */}
+      <SafeAreaView style={styles.footer} edges={['bottom']}>
+        <View style={styles.logoMark}>
+          <Text style={styles.logoLetter}>S</Text>
+        </View>
+
+        <Text style={styles.headline}>
+          Curated experiences and services,{'\n'}designed around you.
+        </Text>
+
+        <View style={styles.actions}>
+          <Pressable
+            style={({ pressed }) => [styles.cta, pressed && { opacity: 0.82 }]}
+            onPress={() => navigation.navigate('OnboardingInfo')}
+          >
+            <Text style={styles.ctaLabel}>Get started</Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [styles.loginBtn, pressed && { opacity: 0.7 }]}
+            onPress={() => navigation.navigate('SignUp')}
+          >
+            <Text style={styles.loginLabel}>Sign in</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.terms}>
+          By continuing you agree to our{' '}
+          <Text style={styles.termsLink}>Terms</Text>
+          {' '}and{' '}
+          <Text style={styles.termsLink}>Privacy Policy</Text>.
+        </Text>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
-  slide: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: 120,
-    alignItems: 'flex-start',
+  mosaicContainer: {
+    height: MOSAIC_H,
+    overflow: 'hidden',
   },
-  iconBadge: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xxl,
+  mosaic: {
+    flexDirection: 'row',
+    gap: COL_GAP,
+    paddingHorizontal: COL_GAP,
+    paddingTop: COL_GAP,
   },
-  title: {
-    fontSize: 30,
-    fontWeight: typography.weight.bold,
-    color: '#ffffff',
-    marginBottom: spacing.md,
-    lineHeight: 38,
+  sideCol: {
+    flex: 1,
+    gap: COL_GAP,
   },
-  subtitle: {
-    fontSize: typography.size.lg,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 26,
+  sideImg: {
+    width: '100%',
+    height: SIDE_IMG_H,
+    borderRadius: 16,
+    backgroundColor: '#eeeeee',
+  },
+  centerCol: {
+    flex: 2,
+  },
+  centerImg: {
+    width: '100%',
+    height: CENTER_IMG_H,
+    borderRadius: 20,
+    backgroundColor: '#eeeeee',
   },
   footer: {
+    flex: 1,
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  dots: {
-    flexDirection: 'row',
-    marginBottom: spacing.xxl,
+  logoMark: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#111111',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    marginRight: spacing.sm,
+  logoLetter: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: -0.5,
   },
-  dotActive: {
-    backgroundColor: '#ffffff',
-    width: 24,
+  headline: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111111',
+    lineHeight: 30,
+    textAlign: 'center',
+  },
+  actions: {
+    gap: spacing.sm,
+    alignSelf: 'stretch',
   },
   cta: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
-    paddingVertical: 16,
+    backgroundColor: '#111111',
+    borderRadius: radius.pill,
+    paddingVertical: 17,
     alignItems: 'center',
   },
   ctaLabel: {
-    color: '#0f0c29',
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    fontWeight: '700',
+    color: '#ffffff',
   },
-  skip: {
-    marginTop: spacing.lg,
+  loginBtn: {
+    backgroundColor: '#f3f3f3',
+    borderRadius: radius.pill,
+    paddingVertical: 17,
     alignItems: 'center',
   },
-  skipLabel: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
+  loginLabel: {
+    fontSize: typography.size.lg,
+    fontWeight: '600',
+    color: '#111111',
+  },
+  terms: {
+    fontSize: 11,
+    color: '#999999',
+    textAlign: 'center',
+    lineHeight: 17,
+  },
+  termsLink: {
+    fontWeight: '700',
+    color: '#555555',
   },
 });

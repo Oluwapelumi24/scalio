@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxxl,
+    paddingTop: 96,
     paddingBottom: spacing.xl,
     backgroundColor: colors.background,
   },

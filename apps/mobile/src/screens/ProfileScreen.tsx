@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { MainTabScreenProps } from '../navigation/types';
 import type { AppUser } from '../lib/api';
 import { getCurrentUser, signOut } from '../lib/session';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radius, spacing, typography } from '../theme';
 
 type Props = MainTabScreenProps<'Profile'>;
@@ -127,6 +128,17 @@ export function ProfileScreen({ navigation }: Props) {
           }}
         />
       </View>
+
+      {/* Dev shortcut */}
+      <Pressable
+        style={styles.devLink}
+        onPress={async () => {
+          await AsyncStorage.multiRemove(['scalio:hasSeenOnboarding', 'scalio:location']);
+          navigation.navigate('Onboarding');
+        }}
+      >
+        <Text style={styles.devLinkLabel}>Preview onboarding</Text>
+      </Pressable>
     </View>
   );
 }
@@ -135,7 +147,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingTop: 60,
+    paddingTop: 96,
     paddingHorizontal: spacing.xl,
   },
   title: {
@@ -262,5 +274,14 @@ const styles = StyleSheet.create({
   },
   menuLabelDanger: {
     color: colors.error,
+  },
+  devLink: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+  },
+  devLinkLabel: {
+    fontSize: typography.size.sm,
+    color: colors.textFaint,
+    textDecorationLine: 'underline',
   },
 });

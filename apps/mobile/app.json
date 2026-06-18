@@ -8,7 +8,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mobile"
+      "bundleIdentifier": "com.anonymous.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Scalio uses your location to show nearby businesses."
+      }
     },
     "android": {
       "adaptiveIcon": {

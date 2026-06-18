@@ -97,9 +97,10 @@ export function vendorLogin(email: string, password: string): Promise<LoginRespo
 
 // ─── Bookings ────────────────────────────────────────────────────────────────
 
-export function listBookings(status?: BookingStatus): Promise<VendorBooking[]> {
+export async function listBookings(status?: BookingStatus): Promise<VendorBooking[]> {
   const qs = status ? `?status=${status}` : '';
-  return req('GET', `/vendor-admin/bookings${qs}`);
+  const data = await req<VendorBooking[]>('GET', `/vendor-admin/bookings${qs}`);
+  return (Array.isArray(data) ? data : []).map((b) => ({ ...b, services: b.services ?? [] }));
 }
 
 export function completeBooking(id: string): Promise<VendorBooking> {
@@ -200,7 +201,8 @@ export function removeBlackoutDate(id: string): Promise<void> {
 
 // ─── Formatting ──────────────────────────────────────────────────────────────
 
-export function formatNaira(kobo: number): string {
+export function formatNaira(kobo: number | null | undefined): string {
+  if (kobo == null || isNaN(kobo)) return '₦0';
   return `₦${(kobo / 100).toLocaleString('en-NG')}`;
 }
 

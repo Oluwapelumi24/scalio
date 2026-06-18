@@ -111,7 +111,7 @@ export function BookingDetailScreen({ route, navigation }: Props) {
           <Text style={styles.cardTitle}>Appointment</Text>
           <InfoRow icon="calendar" label="Date & time" value={formatDateTime(booking.scheduledAt)} />
           <InfoRow icon="clock" label="Duration" value={`${booking.durationMinutes} minutes`} />
-          <InfoRow icon="tag" label="Services" value={booking.services.map((s) => s.name).join(', ')} />
+          <InfoRow icon="tag" label="Services" value={(booking.services ?? []).map((s) => s.name).join(', ')} />
         </View>
 
         {/* Payment */}

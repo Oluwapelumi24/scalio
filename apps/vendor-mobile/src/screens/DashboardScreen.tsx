@@ -63,7 +63,7 @@ function BookingRow({ booking, onPress }: { booking: VendorBooking; onPress: () 
           {booking.customer?.name ?? 'Unknown'}
         </Text>
         <Text style={styles.bookingMeta} numberOfLines={1}>
-          {booking.services.map((s) => s.name).join(', ')} · {formatDateTime(booking.scheduledAt)}
+          {(booking.services ?? []).map((s) => s.name).join(', ')} · {formatDateTime(booking.scheduledAt)}
         </Text>
       </View>
       <View style={[styles.statusBadge, { backgroundColor: STATUS_BG[booking.status] }]}>

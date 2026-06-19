@@ -8,7 +8,8 @@
   "scripts": {
     "dev:backend": "npm run start:dev --workspace=apps/backend",
     "dev:mobile": "npm run start --workspace=apps/mobile",
-    "dev:vendor-web": "npm run dev --workspace=apps/vendor-web"
+    "dev:vendor-web": "npm run dev --workspace=apps/vendor-web",
+    "dev:vendor-mobile": "npm run start --workspace=apps/vendor-mobile -- --port 8082"
   },
   "dependencies": {
     "expo-linear-gradient": "~56.0.4"

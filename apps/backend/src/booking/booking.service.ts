@@ -5,9 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { bookings, customers, users, vendors } from '../db/schema';
+import { bookings, customers, users, vendors, services } from '../db/schema';
 import {
   PaystackService,
   type InitializeTransactionResult,
@@ -279,15 +279,42 @@ export class BookingService {
 
   /** Vendor-admin booking list, newest first — optionally narrowed by status. */
   async listForVendor(vendorId: string, status?: BookingStatus) {
-    return this.db
+    const rows = await this.db
       .select()
       .from(bookings)
+      .leftJoin(customers, eq(bookings.customerId, customers.id))
       .where(
         status
           ? and(eq(bookings.vendorId, vendorId), eq(bookings.status, status))
           : eq(bookings.vendorId, vendorId),
       )
       .orderBy(desc(bookings.scheduledAt));
+
+    const allServiceIds = [...new Set(rows.flatMap((r) => r.bookings.serviceIds))];
+    const serviceRows =
+      allServiceIds.length > 0
+        ? await this.db
+            .select()
+            .from(services)
+            .where(inArray(services.id, allServiceIds))
+        : [];
+    const serviceMap = new Map(serviceRows.map((s) => [s.id, s]));
+
+    return rows.map(({ bookings: b, customers: c }) => ({
+      id: b.id,
+      status: b.status,
+      scheduledAt: b.scheduledAt,
+      durationMinutes: b.durationMinutes,
+      paymentMode: b.paymentMode,
+      totalAmountKobo: b.amountDueKobo,
+      customer: c ? { id: c.id, name: c.name, email: c.email } : null,
+      services: b.serviceIds
+        .map((id) => serviceMap.get(id))
+        .filter((s): s is NonNullable<typeof s> => s != null)
+        .map((s) => ({ id: s.id, name: s.name, priceKobo: s.priceKobo })),
+      notes: b.cancellationReason,
+      createdAt: b.createdAt,
+    }));
   }
 
   /** This app user's bookings across every vendor, newest first, with the vendor they're for. */

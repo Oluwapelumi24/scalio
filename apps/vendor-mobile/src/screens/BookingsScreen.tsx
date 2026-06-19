@@ -76,7 +76,7 @@ export function BookingsScreen({ navigation }: Props) {
               {item.customer?.name ?? 'Unknown customer'}
             </Text>
             <Text style={styles.services} numberOfLines={1}>
-              {item.services.map((s) => s.name).join(', ')}
+              {(item.services ?? []).map((s) => s.name).join(', ')}
             </Text>
           </View>
           <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[item.status] }]} />

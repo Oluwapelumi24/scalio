@@ -202,8 +202,14 @@ export function removeBlackoutDate(id: string): Promise<void> {
 // ─── Formatting ──────────────────────────────────────────────────────────────
 
 export function formatNaira(kobo: number | null | undefined): string {
-  if (kobo == null || isNaN(kobo)) return '₦0';
-  return `₦${(kobo / 100).toLocaleString('en-NG')}`;
+  if (kobo == null || isNaN(kobo)) return 'NGN 0';
+  const amount = kobo / 100;
+  const whole = Math.floor(amount);
+  const cents = Math.round((amount - whole) * 100);
+  const withCommas = whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return cents > 0
+    ? `NGN ${withCommas}.${cents.toString().padStart(2, '0')}`
+    : `NGN ${withCommas}`;
 }
 
 export function formatDate(iso: string): string {

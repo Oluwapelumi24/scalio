@@ -30,18 +30,20 @@ type Props = CompositeScreenProps<
 >;
 
 const STATUS_COLOR: Record<BookingStatus, string> = {
-  pending: colors.warning,
+  pending_payment: colors.warning,
   confirmed: colors.accent,
   completed: colors.accent,
-  cancelled: colors.cancelled,
+  cancelled_by_customer: colors.accent,
+  cancelled_by_vendor: colors.accent,
   no_show: colors.textMuted,
 };
 
 const STATUS_BG: Record<BookingStatus, string> = {
-  pending: colors.warningLight,
+  pending_payment: colors.warningLight,
   confirmed: colors.accentLight,
   completed: colors.accentLight,
-  cancelled: colors.cancelledLight,
+  cancelled_by_customer: colors.accentLight,
+  cancelled_by_vendor: colors.accentLight,
   no_show: colors.surface,
 };
 
@@ -132,7 +134,7 @@ export function DashboardScreen({ navigation }: Props) {
           <View style={styles.statsRow}>
             <StatCard label="Today's bookings" value={String(todayBookings.length)} icon="calendar" accent={colors.accent} />
             <StatCard label="Pending approval" value={String(pending)} icon="clock" accent={pending > 0 ? colors.warning : colors.textMuted} />
-            <StatCard label="Today's revenue" value={formatNaira(todayRevenue)} icon="trending-up" accent={colors.success} />
+            <StatCard label="Today's revenue" value={formatNaira(todayRevenue)} icon="trending-up" accent={colors.accent} />
           </View>
 
           {/* Upcoming */}

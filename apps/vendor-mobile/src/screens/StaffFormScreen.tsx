@@ -20,7 +20,7 @@ import { colors, radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StaffForm'>;
 
-const ROLES = ['staff', 'admin', 'owner'] as const;
+const ROLES = ['practitioner', 'front_desk', 'manager', 'owner'] as const;
 type Role = (typeof ROLES)[number];
 
 export function StaffFormScreen({ route, navigation }: Props) {
@@ -29,7 +29,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
 
   const [name, setName] = useState(existing?.name ?? '');
   const [email, setEmail] = useState(existing?.email ?? '');
-  const [role, setRole] = useState<Role>((existing?.role as Role) ?? 'staff');
+  const [role, setRole] = useState<Role>((existing?.role as Role) ?? 'practitioner');
   const [password, setPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -121,7 +121,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
                   onPress={() => setRole(r)}
                 >
                   <Text style={[styles.rolePillLabel, role === r && styles.rolePillLabelActive]}>
-                    {r.charAt(0).toUpperCase() + r.slice(1)}
+                    {r === 'front_desk' ? 'Front desk' : r.charAt(0).toUpperCase() + r.slice(1)}
                   </Text>
                 </Pressable>
               ))}
@@ -129,8 +129,10 @@ export function StaffFormScreen({ route, navigation }: Props) {
             <Text style={styles.fieldHint}>
               {role === 'owner'
                 ? 'Full access including billing and team management.'
-                : role === 'admin'
+                : role === 'manager'
                 ? 'Can manage bookings, services and customers.'
+                : role === 'front_desk'
+                ? 'Can view and create bookings for walk-ins.'
                 : 'Can view and update bookings assigned to them.'}
             </Text>
           </View>

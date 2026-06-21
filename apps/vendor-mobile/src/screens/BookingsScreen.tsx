@@ -30,17 +30,18 @@ type Props = CompositeScreenProps<
 
 const FILTERS: { key: BookingStatus | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },
-  { key: 'pending', label: 'Pending' },
+  { key: 'pending_payment', label: 'Pending' },
   { key: 'confirmed', label: 'Confirmed' },
   { key: 'completed', label: 'Completed' },
-  { key: 'cancelled', label: 'Cancelled' },
+  { key: 'cancelled_by_vendor', label: 'Cancelled' },
 ];
 
 const STATUS_COLOR: Record<BookingStatus, string> = {
-  pending: colors.warning,
+  pending_payment: colors.warning,
   confirmed: colors.accent,
-  completed: colors.success,
-  cancelled: colors.cancelled,
+  completed: colors.accent,
+  cancelled_by_customer: colors.accent,
+  cancelled_by_vendor: colors.accent,
   no_show: colors.textMuted,
 };
 

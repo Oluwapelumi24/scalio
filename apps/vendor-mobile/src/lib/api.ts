@@ -4,7 +4,7 @@ const BASE = 'http://localhost:3000';
 
 // ─── Shared types ────────────────────────────────────────────────────────────
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no_show';
+export type BookingStatus = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled_by_customer' | 'cancelled_by_vendor' | 'no_show';
 export type PaymentMode = 'pay_on_arrival' | 'deposit' | 'full_prepayment';
 
 export interface VendorBooking {
@@ -227,10 +227,11 @@ export function formatDateTime(iso: string): string {
 }
 
 const STATUS_LABEL: Record<BookingStatus, string> = {
-  pending: 'Pending',
+  pending_payment: 'Pending',
   confirmed: 'Confirmed',
-  cancelled: 'Cancelled',
   completed: 'Completed',
+  cancelled_by_customer: 'Cancelled',
+  cancelled_by_vendor: 'Cancelled',
   no_show: 'No-show',
 };
 

@@ -20,8 +20,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'StaffManagement'>;
 
 const ROLE_COLOR: Record<string, string> = {
   owner: colors.primary,
-  admin: '#7c3aed',
-  staff: colors.accent,
+  manager: '#172554',
+  practitioner: colors.accent,
+  front_desk: colors.textMuted,
 };
 
 function RoleBadge({ role }: { role: string }) {

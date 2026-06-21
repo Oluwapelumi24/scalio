@@ -27,11 +27,21 @@ import { colors, radius, spacing, typography } from '../theme';
 type Props = NativeStackScreenProps<RootStackParamList, 'BookingDetail'>;
 
 const STATUS_COLOR: Record<BookingStatus, string> = {
-  pending: colors.warning,
+  pending_payment: colors.warning,
   confirmed: colors.accent,
-  completed: colors.success,
-  cancelled: colors.cancelled,
+  completed: colors.accent,
+  cancelled_by_customer: colors.accent,
+  cancelled_by_vendor: colors.accent,
   no_show: colors.textMuted,
+};
+
+const STATUS_BG: Record<BookingStatus, string> = {
+  pending_payment: colors.warningLight,
+  confirmed: colors.accentLight,
+  completed: colors.accentLight,
+  cancelled_by_customer: colors.accentLight,
+  cancelled_by_vendor: colors.accentLight,
+  no_show: colors.surface,
 };
 
 function InfoRow({ icon, label, value }: { icon: keyof typeof Feather.glyphMap; label: string; value: string }) {
@@ -52,7 +62,7 @@ export function BookingDetailScreen({ route, navigation }: Props) {
   const [booking, setBooking] = useState<VendorBooking>(route.params.booking);
   const [loading, setLoading] = useState<string | null>(null);
 
-  const canAct = ['pending', 'confirmed'].includes(booking.status);
+  const canAct = ['pending_payment', 'confirmed'].includes(booking.status);
 
   async function act(action: 'complete' | 'cancel' | 'no-show') {
     const label = action === 'complete' ? 'Mark complete' : action === 'cancel' ? 'Cancel booking' : 'Mark no-show';
@@ -95,8 +105,8 @@ export function BookingDetailScreen({ route, navigation }: Props) {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* Status banner */}
-        <View style={[styles.statusBanner, { backgroundColor: STATUS_COLOR[booking.status] }]}>
-          <Text style={styles.statusBannerText}>{statusLabel(booking.status)}</Text>
+        <View style={[styles.statusBanner, { backgroundColor: STATUS_BG[booking.status] }]}>
+          <Text style={[styles.statusBannerText, { color: STATUS_COLOR[booking.status] }]}>{statusLabel(booking.status)}</Text>
         </View>
 
         {/* Customer */}
@@ -198,7 +208,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  statusBannerText: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.white },
+  statusBannerText: { fontSize: typography.size.md, fontWeight: typography.weight.bold },
   card: {
     backgroundColor: colors.background,
     borderRadius: radius.xl,

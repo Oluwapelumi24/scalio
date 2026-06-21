@@ -41,14 +41,15 @@ function reference(bookingId: string): string {
 }
 
 export function LaundryCheckoutScreen({ route, navigation }: Props) {
-  const { vendor, clothingItems, duvets, serviceIds, slotISO, slotLabel } = route.params;
+  const { vendor, serviceType, clothingItems, duvets, serviceIds, slotISO, slotLabel } = route.params;
+  const isDropOff = serviceType === 'drop_off';
 
   const [paymentMode, setPaymentMode] = useState<PayMode>('pay_on_arrival');
   const [submitting, setSubmitting] = useState(false);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [payment, setPayment] = useState<PaymentCheckout | null>(null);
 
-  const order = useMemo(() => calcLaundryOrder(clothingItems, duvets), [clothingItems, duvets]);
+  const order = useMemo(() => calcLaundryOrder(clothingItems, duvets, isDropOff), [clothingItems, duvets, isDropOff]);
   const durationMinutes = useMemo(() => laundryDurationMinutes(clothingItems, duvets), [clothingItems, duvets]);
 
   async function handleConfirm() {
@@ -184,7 +185,7 @@ export function LaundryCheckoutScreen({ route, navigation }: Props) {
               <Feather name="calendar" size={16} color={colors.primary} />
             </View>
             <View style={styles.slotInfo}>
-              <Text style={styles.slotTitle}>Drop-off time</Text>
+              <Text style={styles.slotTitle}>{isDropOff ? 'Drop-off time' : 'Appointment time'}</Text>
               <Text style={styles.slotValue}>{slotLabel}</Text>
             </View>
           </View>

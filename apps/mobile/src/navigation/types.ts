@@ -15,9 +15,11 @@ export type RootStackParamList = {
   ScheduleAppointment: { vendor: Vendor; services: Service[] };
   BookingConfirmation: { booking: Booking; vendor: Vendor; services: Service[] };
   BookingSuccess: { booking: Booking; vendor: Vendor };
-  LaundryBooking: { vendor: Vendor };
+  LaundryServiceType: { vendor: Vendor };
+  LaundryBooking: { vendor: Vendor; serviceType: 'self_service' | 'drop_off' };
   LaundryCheckout: {
     vendor: Vendor;
+    serviceType: 'self_service' | 'drop_off';
     clothingItems: number;
     duvets: number;
     serviceIds: string[];

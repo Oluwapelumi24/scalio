@@ -15,6 +15,7 @@ import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
 import { ScheduleAppointmentScreen } from '../screens/ScheduleAppointmentScreen';
 import { BookingConfirmationScreen } from '../screens/BookingConfirmationScreen';
 import { BookingSuccessScreen } from '../screens/BookingSuccessScreen';
+import { LaundryServiceTypeScreen } from '../screens/LaundryServiceTypeScreen';
 import { LaundryBookingScreen } from '../screens/LaundryBookingScreen';
 import { LaundryCheckoutScreen } from '../screens/LaundryCheckoutScreen';
 import { hasSeenOnboarding } from '../lib/preferences';
@@ -42,6 +43,10 @@ export function RootNavigator() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
 
   useEffect(() => {
+    if (__DEV__) {
+      setInitialRoute('Onboarding');
+      return;
+    }
     hasSeenOnboarding().then((seen) => {
       setInitialRoute(seen ? 'Main' : 'Onboarding');
     });
@@ -73,6 +78,7 @@ export function RootNavigator() {
           component={BookingSuccessScreen}
           options={{ gestureEnabled: false }}
         />
+        <Stack.Screen name="LaundryServiceType" component={LaundryServiceTypeScreen} />
         <Stack.Screen name="LaundryBooking" component={LaundryBookingScreen} />
         <Stack.Screen
           name="LaundryCheckout"

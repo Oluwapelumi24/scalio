@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import { listServices } from '../lib/api';
 import {
   BASKET_PRICE_KOBO,
   CLOTHING_SERVICE_NAME,
+  DROPOFF_SURCHARGE_KOBO,
   DUVET_PRICE_KOBO,
   DUVET_SERVICE_NAME,
   calcLaundryOrder,
@@ -26,13 +28,23 @@ import { colors, radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LaundryBooking'>;
 
+// ── Drop-off: time windows ────────────────────────────────────────────────────
 const TIME_WINDOWS = [
   { key: 'morning', label: 'Morning', time: '09:00', display: '9am – 12pm' },
   { key: 'afternoon', label: 'Afternoon', time: '13:00', display: '1pm – 5pm' },
   { key: 'evening', label: 'Evening', time: '17:00', display: '5pm – 8pm' },
 ] as const;
-
 type WindowKey = (typeof TIME_WINDOWS)[number]['key'];
+
+// ── Self-service: specific hour slots ────────────────────────────────────────
+const SELF_SERVICE_HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+function formatHour(h: number): string {
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+  return `${h12}:00 ${ampm}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function nextNDays(n: number): Date[] {
   const days: Date[] = [];
@@ -45,53 +57,106 @@ function nextNDays(n: number): Date[] {
   return days;
 }
 
-function buildSlotISO(date: Date, windowKey: WindowKey): string {
+function buildDropOffSlot(date: Date, windowKey: WindowKey): { iso: string; label: string } {
   const win = TIME_WINDOWS.find((w) => w.key === windowKey)!;
   const [h, m] = win.time.split(':').map(Number);
   const d = new Date(date);
   d.setHours(h, m, 0, 0);
-  return d.toISOString();
+  return { iso: d.toISOString(), label: '' };
 }
 
-function buildSlotLabel(date: Date, dayIndex: number, windowKey: WindowKey): string {
-  const win = TIME_WINDOWS.find((w) => w.key === windowKey)!;
-  let dateStr: string;
-  if (dayIndex === 0) dateStr = 'Today';
-  else if (dayIndex === 1) dateStr = 'Tomorrow';
-  else dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  return `${dateStr} • ${win.label} (${win.display})`;
+function buildSelfServiceSlot(date: Date, hour: number): { iso: string; label: string } {
+  const d = new Date(date);
+  d.setHours(hour, 0, 0, 0);
+  return { iso: d.toISOString(), label: '' };
 }
 
+function dayLabel(day: Date, index: number): string {
+  if (index === 0) return 'Today';
+  if (index === 1) return 'Tomorrow';
+  return day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function buildSlotLabel(
+  date: Date,
+  dayIndex: number,
+  serviceType: 'self_service' | 'drop_off',
+  windowKey?: WindowKey,
+  hour?: number,
+): string {
+  const dStr = dayLabel(date, dayIndex);
+  if (serviceType === 'drop_off' && windowKey) {
+    const win = TIME_WINDOWS.find((w) => w.key === windowKey)!;
+    return `${dStr} • ${win.label} (${win.display})`;
+  }
+  if (serviceType === 'self_service' && hour !== undefined) {
+    return `${dStr} • ${formatHour(hour)}`;
+  }
+  return dStr;
+}
+
+// ── Editable stepper ─────────────────────────────────────────────────────────
 function Stepper({
   value,
-  onDecrement,
-  onIncrement,
+  onChange,
   min = 1,
+  max = 999,
 }: {
   value: number;
-  onDecrement: () => void;
-  onIncrement: () => void;
+  onChange: (v: number) => void;
   min?: number;
+  max?: number;
 }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  function commit(text: string) {
+    const n = parseInt(text, 10);
+    if (!isNaN(n)) onChange(Math.max(min, Math.min(max, n)));
+    setDraft(null);
+  }
+
   return (
     <View style={styles.stepper}>
       <Pressable
-        onPress={onDecrement}
+        onPress={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
         style={[styles.stepBtn, value <= min && styles.stepBtnDisabled]}
       >
         <Text style={[styles.stepIcon, value <= min && styles.stepIconDisabled]}>−</Text>
       </Pressable>
-      <Text style={styles.stepValue}>{value}</Text>
-      <Pressable onPress={onIncrement} style={styles.stepBtn}>
-        <Text style={styles.stepIcon}>+</Text>
+
+      <Pressable onPress={() => inputRef.current?.focus()} style={styles.stepValueWrap}>
+        <TextInput
+          ref={inputRef}
+          style={styles.stepValue}
+          value={draft !== null ? draft : String(value)}
+          onFocus={() => setDraft(String(value))}
+          onChangeText={setDraft}
+          onBlur={() => commit(draft ?? String(value))}
+          onSubmitEditing={() => commit(draft ?? String(value))}
+          keyboardType="number-pad"
+          selectTextOnFocus
+          returnKeyType="done"
+        />
+      </Pressable>
+
+      <Pressable
+        onPress={() => onChange(Math.min(max, value + 1))}
+        disabled={value >= max}
+        style={[styles.stepBtn, value >= max && styles.stepBtnDisabled]}
+      >
+        <Text style={[styles.stepIcon, value >= max && styles.stepIconDisabled]}>+</Text>
       </Pressable>
     </View>
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function LaundryBookingScreen({ route, navigation }: Props) {
-  const { vendor } = route.params;
+  const { vendor, serviceType } = route.params;
+  const isDropOff = serviceType === 'drop_off';
 
   const [services, setServices] = useState<Service[] | null>(null);
   const [clothingEnabled, setClothingEnabled] = useState(false);
@@ -99,7 +164,11 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
   const [clothingItems, setClothingItems] = useState(20);
   const [duvets, setDuvets] = useState(1);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+
+  // Drop-off: window selection
   const [selectedWindow, setSelectedWindow] = useState<WindowKey | null>(null);
+  // Self-service: specific hour selection
+  const [selectedHour, setSelectedHour] = useState<number | null>(null);
 
   const days = useMemo(() => nextNDays(7), []);
 
@@ -114,28 +183,39 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
 
   const effectiveClothing = clothingEnabled ? clothingItems : 0;
   const effectiveDuvets = duvetEnabled ? duvets : 0;
-  const order = calcLaundryOrder(effectiveClothing, effectiveDuvets);
+  const order = calcLaundryOrder(effectiveClothing, effectiveDuvets, isDropOff);
 
-  const isReady =
-    (clothingEnabled || duvetEnabled) &&
-    selectedWindow !== null &&
-    services !== null;
+  const scheduleReady = isDropOff ? selectedWindow !== null : selectedHour !== null;
+  const isReady = (clothingEnabled || duvetEnabled) && scheduleReady && services !== null;
 
   function handleReview() {
-    if (!isReady || !selectedWindow) return;
+    if (!isReady) return;
     const serviceIds: string[] = [];
     if (clothingEnabled && clothingServiceId) serviceIds.push(clothingServiceId);
     if (duvetEnabled && duvetServiceId) serviceIds.push(duvetServiceId);
 
+    const day = days[selectedDayIndex];
+    let slotISO: string;
+    if (isDropOff && selectedWindow) {
+      slotISO = buildDropOffSlot(day, selectedWindow).iso;
+    } else {
+      slotISO = buildSelfServiceSlot(day, selectedHour!).iso;
+    }
+    const slotLabel = buildSlotLabel(day, selectedDayIndex, serviceType, selectedWindow ?? undefined, selectedHour ?? undefined);
+
     navigation.navigate('LaundryCheckout', {
       vendor,
+      serviceType,
       clothingItems: effectiveClothing,
       duvets: effectiveDuvets,
       serviceIds,
-      slotISO: buildSlotISO(days[selectedDayIndex], selectedWindow),
-      slotLabel: buildSlotLabel(days[selectedDayIndex], selectedDayIndex, selectedWindow),
+      slotISO,
+      slotLabel,
     });
   }
+
+  const basketPrice = BASKET_PRICE_KOBO + (isDropOff ? DROPOFF_SURCHARGE_KOBO : 0);
+  const duvetPrice = DUVET_PRICE_KOBO + (isDropOff ? DROPOFF_SURCHARGE_KOBO : 0);
 
   return (
     <View style={styles.root}>
@@ -151,7 +231,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
         {/* What needs washing */}
         <Text style={styles.sectionLabel}>What needs washing?</Text>
 
-        {/* Option A: Clothing */}
+        {/* Clothing & fabrics */}
         <Pressable
           style={[styles.optionCard, clothingEnabled && styles.optionCardSelected]}
           onPress={() => setClothingEnabled((v) => !v)}
@@ -162,7 +242,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
             </View>
             <View style={styles.optionInfo}>
               <Text style={styles.optionTitle}>Clothing & fabrics</Text>
-              <Text style={styles.optionMeta}>{formatNaira(BASKET_PRICE_KOBO)} per basket · 20 items = 1 basket</Text>
+              <Text style={styles.optionMeta}>{formatNaira(basketPrice)} per basket · 20 items = 1 basket</Text>
             </View>
           </View>
 
@@ -170,12 +250,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
             <View style={styles.optionBody}>
               <View style={styles.stepperRow}>
                 <Text style={styles.stepperLabel}>Number of clothing items</Text>
-                <Stepper
-                  value={clothingItems}
-                  min={1}
-                  onDecrement={() => setClothingItems((v) => Math.max(1, v - 1))}
-                  onIncrement={() => setClothingItems((v) => Math.min(200, v + 1))}
-                />
+                <Stepper value={clothingItems} onChange={setClothingItems} min={1} max={200} />
               </View>
               <View style={styles.basketPreview}>
                 <Feather name="package" size={13} color={colors.textMuted} />
@@ -187,7 +262,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
           )}
         </Pressable>
 
-        {/* Option B: Duvets */}
+        {/* Duvets & bedding */}
         <Pressable
           style={[styles.optionCard, duvetEnabled && styles.optionCardSelected]}
           onPress={() => setDuvetEnabled((v) => !v)}
@@ -198,7 +273,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
             </View>
             <View style={styles.optionInfo}>
               <Text style={styles.optionTitle}>Duvets & bedding</Text>
-              <Text style={styles.optionMeta}>{formatNaira(DUVET_PRICE_KOBO)} per duvet</Text>
+              <Text style={styles.optionMeta}>{formatNaira(duvetPrice)} per duvet</Text>
             </View>
           </View>
 
@@ -206,12 +281,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
             <View style={styles.optionBody}>
               <View style={styles.stepperRow}>
                 <Text style={styles.stepperLabel}>Number of duvets</Text>
-                <Stepper
-                  value={duvets}
-                  min={1}
-                  onDecrement={() => setDuvets((v) => Math.max(1, v - 1))}
-                  onIncrement={() => setDuvets((v) => Math.min(20, v + 1))}
-                />
+                <Stepper value={duvets} onChange={setDuvets} min={1} max={20} />
               </View>
               <View style={styles.basketPreview}>
                 <Feather name="package" size={13} color={colors.textMuted} />
@@ -223,8 +293,10 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
           )}
         </Pressable>
 
-        {/* Drop-off time */}
-        <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>Drop-off date</Text>
+        {/* Schedule */}
+        <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>
+          {isDropOff ? 'Drop-off date' : 'Select date'}
+        </Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayPills}>
           {days.map((day, i) => {
@@ -244,23 +316,48 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
           })}
         </ScrollView>
 
-        <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Drop-off window</Text>
-
-        <View style={styles.windowRow}>
-          {TIME_WINDOWS.map((win) => {
-            const selected = selectedWindow === win.key;
-            return (
-              <Pressable
-                key={win.key}
-                style={[styles.windowPill, selected && styles.windowPillSelected]}
-                onPress={() => setSelectedWindow(win.key)}
-              >
-                <Text style={[styles.windowLabel, selected && styles.windowLabelSelected]}>{win.label}</Text>
-                <Text style={[styles.windowDisplay, selected && styles.windowDisplaySelected]}>{win.display}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {isDropOff ? (
+          /* Drop-off: time window picker */
+          <>
+            <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Drop-off window</Text>
+            <View style={styles.windowRow}>
+              {TIME_WINDOWS.map((win) => {
+                const selected = selectedWindow === win.key;
+                return (
+                  <Pressable
+                    key={win.key}
+                    style={[styles.windowPill, selected && styles.windowPillSelected]}
+                    onPress={() => setSelectedWindow(win.key)}
+                  >
+                    <Text style={[styles.windowLabel, selected && styles.windowLabelSelected]}>{win.label}</Text>
+                    <Text style={[styles.windowDisplay, selected && styles.windowDisplaySelected]}>{win.display}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        ) : (
+          /* Self-service: specific time slot picker */
+          <>
+            <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Select time</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timePills}>
+              {SELF_SERVICE_HOURS.map((h) => {
+                const selected = selectedHour === h;
+                return (
+                  <Pressable
+                    key={h}
+                    style={[styles.timePill, selected && styles.timePillSelected]}
+                    onPress={() => setSelectedHour(h)}
+                  >
+                    <Text style={[styles.timePillLabel, selected && styles.timePillLabelSelected]}>
+                      {formatHour(h)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </>
+        )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -320,9 +417,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 2,
   },
-  scroll: {
-    flex: 1,
-  },
+  scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xl,
@@ -340,9 +435,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
-  optionCardSelected: {
-    borderColor: colors.primary,
-  },
+  optionCardSelected: { borderColor: colors.primary },
   optionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,9 +460,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: typography.weight.bold,
   },
-  optionInfo: {
-    flex: 1,
-  },
+  optionInfo: { flex: 1 },
   optionTitle: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
@@ -410,22 +501,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepBtnDisabled: {
-    borderColor: colors.disabled,
-  },
+  stepBtnDisabled: { borderColor: colors.disabled },
   stepIcon: {
     fontSize: 20,
     color: colors.primary,
     lineHeight: 24,
   },
-  stepIconDisabled: {
-    color: colors.disabled,
+  stepIconDisabled: { color: colors.disabled },
+  stepValueWrap: {
+    minWidth: 40,
+    alignItems: 'center',
   },
   stepValue: {
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
     color: colors.primary,
-    minWidth: 32,
+    minWidth: 40,
     textAlign: 'center',
   },
   basketPreview: {
@@ -466,9 +557,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginTop: 2,
   },
-  dayPillTextSelected: {
-    color: '#ffffff',
-  },
+  dayPillTextSelected: { color: '#ffffff' },
   windowRow: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -490,17 +579,34 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     color: colors.primary,
   },
-  windowLabelSelected: {
-    color: '#ffffff',
-  },
+  windowLabelSelected: { color: '#ffffff' },
   windowDisplay: {
     fontSize: 11,
     color: colors.textMuted,
     marginTop: 2,
   },
-  windowDisplaySelected: {
-    color: 'rgba(255,255,255,0.75)',
+  windowDisplaySelected: { color: 'rgba(255,255,255,0.75)' },
+  timePills: {
+    gap: spacing.sm,
+    paddingBottom: spacing.xs,
   },
+  timePill: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  timePillSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  timePillLabel: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: colors.primary,
+  },
+  timePillLabelSelected: { color: '#ffffff' },
   ctaBar: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
@@ -515,9 +621,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  ctaDisabled: {
-    backgroundColor: colors.disabled,
-  },
+  ctaDisabled: { backgroundColor: colors.disabled },
   ctaInner: {
     flexDirection: 'row',
     alignItems: 'center',

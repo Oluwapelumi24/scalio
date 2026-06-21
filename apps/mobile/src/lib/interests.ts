@@ -11,8 +11,9 @@ export const INTERESTS = [
   'Lashes & Brows',
   'Tutors & Coaching',
   'Photography',
-  'Laundromat',
+  'Laundry',
   'Cleaning',
+  'Studio',
 ] as const;
 
 export type Interest = (typeof INTERESTS)[number];

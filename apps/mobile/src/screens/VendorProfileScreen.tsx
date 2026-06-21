@@ -41,7 +41,7 @@ export function VendorProfileScreen({ route, navigation }: Props) {
 
   function handleBook() {
     if (vendor.category === 'Laundromat') {
-      navigation.navigate('LaundryBooking', { vendor });
+      navigation.navigate('LaundryServiceType', { vendor });
     } else {
       navigation.navigate('ServiceSelection', { vendor });
     }

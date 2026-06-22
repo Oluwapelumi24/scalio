@@ -49,7 +49,7 @@ export default async function VendorStaffPage({ params }: { params: Promise<{ ve
                   }
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <StaffActions vendorId={vendorId} staffId={s.id} />
+                  <StaffActions vendorId={vendorId} staffId={s.id} name={s.name} />
                 </td>
               </tr>
             ))}

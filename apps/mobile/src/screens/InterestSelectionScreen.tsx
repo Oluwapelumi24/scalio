@@ -128,7 +128,7 @@ function InterestCell({
               </View>
             ) : (
               <Image
-                source={{ uri: meta.imageUrl }}
+                source={typeof meta.image === 'number' ? meta.image : { uri: meta.image }}
                 style={styles.circleImage}
                 resizeMode="cover"
                 onError={() => setImgError(true)}

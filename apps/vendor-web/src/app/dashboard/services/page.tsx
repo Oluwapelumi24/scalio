@@ -1,10 +1,11 @@
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
-import { CreateServiceForm } from './ServiceForm'
-import { DeleteServiceButton } from './DeleteServiceButton'
+import { ItemList } from './ItemList'
+import { AddItemForm } from './AddItemForm'
 
-interface Service {
+export interface ServiceItem {
   id: string
+  serviceType: 'package' | 'service'
   name: string
   durationMinutes: number
   priceKobo: number
@@ -12,78 +13,46 @@ interface Service {
   depositPercent: number | null
 }
 
-function formatPrice(kobo: number) {
-  return `₦${(kobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`
-}
-
-function formatPaymentMode(mode: string, depositPercent: number | null) {
-  if (mode === 'deposit' && depositPercent) return `Deposit (${depositPercent}%)`
-  return { pay_on_arrival: 'Pay on arrival', deposit: 'Deposit', full_prepayment: 'Full prepayment' }[mode] ?? mode
-}
-
 export default async function ServicesPage() {
   const token = await requireToken()
 
-  let services: Service[] = []
+  let items: ServiceItem[] = []
   try {
-    services = await apiFetch<Service[]>('/vendor-admin/services', token)
+    items = await apiFetch<ServiceItem[]>('/vendor-admin/services', token)
   } catch {
     /* show empty state */
   }
 
+  const packages = items.filter((i) => i.serviceType === 'package')
+  const services = items.filter((i) => i.serviceType === 'service')
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Services</h1>
-
-      {/* Services list */}
-      {services.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center mb-6">
-          <p className="text-gray-400 text-sm">No services yet. Add one below.</p>
+    <div className="space-y-8">
+      {/* Packages */}
+      <section>
+        <div className="mb-3">
+          <h2 className="text-lg font-bold text-gray-900">Packages</h2>
+          <p className="text-sm text-gray-500">Booking types customers select — e.g. &ldquo;Self Service Wash&rdquo;, &ldquo;Drop Off&rdquo;</p>
         </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Name
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Duration
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Price
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Payment
-                </th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {services.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{s.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{s.durationMinutes} min</td>
-                  <td className="px-4 py-3 text-gray-900">{formatPrice(s.priceKobo)}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {formatPaymentMode(s.paymentMode, s.depositPercent)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <DeleteServiceButton serviceId={s.id} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <ItemList items={packages} emptyLabel="No packages yet." />
+        <div className="mt-3">
+          <AddItemForm serviceType="package" placeholder="e.g. Self Service Wash" />
         </div>
-      )}
+      </section>
 
-      {/* Add service form */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Add a service</h2>
-        <CreateServiceForm />
-      </div>
+      <div className="border-t border-gray-200" />
+
+      {/* Services */}
+      <section>
+        <div className="mb-3">
+          <h2 className="text-lg font-bold text-gray-900">Services</h2>
+          <p className="text-sm text-gray-500">What customers are booking — e.g. &ldquo;Duvet Laundry&rdquo;, &ldquo;Clothing Laundry&rdquo;</p>
+        </div>
+        <ItemList items={services} emptyLabel="No services yet." />
+        <div className="mt-3">
+          <AddItemForm serviceType="service" placeholder="e.g. Duvet Laundry" />
+        </div>
+      </section>
     </div>
   )
 }

@@ -12,6 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CurrentStaff } from '../vendor-auth/current-staff.decorator';
+import { Roles } from '../vendor-auth/roles.decorator';
+import { RolesGuard } from '../vendor-auth/roles.guard';
 import { VendorAuthGuard } from '../vendor-auth/vendor-auth.guard';
 import type { VendorPrincipal } from '../vendor-auth/vendor-jwt.strategy';
 import { CreateBlackoutDateDto } from './dto/create-blackout-date.dto';
@@ -19,7 +21,8 @@ import { SetBusinessHoursDto } from './dto/set-business-hours.dto';
 import { VendorScheduleService } from './schedule.service';
 
 @Controller('vendor-admin/schedule')
-@UseGuards(VendorAuthGuard)
+@UseGuards(VendorAuthGuard, RolesGuard)
+@Roles('owner', 'manager')
 export class VendorScheduleController {
   constructor(private readonly scheduleService: VendorScheduleService) {}
 

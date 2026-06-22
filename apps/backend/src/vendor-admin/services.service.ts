@@ -21,9 +21,10 @@ export class VendorServicesService {
       .insert(services)
       .values({
         vendorId,
+        serviceType: dto.serviceType ?? 'service',
         name: dto.name,
-        durationMinutes: dto.durationMinutes,
-        priceKobo: dto.priceKobo,
+        durationMinutes: dto.durationMinutes ?? 0,
+        priceKobo: dto.priceKobo ?? 0,
         paymentMode: dto.paymentMode,
         depositPercent: dto.depositPercent,
       })

@@ -12,6 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CurrentStaff } from '../vendor-auth/current-staff.decorator';
+import { Roles } from '../vendor-auth/roles.decorator';
+import { RolesGuard } from '../vendor-auth/roles.guard';
 import { VendorAuthGuard } from '../vendor-auth/vendor-auth.guard';
 import type { VendorPrincipal } from '../vendor-auth/vendor-jwt.strategy';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -19,7 +21,8 @@ import { UpdateStaffDto } from './dto/update-staff.dto';
 import { VendorStaffService } from './staff.service';
 
 @Controller('vendor-admin/staff')
-@UseGuards(VendorAuthGuard)
+@UseGuards(VendorAuthGuard, RolesGuard)
+@Roles('owner', 'manager')
 export class VendorStaffController {
   constructor(private readonly staffService: VendorStaffService) {}
 
@@ -44,6 +47,7 @@ export class VendorStaffController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles('owner')
   async remove(
     @CurrentStaff() staff: VendorPrincipal,
     @Param('id', ParseUUIDPipe) id: string,

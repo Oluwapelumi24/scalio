@@ -15,6 +15,8 @@ import { AuthModule } from './auth/auth.module';
 import { VendorAuthModule } from './vendor-auth/vendor-auth.module';
 import { VendorModule } from './vendor/vendor.module';
 import { VendorAdminModule } from './vendor-admin/vendor-admin.module';
+import { SuperAdminAuthModule } from './super-admin-auth/super-admin-auth.module';
+import { SuperAdminModule } from './super-admin/super-admin.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { VendorAdminModule } from './vendor-admin/vendor-admin.module';
     VendorModule,
     VendorAdminModule,
     BookingModule,
+    SuperAdminAuthModule,
+    SuperAdminModule,
     PaymentsModule,
     NotificationsModule,
   ],

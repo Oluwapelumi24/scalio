@@ -39,7 +39,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <p className="text-slate-400 text-xs mt-0.5">Vendor Portal</p>
         </div>
 
-        <SidebarNav />
+        <SidebarNav role={staff.role} />
 
         {/* User footer */}
         <div className="px-4 py-4 border-t border-slate-700">

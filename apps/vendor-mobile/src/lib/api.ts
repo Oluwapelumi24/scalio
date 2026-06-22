@@ -95,6 +95,14 @@ export function vendorLogin(email: string, password: string): Promise<LoginRespo
   return req('POST', '/vendor-auth/login', { email, password });
 }
 
+export function requestPasswordReset(email: string): Promise<void> {
+  return req('POST', '/vendor-auth/forgot-password', { email });
+}
+
+export function resetPassword(email: string, code: string, password: string): Promise<LoginResponse> {
+  return req('POST', '/vendor-auth/reset-password', { email, code, password });
+}
+
 // ─── Bookings ────────────────────────────────────────────────────────────────
 
 export async function listBookings(status?: BookingStatus): Promise<VendorBooking[]> {

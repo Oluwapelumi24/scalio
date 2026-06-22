@@ -9,7 +9,9 @@ import {
 } from '@nestjs/common';
 import { CurrentStaff } from './current-staff.decorator';
 import { AcceptVendorInviteDto } from './dto/accept-vendor-invite.dto';
+import { ForgotVendorPasswordDto } from './dto/forgot-vendor-password.dto';
 import { RequestVendorInviteDto } from './dto/request-vendor-invite.dto';
+import { ResetVendorPasswordDto } from './dto/reset-vendor-password.dto';
 import { VendorLoginDto } from './dto/vendor-login.dto';
 import { VendorAuthGuard } from './vendor-auth.guard';
 import { VendorAuthService } from './vendor-auth.service';
@@ -34,6 +36,18 @@ export class VendorAuthController {
   @Post('login')
   login(@Body() dto: VendorLoginDto) {
     return this.vendorAuth.login(dto.email, dto.password);
+  }
+
+  /** Always 204 — never reveals whether the email is known. */
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async forgotPassword(@Body() dto: ForgotVendorPasswordDto) {
+    await this.vendorAuth.requestPasswordReset(dto.email);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() dto: ResetVendorPasswordDto) {
+    return this.vendorAuth.resetPassword(dto.email, dto.code, dto.password);
   }
 
   @Get('me')

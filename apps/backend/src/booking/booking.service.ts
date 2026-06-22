@@ -278,16 +278,16 @@ export class BookingService {
   }
 
   /** Vendor-admin booking list, newest first — optionally narrowed by status. */
-  async listForVendor(vendorId: string, status?: BookingStatus) {
+  async listForVendor(vendorId: string, status?: BookingStatus, staffId?: string) {
+    const conditions = [eq(bookings.vendorId, vendorId)];
+    if (status) conditions.push(eq(bookings.status, status));
+    if (staffId) conditions.push(eq(bookings.staffId, staffId));
+
     const rows = await this.db
       .select()
       .from(bookings)
       .leftJoin(customers, eq(bookings.customerId, customers.id))
-      .where(
-        status
-          ? and(eq(bookings.vendorId, vendorId), eq(bookings.status, status))
-          : eq(bookings.vendorId, vendorId),
-      )
+      .where(and(...conditions))
       .orderBy(desc(bookings.scheduledAt));
 
     const allServiceIds = [...new Set(rows.flatMap((r) => r.bookings.serviceIds))];

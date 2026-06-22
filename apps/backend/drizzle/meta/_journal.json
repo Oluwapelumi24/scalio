@@ -50,6 +50,13 @@
       "when": 1780926460170,
       "tag": "0006_eminent_storm",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782124982901,
+      "tag": "0007_stiff_malice",
+      "breakpoints": true
     }
   ]
 }

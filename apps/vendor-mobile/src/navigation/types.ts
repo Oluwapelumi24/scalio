@@ -2,6 +2,8 @@ import type { VendorBooking, VendorService, Customer, StaffMember } from '../lib
 
 export type RootStackParamList = {
   Login: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { email: string };
   Main: undefined;
   BookingDetail: { booking: VendorBooking };
   Services: undefined;

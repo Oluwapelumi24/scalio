@@ -49,6 +49,13 @@ function makeMail() {
   return { sendVendorInviteEmail: jest.fn().mockResolvedValue(undefined) };
 }
 
+function makePasswordReset() {
+  return {
+    issueCode: jest.fn().mockResolvedValue('123456'),
+    consumeCode: jest.fn(),
+  };
+}
+
 function makeJwt() {
   return { sign: jest.fn().mockReturnValue('signed-jwt') };
 }
@@ -88,6 +95,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         invites as any,
+        makePasswordReset() as any,
         mail as any,
         makeJwt() as any,
         makeConfig({ VENDOR_WEB_URL: 'https://vendors.scalio.app' }) as any,
@@ -112,6 +120,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         invites as any,
+        makePasswordReset() as any,
         mail as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -140,6 +149,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         invites as any,
+        makePasswordReset() as any,
         mail as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -161,6 +171,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         invites as any,
+        makePasswordReset() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -184,6 +195,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         invites as any,
+        makePasswordReset() as any,
         makeMail() as any,
         jwt as any,
         makeConfig() as any,
@@ -217,6 +229,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         makeInvites() as any,
+        makePasswordReset() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -234,6 +247,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         makeInvites() as any,
+        makePasswordReset() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -252,6 +266,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         makeInvites() as any,
+        makePasswordReset() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -274,6 +289,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         makeInvites() as any,
+        makePasswordReset() as any,
         makeMail() as any,
         jwt as any,
         makeConfig() as any,
@@ -305,6 +321,7 @@ describe('VendorAuthService', () => {
       const service = new VendorAuthService(
         db as any,
         makeInvites() as any,
+        makePasswordReset() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,

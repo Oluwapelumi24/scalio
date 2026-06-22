@@ -8,13 +8,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CurrentStaff } from '../vendor-auth/current-staff.decorator';
+import { Roles } from '../vendor-auth/roles.decorator';
+import { RolesGuard } from '../vendor-auth/roles.guard';
 import { VendorAuthGuard } from '../vendor-auth/vendor-auth.guard';
 import type { VendorPrincipal } from '../vendor-auth/vendor-jwt.strategy';
 import { UpdateCustomerNotesDto } from './dto/update-customer-notes.dto';
 import { VendorCustomersService } from './customers.service';
 
 @Controller('vendor-admin/customers')
-@UseGuards(VendorAuthGuard)
+@UseGuards(VendorAuthGuard, RolesGuard)
+@Roles('owner', 'manager', 'front_desk')
 export class VendorCustomersController {
   constructor(private readonly customersService: VendorCustomersService) {}
 

@@ -99,7 +99,7 @@ describe('BookingService', () => {
       expect(db.insert).toHaveBeenCalledTimes(1);
       const [insertedValues] = (
         db.insert.mock.results[0].value as ReturnType<typeof insertResult>
-      ).values.mock.calls[0];
+      ).values.mock.calls[0] as [unknown];
       expect(insertedValues).toMatchObject({
         status: 'confirmed',
         paymentMode: 'pay_on_arrival',
@@ -403,11 +403,27 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const paystack = makePaystack();
       const push = makePush();
-      const rows = [{ id: 'booking-2' }, { id: 'booking-1' }];
+      const bookingRow = {
+        id: 'booking-1', vendorId: 'vendor-1', customerId: 'cust-1', staffId: null,
+        serviceIds: [], status: 'confirmed' as const, scheduledAt: new Date(),
+        durationMinutes: 60, paymentMode: 'pay_on_arrival' as const,
+        amountDueKobo: 0, amountPaidKobo: 0, paystackReference: null,
+        cancellationReason: null, reminderSentAt: null, lockToken: null,
+        createdAt: new Date(), updatedAt: new Date(),
+      };
+      const rows = [{ bookings: bookingRow, customers: null }];
+      // Mock the second select for services lookup (empty result)
+      const serviceOrderBy = jest.fn(() => Promise.resolve([]));
+      const serviceWhere = jest.fn(() => ({ orderBy: serviceOrderBy }));
+      const serviceFrom = jest.fn(() => ({ where: serviceWhere }));
+
       const orderBy = jest.fn(() => Promise.resolve(rows));
       const where = jest.fn(() => ({ orderBy }));
-      const from = jest.fn(() => ({ where }));
-      db.select.mockReturnValueOnce({ from });
+      const leftJoin = jest.fn(() => ({ where }));
+      const from = jest.fn(() => ({ leftJoin }));
+      db.select
+        .mockReturnValueOnce({ from })
+        .mockReturnValueOnce({ from: serviceFrom });
 
       const service = new BookingService(
         db as any,
@@ -418,7 +434,8 @@ describe('BookingService', () => {
 
       const result = await service.listForVendor('vendor-1', 'confirmed');
 
-      expect(result).toBe(rows);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: 'booking-1', status: 'confirmed' });
       expect(where).toHaveBeenCalled();
       expect(orderBy).toHaveBeenCalled();
     });

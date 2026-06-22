@@ -7,6 +7,7 @@ import { DB, type Database } from '../db/db.module';
 import { staff, vendors } from '../db/schema';
 import { MailService } from '../mail/mail.service';
 import { VendorInviteService } from './vendor-invite.service';
+import { VendorPasswordResetService } from './vendor-password-reset.service';
 
 const PASSWORD_HASH_ROUNDS = 10;
 
@@ -26,6 +27,7 @@ export class VendorAuthService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly invites: VendorInviteService,
+    private readonly passwordReset: VendorPasswordResetService,
     private readonly mail: MailService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
@@ -76,6 +78,44 @@ export class VendorAuthService {
       throw new UnauthorizedException(
         'This invite link is invalid or has expired.',
       );
+    }
+
+    return this.issueSession(updated);
+  }
+
+  /**
+   * Quietly sends a 6-digit reset code to the email if it belongs to an
+   * active staff account. Always resolves — never reveals whether the email
+   * is known (same enumeration-protection principle as issueInvite).
+   */
+  async requestPasswordReset(email: string): Promise<void> {
+    const [row] = await this.db
+      .select({ id: staff.id })
+      .from(staff)
+      .where(eq(staff.email, email));
+
+    if (!row) return;
+
+    const code = await this.passwordReset.issueCode(email, row.id);
+    await this.mail.sendPasswordResetEmail(email, code).catch(() => {/* swallow — same pattern as push notifications */});
+  }
+
+  /** Validates the reset code and sets a new password, returning a fresh session. */
+  async resetPassword(email: string, code: string, newPassword: string): Promise<VendorSession> {
+    const staffId = await this.passwordReset.consumeCode(email, code);
+    if (!staffId) {
+      throw new UnauthorizedException('Invalid or expired reset code.');
+    }
+
+    const passwordHash = await hash(newPassword, PASSWORD_HASH_ROUNDS);
+    const [updated] = await this.db
+      .update(staff)
+      .set({ passwordHash, lastLoginAt: new Date() })
+      .where(eq(staff.id, staffId))
+      .returning();
+
+    if (!updated) {
+      throw new UnauthorizedException('Invalid or expired reset code.');
     }
 
     return this.issueSession(updated);

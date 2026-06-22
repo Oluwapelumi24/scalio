@@ -7,6 +7,8 @@ import { VendorAuthGuard } from './vendor-auth.guard';
 import { VendorAuthService } from './vendor-auth.service';
 import { VendorInviteService } from './vendor-invite.service';
 import { VendorJwtStrategy } from './vendor-jwt.strategy';
+import { VendorPasswordResetService } from './vendor-password-reset.service';
+import { RolesGuard } from './roles.guard';
 
 @Module({
   imports: [
@@ -27,9 +29,11 @@ import { VendorJwtStrategy } from './vendor-jwt.strategy';
   providers: [
     VendorAuthService,
     VendorInviteService,
+    VendorPasswordResetService,
     VendorJwtStrategy,
     VendorAuthGuard,
+    RolesGuard,
   ],
-  exports: [VendorAuthService, VendorAuthGuard],
+  exports: [VendorAuthService, VendorAuthGuard, RolesGuard],
 })
 export class VendorAuthModule {}

@@ -3,3 +3,4 @@ export * from './users';
 export * from './customers';
 export * from './bookings';
 export * from './schedule';
+export * from './admins';

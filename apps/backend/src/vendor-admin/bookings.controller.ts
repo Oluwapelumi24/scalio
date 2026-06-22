@@ -12,6 +12,8 @@ import { BookingService } from '../booking/booking.service';
 import type { BookingStatus } from '../booking/booking-state-machine';
 import { bookingStatusValues } from '../db/schema';
 import { CurrentStaff } from '../vendor-auth/current-staff.decorator';
+import { Roles } from '../vendor-auth/roles.decorator';
+import { RolesGuard } from '../vendor-auth/roles.guard';
 import { VendorAuthGuard } from '../vendor-auth/vendor-auth.guard';
 import type { VendorPrincipal } from '../vendor-auth/vendor-jwt.strategy';
 
@@ -22,7 +24,8 @@ function parseStatus(status?: string): BookingStatus | undefined {
 }
 
 @Controller('vendor-admin/bookings')
-@UseGuards(VendorAuthGuard)
+@UseGuards(VendorAuthGuard, RolesGuard)
+@Roles('owner', 'manager', 'practitioner', 'front_desk')
 export class VendorBookingsController {
   constructor(private readonly bookingService: BookingService) {}
 
@@ -31,10 +34,8 @@ export class VendorBookingsController {
     @CurrentStaff() staff: VendorPrincipal,
     @Query('status') status?: string,
   ) {
-    return this.bookingService.listForVendor(
-      staff.vendorId,
-      parseStatus(status),
-    );
+    const staffIdFilter = staff.role === 'practitioner' ? staff.staffId : undefined;
+    return this.bookingService.listForVendor(staff.vendorId, parseStatus(status), staffIdFilter);
   }
 
   @Post(':id/cancel')

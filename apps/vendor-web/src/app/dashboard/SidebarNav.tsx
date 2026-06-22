@@ -3,16 +3,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const navItems = [
-  { href: '/dashboard/bookings', label: 'Bookings' },
-  { href: '/dashboard/services', label: 'Services' },
-  { href: '/dashboard/staff', label: 'Staff' },
-  { href: '/dashboard/schedule', label: 'Schedule' },
-  { href: '/dashboard/customers', label: 'Customers' },
+const ALL_NAV = [
+  { href: '/dashboard/bookings', label: 'Bookings', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
+  { href: '/dashboard/services', label: 'Services', roles: ['owner', 'manager'] },
+  { href: '/dashboard/staff', label: 'Staff', roles: ['owner', 'manager'] },
+  { href: '/dashboard/schedule', label: 'Schedule', roles: ['owner', 'manager'] },
+  { href: '/dashboard/customers', label: 'Customers', roles: ['owner', 'manager', 'front_desk'] },
 ]
 
-export function SidebarNav() {
+export function SidebarNav({ role }: { role: string }) {
   const pathname = usePathname()
+  const navItems = ALL_NAV.filter((item) => item.roles.includes(role))
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">

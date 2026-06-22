@@ -33,10 +33,12 @@ export const staff = pgTable('staff', {
 });
 
 export const paymentModeValues = ['pay_on_arrival', 'deposit', 'full_prepayment'] as const;
+export const serviceTypeValues = ['package', 'service'] as const;
 
 export const services = pgTable('services', {
   id: uuid('id').defaultRandom().primaryKey(),
   vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
+  serviceType: text('service_type', { enum: serviceTypeValues }).notNull().default('service'),
   name: text('name').notNull(),
   durationMinutes: integer('duration_minutes').notNull(),
   priceKobo: integer('price_kobo').notNull(),

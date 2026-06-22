@@ -101,6 +101,10 @@ export function LoginScreen({ navigation }: Props) {
               <Text style={styles.btnLabel}>Sign in</Text>
             )}
           </Pressable>
+
+          <Pressable style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotLabel}>Forgot password?</Text>
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -167,5 +171,11 @@ const styles = StyleSheet.create({
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     color: colors.white,
+  },
+  forgotBtn: { alignItems: 'center', paddingVertical: spacing.sm },
+  forgotLabel: {
+    fontSize: typography.size.base,
+    color: colors.accent,
+    fontWeight: typography.weight.semibold,
   },
 });

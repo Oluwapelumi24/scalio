@@ -1,15 +1,11 @@
-import {
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-  MinLength,
-} from 'class-validator';
-import { paymentModeValues } from '../../db/schema';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
+import { paymentModeValues, serviceTypeValues } from '../../db/schema';
 
 export class UpdateServiceDto {
+  @IsOptional()
+  @IsIn(serviceTypeValues)
+  serviceType?: (typeof serviceTypeValues)[number];
+
   @IsOptional()
   @IsString()
   @MinLength(1)

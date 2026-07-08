@@ -58,6 +58,33 @@ export async function acceptInviteAction(
   redirect('/dashboard')
 }
 
+export async function registerAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const ownerName = formData.get('ownerName') as string
+  const businessName = formData.get('businessName') as string
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const confirm = formData.get('confirm') as string
+  const registrationNumber = (formData.get('registrationNumber') as string) || undefined
+
+  if (password !== confirm) return { error: 'Passwords do not match.' }
+  if (password.length < 8) return { error: 'Password must be at least 8 characters.' }
+
+  let token: string
+  try {
+    const data = await apiFetch<VendorSession>('/vendor-auth/register', null, {
+      method: 'POST',
+      body: JSON.stringify({ ownerName, businessName, email, password, registrationNumber }),
+    })
+    token = data.accessToken
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message }
+    throw err
+  }
+
+  await setToken(token)
+  redirect('/dashboard')
+}
+
 export async function forgotPasswordAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = formData.get('email') as string
   try {

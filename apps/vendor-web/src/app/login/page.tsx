@@ -68,6 +68,13 @@ export default function LoginPage() {
             </p>
           </form>
         </div>
+
+        <p className="text-center text-sm text-gray-400 mt-4">
+          New to Scalio?{' '}
+          <Link href="/register" className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors">
+            Register your business
+          </Link>
+        </p>
       </div>
     </div>
   )

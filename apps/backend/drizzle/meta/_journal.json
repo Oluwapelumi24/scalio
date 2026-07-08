@@ -64,6 +64,13 @@
       "when": 1782593995313,
       "tag": "0008_vendor_registration_number",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783521255867,
+      "tag": "0009_waitlist_signups",
+      "breakpoints": true
     }
   ]
 }

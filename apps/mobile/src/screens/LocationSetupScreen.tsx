@@ -103,7 +103,7 @@ export function LocationSetupScreen({ navigation }: Props) {
         <View style={styles.hero}>
           <BackButton onPress={() => navigation.goBack()} />
           <View style={styles.iconBadge}>
-            <Feather name="map-pin" size={36} color="#FF6F91" />
+            <Feather name="map-pin" size={36} color="#1E3A8A" />
           </View>
           <Text style={styles.title}>Where are you based?</Text>
           <Text style={styles.subtitle}>
@@ -125,7 +125,7 @@ export function LocationSetupScreen({ navigation }: Props) {
             onPress={() => void handleUseDetected()}
           >
             <View style={styles.detectedCardLeft}>
-              <Feather name="navigation" size={18} color="#FF6F91" />
+              <Feather name="navigation" size={18} color="#1E3A8A" />
               <View>
                 <Text style={styles.detectedCity}>{locState.label}</Text>
                 <Text style={styles.detectedHint}>Tap to use this location</Text>
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#FF6F9122',
+    backgroundColor: '#1E3A8A22',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,

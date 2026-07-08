@@ -39,7 +39,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {state?.error && (
+            {state !== null && 'error' in state && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{state.error}</p>
             )}
 

@@ -5,7 +5,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
-import { OnboardingInfoScreen } from '../screens/OnboardingInfoScreen';
 import { InterestSelectionScreen } from '../screens/InterestSelectionScreen';
 import { LocationSetupScreen } from '../screens/LocationSetupScreen';
 import { MainTabNavigator } from './MainTabNavigator';
@@ -60,7 +59,6 @@ export function RootNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        <Stack.Screen name="OnboardingInfo" component={OnboardingInfoScreen} />
         <Stack.Screen name="InterestSelection" component={InterestSelectionScreen} />
         <Stack.Screen name="LocationSetup" component={LocationSetupScreen} />
         <Stack.Screen name="Main" component={MainTabNavigator} />

@@ -99,7 +99,7 @@ describe('BookingService', () => {
       expect(db.insert).toHaveBeenCalledTimes(1);
       const [insertedValues] = (
         db.insert.mock.results[0].value as ReturnType<typeof insertResult>
-      ).values.mock.calls[0] as [unknown];
+      ).values.mock.calls[0] as unknown as [unknown];
       expect(insertedValues).toMatchObject({
         status: 'confirmed',
         paymentMode: 'pay_on_arrival',

@@ -95,6 +95,10 @@ export function vendorLogin(email: string, password: string): Promise<LoginRespo
   return req('POST', '/vendor-auth/login', { email, password });
 }
 
+export function vendorRegister(ownerName: string, businessName: string, email: string, password: string, registrationNumber?: string): Promise<LoginResponse> {
+  return req('POST', '/vendor-auth/register', { ownerName, businessName, email, password, ...(registrationNumber ? { registrationNumber } : {}) });
+}
+
 export function requestPasswordReset(email: string): Promise<void> {
   return req('POST', '/vendor-auth/forgot-password', { email });
 }

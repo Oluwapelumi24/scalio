@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,10 +22,12 @@ export function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   async function handleLogin() {
+    setError('');
     if (!email.trim() || !password) {
-      Alert.alert('Missing fields', 'Please enter your email and password.');
+      setError('Please enter your email and password.');
       return;
     }
     setLoading(true);
@@ -42,7 +43,7 @@ export function LoginScreen({ navigation }: Props) {
       });
       navigation.replace('Main');
     } catch (err) {
-      Alert.alert('Login failed', err instanceof Error ? err.message : 'Please check your credentials.');
+      setError(err instanceof Error ? err.message : 'Incorrect email or password.');
     } finally {
       setLoading(false);
     }
@@ -50,6 +51,7 @@ export function LoginScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+      <View style={styles.fill}>
       <KeyboardAvoidingView
         style={styles.inner}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -90,6 +92,12 @@ export function LoginScreen({ navigation }: Props) {
             />
           </View>
 
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
           <Pressable
             style={[styles.btn, loading && styles.btnDisabled]}
             onPress={() => void handleLogin()}
@@ -105,14 +113,21 @@ export function LoginScreen({ navigation }: Props) {
           <Pressable style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
             <Text style={styles.forgotLabel}>Forgot password?</Text>
           </Pressable>
+
+          <Pressable style={styles.registerRow} onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.registerPrompt}>New to Scalio?</Text>
+            <Text style={styles.registerLink}>Register your business →</Text>
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  fill: { flex: 1, backgroundColor: colors.background },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.xl },
   header: { alignItems: 'center', marginBottom: spacing.xxxl },
   logo: {
@@ -172,10 +187,39 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     color: colors.white,
   },
+  registerRow: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: spacing.sm,
+  },
+  registerPrompt: {
+    fontSize: typography.size.base,
+    color: colors.textMuted,
+  },
+  registerLink: {
+    fontSize: typography.size.lg,
+    color: colors.accent,
+    fontWeight: typography.weight.bold,
+  },
   forgotBtn: { alignItems: 'center', paddingVertical: spacing.sm },
   forgotLabel: {
     fontSize: typography.size.base,
     color: colors.accent,
     fontWeight: typography.weight.semibold,
+  },
+  errorBox: {
+    backgroundColor: colors.errorLight,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  errorText: {
+    fontSize: typography.size.sm,
+    color: colors.error,
+    fontWeight: typography.weight.medium,
   },
 });

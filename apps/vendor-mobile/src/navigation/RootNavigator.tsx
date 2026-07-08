@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { MainTabNavigator } from './MainTabNavigator';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { RegisterScreen } from '../screens/RegisterScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '../screens/ResetPasswordScreen';
@@ -19,10 +21,12 @@ import { loadSession } from '../lib/session';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
-  const [initialRoute, setInitialRoute] = useState<'Login' | 'Main' | null>(null);
+  const [initialRoute, setInitialRoute] = useState<'Onboarding' | 'Login' | 'Main' | null>(null);
 
   useEffect(() => {
-    loadSession().then((s) => setInitialRoute(s ? 'Main' : 'Login'));
+    loadSession().then((session) => {
+      setInitialRoute(session ? 'Main' : 'Onboarding');
+    });
   }, []);
 
   if (!initialRoute) return null;
@@ -30,6 +34,8 @@ export function RootNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />

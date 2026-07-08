@@ -9,7 +9,7 @@ interface VendorSession {
   staff: { id: string; vendorId: string; name: string; email: string | null; role: string }
 }
 
-export type AuthState = { error: string } | null
+export type AuthState = { error: string } | { success: true } | null
 
 export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = formData.get('email') as string
@@ -55,6 +55,44 @@ export async function acceptInviteAction(
   }
 
   await setToken(accessToken)
+  redirect('/dashboard')
+}
+
+export async function forgotPasswordAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const email = formData.get('email') as string
+  try {
+    await apiFetch('/vendor-auth/forgot-password', null, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  } catch {
+    /* never reveal whether email exists */
+  }
+  return { success: true }
+}
+
+export async function resetPasswordAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const email = formData.get('email') as string
+  const code = formData.get('code') as string
+  const password = formData.get('password') as string
+  const confirm = formData.get('confirm') as string
+
+  if (password !== confirm) return { error: 'Passwords do not match.' }
+  if (password.length < 8) return { error: 'Password must be at least 8 characters.' }
+
+  let token: string
+  try {
+    const data = await apiFetch<VendorSession>('/vendor-auth/reset-password', null, {
+      method: 'POST',
+      body: JSON.stringify({ email, code, password }),
+    })
+    token = data.accessToken
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message }
+    throw err
+  }
+
+  await setToken(token)
   redirect('/dashboard')
 }
 

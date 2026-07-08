@@ -32,18 +32,18 @@ type Props = CompositeScreenProps<
 const STATUS_COLOR: Record<BookingStatus, string> = {
   pending_payment: colors.warning,
   confirmed: colors.accent,
-  completed: colors.accent,
-  cancelled_by_customer: colors.accent,
-  cancelled_by_vendor: colors.accent,
+  completed: colors.success,
+  cancelled_by_customer: colors.cancelled,
+  cancelled_by_vendor: colors.cancelled,
   no_show: colors.textMuted,
 };
 
 const STATUS_BG: Record<BookingStatus, string> = {
   pending_payment: colors.warningLight,
   confirmed: colors.accentLight,
-  completed: colors.accentLight,
-  cancelled_by_customer: colors.accentLight,
-  cancelled_by_vendor: colors.accentLight,
+  completed: colors.successLight,
+  cancelled_by_customer: colors.cancelledLight,
+  cancelled_by_vendor: colors.cancelledLight,
   no_show: colors.surface,
 };
 
@@ -99,12 +99,12 @@ export function DashboardScreen({ navigation }: Props) {
 
   const today = new Date().toDateString();
   const todayBookings = bookings.filter((b) => new Date(b.scheduledAt).toDateString() === today);
-  const pending = bookings.filter((b) => b.status === 'pending').length;
+  const pending = bookings.filter((b) => b.status === 'pending_payment').length;
   const todayRevenue = todayBookings
     .filter((b) => b.status === 'completed')
     .reduce((sum, b) => sum + b.totalAmountKobo, 0);
   const upcoming = bookings
-    .filter((b) => ['pending', 'confirmed'].includes(b.status) && new Date(b.scheduledAt) > new Date())
+    .filter((b) => ['pending_payment', 'confirmed'].includes(b.status) && new Date(b.scheduledAt) > new Date())
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
     .slice(0, 5);
 

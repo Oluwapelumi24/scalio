@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState } from 'react'
 import { loginAction } from '@/app/actions/auth'
 
@@ -48,7 +49,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {state?.error && (
+            {state !== null && 'error' in state && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{state.error}</p>
             )}
 
@@ -59,6 +60,12 @@ export default function LoginPage() {
             >
               {pending ? 'Signing in…' : 'Sign in'}
             </button>
+
+            <p className="text-center text-xs text-gray-400 mt-1">
+              <Link href="/forgot-password" className="hover:text-gray-600 transition-colors">
+                Forgot password?
+              </Link>
+            </p>
           </form>
         </div>
       </div>

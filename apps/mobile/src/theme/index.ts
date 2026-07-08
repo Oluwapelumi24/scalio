@@ -6,7 +6,10 @@
 
 export const colors = {
   primary: '#111111',
+  accent: '#1e3a8a',
+  accentLight: '#dbeafe',
   background: '#ffffff',
+  surface: '#f4f6fb',
   border: '#eeeeee',
   borderStrong: '#dddddd',
   textMuted: '#777777',
@@ -16,6 +19,12 @@ export const colors = {
   disabled: '#cccccc',
   error: '#b00020',
   pending: '#b8860b',
+  success: '#0d9488',
+  successLight: '#ccfbf1',
+  warning: '#d97706',
+  warningLight: '#fffbeb',
+  cancelled: '#dc2626',
+  cancelledLight: '#fef2f2',
   white: '#ffffff',
 } as const;
 
@@ -40,6 +49,7 @@ export const radius = {
 export const typography = {
   weight: {
     regular: '400',
+    medium: '500',
     semibold: '600',
     bold: '700',
   },

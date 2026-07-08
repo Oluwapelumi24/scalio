@@ -6,7 +6,7 @@ import { forgotPasswordAction } from '@/app/actions/auth'
 
 export default function ForgotPasswordPage() {
   const [state, formAction, pending] = useActionState(forgotPasswordAction, null)
-  const sent = state === null && pending === false
+  const sent = state !== null && 'success' in state
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

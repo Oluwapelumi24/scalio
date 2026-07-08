@@ -39,9 +39,9 @@ const FILTERS: { key: BookingStatus | 'all'; label: string }[] = [
 const STATUS_COLOR: Record<BookingStatus, string> = {
   pending_payment: colors.warning,
   confirmed: colors.accent,
-  completed: colors.accent,
-  cancelled_by_customer: colors.accent,
-  cancelled_by_vendor: colors.accent,
+  completed: colors.success,
+  cancelled_by_customer: colors.cancelled,
+  cancelled_by_vendor: colors.cancelled,
   no_show: colors.textMuted,
 };
 

@@ -5,7 +5,6 @@ import type { Booking, Service, Vendor } from '@scalio/shared-types';
 
 export type RootStackParamList = {
   Onboarding: undefined;
-  OnboardingInfo: undefined;
   InterestSelection: undefined;
   LocationSetup: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;

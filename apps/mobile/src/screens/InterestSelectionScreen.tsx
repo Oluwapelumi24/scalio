@@ -192,6 +192,9 @@ export function InterestSelectionScreen({ navigation }: Props) {
     <View style={styles.root}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={8}>
+            <Feather name="arrow-left" size={22} color={colors.primary} />
+          </Pressable>
           <Text style={styles.title}>What are you into?</Text>
           <Text style={styles.subtitle}>
             Pick your interests and we'll personalise your feed.
@@ -272,6 +275,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
+  },
+  backButton: {
+    marginBottom: spacing.sm,
+    alignSelf: 'flex-start',
   },
   title: {
     fontSize: 26,

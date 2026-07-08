@@ -10,6 +10,7 @@ import {
 import { CurrentStaff } from './current-staff.decorator';
 import { AcceptVendorInviteDto } from './dto/accept-vendor-invite.dto';
 import { ForgotVendorPasswordDto } from './dto/forgot-vendor-password.dto';
+import { RegisterVendorDto } from './dto/register-vendor.dto';
 import { RequestVendorInviteDto } from './dto/request-vendor-invite.dto';
 import { ResetVendorPasswordDto } from './dto/reset-vendor-password.dto';
 import { VendorLoginDto } from './dto/vendor-login.dto';
@@ -31,6 +32,11 @@ export class VendorAuthController {
   @Post('accept-invite')
   acceptInvite(@Body() dto: AcceptVendorInviteDto) {
     return this.vendorAuth.acceptInvite(dto.token, dto.password);
+  }
+
+  @Post('register')
+  register(@Body() dto: RegisterVendorDto) {
+    return this.vendorAuth.register(dto.ownerName, dto.businessName, dto.email, dto.password, dto.registrationNumber);
   }
 
   @Post('login')

@@ -30,7 +30,7 @@ export class VendorService {
   // TODO: paginate + support search/category/location filters once the
   // vendor directory grows beyond what a single page can hold.
   async list() {
-    return this.db.select().from(vendors);
+    return this.db.select().from(vendors).where(eq(vendors.approvalStatus, 'approved'));
   }
 
   async getById(vendorId: string) {

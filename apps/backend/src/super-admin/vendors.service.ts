@@ -13,6 +13,14 @@ export class SuperAdminVendorsService {
     return this.db.select().from(vendors).orderBy(desc(vendors.createdAt));
   }
 
+  listPending() {
+    return this.db
+      .select()
+      .from(vendors)
+      .where(eq(vendors.approvalStatus, 'pending_review'))
+      .orderBy(desc(vendors.createdAt));
+  }
+
   create(dto: CreateVendorDto) {
     return this.db
       .insert(vendors)
@@ -22,9 +30,13 @@ export class SuperAdminVendorsService {
         category: dto.category,
         logoUrl: dto.logoUrl,
         themeColor: dto.themeColor,
+        description: dto.description,
+        ownerName: dto.ownerName,
+        ownerEmail: dto.ownerEmail,
         address: dto.address,
         averageDaysBetweenVisits: dto.averageDaysBetweenVisits,
         featured: dto.featured ?? false,
+        approvalStatus: 'pending_review',
       })
       .returning()
       .then(([v]) => v);
@@ -40,6 +52,38 @@ export class SuperAdminVendorsService {
     const [updated] = await this.db
       .update(vendors)
       .set({ ...dto, updatedAt: new Date() })
+      .where(eq(vendors.id, vendorId))
+      .returning();
+    if (!updated) throw new NotFoundException(`Vendor ${vendorId} not found`);
+    return updated;
+  }
+
+  async approve(vendorId: string, adminId: string) {
+    const [updated] = await this.db
+      .update(vendors)
+      .set({
+        approvalStatus: 'approved',
+        reviewNote: null,
+        reviewedAt: new Date(),
+        reviewedById: adminId,
+        updatedAt: new Date(),
+      })
+      .where(eq(vendors.id, vendorId))
+      .returning();
+    if (!updated) throw new NotFoundException(`Vendor ${vendorId} not found`);
+    return updated;
+  }
+
+  async reject(vendorId: string, adminId: string, note?: string) {
+    const [updated] = await this.db
+      .update(vendors)
+      .set({
+        approvalStatus: 'rejected',
+        reviewNote: note ?? null,
+        reviewedAt: new Date(),
+        reviewedById: adminId,
+        updatedAt: new Date(),
+      })
       .where(eq(vendors.id, vendorId))
       .returning();
     if (!updated) throw new NotFoundException(`Vendor ${vendorId} not found`);

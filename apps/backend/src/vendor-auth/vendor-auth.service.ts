@@ -1,8 +1,8 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
-import { eq, type InferSelectModel } from 'drizzle-orm';
+import { eq, like, type InferSelectModel } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
 import { staff, vendors } from '../db/schema';
 import { MailService } from '../mail/mail.service';
@@ -121,6 +121,33 @@ export class VendorAuthService {
     return this.issueSession(updated);
   }
 
+  async register(
+    ownerName: string,
+    businessName: string,
+    email: string,
+    password: string,
+    registrationNumber?: string,
+  ): Promise<VendorSession> {
+    const [existing] = await this.db.select({ id: staff.id }).from(staff).where(eq(staff.email, email));
+    if (existing) throw new ConflictException('An account with this email already exists.');
+
+    const baseSlug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const slug = await this.findUniqueSlug(baseSlug);
+    const passwordHash = await hash(password, PASSWORD_HASH_ROUNDS);
+
+    const [vendor] = await this.db
+      .insert(vendors)
+      .values({ slug, businessName, category: 'Other', ownerName, ownerEmail: email, approvalStatus: 'pending_review', registrationNumber: registrationNumber ?? null })
+      .returning();
+
+    const [owner] = await this.db
+      .insert(staff)
+      .values({ vendorId: vendor.id, name: ownerName, email, role: 'owner', passwordHash })
+      .returning();
+
+    return this.issueSession(owner);
+  }
+
   async login(email: string, password: string): Promise<VendorSession> {
     const [row] = await this.db
       .select()
@@ -164,6 +191,18 @@ export class VendorAuthService {
         role: row.role,
       },
     };
+  }
+
+  private async findUniqueSlug(baseSlug: string): Promise<string> {
+    const rows = await this.db
+      .select({ slug: vendors.slug })
+      .from(vendors)
+      .where(like(vendors.slug, `${baseSlug}%`));
+    const taken = new Set(rows.map(r => r.slug));
+    if (!taken.has(baseSlug)) return baseSlug;
+    let i = 2;
+    while (taken.has(`${baseSlug}-${i}`)) i++;
+    return `${baseSlug}-${i}`;
   }
 
   private vendorWebUrl(): string {

@@ -1,6 +1,8 @@
 import type { VendorBooking, VendorService, Customer, StaffMember } from '../lib/api';
 
 export type RootStackParamList = {
+  Onboarding: undefined;
+  Register: undefined;
   Login: undefined;
   ForgotPassword: undefined;
   ResetPassword: { email: string };

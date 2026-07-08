@@ -9,7 +9,7 @@ interface AdminSession {
   admin: { id: string; name: string; email: string }
 }
 
-export type AuthState = { error: string } | null
+export type AuthState = { error: string } | { success: true } | null
 
 export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = formData.get('email') as string
@@ -65,7 +65,7 @@ export async function forgotPasswordAction(_prev: AuthState, formData: FormData)
   } catch {
     /* never reveal whether email exists */
   }
-  return null
+  return { success: true }
 }
 
 export async function resetPasswordAction(_prev: AuthState, formData: FormData): Promise<AuthState> {

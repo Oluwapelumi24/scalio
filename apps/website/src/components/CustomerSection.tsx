@@ -1,6 +1,6 @@
 import { Search, CalendarCheck, Wallet } from 'lucide-react'
 import { Reveal } from './Reveal'
-import { CategoryGrid } from './CategoryGrid'
+import { CategoryCarousel } from './CategoryCarousel'
 import { AppBadges } from './AppBadges'
 
 const STEPS = [
@@ -55,7 +55,7 @@ export function CustomerSection() {
           Salons, spas, barbers, photographers, and more — thirteen categories and counting.
         </p>
         <div className="mt-6">
-          <CategoryGrid />
+          <CategoryCarousel />
         </div>
       </Reveal>
 

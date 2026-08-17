@@ -196,7 +196,7 @@ export function OnboardingScreen({ navigation }: Props) {
         {/* Secondary */}
         <Pressable
           style={({ pressed }) => [s.signIn, pressed && { opacity: 0.7 }]}
-          onPress={() => navigation.navigate('SignUp')}
+          onPress={() => navigation.navigate('SignIn', { mode: 'onboarding' })}
         >
           <Text style={s.signInLabel}>Sign in</Text>
         </Pressable>

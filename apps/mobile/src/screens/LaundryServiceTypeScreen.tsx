@@ -4,9 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import {
-  BASKET_PRICE_KOBO,
-  DROPOFF_SURCHARGE_KOBO,
+  DROPOFF_PRICE_KOBO,
   DUVET_PRICE_KOBO,
+  SELF_SERVICE_PRICE_KOBO,
   formatNaira,
 } from '../lib/laundry';
 import { colors, radius, spacing, typography } from '../theme';
@@ -40,7 +40,7 @@ export function LaundryServiceTypeScreen({ route, navigation }: Props) {
             <Text style={styles.cardTitle}>Self-service</Text>
             <Text style={styles.cardDesc}>Use our machines at the laundromat. Pick your own time slot.</Text>
             <Text style={styles.cardPrice}>
-              From {formatNaira(BASKET_PRICE_KOBO)} / basket
+              {formatNaira(SELF_SERVICE_PRICE_KOBO)} wash{'  ·  '}{formatNaira(DUVET_PRICE_KOBO)} / duvet
             </Text>
           </View>
           <Feather name="chevron-right" size={20} color={colors.textMuted} />
@@ -55,8 +55,7 @@ export function LaundryServiceTypeScreen({ route, navigation }: Props) {
             <Text style={styles.cardTitle}>Drop-off & collect</Text>
             <Text style={styles.cardDesc}>Leave it with us, we'll wash and have it ready for you.</Text>
             <Text style={styles.cardPrice}>
-              From {formatNaira(BASKET_PRICE_KOBO + DROPOFF_SURCHARGE_KOBO)} / basket
-              {'  ·  '}{formatNaira(DUVET_PRICE_KOBO + DROPOFF_SURCHARGE_KOBO)} / duvet
+              {formatNaira(DROPOFF_PRICE_KOBO)} wash{'  ·  '}{formatNaira(DUVET_PRICE_KOBO)} / duvet
             </Text>
           </View>
           <Feather name="chevron-right" size={20} color={colors.textMuted} />

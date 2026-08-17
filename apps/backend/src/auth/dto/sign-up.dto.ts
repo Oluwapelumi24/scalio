@@ -7,4 +7,9 @@ export class SignUpDto {
 
   @IsEmail()
   email!: string;
+
+  // Minimal on purpose — length is the only bar, no complexity rules to fight.
+  @IsString()
+  @MinLength(8)
+  password!: string;
 }

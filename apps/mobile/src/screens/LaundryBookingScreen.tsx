@@ -15,14 +15,12 @@ import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { listServices } from '../lib/api';
 import {
-  BASKET_PRICE_KOBO,
-  CLOTHING_SERVICE_NAME,
-  DROPOFF_SURCHARGE_KOBO,
   DUVET_PRICE_KOBO,
   DUVET_SERVICE_NAME,
   calcLaundryOrder,
-  clothingToBaskets,
   formatNaira,
+  washPriceKobo,
+  washServiceName,
 } from '../lib/laundry';
 import { colors, radius, spacing, typography } from '../theme';
 
@@ -159,9 +157,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
   const isDropOff = serviceType === 'drop_off';
 
   const [services, setServices] = useState<Service[] | null>(null);
-  const [clothingEnabled, setClothingEnabled] = useState(false);
   const [duvetEnabled, setDuvetEnabled] = useState(false);
-  const [clothingItems, setClothingItems] = useState(20);
   const [duvets, setDuvets] = useState(1);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
 
@@ -170,7 +166,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
   // Self-service: specific hour selection
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
 
-  const days = useMemo(() => nextNDays(7), []);
+  const days = useMemo(() => nextNDays(21), []);
 
   useEffect(() => {
     listServices(vendor.id)
@@ -178,20 +174,18 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
       .catch(() => setServices([]));
   }, [vendor.id]);
 
-  const clothingServiceId = services?.find((s) => s.name === CLOTHING_SERVICE_NAME)?.id ?? null;
+  const washServiceId = services?.find((s) => s.name === washServiceName(serviceType))?.id ?? null;
   const duvetServiceId = services?.find((s) => s.name === DUVET_SERVICE_NAME)?.id ?? null;
 
-  const effectiveClothing = clothingEnabled ? clothingItems : 0;
   const effectiveDuvets = duvetEnabled ? duvets : 0;
-  const order = calcLaundryOrder(effectiveClothing, effectiveDuvets, isDropOff);
+  const order = calcLaundryOrder(effectiveDuvets, serviceType);
 
   const scheduleReady = isDropOff ? selectedWindow !== null : selectedHour !== null;
-  const isReady = (clothingEnabled || duvetEnabled) && scheduleReady && services !== null;
+  const isReady = scheduleReady && services !== null && washServiceId !== null;
 
   function handleReview() {
-    if (!isReady) return;
-    const serviceIds: string[] = [];
-    if (clothingEnabled && clothingServiceId) serviceIds.push(clothingServiceId);
+    if (!isReady || !washServiceId) return;
+    const serviceIds: string[] = [washServiceId];
     if (duvetEnabled && duvetServiceId) serviceIds.push(duvetServiceId);
 
     const day = days[selectedDayIndex];
@@ -206,7 +200,6 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
     navigation.navigate('LaundryCheckout', {
       vendor,
       serviceType,
-      clothingItems: effectiveClothing,
       duvets: effectiveDuvets,
       serviceIds,
       slotISO,
@@ -214,8 +207,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
     });
   }
 
-  const basketPrice = BASKET_PRICE_KOBO + (isDropOff ? DROPOFF_SURCHARGE_KOBO : 0);
-  const duvetPrice = DUVET_PRICE_KOBO + (isDropOff ? DROPOFF_SURCHARGE_KOBO : 0);
+  const washPrice = washPriceKobo(serviceType);
 
   return (
     <View style={styles.root}>
@@ -228,41 +220,22 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
       </SafeAreaView>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* What needs washing */}
-        <Text style={styles.sectionLabel}>What needs washing?</Text>
+        {/* Wash summary — flat fee for the chosen service type, always included */}
+        <Text style={styles.sectionLabel}>Your wash</Text>
 
-        {/* Clothing & fabrics */}
-        <Pressable
-          style={[styles.optionCard, clothingEnabled && styles.optionCardSelected]}
-          onPress={() => setClothingEnabled((v) => !v)}
-        >
+        <View style={styles.optionCard}>
           <View style={styles.optionHeader}>
-            <View style={[styles.checkbox, clothingEnabled && styles.checkboxSelected]}>
-              {clothingEnabled && <Text style={styles.checkmark}>✓</Text>}
-            </View>
             <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>Clothing & fabrics</Text>
-              <Text style={styles.optionMeta}>{formatNaira(basketPrice)} per basket · 20 items = 1 basket</Text>
+              <Text style={styles.optionTitle}>{washServiceName(serviceType)}</Text>
+              <Text style={styles.optionMeta}>Flat rate, included in every order</Text>
             </View>
+            <Text style={styles.washPrice}>{formatNaira(washPrice)}</Text>
           </View>
+        </View>
 
-          {clothingEnabled && (
-            <View style={styles.optionBody}>
-              <View style={styles.stepperRow}>
-                <Text style={styles.stepperLabel}>Number of clothing items</Text>
-                <Stepper value={clothingItems} onChange={setClothingItems} min={1} max={200} />
-              </View>
-              <View style={styles.basketPreview}>
-                <Feather name="package" size={13} color={colors.textMuted} />
-                <Text style={styles.basketPreviewText}>
-                  {clothingItems} item{clothingItems !== 1 ? 's' : ''} → {clothingToBaskets(clothingItems)} basket{clothingToBaskets(clothingItems) !== 1 ? 's' : ''} → {formatNaira(order.clothingSubtotalKobo)}
-                </Text>
-              </View>
-            </View>
-          )}
-        </Pressable>
+        {/* Duvets & bedding — optional add-on */}
+        <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>Add duvets & bedding?</Text>
 
-        {/* Duvets & bedding */}
         <Pressable
           style={[styles.optionCard, duvetEnabled && styles.optionCardSelected]}
           onPress={() => setDuvetEnabled((v) => !v)}
@@ -273,7 +246,7 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
             </View>
             <View style={styles.optionInfo}>
               <Text style={styles.optionTitle}>Duvets & bedding</Text>
-              <Text style={styles.optionMeta}>{formatNaira(duvetPrice)} per duvet</Text>
+              <Text style={styles.optionMeta}>{formatNaira(DUVET_PRICE_KOBO)} per duvet</Text>
             </View>
           </View>
 
@@ -372,14 +345,14 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
             disabled={!isReady}
             onPress={handleReview}
           >
-            {(clothingEnabled || duvetEnabled) && order.totalKobo > 0 ? (
+            {isReady ? (
               <View style={styles.ctaInner}>
                 <Text style={styles.ctaTotal}>{formatNaira(order.totalKobo)}</Text>
                 <Text style={styles.ctaLabel}>Review order</Text>
                 <Feather name="arrow-right" size={18} color="#ffffff" />
               </View>
             ) : (
-              <Text style={styles.ctaLabel}>Select a service to continue</Text>
+              <Text style={styles.ctaLabel}>Select a date and time to continue</Text>
             )}
           </Pressable>
         )}
@@ -470,6 +443,11 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     color: colors.textMuted,
     marginTop: 2,
+  },
+  washPrice: {
+    fontSize: typography.size.md,
+    fontWeight: typography.weight.bold,
+    color: colors.primary,
   },
   optionBody: {
     marginTop: spacing.lg,

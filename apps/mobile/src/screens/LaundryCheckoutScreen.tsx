@@ -15,7 +15,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Booking } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { createBooking, initiateBookingPayment, type PaymentCheckout } from '../lib/api';
-import { calcLaundryOrder, formatNaira, laundryDurationMinutes } from '../lib/laundry';
+import { calcLaundryOrder, formatNaira, laundryDurationMinutes, washServiceName } from '../lib/laundry';
 import { getCurrentUser } from '../lib/session';
 import { colors, radius, spacing, typography } from '../theme';
 
@@ -41,7 +41,7 @@ function reference(bookingId: string): string {
 }
 
 export function LaundryCheckoutScreen({ route, navigation }: Props) {
-  const { vendor, serviceType, clothingItems, duvets, serviceIds, slotISO, slotLabel } = route.params;
+  const { vendor, serviceType, duvets, serviceIds, slotISO, slotLabel } = route.params;
   const isDropOff = serviceType === 'drop_off';
 
   const [paymentMode, setPaymentMode] = useState<PayMode>('pay_on_arrival');
@@ -49,8 +49,8 @@ export function LaundryCheckoutScreen({ route, navigation }: Props) {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [payment, setPayment] = useState<PaymentCheckout | null>(null);
 
-  const order = useMemo(() => calcLaundryOrder(clothingItems, duvets, isDropOff), [clothingItems, duvets, isDropOff]);
-  const durationMinutes = useMemo(() => laundryDurationMinutes(clothingItems, duvets), [clothingItems, duvets]);
+  const order = useMemo(() => calcLaundryOrder(duvets, serviceType), [duvets, serviceType]);
+  const durationMinutes = useMemo(() => laundryDurationMinutes(duvets), [duvets]);
 
   async function handleConfirm() {
     const user = getCurrentUser();
@@ -146,17 +146,13 @@ export function LaundryCheckoutScreen({ route, navigation }: Props) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Order summary</Text>
 
-          {clothingItems > 0 && (
-            <View style={styles.lineItem}>
-              <View style={styles.lineItemLeft}>
-                <Text style={styles.lineItemName}>Clothing & fabrics</Text>
-                <Text style={styles.lineItemMeta}>
-                  {clothingItems} item{clothingItems !== 1 ? 's' : ''} → {order.baskets} basket{order.baskets !== 1 ? 's' : ''}
-                </Text>
-              </View>
-              <Text style={styles.lineItemPrice}>{formatNaira(order.clothingSubtotalKobo)}</Text>
+          <View style={styles.lineItem}>
+            <View style={styles.lineItemLeft}>
+              <Text style={styles.lineItemName}>{washServiceName(serviceType)}</Text>
+              <Text style={styles.lineItemMeta}>Flat rate</Text>
             </View>
-          )}
+            <Text style={styles.lineItemPrice}>{formatNaira(order.washSubtotalKobo)}</Text>
+          </View>
 
           {duvets > 0 && (
             <View style={styles.lineItem}>

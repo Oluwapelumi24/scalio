@@ -9,6 +9,7 @@ import { InterestSelectionScreen } from '../screens/InterestSelectionScreen';
 import { LocationSetupScreen } from '../screens/LocationSetupScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import { SignUpScreen } from '../screens/SignUpScreen';
+import { SignInScreen } from '../screens/SignInScreen';
 import { VendorProfileScreen } from '../screens/VendorProfileScreen';
 import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
 import { ScheduleAppointmentScreen } from '../screens/ScheduleAppointmentScreen';
@@ -18,6 +19,7 @@ import { LaundryServiceTypeScreen } from '../screens/LaundryServiceTypeScreen';
 import { LaundryBookingScreen } from '../screens/LaundryBookingScreen';
 import { LaundryCheckoutScreen } from '../screens/LaundryCheckoutScreen';
 import { hasSeenOnboarding } from '../lib/preferences';
+import { restoreSession } from '../lib/session';
 import { typography } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,13 +44,15 @@ export function RootNavigator() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
 
   useEffect(() => {
-    if (__DEV__) {
-      setInitialRoute('Onboarding');
-      return;
-    }
-    hasSeenOnboarding().then((seen) => {
+    (async () => {
+      await restoreSession();
+      if (__DEV__) {
+        setInitialRoute('Onboarding');
+        return;
+      }
+      const seen = await hasSeenOnboarding();
       setInitialRoute(seen ? 'Main' : 'Onboarding');
-    });
+    })();
   }, []);
 
   if (!initialRoute) {
@@ -63,6 +67,7 @@ export function RootNavigator() {
         <Stack.Screen name="LocationSetup" component={LocationSetupScreen} />
         <Stack.Screen name="Main" component={MainTabNavigator} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="VendorProfile" component={VendorProfileScreen} />
         <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
         <Stack.Screen name="ScheduleAppointment" component={ScheduleAppointmentScreen} />

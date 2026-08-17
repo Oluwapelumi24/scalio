@@ -73,7 +73,7 @@ export function LocationSetupScreen({ navigation }: Props) {
     if (locState.phase !== 'detected') return;
     await setLocation({ label: locState.label, lat: locState.lat, lng: locState.lng });
     await setHasSeenOnboarding();
-    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    navigation.navigate('SignUp', { mode: 'onboarding' });
   }
 
   async function handleManualContinue() {
@@ -82,12 +82,12 @@ export function LocationSetupScreen({ navigation }: Props) {
     Keyboard.dismiss();
     await setLocation({ label });
     await setHasSeenOnboarding();
-    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    navigation.navigate('SignUp', { mode: 'onboarding' });
   }
 
   async function handleSkip() {
     await setHasSeenOnboarding();
-    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    navigation.navigate('SignUp', { mode: 'onboarding' });
   }
 
   const canManualContinue = manual.trim().length > 0;

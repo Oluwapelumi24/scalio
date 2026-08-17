@@ -9,6 +9,9 @@ export const users = pgTable('users', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   phone: text('phone'),
+  // Null for legacy rows created before password auth landed. New signups
+  // always set this (see AuthService.signUp).
+  passwordHash: text('password_hash'),
   // Set by the mobile app once the user grants notification permission — lets
   // the backend push booking-status and reminder notifications via Expo's
   // push API. Null until registered, or if the user never grants permission.

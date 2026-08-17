@@ -1,38 +1,33 @@
-export const ITEMS_PER_BASKET = 20;
-export const BASKET_PRICE_KOBO = 250_000;       // ₦2,500 self-service
-export const DUVET_PRICE_KOBO = 400_000;        // ₦4,000 self-service
-export const DROPOFF_SURCHARGE_KOBO = 100_000;  // ₦1,000 extra per basket/duvet for drop-off
+export const SELF_SERVICE_PRICE_KOBO = 250_000; // ₦2,500 flat, self-service wash
+export const DROPOFF_PRICE_KOBO = 350_000;      // ₦3,500 flat, drop-off & collect
+export const DUVET_PRICE_KOBO = 300_000;        // ₦3,000 per duvet, either service type
 
 export type ServiceType = 'self_service' | 'drop_off';
 
-export const CLOTHING_SERVICE_NAME = 'Clothing Laundry';
+export const SELF_SERVICE_SERVICE_NAME = 'Self-service wash';
+export const DROPOFF_SERVICE_NAME = 'Drop-off';
 export const DUVET_SERVICE_NAME = 'Duvet Laundry';
 
-export function clothingToBaskets(items: number): number {
-  return Math.max(1, Math.ceil(items / ITEMS_PER_BASKET));
+export function washServiceName(serviceType: ServiceType): string {
+  return serviceType === 'drop_off' ? DROPOFF_SERVICE_NAME : SELF_SERVICE_SERVICE_NAME;
 }
 
-export function calcLaundryOrder(clothingItems: number, duvets: number, isDropOff = false) {
-  const surcharge = isDropOff ? DROPOFF_SURCHARGE_KOBO : 0;
-  const basketPrice = BASKET_PRICE_KOBO + surcharge;
-  const duvetPrice = DUVET_PRICE_KOBO + surcharge;
-  const baskets = clothingItems > 0 ? clothingToBaskets(clothingItems) : 0;
-  const clothingSubtotalKobo = baskets * basketPrice;
-  const duvetSubtotalKobo = duvets * duvetPrice;
+export function washPriceKobo(serviceType: ServiceType): number {
+  return serviceType === 'drop_off' ? DROPOFF_PRICE_KOBO : SELF_SERVICE_PRICE_KOBO;
+}
+
+export function calcLaundryOrder(duvets: number, serviceType: ServiceType) {
+  const washSubtotalKobo = washPriceKobo(serviceType);
+  const duvetSubtotalKobo = duvets * DUVET_PRICE_KOBO;
   return {
-    baskets,
-    basketPrice,
-    duvetPrice,
-    clothingSubtotalKobo,
+    washSubtotalKobo,
     duvetSubtotalKobo,
-    totalKobo: clothingSubtotalKobo + duvetSubtotalKobo,
+    totalKobo: washSubtotalKobo + duvetSubtotalKobo,
   };
 }
 
-export function laundryDurationMinutes(clothingItems: number, duvets: number): number {
-  if (clothingItems > 0 && duvets > 0) return 240;
-  if (duvets > 0) return 240;
-  return 120;
+export function laundryDurationMinutes(duvets: number): number {
+  return duvets > 0 ? 240 : 120;
 }
 
 export function formatNaira(kobo: number): string {

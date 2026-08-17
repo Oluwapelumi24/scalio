@@ -71,6 +71,13 @@
       "when": 1783521255867,
       "tag": "0009_waitlist_signups",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786785306007,
+      "tag": "0010_add_users_password_hash",
+      "breakpoints": true
     }
   ]
 }

@@ -83,14 +83,21 @@ INSERT INTO services (vendor_id, name, duration_minutes, price_kobo, payment_mod
 SELECT v.id, x.name, x.duration_minutes, x.price_kobo, x.payment_mode, x.deposit_percent
 FROM vendors v
 CROSS JOIN (VALUES
-  ('Clothing Laundry', 120, 250000, 'pay_on_arrival', NULL::integer),
-  ('Duvet Laundry', 240, 400000, 'pay_on_arrival', NULL::integer)
+  ('Self-service wash', 60, 250000, 'pay_on_arrival', NULL::integer),
+  ('Drop-off', 120, 350000, 'pay_on_arrival', NULL::integer),
+  ('Duvet Laundry', 240, 300000, 'pay_on_arrival', NULL::integer)
 ) AS x(name, duration_minutes, price_kobo, payment_mode, deposit_percent)
 WHERE v.slug = 'true-wash'
   AND NOT EXISTS (SELECT 1 FROM services s WHERE s.vendor_id = v.id AND s.name = x.name);
 
+UPDATE services SET price_kobo = 300000
+WHERE vendor_id = (SELECT id FROM vendors WHERE slug = 'true-wash') AND name = 'Duvet Laundry';
+
+DELETE FROM services
+WHERE vendor_id = (SELECT id FROM vendors WHERE slug = 'true-wash') AND name = 'Clothing Laundry';
+
 UPDATE vendors SET
-  address      = '12 Admiralty Way, Lekki Phase 1, Lagos',
+  address      = 'Bariga, Shomolu, Lagos',
   rating       = 4.7,
   review_count = 156
 WHERE slug = 'true-wash';

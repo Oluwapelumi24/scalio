@@ -8,8 +8,8 @@ const HTTP_NO_CONTENT = 204;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...init,
+    headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
 
   if (!response.ok) {
@@ -31,10 +31,29 @@ export interface AppUser {
   email: string;
 }
 
-export function signUp(name: string, email: string): Promise<AppUser> {
-  return request<AppUser>('/auth/signup', {
+export interface AuthSession {
+  accessToken: string;
+  user: AppUser;
+}
+
+export function signUp(name: string, email: string, password: string): Promise<AuthSession> {
+  return request<AuthSession>('/auth/signup', {
     method: 'POST',
-    body: JSON.stringify({ name, email }),
+    body: JSON.stringify({ name, email, password }),
+  });
+}
+
+export function signIn(email: string, password: string): Promise<AuthSession> {
+  return request<AuthSession>('/auth/signin', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+/** Validates a stored session token on app launch; throws if it's expired or the account is gone. */
+export function getMe(accessToken: string): Promise<AppUser> {
+  return request<AppUser>('/auth/me', {
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
 }
 

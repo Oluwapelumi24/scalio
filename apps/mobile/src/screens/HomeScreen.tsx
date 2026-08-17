@@ -464,7 +464,7 @@ function LocationModal({
 export function HomeScreen({ navigation }: Props) {
   const [vendors, setVendors] = useState<Vendor[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [location, setLocation] = useState('Lekki Phase 1, Lagos');
+  const [location, setLocation] = useState('Yaba, Lagos');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [filterVisible, setFilterVisible] = useState(false);

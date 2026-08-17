@@ -48,7 +48,7 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
           <Text style={styles.guestHeadline}>Sign in to your account</Text>
           <Text style={styles.guestSub}>Manage bookings, track appointments, and more.</Text>
-          <Pressable style={styles.signInBtn} onPress={() => navigation.navigate('SignUp')}>
+          <Pressable style={styles.signInBtn} onPress={() => navigation.navigate('SignIn')}>
             <Text style={styles.signInBtnLabel}>Sign in</Text>
           </Pressable>
         </View>
@@ -123,8 +123,7 @@ export function ProfileScreen({ navigation }: Props) {
           label="Sign out"
           danger
           onPress={() => {
-            signOut();
-            setUser(null);
+            void signOut().then(() => setUser(null));
           }}
         />
       </View>

@@ -8,7 +8,11 @@ export type RootStackParamList = {
   InterestSelection: undefined;
   LocationSetup: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
-  SignUp: undefined;
+  // `mode: 'onboarding'` marks this as the final onboarding step (land on
+  // Main on success); omitted when reached as a just-in-time booking gate
+  // (return the user to where they were instead).
+  SignUp: { mode?: 'onboarding' } | undefined;
+  SignIn: { mode?: 'onboarding' } | undefined;
   VendorProfile: { vendor: Vendor };
   ServiceSelection: { vendor: Vendor };
   ScheduleAppointment: { vendor: Vendor; services: Service[] };
@@ -19,7 +23,6 @@ export type RootStackParamList = {
   LaundryCheckout: {
     vendor: Vendor;
     serviceType: 'self_service' | 'drop_off';
-    clothingItems: number;
     duvets: number;
     serviceIds: string[];
     slotISO: string;

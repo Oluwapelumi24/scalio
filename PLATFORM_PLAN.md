@@ -80,8 +80,10 @@ payment-partner due diligence for payouts.
 `id`, pillar, layer (`overview | quick_action | attention | recommendation`),
 required capability, required permission, data source.
 
-**Ranking** — one pure, deterministic function in a shared package, used by vendor
-mobile and vendor web:
+**Ranking** — one pure, deterministic function, run on the backend
+(`apps/backend/src/personalisation/ranking.ts`). Vendor mobile and vendor web both
+receive the home screen already ranked from `GET /vendor-admin/home`, so the order
+can't drift between platforms:
 
 ```
 score(module) = interestWeight + businessTypeWeight + capabilityGate
@@ -111,29 +113,31 @@ states) and build. Every phase ends with the existing booking flows still passin
 ### Phase 1 — Foundation: personalisation and core operations
 
 Backend
-- [ ] `business_preferences` table: interests, home pins/hides, onboarding state, keyed by vendor (and later user).
-- [ ] `personalisation` module: `GET/PUT /vendor-admin/preferences`, `GET /vendor-admin/home` returning ranked modules + their data.
-- [ ] `vendors.timezone` (default `Africa/Lagos`); `business_locations` table with a default location backfilled per vendor; nullable `locationId` on staff, bookings, business hours.
-- [ ] Vendor auth: phone OTP, Google, Apple — supplementing email + password, not replacing them.
-- [ ] Public booking link: `GET /public/vendors/:slug` (services, hours, availability) reusing `VendorService.getAvailability`.
+- [x] `business_preferences` table: interests, home pins/hides, module usage, interests-completed stamp, keyed by vendor (migration `0011`).
+- [x] `personalisation` module: `GET personalisation/interests`, `GET/PUT preferences`, `POST preferences/reset-home`, `GET home`, `POST home/usage` (all under `/vendor-admin`). Practitioners get a home scoped to their own bookings; money figures and setup tasks are owner/manager only.
+- [x] `vendors.timezone` (default `Africa/Lagos`); "today" on the home screen follows it.
+- [ ] `business_locations` table with a default location backfilled per vendor; nullable `locationId` on staff, bookings, business hours.
+- [ ] Vendor auth: phone OTP, Google, Apple — supplementing email + password, not replacing them. *(Phone OTP on hold until the SMS provider is settled — D8.)*
+- [x] Public booking link: `GET /vendors/by-slug/:slug` (approved businesses only; public fields, services, hours); open times reuse `GET /vendors/:id/availability`.
+- [ ] Guest booking from the public page — bookings currently require a signed-in customer (`CreateBookingDto.userId`).
 
 Shared
-- [ ] `packages/personalisation`: interest taxonomy, module registry, ranking function + fixtures/tests.
+- [x] Interest list (15 interests in 4 groups), module registry and ranking with tests — built in the backend (`personalisation/`) rather than a shared package, so both apps get identical results without sharing code. The three reference businesses are test fixtures.
 - [ ] Grow `packages/shared-types` into the API contract for every new endpoint.
 
 Vendor mobile
-- [ ] Rework onboarding to the 3 screens (*Doing business the right way / Grow your business / Run your business with ease*) with progress dots and Skip.
-- [ ] Sign-in screen with Google, Apple, phone, email; terms and privacy links.
-- [ ] Interest selection screen immediately before Home (grid of cards, sticky Continue).
-- [ ] Home screen built from the ranked modules; "Customise home" + reset; interests editable in Settings.
+- [x] Rework onboarding to the 3 screens (*Doing business the right way / Grow your business / Run your business with ease*) with progress dots and Skip.
+- [ ] Sign-in screen with Google, Apple, phone, email *(terms and privacy shown on onboarding; social and phone sign-in not built yet)*.
+- [x] Interest selection screen immediately before Home (grid of cards, sticky Continue, Skip). Shown once, after sign-in, to owners/managers.
+- [x] Home screen built from the ranked modules; "Customise home" + reset; interests editable in Settings.
 - [ ] Move to the D6 navigation once tested.
 - [ ] Extract shared components (cards, status labels, empty/error states, confirm dialogs).
 
 Vendor web
-- [ ] Same interests screen and ranked home, wider layout.
+- [x] Same interests screen and ranked home, wider layout; `/dashboard/customise`.
 
 Website
-- [ ] Public booking page at `/{slug}` with the vendor's branding and hours — customers book without installing the app; link shareable to WhatsApp/Instagram/Facebook.
+- [x] Public booking page at `/book/{slug}` with the vendor's branding and hours — customers see services, prices, hours and live open times without installing the app; vendors share it by copy or WhatsApp. Booking from the page waits on guest booking (above).
 
 ### Phase 2 — Operations: bookings, customers, staff
 
@@ -204,7 +208,6 @@ apps/
   admin-web/              platform oversight
 packages/
   shared-types/           API contracts
-  personalisation/        interests, module registry, ranking
   permissions/            role → capability map shared by both vendor apps
 ```
 

@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   badgeText: { fontFamily: fonts.bold, fontSize: 10, color: colors.white },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: fonts.bold, fontSize: 13, color: colors.white },
-  greeting: { fontFamily: fonts.displayExtraBold, fontSize: 34, lineHeight: 38, letterSpacing: -1, color: colors.text, marginTop: 28 },
+  greeting: { fontFamily: fonts.displaySemiBold, fontSize: 26, lineHeight: 32, letterSpacing: -0.4, color: colors.text, marginTop: 28 },
   greetingSub: { fontFamily: fonts.medium, fontSize: 15, color: colors.textSecondary, marginTop: 6 },
   quick: { flexDirection: 'row', marginTop: 26 },
   quickItem: { flex: 1, alignItems: 'center', gap: 10, paddingHorizontal: 2 },

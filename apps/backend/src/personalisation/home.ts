@@ -20,6 +20,10 @@ export interface HomeSnapshot {
   awaitingPayment: number;
   startingSoon: number;
   unassignedToday: number;
+  /** Active bookings in the next 14 days whose staff member is on leave that day. */
+  bookingsOnLeave: number;
+  /** Whether the person viewing is clocked in right now. */
+  viewerClockedIn: boolean;
   totalCustomers: number;
   repeatCustomers: number;
   newCustomers30d: number;
@@ -68,6 +72,10 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.startingSoon > 0 ? { count: s.startingSoon } : null;
     case 'unassigned_today':
       return s.unassignedToday > 0 && s.staffCount > 1 ? { count: s.unassignedToday } : null;
+    case 'bookings_on_leave':
+      return s.bookingsOnLeave > 0 ? { count: s.bookingsOnLeave } : null;
+    case 'clock_in':
+      return { clockedIn: s.viewerClockedIn };
     case 'today_bookings':
       return { count: s.todayBookings };
     case 'upcoming_bookings':

@@ -6,3 +6,4 @@ export * from './schedule';
 export * from './admins';
 export * from './waitlist';
 export * from './preferences';
+export * from './staff-schedule';

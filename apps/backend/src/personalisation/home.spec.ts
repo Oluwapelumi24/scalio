@@ -12,6 +12,8 @@ const snapshot: HomeSnapshot = {
   awaitingPayment: 0,
   startingSoon: 0,
   unassignedToday: 0,
+  bookingsOnLeave: 0,
+  viewerClockedIn: false,
   totalCustomers: 60,
   repeatCustomers: 25,
   newCustomers30d: 9,
@@ -62,6 +64,16 @@ describe('buildHome — rules', () => {
     const home = buildHome({ ...snapshot, awaitingPayment: 2 }, prefs(['run_ads'], { hiddenModules: ['awaiting_payment'] }), 'owner', now);
     expect(home.layers.attention.map((i) => i.id)).toEqual(['awaiting_payment']);
     expect(home.layers.attention[0].data).toEqual({ count: 2 });
+  });
+
+  it('flags upcoming bookings with staff who will be on leave', () => {
+    const home = buildHome({ ...snapshot, bookingsOnLeave: 2 }, prefs([]), 'owner', now);
+    expect(home.layers.attention.map((i) => i.id)).toEqual(['bookings_on_leave']);
+  });
+
+  it('tells the clock-in action whether the viewer is on shift', () => {
+    const home = buildHome({ ...snapshot, viewerClockedIn: true }, prefs([]), 'practitioner', now);
+    expect(home.layers.quick_action.find((i) => i.id === 'clock_in')?.data).toEqual({ clockedIn: true });
   });
 
   it('hides alerts that have nothing to report', () => {

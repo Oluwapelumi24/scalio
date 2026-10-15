@@ -85,6 +85,13 @@
       "when": 1792058896851,
       "tag": "0011_business_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792061623250,
+      "tag": "0012_staff_schedule_attendance",
+      "breakpoints": true
     }
   ]
 }

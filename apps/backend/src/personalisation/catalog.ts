@@ -82,6 +82,7 @@ export const MODULES: readonly ModuleDef[] = [
   // ── Needs your attention: shown whenever there is something to act on ──────
   { id: 'awaiting_payment', layer: 'attention', title: 'Bookings waiting for payment', icon: 'clock', interests: [], basePriority: 30 },
   { id: 'starting_soon', layer: 'attention', title: 'Starting within the hour', icon: 'bell', interests: [], basePriority: 40 },
+  { id: 'bookings_on_leave', layer: 'attention', title: 'Bookings with staff on leave', icon: 'user-minus', interests: [], basePriority: 35, roles: [...MANAGERS, 'front_desk'] },
   { id: 'unassigned_today', layer: 'attention', title: "Today's bookings with no staff assigned", icon: 'user-x', interests: [], basePriority: 20, roles: [...MANAGERS, 'front_desk'] },
 
   // ── Business overview ─────────────────────────────────────────────────────
@@ -97,6 +98,8 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'share_booking_link', layer: 'quick_action', title: 'Share booking link', icon: 'share-2', interests: ['manage_bookings', 'find_customers', 'social_posts', 'manage_social'], basePriority: 40 },
   { id: 'view_bookings', layer: 'quick_action', title: 'Bookings', icon: 'calendar', interests: ['manage_bookings'], basePriority: 35 },
   { id: 'view_customers', layer: 'quick_action', title: 'Customers', icon: 'users', interests: ['repeat_customers', 'chat_customers', 'reviews_feedback', 'find_customers'], basePriority: 25 },
+  { id: 'clock_in', layer: 'quick_action', title: 'Clock in', icon: 'log-in', interests: ['manage_staff', 'pay_staff'], basePriority: 30 },
+  { id: 'staff_performance', layer: 'quick_action', title: 'Staff performance', icon: 'award', interests: ['manage_staff', 'business_insights', 'pay_staff'], basePriority: 12, roles: [...MANAGERS, 'practitioner'] },
   { id: 'manage_team', layer: 'quick_action', title: 'Manage staff', icon: 'user-check', interests: ['manage_staff', 'pay_staff'], basePriority: 20, roles: MANAGERS },
   { id: 'add_service', layer: 'quick_action', title: 'Add a service', icon: 'plus-circle', interests: ['manage_bookings', 'manage_stock_orders'], basePriority: 15, roles: MANAGERS },
   { id: 'business_hours', layer: 'quick_action', title: 'Opening hours', icon: 'clock', interests: ['manage_bookings', 'manage_staff'], basePriority: 10, roles: MANAGERS },

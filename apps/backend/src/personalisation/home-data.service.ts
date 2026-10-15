@@ -1,9 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { and, asc, count, eq, gt, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, eq, gt, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { bookings, businessHours, customers, services, staff, vendors } from '../db/schema';
-import { businessDayBounds } from './business-day';
+import { attendanceRecords, bookings, businessHours, customers, services, staff, staffTimeOff, vendors } from '../db/schema';
+import { businessDayBounds } from '../common/business-day';
 import type { HomeSnapshot } from './home';
 
 const DAY_MS = 86_400_000;
@@ -23,10 +23,11 @@ export class HomeDataService {
   }
 
   /**
+   * @param viewerStaffId whoever is looking — for their own clock-in status.
    * @param practitionerStaffId when set, booking figures cover only this staff
    *   member's bookings (practitioners see their own work, as in the bookings list).
    */
-  async load(vendorId: string, now: Date, practitionerStaffId?: string): Promise<HomeSnapshot> {
+  async load(vendorId: string, now: Date, viewerStaffId: string, practitionerStaffId?: string): Promise<HomeSnapshot> {
     const [vendor] = await this.db
       .select({
         slug: vendors.slug,
@@ -48,15 +49,15 @@ export class HomeDataService {
 
     const isToday = sql`${bookings.scheduledAt} >= ${start} and ${bookings.scheduledAt} < ${end}`;
     const countWhere = (cond: SQL) => sql<number>`count(*) filter (where ${cond})`.mapWith(Number);
-    const sumDueWhere = (cond: SQL) =>
-      sql<number>`coalesce(sum(${bookings.amountDueKobo}) filter (where ${cond}), 0)`.mapWith(Number);
+    const sumValueWhere = (cond: SQL) =>
+      sql<number>`coalesce(sum(${bookings.totalPriceKobo}) filter (where ${cond}), 0)`.mapWith(Number);
 
     const [b] = await this.db
       .select({
         total: count(),
         today: countWhere(sql`${isToday} and ${bookings.status} in ('pending_payment', 'confirmed', 'completed')`),
-        todaySales: sumDueWhere(sql`${isToday} and ${bookings.status} = 'completed'`),
-        sales30d: sumDueWhere(sql`${bookings.scheduledAt} >= ${thirtyDaysAgo} and ${bookings.status} = 'completed'`),
+        todaySales: sumValueWhere(sql`${isToday} and ${bookings.status} = 'completed'`),
+        sales30d: sumValueWhere(sql`${bookings.scheduledAt} >= ${thirtyDaysAgo} and ${bookings.status} = 'completed'`),
         awaitingPayment: countWhere(sql`${bookings.status} = 'pending_payment' and ${bookings.scheduledAt} > ${now}`),
         startingSoon: countWhere(
           sql`${bookings.status} = 'confirmed' and ${bookings.scheduledAt} > ${now} and ${bookings.scheduledAt} <= ${inAnHour}`,
@@ -97,6 +98,34 @@ export class HomeDataService {
       .from(customers)
       .where(eq(customers.vendorId, vendorId));
 
+    const inTwoWeeks = new Date(now.getTime() + 14 * DAY_MS);
+    // A booking clashes with leave when its date, in the business's calendar,
+    // falls inside a time-off range for the staff member it's assigned to.
+    const [[leaveRow], [openShift]] = await Promise.all([
+      this.db
+        .select({ n: count() })
+        .from(bookings)
+        .innerJoin(
+          staffTimeOff,
+          and(
+            eq(staffTimeOff.staffId, bookings.staffId),
+            sql`(${bookings.scheduledAt} at time zone ${vendor.timezone})::date between ${staffTimeOff.startDate} and ${staffTimeOff.endDate}`,
+          ),
+        )
+        .where(
+          and(
+            ...bookingScope,
+            inArray(bookings.status, ['pending_payment', 'confirmed']),
+            gt(bookings.scheduledAt, now),
+            sql`${bookings.scheduledAt} <= ${inTwoWeeks}`,
+          ),
+        ),
+      this.db
+        .select({ id: attendanceRecords.id })
+        .from(attendanceRecords)
+        .where(and(eq(attendanceRecords.staffId, viewerStaffId), isNull(attendanceRecords.clockOutAt))),
+    ]);
+
     const [[staffRow], [serviceRow], [hoursRow]] = await Promise.all([
       this.db.select({ n: count() }).from(staff).where(eq(staff.vendorId, vendorId)),
       this.db.select({ n: count() }).from(services).where(eq(services.vendorId, vendorId)),
@@ -118,6 +147,8 @@ export class HomeDataService {
       awaitingPayment: b?.awaitingPayment ?? 0,
       startingSoon: b?.startingSoon ?? 0,
       unassignedToday: b?.unassignedToday ?? 0,
+      bookingsOnLeave: leaveRow?.n ?? 0,
+      viewerClockedIn: !!openShift,
       totalCustomers: c?.total ?? 0,
       repeatCustomers: c?.repeat ?? 0,
       newCustomers30d: c?.new30d ?? 0,

@@ -47,6 +47,9 @@ export const bookings = pgTable(
     paymentMode: text('payment_mode', { enum: paymentModeValues }).notNull(),
     amountDueKobo: integer('amount_due_kobo').notNull(),
     amountPaidKobo: integer('amount_paid_kobo').notNull().default(0),
+    // Price of the booked services at the time of booking. `amountDueKobo` is only
+    // what's been requested online (0 for pay-on-arrival), so sales use this.
+    totalPriceKobo: integer('total_price_kobo').notNull().default(0),
     // Set when a Paystack transaction is initialized for `deposit`/`full_prepayment`
     // bookings — lets the webhook look the booking up by `data.reference`. Null for
     // `pay_on_arrival` bookings, which skip Paystack entirely.

@@ -21,9 +21,12 @@ export const colors = {
   cancelled: '#dc2626',
   cancelledLight: '#fef2f2',
   white: '#ffffff',
-  // Deep navy end of the brand gradient (accent → ink) and the cool page wash behind cards.
+  // Calm ledger Home: the soft blue wash behind the header, and supporting tints.
   ink: '#0b1638',
   mist: '#e8eef9',
+  sky: '#eaf2ff',
+  mintSoft: '#dff5f1',
+  amberSoft: '#fff4e0',
   onDark: '#ffffff',
   onDarkMuted: 'rgba(255,255,255,0.72)',
   onDarkFaint: 'rgba(255,255,255,0.14)',
@@ -66,12 +69,14 @@ export const typography = {
   },
 } as const;
 
-// Plus Jakarta Sans, loaded in App.tsx. With custom fonts each weight is its own
-// family, so use these instead of `fontWeight`.
+// Loaded in App.tsx. With custom fonts each weight is its own family, so use
+// these instead of `fontWeight`. Bricolage Grotesque sets headings and big
+// figures; Figtree sets everything else.
 export const fonts = {
-  regular: 'PlusJakartaSans_400Regular',
-  medium: 'PlusJakartaSans_500Medium',
-  semibold: 'PlusJakartaSans_600SemiBold',
-  bold: 'PlusJakartaSans_700Bold',
-  extrabold: 'PlusJakartaSans_800ExtraBold',
+  displayBold: 'BricolageGrotesque_700Bold',
+  displayExtraBold: 'BricolageGrotesque_800ExtraBold',
+  regular: 'Figtree_400Regular',
+  medium: 'Figtree_500Medium',
+  semibold: 'Figtree_600SemiBold',
+  bold: 'Figtree_700Bold',
 } as const;

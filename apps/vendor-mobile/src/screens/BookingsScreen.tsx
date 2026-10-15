@@ -23,7 +23,7 @@ import {
   type BookingStatus,
   type TodaySummary,
 } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { colors, fonts, radius, spacing, typography } from '../theme';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Bookings'>,
@@ -127,7 +127,7 @@ export function BookingsScreen({ navigation }: Props) {
           </View>
           {today.salesKobo != null && (
             <View style={[styles.todayStat, styles.todayDivider]}>
-              <Text style={styles.todayValue}>{formatNaira(today.salesKobo)}</Text>
+              <Text style={styles.todayValue}>₦{(today.salesKobo / 100).toLocaleString('en-NG')}</Text>
               <Text style={styles.todayLabel}>Today's sales</Text>
             </View>
           )}
@@ -172,19 +172,21 @@ export function BookingsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  // Today's figures, moved here from Home — set in the Home screen's type.
   today: {
     flexDirection: 'row',
     marginHorizontal: spacing.xl,
-    marginBottom: spacing.lg,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: 20,
   },
-  todayStat: { flex: 1, paddingVertical: spacing.lg, paddingHorizontal: spacing.lg, gap: 2 },
+  todayStat: { flex: 1, paddingVertical: spacing.lg, paddingHorizontal: 18, gap: 2 },
   todayDivider: { borderLeftWidth: 1, borderLeftColor: colors.border },
-  todayValue: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text, fontVariant: ['tabular-nums'] },
-  todayLabel: { fontSize: typography.size.sm, color: colors.textMuted },
+  todayValue: { fontFamily: fonts.displayExtraBold, fontSize: 28, letterSpacing: -0.6, color: colors.text, fontVariant: ['tabular-nums'] },
+  todayLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
     paddingHorizontal: spacing.xl,

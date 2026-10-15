@@ -1,31 +1,25 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   RefreshControl,
   ScrollView,
   Share,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect, useIsFocused, type CompositeScreenProps } from '@react-navigation/native';
+import { useFocusEffect, type CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
-import {
-  formatDateTime,
-  getHome,
-  recordModuleUsage,
-  updatePreferences,
-  type HomeItem,
-  type HomeResponse,
-} from '../lib/api';
+import { formatDateTime, getHome, recordModuleUsage, type HomeItem, type HomeResponse } from '../lib/api';
 import { getSession } from '../lib/session';
 import { colors, fonts, radius, spacing } from '../theme';
 
@@ -35,6 +29,9 @@ type Props = CompositeScreenProps<
 >;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
 
+const GUTTER = 24;
+const SLIDE_GAP = 12;
+
 const ATTENTION: Record<string, { text: (n: number) => string; action: string }> = {
   awaiting_payment: { text: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`, action: 'View' },
   starting_soon: { text: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`, action: 'View' },
@@ -42,16 +39,17 @@ const ATTENTION: Record<string, { text: (n: number) => string; action: string }>
   bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`, action: 'Review' },
 };
 
-const SUGGESTION: Record<string, { text: (d: Record<string, any>) => string; action: string }> = {
-  choose_interests: { text: () => 'Pick what you want help with and we will set up your home.', action: 'Start' },
-  setup_services: { text: () => 'Customers can only book once you have at least one service.', action: 'Add' },
-  setup_hours: { text: () => 'Let customers know when you are open.', action: 'Set' },
-  share_link_first: { text: () => 'Share your booking link on WhatsApp or Instagram.', action: 'Share' },
-  follow_up_lapsed: {
-    text: (d) => `${d.count} ${d.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
-    action: 'Review',
-  },
-};
+/** One carousel slide: copy, a tint, and three icons for the small illustration. */
+interface Slide {
+  key: string;
+  title: string;
+  body: string;
+  cta?: string;
+  tint: string;
+  tone: string;
+  icons: [FeatherName, FeatherName, FeatherName];
+  onPress?: () => void;
+}
 
 function overviewValue(item: HomeItem): string {
   const d = item.data;
@@ -61,57 +59,102 @@ function overviewValue(item: HomeItem): string {
   return '—';
 }
 
-function HeaderButton({ icon, onPress, badge, label }: { icon: FeatherName; onPress: () => void; badge?: number; label: string }) {
+function SectionHeading({ title, link, onLink }: { title: string; link?: string; onLink?: () => void }) {
   return (
-    <Pressable style={styles.headerBtn} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
-      <Feather name={icon} size={18} color={colors.onDark} />
-      {badge ? (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
-        </View>
+    <View style={styles.sectionHead}>
+      <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
+      {link && onLink ? (
+        <Pressable onPress={onLink} hitSlop={8} accessibilityRole="button">
+          <Text style={styles.sectionLink}>{link}</Text>
+        </Pressable>
       ) : null}
-    </Pressable>
+    </View>
   );
 }
 
-/** A full-width card with an outlined icon tile, a title and an optional pill link. */
-function Section({
-  icon,
-  title,
-  subtitle,
-  linkLabel,
-  onLink,
-  children,
-}: {
-  icon: FeatherName;
-  title: string;
-  subtitle?: string;
-  linkLabel?: string;
-  onLink?: () => void;
-  children: React.ReactNode;
-}) {
+/** A tinted blob with one large icon chip and two small ones — the slide's illustration. */
+function SlideArt({ slide }: { slide: Slide }) {
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHead}>
-        <View style={styles.cardIcon}>
-          <Feather name={icon} size={17} color={colors.accent} />
-        </View>
-        <Text style={styles.cardTitle}>{title}</Text>
-        {linkLabel && onLink ? (
-          <Pressable style={styles.linkPill} onPress={onLink} accessibilityRole="button">
-            <Text style={styles.linkPillText}>{linkLabel}</Text>
-          </Pressable>
-        ) : null}
+    <View style={styles.art} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View style={styles.artBlob} />
+      <View style={[styles.artChip, { width: 62, height: 62, borderRadius: 31, left: 22, top: 28, backgroundColor: slide.tone }]}>
+        <Feather name={slide.icons[0]} size={28} color={colors.white} />
       </View>
-      {subtitle ? <Text style={styles.cardSubtitle}>{subtitle}</Text> : null}
-      {children}
+      <View style={[styles.artChip, { width: 40, height: 40, borderRadius: 20, left: 62, top: 2, backgroundColor: colors.white }]}>
+        <Feather name={slide.icons[1]} size={18} color={slide.tone} />
+      </View>
+      <View style={[styles.artChip, { width: 36, height: 36, borderRadius: 18, left: 68, top: 80, backgroundColor: colors.white }]}>
+        <Feather name={slide.icons[2]} size={16} color={slide.tone} />
+      </View>
+    </View>
+  );
+}
+
+function Carousel({ slides }: { slides: Slide[] }) {
+  const { width } = useWindowDimensions();
+  const slideWidth = width - GUTTER * 2;
+  const [index, setIndex] = useState(0);
+  const scroller = useRef<ScrollView>(null);
+
+  function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const i = Math.round(e.nativeEvent.contentOffset.x / (slideWidth + SLIDE_GAP));
+    setIndex(Math.max(0, Math.min(slides.length - 1, i)));
+  }
+
+  return (
+    <View style={{ gap: spacing.md }}>
+      <ScrollView
+        ref={scroller}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={slideWidth + SLIDE_GAP}
+        decelerationRate="fast"
+        contentContainerStyle={{ paddingHorizontal: GUTTER, gap: SLIDE_GAP }}
+        onScroll={onScroll}
+        scrollEventThrottle={32}
+      >
+        {slides.map((s, i) => (
+          <View
+            key={s.key}
+            style={[styles.slide, { width: slideWidth, backgroundColor: s.tint }]}
+            accessibilityLabel={`${i + 1} of ${slides.length}: ${s.title}`}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.slideTitle}>{s.title}</Text>
+              <Text style={styles.slideBody}>{s.body}</Text>
+              {s.cta && s.onPress ? (
+                <Pressable style={styles.slideCta} onPress={s.onPress} accessibilityRole="button">
+                  <Text style={styles.slideCtaText}>{s.cta}</Text>
+                  <Feather name="arrow-right" size={15} color={colors.white} />
+                </Pressable>
+              ) : (
+                <View style={styles.soonTag}><Text style={styles.soonText}>Coming soon</Text></View>
+              )}
+            </View>
+            <SlideArt slide={s} />
+          </View>
+        ))}
+      </ScrollView>
+      {slides.length > 1 && (
+        <View style={styles.dots}>
+          {slides.map((s, i) => (
+            <Pressable
+              key={s.key}
+              hitSlop={8}
+              onPress={() => scroller.current?.scrollTo({ x: i * (slideWidth + SLIDE_GAP), animated: true })}
+              accessibilityRole="button"
+              accessibilityLabel={`Show slide ${i + 1}`}
+              style={[styles.dot, i === index && styles.dotOn]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
 
 export function HomeScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const isFocused = useIsFocused();
   const session = getSession();
   const [home, setHome] = useState<HomeResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,7 +176,7 @@ export function HomeScreen({ navigation }: Props) {
   // Reload whenever Home comes back into view — interests or setup may have changed.
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
-  const canCustomise = session?.role === 'owner' || session?.role === 'manager';
+  const isManager = session?.role === 'owner' || session?.role === 'manager';
   const firstName = (session?.name ?? '').split(' ')[0] || 'there';
 
   function open(item: HomeItem) {
@@ -182,133 +225,169 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
-  /** "Dismiss" hides a suggestion; it stays available under Customise home. */
-  async function dismiss(item: HomeItem) {
-    if (!home) return;
-    try {
-      await updatePreferences({ hiddenModules: [...home.hidden.map((h) => h.id), item.id] });
-      await load();
-    } catch (err) {
-      Alert.alert('Could not dismiss', err instanceof Error ? err.message : 'Please try again.');
-    }
-  }
-
   const attention = home?.layers.attention ?? [];
+  const quick = home?.layers.quick_action.slice(0, 4) ?? [];
   const overview = home?.layers.overview.filter((i) => i.id !== 'upcoming_bookings') ?? [];
   const upcoming = home?.layers.overview.find((i) => i.id === 'upcoming_bookings');
+  const slides = home ? buildSlides(home) : [];
+
+  /** Carousel slides from the ranked suggestions, plus sharing and staff set-up when they apply. */
+  function buildSlides(h: HomeResponse): Slide[] {
+    const byId = (id: string) =>
+      [...h.layers.recommendation, ...h.layers.quick_action, ...h.layers.overview].find((i) => i.id === id);
+    const recs = h.layers.recommendation;
+    const out: Slide[] = [];
+    const add = (item: HomeItem | undefined, s: Omit<Slide, 'key' | 'onPress'>) => {
+      if (item && !out.some((o) => o.key === item.id)) out.push({ ...s, key: item.id, onPress: () => open(item) });
+    };
+
+    // Set-up steps first: nothing else matters until customers can book.
+    add(byId('choose_interests'), { title: 'Make Scalio yours', body: "Tell us what you want help with and we'll set up your home.", cta: 'Start', tint: colors.accentLight, tone: colors.accent, icons: ['sliders', 'star', 'compass'] });
+    add(byId('setup_services'), { title: 'Add your first service', body: 'Customers can only book once you have at least one.', cta: 'Add service', tint: colors.mintSoft, tone: colors.success, icons: ['plus-circle', 'scissors', 'tag'] });
+    add(byId('setup_hours'), { title: 'Set your opening hours', body: "Let customers know when you're open.", cta: 'Set hours', tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'calendar', 'sun'] });
+
+    const share = byId('share_link_first') ?? byId('share_booking_link');
+    if (share) {
+      out.push({
+        key: 'share', title: 'Get your next booking', body: 'Share your booking link on WhatsApp and Instagram.', cta: 'Share link',
+        tint: colors.accentLight, tone: colors.accent, icons: ['message-circle', 'share-2', 'calendar'], onPress: () => open(share),
+      });
+    }
+    const team = byId('team');
+    if (isManager && team && (team.data.count ?? 0) > 1) {
+      out.push({
+        key: 'staff', title: "Know who's working", body: 'Set staff hours and let your team clock in from their phones.', cta: 'Set up',
+        tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'user-check', 'users'], onPress: () => navigation.navigate('StaffManagement'),
+      });
+    }
+    const lapsed = byId('follow_up_lapsed');
+    add(lapsed, {
+      title: 'Bring customers back',
+      body: `${lapsed?.data.count} ${lapsed?.data.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
+      cta: 'Review', tint: colors.amberSoft, tone: colors.warning, icons: ['repeat', 'heart', 'message-circle'],
+    });
+    // Features on the way, for businesses that asked for them. Never actionable.
+    for (const r of recs.filter((x) => x.status === 'coming_soon')) {
+      out.push({
+        key: r.id, title: r.title, body: "Coming soon. We'll let you know when it's ready.",
+        tint: colors.surface, tone: colors.textMuted, icons: [r.icon as FeatherName, 'clock', 'bell'],
+      });
+    }
+    return out;
+  }
 
   return (
-    <View style={styles.root}>
-      {isFocused && <StatusBar style="light" />}
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: spacing.xxxl }}
-        refreshControl={
-          <RefreshControl tintColor={colors.onDark} refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />
-        }
-        showsVerticalScrollIndicator={false}
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={{ paddingBottom: spacing.xxxl }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header: soft Scalio-blue wash fading into the page */}
+      <LinearGradient
+        colors={[colors.accentLight, colors.sky, colors.background]}
+        locations={[0, 0.55, 1]}
+        style={[styles.header, { paddingTop: insets.top + spacing.md }]}
       >
-        {/* Header: deep Scalio navy with the day's headline numbers */}
-        <LinearGradient
-          colors={[colors.accent, colors.ink]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.9, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + spacing.md }]}
-        >
-          <View style={styles.topRow}>
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>{(home?.business.name ?? 'S').charAt(0).toUpperCase()}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bizName} numberOfLines={1}>{home?.business.name ?? 'Your business'}</Text>
-              <Text style={styles.bizRole}>{session?.role?.replace('_', ' ') ?? ''}</Text>
-            </View>
-            <HeaderButton icon="settings" label="Settings" onPress={() => navigation.navigate('Settings')} />
-            <HeaderButton
-              icon="bell"
-              label={`${attention.length} items need your attention`}
-              badge={attention.length}
-              onPress={() => navigation.navigate('Bookings')}
-            />
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{(session?.name ?? 'V').slice(0, 2).toUpperCase()}</Text>
-            </View>
+        <View style={styles.topRow}>
+          <View style={styles.logo}>
+            <Text style={styles.logoText}>{(home?.business.name ?? 'S').charAt(0).toUpperCase()}</Text>
           </View>
-
-          <Pressable style={styles.search} onPress={() => navigation.navigate('Customers')} accessibilityRole="search">
-            <Feather name="search" size={17} color={colors.onDarkMuted} />
-            <Text style={styles.searchText}>Search customers</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bizName} numberOfLines={1}>{home?.business.name ?? 'Your business'}</Text>
+            <Text style={styles.bizRole}>{session?.role?.replace('_', ' ') ?? ''}</Text>
+          </View>
+          <Pressable style={styles.roundBtn} onPress={() => navigation.navigate('Customers')} accessibilityRole="button" accessibilityLabel="Search customers">
+            <Feather name="search" size={18} color={colors.text} />
           </Pressable>
+          <Pressable
+            style={styles.roundBtn}
+            onPress={() => navigation.navigate('Bookings')}
+            accessibilityRole="button"
+            accessibilityLabel={`${attention.length} items need your attention`}
+          >
+            <Feather name="bell" size={18} color={colors.text} />
+            {attention.length > 0 && (
+              <View style={styles.badge}><Text style={styles.badgeText}>{attention.length > 9 ? '9+' : attention.length}</Text></View>
+            )}
+          </Pressable>
+          <Pressable style={styles.avatar} onPress={() => navigation.navigate('Settings')} accessibilityRole="button" accessibilityLabel="Settings">
+            <Text style={styles.avatarText}>{(session?.name ?? 'V').slice(0, 2).toUpperCase()}</Text>
+          </Pressable>
+        </View>
 
-          <Text style={styles.greeting}>Hey, {firstName}</Text>
-          <Text style={styles.greetingSub}>Here's your business today.</Text>
+        <Text style={styles.greeting}>Hey, {firstName}</Text>
+        <Text style={styles.greetingSub}>Here's your business today.</Text>
 
-        </LinearGradient>
-
-        {loading ? (
-          <ActivityIndicator style={{ marginVertical: spacing.xxl }} color={colors.accent} />
-        ) : !home ? (
-          <View style={styles.errorBox}>
-            <Feather name="wifi-off" size={26} color={colors.textMuted} />
-            <Text style={styles.metaText}>{error}</Text>
-            <Pressable style={styles.linkPill} onPress={() => { setLoading(true); void load(); }}>
-              <Text style={styles.linkPillText}>Try again</Text>
-            </Pressable>
+        {quick.length > 0 && (
+          <View style={styles.quick}>
+            {quick.map((item) => (
+              <Pressable key={item.id} style={styles.quickItem} onPress={() => open(item)} accessibilityRole="button">
+                <View style={styles.quickDisc}>
+                  <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
+                </View>
+                <Text style={styles.quickLabel} numberOfLines={2}>
+                  {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
+                </Text>
+              </Pressable>
+            ))}
           </View>
-        ) : (
-          <View style={styles.body}>
-            {/* Needs your attention — always present, so "all clear" is visible too */}
-            <Section icon="alert-circle" title="Needs your attention">
+        )}
+      </LinearGradient>
+
+      {loading ? (
+        <ActivityIndicator style={{ marginVertical: spacing.xxl }} color={colors.accent} />
+      ) : !home ? (
+        <View style={styles.errorBox}>
+          <Feather name="wifi-off" size={26} color={colors.textMuted} />
+          <Text style={styles.metaText}>{error}</Text>
+          <Pressable style={styles.retry} onPress={() => { setLoading(true); void load(); }}>
+            <Text style={styles.sectionLink}>Try again</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.body}>
+          {/* Needs your attention — always present, so "all clear" is visible too */}
+          <View style={styles.section}>
+            <SectionHeading title="Needs your attention" />
+            <View style={styles.panel}>
               {attention.length === 0 ? (
                 <View style={styles.row}>
                   <Text style={[styles.rowText, { color: colors.textMuted }]}>Nothing needs you right now</Text>
-                  <View style={[styles.actionBtn, styles.actionBtnOff]}>
-                    <Text style={[styles.actionBtnText, { color: colors.textMuted }]}>All clear</Text>
+                  <View style={[styles.darkBtn, styles.darkBtnOff]}>
+                    <Text style={[styles.darkBtnText, { color: colors.textMuted }]}>All clear</Text>
                   </View>
                 </View>
               ) : (
                 attention.map((item, i) => (
                   <View key={item.id} style={[styles.row, i > 0 && styles.divider]}>
-                    <View style={styles.alertDot} />
+                    <View style={styles.flag} />
                     <Text style={styles.rowText}>{ATTENTION[item.id]?.text(item.data.count) ?? item.title}</Text>
-                    <Pressable style={styles.actionBtn} onPress={() => open(item)} accessibilityRole="button">
-                      <Text style={styles.actionBtnText}>{ATTENTION[item.id]?.action ?? 'View'}</Text>
+                    <Pressable style={styles.darkBtn} onPress={() => open(item)} accessibilityRole="button">
+                      <Text style={styles.darkBtnText}>{ATTENTION[item.id]?.action ?? 'View'}</Text>
                     </Pressable>
                   </View>
                 ))
               )}
-            </Section>
+            </View>
+          </View>
 
-            {overview.length > 0 && (
-              <Section icon="activity" title="Your business" linkLabel="View bookings" onLink={() => navigation.navigate('Bookings')}>
-                {overview.map((item, i) => (
-                  <Pressable key={item.id} style={[styles.row, i > 0 && styles.divider]} onPress={() => open(item)} accessibilityRole="button">
-                    <Feather name={item.icon as FeatherName} size={17} color={colors.textMuted} />
-                    <Text style={styles.statLabel}>{item.title}</Text>
-                    <Text style={styles.statValue}>{overviewValue(item)}</Text>
-                    <Feather name="chevron-right" size={16} color={colors.borderStrong} />
-                  </Pressable>
-                ))}
-              </Section>
-            )}
+          {slides.length > 0 && <Carousel slides={slides} />}
 
-            {upcoming && (
-              <Section
-                icon="calendar"
-                title="Upcoming bookings"
-                subtitle="Your next confirmed and pending appointments"
-                linkLabel="View all"
-                onLink={() => open(upcoming)}
-              >
+          {upcoming && (
+            <View style={styles.section}>
+              <SectionHeading title="Up next" link="View all" onLink={() => open(upcoming)} />
+              <View style={styles.panel}>
                 {upcoming.data.bookings.length === 0 ? (
-                  <View style={styles.emptyBox}>
-                    <Feather name="info" size={17} color={colors.textMuted} />
-                    <Text style={styles.emptyText}>You have no upcoming bookings. Share your booking link to get some.</Text>
+                  <View style={styles.empty}>
+                    <Feather name="calendar" size={18} color={colors.textMuted} />
+                    <Text style={styles.emptyText}>No upcoming bookings yet. Share your booking link to get some.</Text>
                   </View>
                 ) : (
                   upcoming.data.bookings.map(
                     (b: { id: string; customerName: string | null; scheduledAt: string; status: string }, i: number) => (
                       <Pressable key={b.id} style={[styles.row, i > 0 && styles.divider]} onPress={() => open(upcoming)}>
-                        <View style={styles.personDot}>
+                        <View style={styles.person}>
                           <Text style={styles.personInitial}>{(b.customerName ?? 'C').charAt(0).toUpperCase()}</Text>
                         </View>
                         <View style={{ flex: 1 }}>
@@ -323,269 +402,116 @@ export function HomeScreen({ navigation }: Props) {
                     ),
                   )
                 )}
-              </Section>
-            )}
-
-            {home.layers.quick_action.length > 0 && (
-              <View style={{ gap: spacing.md }}>
-                <Text style={styles.blockTitle}>Quick actions</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pills}>
-                  {home.layers.quick_action.map((item) => (
-                    <Pressable key={item.id} style={styles.pill} onPress={() => open(item)} accessibilityRole="button">
-                      <View style={styles.pillIcon}>
-                        <Feather name={item.icon as FeatherName} size={14} color={colors.onDark} />
-                      </View>
-                      <Text style={styles.pillText}>
-                        {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
               </View>
-            )}
+            </View>
+          )}
 
-            {home.layers.recommendation.length > 0 && (
-              <Section icon="compass" title="Suggested for you">
-                {home.layers.recommendation.map((item, i) => {
-                  const soon = item.status === 'coming_soon';
-                  return (
-                    <View key={item.id} style={[styles.suggestion, i > 0 && styles.divider]}>
-                      <View style={[styles.suggestionIcon, soon && styles.suggestionIconSoon]}>
-                        <Feather name={item.icon as FeatherName} size={17} color={soon ? colors.textMuted : colors.accent} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.rowStrong, soon && { color: colors.textSecondary }]}>{item.title}</Text>
-                        <Text style={styles.metaText}>
-                          {soon ? 'Coming soon — we will let you know when it is ready.' : SUGGESTION[item.id]?.text(item.data) ?? ''}
-                        </Text>
-                        {canCustomise && item.id !== 'choose_interests' && (
-                          <Pressable onPress={() => dismiss(item)} hitSlop={6} accessibilityRole="button">
-                            <Text style={styles.dismiss}>Dismiss</Text>
-                          </Pressable>
-                        )}
-                      </View>
-                      {soon ? (
-                        <View style={styles.soonTag}><Text style={styles.soonText}>Soon</Text></View>
-                      ) : (
-                        <Pressable style={styles.outlineBtn} onPress={() => open(item)} accessibilityRole="button">
-                          <Text style={styles.outlineBtnText}>{SUGGESTION[item.id]?.action ?? 'Open'}</Text>
-                        </Pressable>
-                      )}
-                    </View>
-                  );
-                })}
-              </Section>
-            )}
+          {overview.length > 0 && (
+            <View style={styles.section}>
+              <SectionHeading title="Your business" />
+              <View style={styles.panel}>
+                {overview.map((item, i) => (
+                  <Pressable key={item.id} style={[styles.row, i > 0 && styles.divider]} onPress={() => open(item)} accessibilityRole="button">
+                    <Feather name={item.icon as FeatherName} size={18} color={colors.textMuted} />
+                    <Text style={styles.rowText}>{item.title}</Text>
+                    <Text style={styles.value}>{overviewValue(item)}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
 
-            {canCustomise && (
-              <Pressable style={styles.wideBtn} onPress={() => navigation.navigate('CustomiseHome')} accessibilityRole="button">
-                <Feather name="sliders" size={16} color={colors.text} />
-                <Text style={styles.wideBtnText}>Customise home</Text>
-              </Pressable>
-            )}
-          </View>
-        )}
-      </ScrollView>
-    </View>
+          {isManager && (
+            <Pressable style={styles.customise} onPress={() => navigation.navigate('CustomiseHome')} accessibilityRole="button">
+              <Feather name="sliders" size={15} color={colors.accent} />
+              <Text style={styles.sectionLink}>Customise home</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
-const CARD_SHADOW = {
-  shadowColor: colors.ink,
-  shadowOffset: { width: 0, height: 6 },
-  shadowOpacity: 0.06,
-  shadowRadius: 16,
-  elevation: 2,
-};
-
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.mist },
+  root: { flex: 1, backgroundColor: colors.background },
 
   // Header
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl + spacing.md,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-  },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  header: { paddingHorizontal: GUTTER, paddingBottom: spacing.xxl },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logo: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.onDark,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
   },
-  logoText: { fontFamily: fonts.extrabold, fontSize: 18, color: colors.accent },
-  bizName: { fontFamily: fonts.bold, fontSize: 16, color: colors.onDark },
-  bizRole: { fontFamily: fonts.medium, fontSize: 12, color: colors.onDarkMuted, textTransform: 'capitalize', marginTop: 1 },
-  headerBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.onDarkFaint,
-    borderWidth: 1,
-    borderColor: colors.onDarkLine,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoText: { fontFamily: fonts.displayExtraBold, fontSize: 18, color: colors.accent },
+  bizName: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
+  bizRole: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted, textTransform: 'capitalize', marginTop: 1 },
+  roundBtn: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
   },
   badge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    backgroundColor: colors.error,
-    borderWidth: 2,
-    borderColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
+    backgroundColor: colors.error, borderWidth: 2, borderColor: colors.background, alignItems: 'center', justifyContent: 'center',
   },
-  badgeText: { fontFamily: fonts.bold, color: colors.onDark, fontSize: 10 },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.accentLight,
-    borderWidth: 2,
-    borderColor: colors.onDarkLine,
-    alignItems: 'center',
-    justifyContent: 'center',
+  badgeText: { fontFamily: fonts.bold, fontSize: 10, color: colors.white },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: fonts.bold, fontSize: 13, color: colors.white },
+  greeting: { fontFamily: fonts.displayExtraBold, fontSize: 34, lineHeight: 38, letterSpacing: -1, color: colors.text, marginTop: 28 },
+  greetingSub: { fontFamily: fonts.medium, fontSize: 15, color: colors.textSecondary, marginTop: 6 },
+  quick: { flexDirection: 'row', marginTop: 26 },
+  quickItem: { flex: 1, alignItems: 'center', gap: 10, paddingHorizontal: 2 },
+  quickDisc: {
+    width: 60, height: 60, borderRadius: 30, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
+    shadowColor: colors.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 2,
   },
-  avatarText: { fontFamily: fonts.bold, fontSize: 13, color: colors.accent },
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-    backgroundColor: colors.onDarkFaint,
-    borderWidth: 1,
-    borderColor: colors.onDarkLine,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 13,
-  },
-  searchText: { fontFamily: fonts.medium, fontSize: 15, color: colors.onDarkMuted },
-  greeting: { fontFamily: fonts.extrabold, fontSize: 30, letterSpacing: -0.6, color: colors.onDark, marginTop: spacing.xl + spacing.xs },
-  greetingSub: { fontFamily: fonts.medium, fontSize: 15, color: colors.onDarkMuted, marginTop: 4 },
+  quickLabel: { fontFamily: fonts.semibold, fontSize: 13, lineHeight: 16, color: colors.text, textAlign: 'center' },
 
-  // Body — the first card tucks up into the header
-  body: { paddingHorizontal: spacing.lg, gap: spacing.lg, marginTop: -spacing.xxl },
-  card: {
-    backgroundColor: colors.background,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg + 2,
-    paddingVertical: spacing.md,
-    ...CARD_SHADOW,
-  },
-  cardHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
-  cardIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardTitle: { flex: 1, fontFamily: fonts.bold, fontSize: 18, letterSpacing: -0.2, color: colors.text },
-  cardSubtitle: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted, marginBottom: spacing.xs },
-  linkPill: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 7,
-  },
-  linkPillText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 14 },
+  // Body
+  body: { gap: 32, paddingTop: spacing.sm },
+  section: { paddingHorizontal: GUTTER, gap: spacing.md },
+  sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  sectionTitle: { fontFamily: fonts.displayBold, fontSize: 21, letterSpacing: -0.4, color: colors.text },
+  sectionLink: { fontFamily: fonts.semibold, fontSize: 14, color: colors.accent },
+  panel: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: 18 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   rowText: { flex: 1, fontFamily: fonts.medium, fontSize: 15, lineHeight: 21, color: colors.text },
   rowStrong: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
+  value: { fontFamily: fonts.bold, fontSize: 15, color: colors.text, fontVariant: ['tabular-nums'] },
   metaText: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: 2 },
-  alertDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.warning },
-  actionBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: spacing.lg, paddingVertical: 10 },
-  actionBtnOff: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  actionBtnText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.onDark },
-  statLabel: { flex: 1, fontFamily: fonts.medium, fontSize: 15, color: colors.text },
-  statValue: { fontFamily: fonts.bold, fontSize: 15, color: colors.text, fontVariant: ['tabular-nums'] },
-  personDot: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  flag: { width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: colors.warning },
+  darkBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: spacing.lg, paddingVertical: 10 },
+  darkBtnOff: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  darkBtnText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.white },
+  person: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
   personInitial: { fontFamily: fonts.bold, fontSize: 15, color: colors.accent },
-  emptyBox: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderStyle: 'dashed',
-    borderRadius: 14,
-    padding: spacing.lg,
-    marginVertical: spacing.sm,
-    backgroundColor: colors.surface,
-  },
+  empty: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 18 },
   emptyText: { flex: 1, fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: colors.textSecondary },
-  blockTitle: { fontFamily: fonts.bold, fontSize: 18, letterSpacing: -0.2, color: colors.text, paddingHorizontal: spacing.xs },
-  pills: { gap: spacing.sm, paddingHorizontal: spacing.xs },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: radius.pill,
-    paddingLeft: 6,
-    paddingRight: spacing.lg,
-    paddingVertical: 6,
+
+  // Carousel
+  slide: { flexDirection: 'row', alignItems: 'center', borderRadius: 22, paddingVertical: 22, paddingLeft: 22, paddingRight: 16, minHeight: 172, gap: spacing.sm },
+  slideTitle: { fontFamily: fonts.displayExtraBold, fontSize: 22, lineHeight: 25, letterSpacing: -0.4, color: colors.text },
+  slideBody: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.textSecondary, marginTop: 8, marginBottom: 16 },
+  slideCta: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10,
   },
-  pillIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+  slideCtaText: { fontFamily: fonts.bold, fontSize: 14, color: colors.white },
+  soonTag: { alignSelf: 'flex-start', backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
+  soonText: { fontFamily: fonts.bold, fontSize: 12, color: colors.textSecondary },
+  art: { width: 104, height: 120 },
+  artBlob: { position: 'absolute', left: 4, top: 6, right: 0, bottom: 0, borderRadius: 52, backgroundColor: 'rgba(255,255,255,0.65)' },
+  artChip: {
+    position: 'absolute', alignItems: 'center', justifyContent: 'center',
+    shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 3,
   },
-  pillText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
-  suggestion: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: 14 },
-  suggestionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  suggestionIconSoon: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  dismiss: { fontFamily: fonts.semibold, fontSize: 13, color: colors.accent, marginTop: spacing.sm },
-  outlineBtn: { borderWidth: 1.5, borderColor: colors.text, borderRadius: 10, paddingHorizontal: spacing.md, paddingVertical: 6 },
-  outlineBtnText: { fontFamily: fonts.bold, fontSize: 13, color: colors.text },
-  soonTag: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  soonText: { fontFamily: fonts.bold, fontSize: 11, color: colors.textSecondary },
-  wideBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingVertical: spacing.lg,
-  },
-  wideBtnText: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.border },
+  dotOn: { backgroundColor: colors.accent },
+
+  customise: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
   errorBox: { alignItems: 'center', paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.md },
+  retry: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
 });

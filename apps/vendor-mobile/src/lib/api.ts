@@ -175,6 +175,111 @@ export function deleteStaff(id: string): Promise<void> {
   return req('DELETE', `/vendor-admin/staff/${id}`);
 }
 
+// ─── Staff schedules, attendance, performance ───────────────────────────────
+
+export interface StaffDay {
+  dayOfWeek: number;
+  startsAtMinutes: number;
+  endsAtMinutes: number;
+  breakStartsAtMinutes: number | null;
+  breakEndsAtMinutes: number | null;
+}
+
+export interface TimeOff {
+  id: string;
+  startDate: string;
+  endDate: string;
+  reason: string | null;
+}
+
+export interface StaffSchedule {
+  staffId: string;
+  name: string;
+  days: StaffDay[];
+  timeOff: TimeOff[];
+}
+
+export function getStaffSchedule(staffId: string): Promise<StaffSchedule> {
+  return req('GET', `/vendor-admin/staff/${staffId}/schedule`);
+}
+
+export function setStaffSchedule(staffId: string, days: StaffDay[]): Promise<StaffSchedule> {
+  return req('PUT', `/vendor-admin/staff/${staffId}/schedule`, {
+    days: days.map((d) => ({
+      dayOfWeek: d.dayOfWeek,
+      startsAtMinutes: d.startsAtMinutes,
+      endsAtMinutes: d.endsAtMinutes,
+      ...(d.breakStartsAtMinutes != null && d.breakEndsAtMinutes != null
+        ? { breakStartsAtMinutes: d.breakStartsAtMinutes, breakEndsAtMinutes: d.breakEndsAtMinutes }
+        : {}),
+    })),
+  });
+}
+
+export function addTimeOff(staffId: string, startDate: string, endDate: string, reason?: string): Promise<TimeOff> {
+  return req('POST', `/vendor-admin/staff/${staffId}/time-off`, { startDate, endDate, reason });
+}
+
+export function removeTimeOff(staffId: string, timeOffId: string): Promise<void> {
+  return req('DELETE', `/vendor-admin/staff/${staffId}/time-off/${timeOffId}`);
+}
+
+export interface ShiftStatus { staffId: string; clockedIn: boolean; since: string | null }
+export interface TeamShiftStatus { id: string; name: string; role: string; clockedIn: boolean; since: string | null }
+
+export function getMyShift(): Promise<ShiftStatus> {
+  return req('GET', '/vendor-admin/attendance/me');
+}
+
+export function getTeamShifts(): Promise<TeamShiftStatus[]> {
+  return req('GET', '/vendor-admin/attendance/team');
+}
+
+/** Omit `staffId` to clock yourself in; owners and managers may name someone else. */
+export function clockIn(staffId?: string): Promise<unknown> {
+  return req('POST', '/vendor-admin/attendance/clock-in', staffId ? { staffId } : {});
+}
+
+export function clockOut(staffId?: string): Promise<unknown> {
+  return req('POST', '/vendor-admin/attendance/clock-out', staffId ? { staffId } : {});
+}
+
+export interface StaffPerformance {
+  staffId: string | null;
+  name: string;
+  role: string | null;
+  bookings: number;
+  completed: number;
+  noShows: number;
+  cancelledByBusiness: number;
+  cancelledByCustomer: number;
+  upcoming: number;
+  salesKobo: number;
+  averageSaleKobo: number | null;
+  completionRate: number | null;
+  uniqueCustomers: number;
+  repeatCustomers: number;
+  attendance: { workedMinutes: number; scheduledMinutes: number | null; rate: number | null; clockedInNow: boolean } | null;
+}
+
+export interface PerformanceReport {
+  from: string;
+  to: string;
+  definitions: Record<string, string>;
+  tracksAttendance: boolean;
+  staff: StaffPerformance[];
+}
+
+export function getPerformance(from: string, to: string): Promise<PerformanceReport> {
+  return req('GET', `/vendor-admin/performance?from=${from}&to=${to}`);
+}
+
+export function minutesToClock(m: number): string {
+  const h = Math.floor(m / 60);
+  const min = String(m % 60).padStart(2, '0');
+  return `${((h + 11) % 12) + 1}:${min}${h >= 12 && h < 24 ? 'pm' : 'am'}`;
+}
+
 // ─── Customers ───────────────────────────────────────────────────────────────
 
 export function listCustomers(): Promise<Customer[]> {

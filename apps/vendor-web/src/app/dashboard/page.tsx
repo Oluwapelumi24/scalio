@@ -21,6 +21,9 @@ const HREF: Record<string, string> = {
   awaiting_payment: '/dashboard/bookings?status=pending_payment',
   starting_soon: '/dashboard/bookings?status=confirmed',
   unassigned_today: '/dashboard/bookings',
+  bookings_on_leave: '/dashboard/bookings',
+  clock_in: '/dashboard/attendance',
+  staff_performance: '/dashboard/performance',
   today_bookings: '/dashboard/bookings',
   upcoming_bookings: '/dashboard/bookings',
   view_bookings: '/dashboard/bookings',
@@ -41,6 +44,7 @@ const ATTENTION_TEXT: Record<string, (n: number) => string> = {
   awaiting_payment: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`,
   starting_soon: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`,
   unassigned_today: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff assigned`,
+  bookings_on_leave: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`,
 }
 
 const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number>) => string> = {
@@ -217,7 +221,7 @@ export default async function DashboardHome() {
                         href={HREF[item.id] ?? '/dashboard'}
                         className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 hover:border-indigo-300"
                       >
-                        {item.title}
+                        {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
                         <span className="text-gray-400">→</span>
                       </ModuleLink>
                     ),

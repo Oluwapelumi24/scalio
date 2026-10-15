@@ -17,6 +17,9 @@ export type RootStackParamList = {
   BlackoutDates: undefined;
   StaffManagement: undefined;
   StaffForm: { member?: StaffMember };
+  StaffSchedule: { staffId: string; name: string };
+  Attendance: undefined;
+  Performance: undefined;
 };
 
 export type MainTabParamList = {

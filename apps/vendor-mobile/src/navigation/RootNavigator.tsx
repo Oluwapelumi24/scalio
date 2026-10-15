@@ -18,6 +18,9 @@ import { BusinessHoursScreen } from '../screens/BusinessHoursScreen';
 import { BlackoutDatesScreen } from '../screens/BlackoutDatesScreen';
 import { StaffManagementScreen } from '../screens/StaffManagementScreen';
 import { StaffFormScreen } from '../screens/StaffFormScreen';
+import { StaffScheduleScreen } from '../screens/StaffScheduleScreen';
+import { AttendanceScreen } from '../screens/AttendanceScreen';
+import { PerformanceScreen } from '../screens/PerformanceScreen';
 import { loadSession } from '../lib/session';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -52,6 +55,9 @@ export function RootNavigator() {
         <Stack.Screen name="BlackoutDates" component={BlackoutDatesScreen} />
         <Stack.Screen name="StaffManagement" component={StaffManagementScreen} />
         <Stack.Screen name="StaffForm" component={StaffFormScreen} />
+        <Stack.Screen name="StaffSchedule" component={StaffScheduleScreen} />
+        <Stack.Screen name="Attendance" component={AttendanceScreen} />
+        <Stack.Screen name="Performance" component={PerformanceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

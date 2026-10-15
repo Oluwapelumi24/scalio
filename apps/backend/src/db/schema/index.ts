@@ -5,3 +5,4 @@ export * from './bookings';
 export * from './schedule';
 export * from './admins';
 export * from './waitlist';
+export * from './preferences';

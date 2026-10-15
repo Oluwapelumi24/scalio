@@ -18,6 +18,7 @@ import { VendorAdminModule } from './vendor-admin/vendor-admin.module';
 import { SuperAdminAuthModule } from './super-admin-auth/super-admin-auth.module';
 import { SuperAdminModule } from './super-admin/super-admin.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
+import { PersonalisationModule } from './personalisation/personalisation.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { WaitlistModule } from './waitlist/waitlist.module';
     PaymentsModule,
     NotificationsModule,
     WaitlistModule,
+    PersonalisationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

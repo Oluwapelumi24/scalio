@@ -27,7 +27,8 @@ two copies of its data.
 | Consumer mobile | Guest-first discovery, interest selection, booking + laundry flows, Paystack checkout | The customer-facing booking surface. Its interest screen is about *what customers want to book* — a different taxonomy from the vendor interests in §3. Don't merge them. |
 | Website | Marketing site + waitlist | Will host public booking pages (§4, Phase 1). |
 | Shared types | `packages/shared-types` (~80 lines: booking, customer, vendor) | Grows into the shared API contract. |
-| `Scalio/` | A SwiftUI Xcode project | Looks unused next to the Expo apps. **Decide:** keep or remove (D7). |
+
+(The `Scalio/` SwiftUI folder seen on the local machine is not part of the repo: it is git-ignored as iOS prebuild output and is an empty Xcode template.)
 
 **Gaps the new direction needs filled:**
 
@@ -49,14 +50,14 @@ two copies of its data.
 
 | # | Decision | Blocks |
 |---|---|---|
-| D1 | What the 2.3% financing rate is: monthly, annual, or flat fee. Never shown as guaranteed. | Phase 6 |
+| D1 | ✅ **Decided:** 2.3% is the interest rate **per month** — 27.6% a year simple (12 × 2.3%), about 31.4% a year if it compounds monthly. Still to settle with the lender: flat on the original amount vs. on the reducing balance (changes the total repaid), and whether it is the same for every business. Never shown as guaranteed. | Phase 6 |
 | D2 | Licensed partner for wallet custody and transfers (Paystack Transfers/Balance vs. a bank or licensed MMO). The wallet UI alone gives no right to hold funds. | Phase 3 |
 | D3 | Lending partner and who makes the credit decision. | Phase 6 |
 | D4 | AI provider for captions; WhatsApp Business Solution Provider. | Phase 4 |
 | D5 | Business size: worked out from staff/branch counts (recommended) rather than a self-picked label. | Home, settings |
 | D6 | Vendor bottom nav: proposed **Home / Business / Customers / Money / More** — test with real vendors before locking. | Phase 1 design |
-| D7 | Keep or remove the SwiftUI `Scalio/` project. | Repo hygiene |
-| D8 | Vendor sign-in methods: add phone OTP (SMS provider needed) + Google + Apple alongside email. | Phase 1 |
+| D8 | Vendor sign-in: add phone OTP + Google + Apple alongside email. SMS provider: **Mono** chosen, but Mono's site lists no SMS/OTP product (its products are Connect, DirectPay, DirectDebit, Disburse, Lookup, Prove) — **confirm** which Mono product sends the codes, or pick an SMS provider. Hide the provider behind an `SmsProvider` adapter so it can change. | Phase 1 |
+| D9 | Worth evaluating Mono for other parts of the plan: **Disburse** (staff payouts, D2), **Connect / Creditworthiness** (financing eligibility, Phase 6), **Lookup / Prove** (verifying staff payout accounts and vendor identity). | Phases 3, 6 |
 
 **Start long-lead approvals now** (they run in parallel with Phases 1–3): Meta app
 review (Instagram/Facebook publishing, messaging, ads), TikTok Content Posting API,
@@ -169,7 +170,7 @@ Website
 
 ### Phase 6 — Expansion: financing and larger businesses (depends on D1 + D3)
 
-- [ ] Financing offers built from transaction history plus the partner's underwriting. Show rate basis, fees, repayment schedule, total repayment and late-payment consequences before acceptance.
+- [ ] Financing offers built from transaction history plus the partner's underwriting. Show the rate as **2.3% per month** with its yearly equivalent next to it, plus fees, repayment schedule, total repayment in naira and late-payment consequences, before acceptance. Show the actual offered rate per business, not a headline rate for everyone.
 - [ ] Application, approval, disbursement and repayment tracking.
 - [ ] Multi-branch management and combined reporting (uses Phase 1's `business_locations`).
 - [ ] Finer roles (add accountant), approval workflows, bulk actions.

@@ -6,7 +6,9 @@ export type RootStackParamList = {
   Login: undefined;
   ForgotPassword: undefined;
   ResetPassword: { email: string };
+  InterestSelection: { fromSettings?: boolean } | undefined;
   Main: undefined;
+  CustomiseHome: undefined;
   BookingDetail: { booking: VendorBooking };
   Services: undefined;
   ServiceForm: { service?: VendorService };
@@ -18,7 +20,7 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  Dashboard: undefined;
+  Home: undefined;
   Bookings: undefined;
   Customers: undefined;
   Settings: undefined;

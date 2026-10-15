@@ -72,6 +72,28 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
       </View>
 
+      {/* Personalisation — business-level, so owners and managers only */}
+      {(session?.role === 'owner' || session?.role === 'manager') && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your home screen</Text>
+          <View style={styles.group}>
+            <SettingsRow
+              icon="sliders"
+              label="What you want help with"
+              subtitle="Change the interests that shape your home screen"
+              onPress={() => navigation.navigate('InterestSelection', { fromSettings: true })}
+            />
+            <View style={styles.divider} />
+            <SettingsRow
+              icon="layout"
+              label="Customise home"
+              subtitle="Pin, hide or reset what you see first"
+              onPress={() => navigation.navigate('CustomiseHome')}
+            />
+          </View>
+        </View>
+      )}
+
       {/* Services */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Services</Text>

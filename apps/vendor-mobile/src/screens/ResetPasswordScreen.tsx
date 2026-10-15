@@ -15,6 +15,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { resetPassword } from '../lib/api';
 import { saveSession } from '../lib/session';
+import { routeAfterSignIn } from '../lib/postAuth';
 import { colors, radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ResetPassword'>;
@@ -50,7 +51,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
         role: res.staff.role,
         token: res.accessToken,
       });
-      navigation.replace('Main');
+      navigation.replace(await routeAfterSignIn(res.staff.role));
     } catch (err) {
       Alert.alert('Reset failed', err instanceof Error ? err.message : 'The code may be invalid or expired. Please request a new one.');
     } finally {

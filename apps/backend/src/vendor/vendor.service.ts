@@ -44,6 +44,58 @@ export class VendorService {
     return vendor;
   }
 
+  /**
+   * Everything the public booking page (`/book/:slug`) needs in one call. Only
+   * approved businesses are public, and only customer-facing fields go out —
+   * owner contact details, review notes and registration numbers stay private.
+   */
+  async getPublicProfile(slug: string) {
+    const [vendor] = await this.db
+      .select({
+        id: vendors.id,
+        slug: vendors.slug,
+        businessName: vendors.businessName,
+        category: vendors.category,
+        description: vendors.description,
+        address: vendors.address,
+        logoUrl: vendors.logoUrl,
+        themeColor: vendors.themeColor,
+        rating: vendors.rating,
+        reviewCount: vendors.reviewCount,
+        timezone: vendors.timezone,
+      })
+      .from(vendors)
+      .where(and(eq(vendors.slug, slug), eq(vendors.approvalStatus, 'approved')));
+    if (!vendor) {
+      throw new NotFoundException('This business is not on Scalio, or is not taking bookings yet');
+    }
+
+    const [serviceRows, hourRows] = await Promise.all([
+      this.db
+        .select({
+          id: services.id,
+          name: services.name,
+          serviceType: services.serviceType,
+          durationMinutes: services.durationMinutes,
+          priceKobo: services.priceKobo,
+          paymentMode: services.paymentMode,
+          depositPercent: services.depositPercent,
+        })
+        .from(services)
+        .where(eq(services.vendorId, vendor.id)),
+      this.db
+        .select({
+          dayOfWeek: businessHours.dayOfWeek,
+          opensAtMinutes: businessHours.opensAtMinutes,
+          closesAtMinutes: businessHours.closesAtMinutes,
+        })
+        .from(businessHours)
+        .where(eq(businessHours.vendorId, vendor.id)),
+    ]);
+
+    return { ...vendor, services: serviceRows, businessHours: hourRows };
+  }
+
   async listServices(vendorId: string) {
     await this.getById(vendorId); // 404s if the vendor doesn't exist
     return this.db

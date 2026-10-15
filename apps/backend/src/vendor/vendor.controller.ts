@@ -11,6 +11,12 @@ export class VendorController {
     return this.vendorService.list();
   }
 
+  // Declared before ':id' so 'by-slug' is never parsed as a vendor id.
+  @Get('by-slug/:slug')
+  getPublicProfile(@Param('slug') slug: string) {
+    return this.vendorService.getPublicProfile(slug);
+  }
+
   @Get(':id')
   getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.vendorService.getById(id);

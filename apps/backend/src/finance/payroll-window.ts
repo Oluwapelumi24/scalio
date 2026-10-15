@@ -30,6 +30,8 @@ const addDays = (isoDate: string, days: number) => {
   return iso(d);
 };
 const payDateFor = (year: number, monthIndex: number, payDay: number) => iso(new Date(Date.UTC(year, monthIndex, payDay)));
+const monthName = (period: string) =>
+  new Date(`${period}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const pretty = (isoDate: string) =>
   new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 
@@ -55,7 +57,7 @@ export function salaryWindow(schedule: PayrollScheduleInput | null, today: strin
   }
   const open = candidates.find((c) => c.opensOn <= today && today <= c.closesOn);
   if (open) {
-    return { state: 'open', ...open, reason: `Payroll for ${open.period} is open until ${pretty(open.closesOn)}.` };
+    return { state: 'open', ...open, reason: `${monthName(open.period)} payroll is open until ${pretty(open.closesOn)}.` };
   }
   const next = candidates.find((c) => c.opensOn > today)!;
   return { state: 'closed', ...next, reason: `Payroll opens on ${pretty(next.opensOn)}, ahead of pay day on ${pretty(next.payDate)}.` };

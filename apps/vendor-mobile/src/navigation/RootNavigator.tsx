@@ -21,6 +21,10 @@ import { StaffFormScreen } from '../screens/StaffFormScreen';
 import { StaffScheduleScreen } from '../screens/StaffScheduleScreen';
 import { AttendanceScreen } from '../screens/AttendanceScreen';
 import { PerformanceScreen } from '../screens/PerformanceScreen';
+import { PaymentsSetupScreen } from '../screens/PaymentsSetupScreen';
+import { PayrollScreen } from '../screens/PayrollScreen';
+import { StaffPayScreen } from '../screens/StaffPayScreen';
+import { MoneyScreen } from '../screens/MoneyScreen';
 import { loadSession } from '../lib/session';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,6 +62,10 @@ export function RootNavigator() {
         <Stack.Screen name="StaffSchedule" component={StaffScheduleScreen} />
         <Stack.Screen name="Attendance" component={AttendanceScreen} />
         <Stack.Screen name="Performance" component={PerformanceScreen} />
+        <Stack.Screen name="PaymentsSetup" component={PaymentsSetupScreen} />
+        <Stack.Screen name="Payroll" component={PayrollScreen} />
+        <Stack.Screen name="StaffPay" component={StaffPayScreen} />
+        <Stack.Screen name="Money" component={MoneyScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

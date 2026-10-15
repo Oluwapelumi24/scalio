@@ -37,6 +37,7 @@ const ATTENTION: Record<string, { text: (n: number) => string; action: string }>
   starting_soon: { text: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`, action: 'View' },
   unassigned_today: { text: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff`, action: 'Assign' },
   bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`, action: 'Review' },
+  payroll_open: { text: (n) => `Payroll is open: ${n} ${n === 1 ? 'person' : 'people'} to pay`, action: 'Pay' },
 };
 
 /** One carousel slide: copy, a tint, and three icons for the small illustration. */
@@ -213,6 +214,14 @@ export function HomeScreen({ navigation }: Props) {
       case 'setup_hours':
         navigation.navigate('BusinessHours');
         return;
+      case 'pay_staff':
+      case 'payroll_open':
+      case 'setup_payroll':
+        navigation.navigate('Payroll');
+        return;
+      case 'setup_payments':
+        navigation.navigate('PaymentsSetup');
+        return;
       case 'clock_in':
         navigation.navigate('Attendance');
         return;
@@ -243,6 +252,7 @@ export function HomeScreen({ navigation }: Props) {
 
     // Set-up steps first: nothing else matters until customers can book.
     add(byId('choose_interests'), { title: 'Make Scalio yours', body: "Tell us what you want help with and we'll set up your home.", cta: 'Start', tint: colors.accentLight, tone: colors.accent, icons: ['sliders', 'star', 'compass'] });
+    add(byId('setup_payments'), { title: 'Take payments online', body: 'Add your bank account. Customer deposits go straight into it.', cta: 'Set up', tint: colors.accentLight, tone: colors.accent, icons: ['credit-card', 'shield', 'check-circle'] });
     add(byId('setup_services'), { title: 'Add your first service', body: 'Customers can only book once you have at least one.', cta: 'Add service', tint: colors.mintSoft, tone: colors.success, icons: ['plus-circle', 'scissors', 'tag'] });
     add(byId('setup_hours'), { title: 'Set your opening hours', body: "Let customers know when you're open.", cta: 'Set hours', tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'calendar', 'sun'] });
 
@@ -260,6 +270,7 @@ export function HomeScreen({ navigation }: Props) {
         tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'user-check', 'users'], onPress: () => navigation.navigate('StaffManagement'),
       });
     }
+    add(byId('setup_payroll'), { title: 'Pay your team on time', body: 'Set a pay day and salaries. Scalio reminds you when payroll opens.', cta: 'Set up', tint: colors.mintSoft, tone: colors.success, icons: ['credit-card', 'calendar', 'users'] });
     const lapsed = byId('follow_up_lapsed');
     add(lapsed, {
       title: 'Bring customers back',
@@ -350,7 +361,7 @@ export function HomeScreen({ navigation }: Props) {
                 attention.map((item, i) => (
                   <View key={item.id} style={[styles.row, i > 0 && styles.divider]}>
                     <View style={styles.flag} />
-                    <Text style={styles.rowText}>{ATTENTION[item.id]?.text(item.data.count) ?? item.title}</Text>
+                    <Text style={styles.rowText}>{ATTENTION[item.id]?.text(item.data.count ?? item.data.toPay) ?? item.title}</Text>
                     <Pressable style={styles.darkBtn} onPress={() => open(item)} accessibilityRole="button">
                       <Text style={styles.darkBtnText}>{ATTENTION[item.id]?.action ?? 'View'}</Text>
                     </Pressable>

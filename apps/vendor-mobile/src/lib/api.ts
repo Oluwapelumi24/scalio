@@ -291,6 +291,167 @@ export function minutesToClock(m: number): string {
   return `${((h + 11) % 12) + 1}:${min}${h >= 12 && h < 24 ? 'pm' : 'am'}`;
 }
 
+// ─── Money: payments, payroll, expenses ──────────────────────────────────────
+// Scalio never holds money: online payments settle to the vendor's own bank, and
+// salaries are paid from the owner's bank, then recorded here.
+
+export interface Bank { name: string; code: string }
+
+export interface PayoutAccount {
+  bankName: string;
+  accountLast4: string;
+  accountName: string;
+  onlinePaymentsEnabled: boolean;
+  verifiedAt: string;
+}
+
+export function getBanks(): Promise<Bank[]> {
+  return req('GET', '/vendor-admin/payments/banks');
+}
+
+export function resolveAccount(bankCode: string, accountNumber: string): Promise<{ accountName: string }> {
+  return req('POST', '/vendor-admin/payments/resolve-account', { bankCode, accountNumber });
+}
+
+export function getPayoutAccount(): Promise<PayoutAccount | null> {
+  return req('GET', '/vendor-admin/payments/account');
+}
+
+export function setPayoutAccount(bankCode: string, accountNumber: string): Promise<PayoutAccount> {
+  return req('PUT', '/vendor-admin/payments/account', { bankCode, accountNumber });
+}
+
+export interface SalaryWindow {
+  state: 'not_set_up' | 'paused' | 'open' | 'closed';
+  period: string | null;
+  payDate: string | null;
+  opensOn: string | null;
+  closesOn: string | null;
+  reason: string;
+}
+
+export interface PayrollSchedule { payDay: number; opensDaysBefore: number; closesDaysAfter: number; paused: boolean }
+
+export interface TeamPay {
+  staffId: string;
+  name: string;
+  role: string;
+  monthlySalaryKobo: number | null;
+  bankName: string | null;
+  accountLast4: string | null;
+  accountName: string | null;
+  verifiedAt: string | null;
+}
+
+export interface SalaryPayout {
+  id: string;
+  staffName: string;
+  amountKobo: number;
+  bankName: string;
+  accountLast4: string;
+  accountName: string;
+  accountNumber?: string;
+  status: 'pending' | 'paid' | 'skipped';
+  reference: string | null;
+  paidAt: string | null;
+}
+
+export interface SalaryRun {
+  id: string;
+  period: string;
+  status: 'open' | 'completed';
+  totalKobo: number;
+  paidKobo: number;
+  payouts: SalaryPayout[];
+}
+
+export interface PayrollOverview {
+  schedule: PayrollSchedule | null;
+  window: SalaryWindow;
+  team: TeamPay[];
+  totals: { monthlyKobo: number; people: number };
+  canStart: boolean;
+  blockedReason: string | null;
+  currentRun: SalaryRun | null;
+}
+
+export function getPayroll(): Promise<PayrollOverview> {
+  return req('GET', '/vendor-admin/payroll');
+}
+
+export function setPayrollSchedule(data: { payDay: number; paused?: boolean }): Promise<PayrollOverview> {
+  return req('PUT', '/vendor-admin/payroll/schedule', data);
+}
+
+export function setStaffPay(staffId: string, data: { monthlySalaryKobo?: number; bankCode?: string; accountNumber?: string }): Promise<PayrollOverview> {
+  return req('PUT', `/vendor-admin/payroll/staff/${staffId}`, data);
+}
+
+export function startPayroll(): Promise<SalaryRun> {
+  return req('POST', '/vendor-admin/payroll/runs');
+}
+
+export function getTransferList(runId: string): Promise<SalaryRun> {
+  return req('GET', `/vendor-admin/payroll/runs/${runId}/transfer-list`);
+}
+
+export function markPayoutPaid(payoutId: string, reference?: string): Promise<SalaryRun> {
+  return req('POST', `/vendor-admin/payroll/payouts/${payoutId}/paid`, reference ? { reference } : {});
+}
+
+export function skipPayout(payoutId: string): Promise<SalaryRun> {
+  return req('POST', `/vendor-admin/payroll/payouts/${payoutId}/skip`, {});
+}
+
+export interface MoneySummary {
+  from: string;
+  to: string;
+  salesKobo: number;
+  receivedOnlineKobo: number;
+  salariesKobo: number;
+  expensesKobo: number;
+  netKobo: number;
+}
+
+export interface LedgerEntry { id: string; kind: string; direction: 'in' | 'out'; amountKobo: number; occurredAt: string; description: string }
+export interface Expense { id: string; amountKobo: number; category: string; spentOn: string; note: string | null }
+
+export function getMoneySummary(from: string, to: string): Promise<MoneySummary> {
+  return req('GET', `/vendor-admin/money/summary?from=${from}&to=${to}`);
+}
+
+export function getLedger(from: string, to: string): Promise<LedgerEntry[]> {
+  return req('GET', `/vendor-admin/money/ledger?from=${from}&to=${to}`);
+}
+
+export function listExpenses(from: string, to: string): Promise<Expense[]> {
+  return req('GET', `/vendor-admin/money/expenses?from=${from}&to=${to}`);
+}
+
+export function getExpenseCategories(): Promise<string[]> {
+  return req('GET', '/vendor-admin/money/expense-categories');
+}
+
+export function addExpense(data: { amountKobo: number; category: string; spentOn: string; note?: string }): Promise<Expense> {
+  return req('POST', '/vendor-admin/money/expenses', data);
+}
+
+export function voidExpense(id: string): Promise<void> {
+  return req('POST', `/vendor-admin/money/expenses/${id}/void`, {});
+}
+
+/** ₦ with thousands separators, from kobo. */
+export function naira(kobo: number): string {
+  // `|| 0` turns -0 into 0, so a zero total never shows as "₦-0".
+  return `₦${(kobo / 100 || 0).toLocaleString('en-NG')}`;
+}
+
+/** 'YYYY-MM' → 'October 2026'. */
+export function periodLabel(period: string): string {
+  const [y, m] = period.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
 // ─── Customers ───────────────────────────────────────────────────────────────
 
 export function listCustomers(): Promise<Customer[]> {

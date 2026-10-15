@@ -21,6 +21,13 @@ export const colors = {
   cancelled: '#dc2626',
   cancelledLight: '#fef2f2',
   white: '#ffffff',
+  // Deep navy end of the brand gradient (accent → ink) and the cool page wash behind cards.
+  ink: '#0b1638',
+  mist: '#e8eef9',
+  onDark: '#ffffff',
+  onDarkMuted: 'rgba(255,255,255,0.72)',
+  onDarkFaint: 'rgba(255,255,255,0.14)',
+  onDarkLine: 'rgba(255,255,255,0.22)',
 } as const;
 
 export const spacing = {
@@ -57,4 +64,14 @@ export const typography = {
     title: 22,
     xl: 28,
   },
+} as const;
+
+// Plus Jakarta Sans, loaded in App.tsx. With custom fonts each weight is its own
+// family, so use these instead of `fontWeight`.
+export const fonts = {
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semibold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
+  extrabold: 'PlusJakartaSans_800ExtraBold',
 } as const;

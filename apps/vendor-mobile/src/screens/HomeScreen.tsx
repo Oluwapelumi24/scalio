@@ -297,9 +297,6 @@ export function HomeScreen({ navigation }: Props) {
             <Text style={styles.bizName} numberOfLines={1}>{home?.business.name ?? 'Your business'}</Text>
             <Text style={styles.bizRole}>{session?.role?.replace('_', ' ') ?? ''}</Text>
           </View>
-          <Pressable style={styles.roundBtn} onPress={() => navigation.navigate('Customers')} accessibilityRole="button" accessibilityLabel="Search customers">
-            <Feather name="search" size={18} color={colors.text} />
-          </Pressable>
           <Pressable
             style={styles.roundBtn}
             onPress={() => navigation.navigate('Bookings')}
@@ -315,6 +312,11 @@ export function HomeScreen({ navigation }: Props) {
             <Text style={styles.avatarText}>{(session?.name ?? 'V').slice(0, 2).toUpperCase()}</Text>
           </Pressable>
         </View>
+
+        <Pressable style={styles.search} onPress={() => navigation.navigate('Customers')} accessibilityRole="search">
+          <Feather name="search" size={18} color={colors.textMuted} />
+          <Text style={styles.searchText}>Search customers</Text>
+        </Pressable>
 
         <Text style={styles.greeting}>Hey, {firstName}</Text>
         <Text style={styles.greetingSub}>Here's your business today.</Text>
@@ -455,9 +457,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error, borderWidth: 2, borderColor: colors.background, alignItems: 'center', justifyContent: 'center',
   },
   badgeText: { fontFamily: fonts.bold, fontSize: 10, color: colors.white },
+  search: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 20,
+    backgroundColor: colors.background, borderWidth: 1, borderColor: colors.borderStrong,
+    borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 13,
+  },
+  searchText: { fontFamily: fonts.medium, fontSize: 15, color: colors.textMuted },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: fonts.bold, fontSize: 13, color: colors.white },
-  greeting: { fontFamily: fonts.displaySemiBold, fontSize: 26, lineHeight: 32, letterSpacing: -0.4, color: colors.text, marginTop: 28 },
+  greeting: { fontFamily: fonts.displaySemiBold, fontSize: 26, lineHeight: 32, letterSpacing: -0.4, color: colors.text, marginTop: 24 },
   greetingSub: { fontFamily: fonts.medium, fontSize: 15, color: colors.textSecondary, marginTop: 6 },
   quick: { flexDirection: 'row', marginTop: 26 },
   quickItem: { flex: 1, alignItems: 'center', gap: 10, paddingHorizontal: 2 },

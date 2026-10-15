@@ -255,7 +255,7 @@ export function HomeScreen({ navigation }: Props) {
             <Text style={styles.searchText}>Search customers</Text>
           </Pressable>
 
-          <Text style={styles.greeting}>Hey, {firstName} 👋</Text>
+          <Text style={styles.greeting}>Hey, {firstName}</Text>
           <Text style={styles.greetingSub}>Here's your business today.</Text>
 
           {hero.length > 0 && (

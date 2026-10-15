@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   badgeText: { fontFamily: fonts.bold, fontSize: 10, color: colors.white },
   search: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 20,
-    backgroundColor: colors.background, borderWidth: 1, borderColor: colors.borderStrong,
+    backgroundColor: colors.field, borderWidth: 1, borderColor: colors.fieldBorder,
     borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 13,
   },
   searchText: { fontFamily: fonts.medium, fontSize: 15, color: colors.textMuted },

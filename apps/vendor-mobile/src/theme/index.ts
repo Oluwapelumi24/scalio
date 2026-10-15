@@ -25,6 +25,9 @@ export const colors = {
   ink: '#0b1638',
   mist: '#e8eef9',
   sky: '#eaf2ff',
+  // Neutral light grey for inputs on the blue wash (surface is too blue to show there).
+  field: '#f1f2f4',
+  fieldBorder: '#e3e6ec',
   mintSoft: '#dff5f1',
   amberSoft: '#fff4e0',
   onDark: '#ffffff',

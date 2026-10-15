@@ -15,8 +15,8 @@ describe('rankModules', () => {
   it('moves modules matching selected interests up their layer', () => {
     const plain = rankModules(MODULES, base).layers.overview;
     const finance = rankModules(MODULES, { ...base, interests: ['track_sales'] }).layers.overview;
-    expect(ids(plain)[0]).toBe('today_bookings');
-    expect(ids(finance)[0]).toBe('today_sales');
+    expect(ids(plain)[0]).toBe('upcoming_bookings');
+    expect(ids(finance)[0]).toBe('sales_30d');
   });
 
   it('never removes a module just because no interest matched', () => {
@@ -52,11 +52,11 @@ describe('rankModules', () => {
   });
 
   it('removes modules the role is not permitted to see', () => {
-    const ranked = rankModules(MODULES, { ...base, role: 'practitioner', pinned: ['today_sales'] });
+    const ranked = rankModules(MODULES, { ...base, role: 'practitioner', pinned: ['sales_30d'] });
     const shown = ids(Object.values(ranked.layers).flat());
-    expect(shown).not.toContain('today_sales');
+    expect(shown).not.toContain('sales_30d');
     expect(shown).not.toContain('manage_team');
-    expect(shown).toContain('today_bookings');
+    expect(shown).toContain('upcoming_bookings');
   });
 });
 

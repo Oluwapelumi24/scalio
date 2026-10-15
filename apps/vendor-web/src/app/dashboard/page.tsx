@@ -24,7 +24,6 @@ const HREF: Record<string, string> = {
   bookings_on_leave: '/dashboard/bookings',
   clock_in: '/dashboard/attendance',
   staff_performance: '/dashboard/performance',
-  today_bookings: '/dashboard/bookings',
   upcoming_bookings: '/dashboard/bookings',
   view_bookings: '/dashboard/bookings',
   repeat_customers: '/dashboard/customers',

@@ -56,8 +56,6 @@ export class HomeDataService {
     const [b] = await this.db
       .select({
         total: count(),
-        today: countWhere(sql`${isToday} and ${bookings.status} in ('pending_payment', 'confirmed', 'completed')`),
-        todaySales: sumValueWhere(sql`${isToday} and ${bookings.status} = 'completed'`),
         sales30d: sumValueWhere(sql`${bookings.scheduledAt} >= ${thirtyDaysAgo} and ${bookings.status} = 'completed'`),
         awaitingPayment: countWhere(sql`${bookings.status} = 'pending_payment' and ${bookings.scheduledAt} > ${now}`),
         startingSoon: countWhere(
@@ -136,8 +134,6 @@ export class HomeDataService {
     return {
       businessName: vendor.businessName,
       bookingLink: this.bookingLinkFor(vendor.slug),
-      todayBookings: b?.today ?? 0,
-      todaySalesKobo: b?.todaySales ?? 0,
       sales30dKobo: b?.sales30d ?? 0,
       upcoming: upcomingRows.map((r) => ({
         id: r.id,

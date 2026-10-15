@@ -86,9 +86,7 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'unassigned_today', layer: 'attention', title: "Today's bookings with no staff assigned", icon: 'user-x', interests: [], basePriority: 20, roles: [...MANAGERS, 'front_desk'] },
 
   // ── Business overview ─────────────────────────────────────────────────────
-  { id: 'today_bookings', layer: 'overview', title: "Today's bookings", icon: 'calendar', interests: ['manage_bookings', 'manage_staff'], basePriority: 50 },
   { id: 'upcoming_bookings', layer: 'overview', title: 'Upcoming bookings', icon: 'list', interests: ['manage_bookings', 'manage_staff'], basePriority: 45 },
-  { id: 'today_sales', layer: 'overview', title: "Today's sales", icon: 'trending-up', interests: ['track_sales', 'pay_staff', 'get_financing'], basePriority: 40, roles: MANAGERS },
   { id: 'sales_30d', layer: 'overview', title: 'Sales, last 30 days', icon: 'bar-chart-2', interests: ['track_sales', 'business_insights', 'get_financing'], basePriority: 20, roles: MANAGERS },
   { id: 'repeat_customers', layer: 'overview', title: 'Repeat customers', icon: 'repeat', interests: ['repeat_customers', 'business_insights', 'reviews_feedback'], basePriority: 15 },
   { id: 'new_customers', layer: 'overview', title: 'New customers, last 30 days', icon: 'user-plus', interests: ['find_customers', 'run_ads', 'social_posts', 'manage_social'], basePriority: 10 },

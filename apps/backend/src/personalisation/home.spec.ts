@@ -5,8 +5,6 @@ const now = new Date('2026-10-15T08:00:00Z');
 const snapshot: HomeSnapshot = {
   businessName: 'Fade House',
   bookingLink: 'http://localhost:3003/book/fade-house',
-  todayBookings: 8,
-  todaySalesKobo: 4_500_000,
   sales30dKobo: 92_000_000,
   upcoming: [{ id: 'b1', scheduledAt: '2026-10-15T10:00:00Z', status: 'confirmed', customerName: 'Tunde' }],
   totalBookings: 120,
@@ -41,7 +39,7 @@ const top = (home: ReturnType<typeof buildHome>, layer: keyof ReturnType<typeof 
 describe('buildHome — reference businesses', () => {
   it('Business A, booking-focused (solo barber): bookings first', () => {
     const home = buildHome(snapshot, prefs(['manage_bookings', 'repeat_customers']), 'owner', now);
-    expect(top(home, 'overview')).toEqual(['today_bookings', 'upcoming_bookings']);
+    expect(top(home, 'overview')).toEqual(['upcoming_bookings', 'repeat_customers']);
     expect(top(home, 'quick_action', 1)).toEqual(['share_booking_link']);
   });
 
@@ -56,7 +54,7 @@ describe('buildHome — reference businesses', () => {
 
   it('Business C, finance-focused: sales first', () => {
     const home = buildHome(snapshot, prefs(['track_sales', 'get_financing']), 'owner', now);
-    expect(top(home, 'overview')).toEqual(['today_sales', 'sales_30d']);
+    expect(top(home, 'overview')).toEqual(['sales_30d', 'upcoming_bookings']);
   });
 });
 
@@ -125,7 +123,7 @@ describe('buildHome — rules', () => {
       now,
     );
     const shown = Object.values(home.layers).flat().map((i) => i.id);
-    expect(shown).not.toEqual(expect.arrayContaining(['today_sales']));
+    expect(shown).toContain('upcoming_bookings');
     expect(shown).not.toContain('sales_30d');
     expect(shown).not.toContain('choose_interests');
     expect(shown).not.toContain('setup_services');

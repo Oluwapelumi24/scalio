@@ -35,9 +35,6 @@ type Props = CompositeScreenProps<
 >;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
 
-// Shown large in the header when the business (and role) has them.
-const HERO_IDS = ['today_bookings', 'today_sales'];
-
 const ATTENTION: Record<string, { text: (n: number) => string; action: string }> = {
   awaiting_payment: { text: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`, action: 'View' },
   starting_soon: { text: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`, action: 'View' },
@@ -55,14 +52,6 @@ const SUGGESTION: Record<string, { text: (d: Record<string, any>) => string; act
     action: 'Review',
   },
 };
-
-/** ₦45k / ₦1.2m — big header figures stay short. */
-function nairaShort(kobo: number): string {
-  const n = kobo / 100;
-  if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1).replace(/\.0$/, '')}m`;
-  if (n >= 1_000) return `₦${Math.round(n / 1_000)}k`;
-  return `₦${Math.round(n)}`;
-}
 
 function overviewValue(item: HomeItem): string {
   const d = item.data;
@@ -159,8 +148,6 @@ export function HomeScreen({ navigation }: Props) {
       case 'starting_soon':
       case 'unassigned_today':
       case 'bookings_on_leave':
-      case 'today_bookings':
-      case 'today_sales':
       case 'upcoming_bookings':
       case 'view_bookings':
         navigation.navigate('Bookings');
@@ -207,10 +194,7 @@ export function HomeScreen({ navigation }: Props) {
   }
 
   const attention = home?.layers.attention ?? [];
-  const hero = HERO_IDS.map((id) => home?.layers.overview.find((i) => i.id === id)).filter(
-    (i): i is HomeItem => !!i,
-  );
-  const overview = home?.layers.overview.filter((i) => i.id !== 'upcoming_bookings' && !HERO_IDS.includes(i.id)) ?? [];
+  const overview = home?.layers.overview.filter((i) => i.id !== 'upcoming_bookings') ?? [];
   const upcoming = home?.layers.overview.find((i) => i.id === 'upcoming_bookings');
 
   return (
@@ -258,23 +242,6 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.greeting}>Hey, {firstName}</Text>
           <Text style={styles.greetingSub}>Here's your business today.</Text>
 
-          {hero.length > 0 && (
-            <View style={styles.heroRow}>
-              {hero.map((item, i) => (
-                <Pressable
-                  key={item.id}
-                  style={[styles.heroStat, i > 0 && styles.heroDivider]}
-                  onPress={() => open(item)}
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.heroValue}>
-                    {typeof item.data.amountKobo === 'number' ? nairaShort(item.data.amountKobo) : String(item.data.count)}
-                  </Text>
-                  <Text style={styles.heroLabel}>{item.title}</Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
         </LinearGradient>
 
         {loading ? (
@@ -504,17 +471,6 @@ const styles = StyleSheet.create({
   searchText: { fontFamily: fonts.medium, fontSize: 15, color: colors.onDarkMuted },
   greeting: { fontFamily: fonts.extrabold, fontSize: 30, letterSpacing: -0.6, color: colors.onDark, marginTop: spacing.xl + spacing.xs },
   greetingSub: { fontFamily: fonts.medium, fontSize: 15, color: colors.onDarkMuted, marginTop: 4 },
-  heroRow: {
-    flexDirection: 'row',
-    marginTop: spacing.xl,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.onDarkLine,
-  },
-  heroStat: { flex: 1, gap: 2 },
-  heroDivider: { borderLeftWidth: 1, borderLeftColor: colors.onDarkLine, paddingLeft: spacing.xl },
-  heroValue: { fontFamily: fonts.extrabold, fontSize: 34, letterSpacing: -1, color: colors.onDark, fontVariant: ['tabular-nums'] },
-  heroLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.onDarkMuted },
 
   // Body — the first card tucks up into the header
   body: { paddingHorizontal: spacing.lg, gap: spacing.lg, marginTop: -spacing.xxl },

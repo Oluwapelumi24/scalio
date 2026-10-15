@@ -115,6 +115,17 @@ export async function listBookings(status?: BookingStatus): Promise<VendorBookin
   return (Array.isArray(data) ? data : []).map((b) => ({ ...b, services: b.services ?? [] }));
 }
 
+export interface TodaySummary {
+  date: string;
+  bookings: number;
+  /** Null for roles that don't see money. */
+  salesKobo: number | null;
+}
+
+export function getTodaySummary(): Promise<TodaySummary> {
+  return req('GET', '/vendor-admin/bookings/summary');
+}
+
 export function completeBooking(id: string): Promise<VendorBooking> {
   return req('POST', `/vendor-admin/bookings/${id}/complete`);
 }

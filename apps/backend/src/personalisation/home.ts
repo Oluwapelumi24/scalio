@@ -13,8 +13,6 @@ export interface UpcomingBooking {
 export interface HomeSnapshot {
   businessName: string;
   bookingLink: string;
-  todayBookings: number;
-  todaySalesKobo: number;
   sales30dKobo: number;
   upcoming: UpcomingBooking[];
   totalBookings: number;
@@ -78,12 +76,8 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.bookingsOnLeave > 0 ? { count: s.bookingsOnLeave } : null;
     case 'clock_in':
       return { clockedIn: s.viewerClockedIn };
-    case 'today_bookings':
-      return { count: s.todayBookings };
     case 'upcoming_bookings':
       return { bookings: s.upcoming };
-    case 'today_sales':
-      return { amountKobo: s.todaySalesKobo };
     case 'sales_30d':
       return { amountKobo: s.sales30dKobo };
     case 'repeat_customers':

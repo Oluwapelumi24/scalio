@@ -14,12 +14,14 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
 import {
+  getTodaySummary,
   listBookings,
   formatDateTime,
   formatNaira,
   statusLabel,
   type VendorBooking,
   type BookingStatus,
+  type TodaySummary,
 } from '../lib/api';
 import { colors, radius, spacing, typography } from '../theme';
 
@@ -50,8 +52,11 @@ export function BookingsScreen({ navigation }: Props) {
   const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [today, setToday] = useState<TodaySummary | null>(null);
 
   const load = useCallback(async () => {
+    // Today's figures don't depend on the filter; a failure just hides them.
+    getTodaySummary().then(setToday).catch(() => setToday(null));
     try {
       const data = await listBookings(filter === 'all' ? undefined : filter);
       setBookings(data.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()));
@@ -114,6 +119,21 @@ export function BookingsScreen({ navigation }: Props) {
         <Text style={styles.title}>Bookings</Text>
       </View>
 
+      {today && (
+        <View style={styles.today} accessibilityLabel="Today">
+          <View style={styles.todayStat}>
+            <Text style={styles.todayValue}>{today.bookings}</Text>
+            <Text style={styles.todayLabel}>Today's bookings</Text>
+          </View>
+          {today.salesKobo != null && (
+            <View style={[styles.todayStat, styles.todayDivider]}>
+              <Text style={styles.todayValue}>{formatNaira(today.salesKobo)}</Text>
+              <Text style={styles.todayLabel}>Today's sales</Text>
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Filter pills */}
       <View style={styles.filterRow}>
         {FILTERS.map((f) => (
@@ -152,6 +172,19 @@ export function BookingsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  today: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+  },
+  todayStat: { flex: 1, paddingVertical: spacing.lg, paddingHorizontal: spacing.lg, gap: 2 },
+  todayDivider: { borderLeftWidth: 1, borderLeftColor: colors.border },
+  todayValue: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text, fontVariant: ['tabular-nums'] },
+  todayLabel: { fontSize: typography.size.sm, color: colors.textMuted },
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
     paddingHorizontal: spacing.xl,

@@ -82,6 +82,7 @@ export const MODULES: readonly ModuleDef[] = [
   // ── Needs your attention: shown whenever there is something to act on ──────
   { id: 'awaiting_payment', layer: 'attention', title: 'Bookings waiting for payment', icon: 'clock', interests: [], basePriority: 30 },
   { id: 'starting_soon', layer: 'attention', title: 'Starting within the hour', icon: 'bell', interests: [], basePriority: 40 },
+  { id: 'payroll_open', layer: 'attention', title: 'Payroll is open', icon: 'credit-card', interests: [], basePriority: 25, roles: MANAGERS },
   { id: 'bookings_on_leave', layer: 'attention', title: 'Bookings with staff on leave', icon: 'user-minus', interests: [], basePriority: 35, roles: [...MANAGERS, 'front_desk'] },
   { id: 'unassigned_today', layer: 'attention', title: "Today's bookings with no staff assigned", icon: 'user-x', interests: [], basePriority: 20, roles: [...MANAGERS, 'front_desk'] },
 
@@ -96,6 +97,7 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'share_booking_link', layer: 'quick_action', title: 'Share booking link', icon: 'share-2', interests: ['manage_bookings', 'find_customers', 'social_posts', 'manage_social'], basePriority: 40 },
   { id: 'view_bookings', layer: 'quick_action', title: 'Bookings', icon: 'calendar', interests: ['manage_bookings'], basePriority: 35 },
   { id: 'view_customers', layer: 'quick_action', title: 'Customers', icon: 'users', interests: ['repeat_customers', 'chat_customers', 'reviews_feedback', 'find_customers'], basePriority: 25 },
+  { id: 'pay_staff', layer: 'quick_action', title: 'Pay staff', icon: 'credit-card', interests: ['pay_staff', 'manage_staff', 'track_sales'], basePriority: 18, roles: MANAGERS },
   { id: 'clock_in', layer: 'quick_action', title: 'Clock in', icon: 'log-in', interests: ['manage_staff', 'pay_staff'], basePriority: 30 },
   { id: 'staff_performance', layer: 'quick_action', title: 'Staff performance', icon: 'award', interests: ['manage_staff', 'business_insights', 'pay_staff'], basePriority: 12, roles: [...MANAGERS, 'practitioner'] },
   { id: 'manage_team', layer: 'quick_action', title: 'Manage staff', icon: 'user-check', interests: ['manage_staff', 'pay_staff'], basePriority: 20, roles: MANAGERS },
@@ -104,6 +106,8 @@ export const MODULES: readonly ModuleDef[] = [
 
   // ── Recommendations: rule-based next steps ────────────────────────────────
   { id: 'choose_interests', layer: 'recommendation', title: 'Tell us what you want help with', icon: 'sliders', interests: [], basePriority: 100, roles: MANAGERS },
+  { id: 'setup_payments', layer: 'recommendation', title: 'Take payments online', icon: 'credit-card', interests: ['manage_bookings', 'track_sales'], basePriority: 60, roles: ['owner'] },
+  { id: 'setup_payroll', layer: 'recommendation', title: 'Set up payroll', icon: 'users', interests: ['pay_staff', 'manage_staff'], basePriority: 55, roles: MANAGERS },
   { id: 'setup_services', layer: 'recommendation', title: 'Add your first service', icon: 'plus-circle', interests: [], basePriority: 90, roles: MANAGERS },
   { id: 'setup_hours', layer: 'recommendation', title: 'Set your opening hours', icon: 'clock', interests: [], basePriority: 80, roles: MANAGERS },
   { id: 'share_link_first', layer: 'recommendation', title: 'Get your first booking', icon: 'share-2', interests: ['manage_bookings', 'find_customers'], basePriority: 70 },
@@ -112,7 +116,6 @@ export const MODULES: readonly ModuleDef[] = [
   // only as "coming soon" — never as if they already work.
   { id: 'content_studio_soon', layer: 'recommendation', title: 'Create social media posts with AI', icon: 'image', interests: ['social_posts', 'manage_social'], basePriority: 10, status: 'coming_soon' },
   { id: 'ads_soon', layer: 'recommendation', title: 'Run ads on Facebook and Instagram', icon: 'target', interests: ['run_ads'], basePriority: 10, status: 'coming_soon' },
-  { id: 'payroll_soon', layer: 'recommendation', title: 'Pay your staff from Scalio', icon: 'credit-card', interests: ['pay_staff'], basePriority: 10, status: 'coming_soon', roles: MANAGERS },
   { id: 'inbox_soon', layer: 'recommendation', title: 'Chat with customers in one inbox', icon: 'message-circle', interests: ['chat_customers'], basePriority: 10, status: 'coming_soon' },
   { id: 'feedback_soon', layer: 'recommendation', title: 'Ask customers for reviews', icon: 'star', interests: ['reviews_feedback'], basePriority: 10, status: 'coming_soon' },
   { id: 'orders_soon', layer: 'recommendation', title: 'Track stock and orders', icon: 'package', interests: ['manage_stock_orders'], basePriority: 10, status: 'coming_soon', roles: MANAGERS },

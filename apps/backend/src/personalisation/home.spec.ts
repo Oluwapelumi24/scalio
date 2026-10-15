@@ -13,6 +13,10 @@ const snapshot: HomeSnapshot = {
   unassignedToday: 0,
   bookingsOnLeave: 0,
   viewerClockedIn: false,
+  payoutAccountSet: true,
+  payrollSetUp: false,
+  payrollOpen: null,
+  wantsPayroll: false,
   totalCustomers: 60,
   repeatCustomers: 25,
   newCustomers30d: 9,
@@ -65,6 +69,25 @@ describe('buildHome — rules', () => {
     expect(home.layers.attention[0].data).toEqual({ count: 2 });
   });
 
+  it('raises an alert while payroll is open and people are still to be paid', () => {
+    const home = buildHome({ ...snapshot, payrollSetUp: true, payrollOpen: { period: '2026-10', toPay: 3, closesOn: '2026-10-30' } }, prefs([]), 'owner', now);
+    expect(home.layers.attention.find((i) => i.id === 'payroll_open')?.data).toEqual({ period: '2026-10', toPay: 3, closesOn: '2026-10-30' });
+    expect(home.layers.quick_action.map((i) => i.id)).toContain('pay_staff');
+  });
+
+  it('suggests taking payments online until the owner adds a payout account', () => {
+    const fresh = buildHome({ ...snapshot, payoutAccountSet: false }, prefs([]), 'owner', now);
+    expect(fresh.layers.recommendation.map((i) => i.id)).toContain('setup_payments');
+    const manager = buildHome({ ...snapshot, payoutAccountSet: false }, prefs([]), 'manager', now);
+    expect(manager.layers.recommendation.map((i) => i.id)).not.toContain('setup_payments');
+  });
+
+  it('suggests payroll set-up to teams, and to anyone who asked for help paying staff', () => {
+    expect(buildHome({ ...snapshot, wantsPayroll: true }, prefs([]), 'owner', now).layers.recommendation.map((i) => i.id)).toContain('setup_payroll');
+    expect(buildHome(snapshot, prefs(['pay_staff']), 'owner', now).layers.recommendation.map((i) => i.id)).toContain('setup_payroll');
+    expect(buildHome(snapshot, prefs([]), 'owner', now).layers.recommendation.map((i) => i.id)).not.toContain('setup_payroll');
+  });
+
   it('flags upcoming bookings with staff who will be on leave', () => {
     const home = buildHome({ ...snapshot, bookingsOnLeave: 2 }, prefs([]), 'owner', now);
     expect(home.layers.attention.map((i) => i.id)).toEqual(['bookings_on_leave']);
@@ -90,8 +113,8 @@ describe('buildHome — rules', () => {
     const none = buildHome(snapshot, prefs([]), 'owner', now);
     expect(none.layers.recommendation.filter((i) => i.status === 'coming_soon')).toEqual([]);
 
-    const payroll = buildHome(snapshot, prefs(['pay_staff']), 'owner', now);
-    const item = payroll.layers.recommendation.find((i) => i.id === 'payroll_soon');
+    const ads = buildHome(snapshot, prefs(['run_ads']), 'owner', now);
+    const item = ads.layers.recommendation.find((i) => i.id === 'ads_soon');
     expect(item?.status).toBe('coming_soon');
   });
 

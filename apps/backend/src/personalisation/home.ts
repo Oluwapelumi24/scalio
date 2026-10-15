@@ -23,6 +23,12 @@ export interface HomeSnapshot {
   bookingsOnLeave: number;
   /** Whether the person viewing is clocked in right now. */
   viewerClockedIn: boolean;
+  /** Finance set-up and the salary window (Phase 3). */
+  payoutAccountSet: boolean;
+  payrollSetUp: boolean;
+  /** Set while the salary window is open and someone is still to be paid. */
+  payrollOpen: { period: string; toPay: number; closesOn: string } | null;
+  wantsPayroll: boolean;
   totalCustomers: number;
   repeatCustomers: number;
   newCustomers30d: number;
@@ -74,6 +80,14 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.unassignedToday > 0 && s.staffCount > 1 ? { count: s.unassignedToday } : null;
     case 'bookings_on_leave':
       return s.bookingsOnLeave > 0 ? { count: s.bookingsOnLeave } : null;
+    case 'payroll_open':
+      return s.payrollOpen ? { ...s.payrollOpen } : null;
+    case 'pay_staff':
+      return s.payrollSetUp ? {} : null;
+    case 'setup_payments':
+      return s.payoutAccountSet ? null : {};
+    case 'setup_payroll':
+      return !s.payrollSetUp && (s.wantsPayroll || prefs.interests.includes('pay_staff')) ? {} : null;
     case 'clock_in':
       return { clockedIn: s.viewerClockedIn };
     case 'upcoming_bookings':

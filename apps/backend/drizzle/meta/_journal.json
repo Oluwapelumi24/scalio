@@ -92,6 +92,13 @@
       "when": 1792061623250,
       "tag": "0012_staff_schedule_attendance",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792105818625,
+      "tag": "0013_finance",
+      "breakpoints": true
     }
   ]
 }

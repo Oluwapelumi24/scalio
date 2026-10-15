@@ -61,13 +61,6 @@ function overviewValue(item: HomeItem): string {
   return '—';
 }
 
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
-}
-
 /** Small round icon button used in the header. */
 function CircleButton({
   icon,
@@ -249,7 +242,7 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.searchText}>Search customers</Text>
         </Pressable>
 
-        <Text style={styles.greeting}>{greeting()}, {firstName} 👋</Text>
+        <Text style={styles.greeting}>Hey, {firstName} 👋</Text>
         <Text style={styles.greetingSub}>Here's your business today.</Text>
       </LinearGradient>
 
@@ -423,6 +416,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.7)',
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -454,6 +449,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.lg,
     backgroundColor: 'rgba(255,255,255,0.75)',
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -464,17 +461,20 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: spacing.lg, gap: spacing.lg },
   section: {
     backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
   sectionHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
   sectionIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm + 2,
+    borderWidth: 1.5,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -482,13 +482,15 @@ const styles = StyleSheet.create({
   sectionSubtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginBottom: spacing.xs },
   greyPill: {
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
   greyPillText: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, color: colors.text },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
-  rowDivider: { borderTopWidth: 1, borderTopColor: colors.surface },
+  rowDivider: { borderTopWidth: 1, borderTopColor: colors.border },
   rowText: { flex: 1, fontSize: typography.size.md, color: colors.text, lineHeight: 21 },
   rowTextStrong: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
   mutedText: { color: colors.textMuted },
@@ -500,7 +502,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
   },
   blackPillText: { color: colors.white, fontSize: typography.size.base, fontWeight: typography.weight.semibold },
-  pillDisabled: { backgroundColor: colors.surface },
+  pillDisabled: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   statRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
   statLabel: { flex: 1, fontSize: typography.size.md, color: colors.text },
   statValue: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text },
@@ -517,7 +519,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
     borderRadius: radius.md,
     padding: spacing.lg,
     marginVertical: spacing.sm,
@@ -538,7 +540,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
@@ -565,6 +567,8 @@ const styles = StyleSheet.create({
   soonText: { fontSize: typography.size.xs, fontWeight: typography.weight.semibold, color: colors.textSecondary },
   wideButton: {
     backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.lg,
     paddingVertical: spacing.lg,
     alignItems: 'center',

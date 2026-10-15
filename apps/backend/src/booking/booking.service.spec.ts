@@ -67,6 +67,14 @@ const baseInput = {
 };
 
 describe('BookingService', () => {
+  // Price lookup, staff-schedule checks and CRM stats have their own tests
+  // below; stubbing them keeps these tests about the booking flow itself.
+  beforeEach(() => {
+    jest.spyOn(BookingService.prototype as any, 'resolveBookingTerms').mockResolvedValue({ totalPriceKobo: 0 });
+    jest.spyOn(BookingService.prototype as any, 'updateCustomerStats').mockResolvedValue(undefined);
+  });
+  afterEach(() => jest.restoreAllMocks());
+
   describe('createPendingBooking', () => {
     it('creates pay_on_arrival bookings straight into `confirmed`, skipping Paystack entirely', async () => {
       const db = makeDb();
@@ -731,5 +739,90 @@ describe('BookingService', () => {
       ).rejects.toThrow(ConflictException);
       expect(paystack.initializeTransaction).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('BookingService booking rules', () => {
+  function service(db: any) {
+    return new BookingService(db, makeSlotLock() as any, makePaystack() as any, makePush() as any);
+  }
+  const terms = (svc: BookingService, input: typeof baseInput) =>
+    (svc as any).resolveBookingTerms(input) as Promise<{ totalPriceKobo: number }>;
+
+  // 10:00 local on a Wednesday — `minutesSinceMidnight`/`localIsoDate` use local time.
+  const wednesdayTen = new Date(2026, 5, 10, 10, 0);
+  const input = { ...baseInput, scheduledAt: wednesdayTen };
+  const shift = { dayOfWeek: 3, startsAtMinutes: 9 * 60, endsAtMinutes: 17 * 60, breakStartsAtMinutes: 13 * 60, breakEndsAtMinutes: 14 * 60 };
+
+  it('captures the price of the chosen services', async () => {
+    const db = makeDb();
+    db.select
+      .mockReturnValueOnce(selectResult([{ id: 'staff-1' }])) // staff belongs to vendor
+      .mockReturnValueOnce(selectResult([])) // no weekly pattern
+      .mockReturnValueOnce(selectResult([])) // no leave
+      .mockReturnValueOnce(selectResult([{ total: 1_500_000 }]));
+    await expect(terms(service(db), input)).resolves.toEqual({ totalPriceKobo: 1_500_000 });
+  });
+
+  it('rejects a staff member from another business', async () => {
+    const db = makeDb();
+    db.select.mockReturnValueOnce(selectResult([]));
+    await expect(terms(service(db), input)).rejects.toThrow('does not work at this business');
+  });
+
+  it('accepts a booking inside the staff member’s shift', async () => {
+    const db = makeDb();
+    db.select
+      .mockReturnValueOnce(selectResult([{ id: 'staff-1' }]))
+      .mockReturnValueOnce(selectResult([shift]))
+      .mockReturnValueOnce(selectResult([]))
+      .mockReturnValueOnce(selectResult([{ total: 0 }]));
+    await expect(terms(service(db), input)).resolves.toEqual({ totalPriceKobo: 0 });
+  });
+
+  it('rejects a booking during the staff member’s break', async () => {
+    const db = makeDb();
+    db.select
+      .mockReturnValueOnce(selectResult([{ id: 'staff-1' }]))
+      .mockReturnValueOnce(selectResult([shift]))
+      .mockReturnValueOnce(selectResult([]));
+    const atOne = { ...input, scheduledAt: new Date(2026, 5, 10, 13, 0) };
+    await expect(terms(service(db), atOne)).rejects.toThrow('not working at this time');
+  });
+
+  it('rejects a booking while the staff member is on leave', async () => {
+    const db = makeDb();
+    db.select
+      .mockReturnValueOnce(selectResult([{ id: 'staff-1' }]))
+      .mockReturnValueOnce(selectResult([]))
+      .mockReturnValueOnce(selectResult([{ id: 'leave-1' }]));
+    await expect(terms(service(db), input)).rejects.toThrow('not working at this time');
+  });
+
+  it('rejects a booking on the staff member’s day off', async () => {
+    const db = makeDb();
+    db.select
+      .mockReturnValueOnce(selectResult([{ id: 'staff-1' }]))
+      .mockReturnValueOnce(selectResult([{ ...shift, dayOfWeek: 1 }])) // works Mondays only
+      .mockReturnValueOnce(selectResult([]));
+    await expect(terms(service(db), input)).rejects.toThrow('not working at this time');
+  });
+
+  it('adds a completed visit and its value to the customer record', async () => {
+    const db = makeDb();
+    const set = jest.fn(() => ({ where: jest.fn(() => Promise.resolve()) }));
+    db.update.mockReturnValueOnce({ set });
+    await (service(db) as any).updateCustomerStats({ status: 'completed', customerId: 'c-1', totalPriceKobo: 500_000, scheduledAt: wednesdayTen });
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ visitCount: expect.anything(), lifetimeValueKobo: expect.anything() }));
+  });
+
+  it('counts a no-show, and leaves other outcomes alone', async () => {
+    const db = makeDb();
+    const set = jest.fn(() => ({ where: jest.fn(() => Promise.resolve()) }));
+    db.update.mockReturnValue({ set });
+    await (service(db) as any).updateCustomerStats({ status: 'no_show', customerId: 'c-1' });
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ noShowCount: expect.anything() }));
+    await (service(db) as any).updateCustomerStats({ status: 'cancelled_by_vendor', customerId: 'c-1' });
+    expect(db.update).toHaveBeenCalledTimes(1);
   });
 });

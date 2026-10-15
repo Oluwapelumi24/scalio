@@ -121,6 +121,14 @@ export function StaffManagementScreen({ navigation }: Props) {
               <View style={styles.actions}>
                 <Pressable
                   style={styles.iconBtn}
+                  onPress={() => navigation.navigate('StaffSchedule', { staffId: item.id, name: item.name })}
+                  hitSlop={8}
+                  accessibilityLabel={`Working hours for ${item.name}`}
+                >
+                  <Feather name="calendar" size={16} color={colors.accent} />
+                </Pressable>
+                <Pressable
+                  style={styles.iconBtn}
                   onPress={() => navigation.navigate('StaffForm', { member: item })}
                   hitSlop={8}
                 >

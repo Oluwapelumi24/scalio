@@ -134,9 +134,38 @@ export function SettingsScreen({ navigation }: Props) {
           <SettingsRow
             icon="users"
             label="Staff management"
-            subtitle="Manage team members and roles"
+            subtitle="Team members, roles and working hours"
             onPress={() => navigation.navigate('StaffManagement')}
           />
+          <View style={styles.divider} />
+          <SettingsRow
+            icon="log-in"
+            label="Attendance"
+            subtitle="Clock in and out"
+            onPress={() => navigation.navigate('Attendance')}
+          />
+          {session?.role !== 'front_desk' && (
+            <>
+              <View style={styles.divider} />
+              <SettingsRow
+                icon="award"
+                label="Staff performance"
+                subtitle="Sales, completed bookings and attendance"
+                onPress={() => navigation.navigate('Performance')}
+              />
+            </>
+          )}
+          {session && session.role !== 'owner' && session.role !== 'manager' && (
+            <>
+              <View style={styles.divider} />
+              <SettingsRow
+                icon="calendar"
+                label="My working hours"
+                subtitle="Your schedule and time off"
+                onPress={() => navigation.navigate('StaffSchedule', { staffId: session.staffId, name: session.name })}
+              />
+            </>
+          )}
         </View>
       </View>
 

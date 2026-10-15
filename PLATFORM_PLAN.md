@@ -141,10 +141,11 @@ Website
 
 ### Phase 2 — Operations: bookings, customers, staff
 
-- [ ] Staff schedules: per-staff working hours, breaks, leave; availability checks use them (extends `availability.ts`).
-- [ ] Attendance (clock-in/out) — only then show attendance metrics.
-- [ ] Staff profile: services they perform, salary or commission setup, location.
-- [ ] Performance view per staff: sales generated, completed services, completion rate, repeat customers, feedback, attendance. Each metric shows how it's calculated; filters by date, staff, location, service. No single overall score.
+- [x] Staff schedules: per-staff weekly hours with a break, and time off; availability with a `staffId` respects them, and booking creation rejects slots outside them (shared `staff-schedule/staff-day.ts`). Mobile and web edit the same records.
+- [x] Attendance: clock in/out for yourself (any role) or for others (owners/managers); one open shift per person, enforced by the database. Attendance metrics only appear once a business has clocked in, and only count scheduled hours from that day.
+- [ ] Staff profile: services they perform, salary or commission setup, location. *(Salary/commission moves to Phase 3 with payroll; location waits on `business_locations`.)*
+- [x] Performance view per staff: sales, completed, completion rate, unique and repeat customers, attendance — each with its definition shown; filters by period and staff (API also takes a service). No single score; unassigned bookings get their own row. Feedback shows as "not collected yet". Location filter waits on `business_locations`.
+- [x] Bookings store their price at booking time (`total_price_kobo`, backfilled); completing a booking updates the customer's visits, spend and last visit; no-shows are counted. (Sales previously read ₦0 for pay-on-arrival bookings.)
 - [ ] Customer follow-ups and rebook reminders (uses `vendors.averageDaysBetweenVisits` already in the schema).
 - [ ] Orders for businesses that don't take appointments (`services.serviceType` already distinguishes types).
 
@@ -214,6 +215,9 @@ packages/
 ---
 
 ## 7. Acceptance checks
+
+> Known gap: slot times are computed in the server's local time, not the business's timezone (`vendor/availability.ts`). Fine while server and businesses are both in Lagos; fix before serving other timezones.
+
 
 - [ ] A vendor can sign up with phone, email, Google or Apple, skip or finish onboarding, and pick several interests.
 - [ ] Home reflects the saved interests on both mobile and web; unselected features stay reachable.

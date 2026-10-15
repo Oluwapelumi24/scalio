@@ -12,10 +12,13 @@ import {
 import {
   computeAvailableSlotOffsets,
   dateFromOffset,
+  DEFAULT_OPEN_HOURS,
   minutesSinceMidnight,
+  staffWorkingWindow,
   type BusyInterval,
   type OpenHours,
 } from './availability';
+import { loadStaffDay } from '../staff-schedule/staff-day';
 
 export interface AvailabilityQuery {
   date: string;
@@ -109,7 +112,8 @@ export class VendorService {
    * placeholder): the vendor's configured hours for that weekday (falling
    * back to the platform default if they haven't set any) minus whatever's
    * already pending/confirmed — and nothing at all on a blacked-out date.
-   * Per-staff schedules are still TODO (see availability.ts).
+   * With a `staffId`, the slots also respect that person's working hours,
+   * break and time off.
    */
   async getAvailability(vendorId: string, query: AvailabilityQuery) {
     await this.getById(vendorId);
@@ -135,7 +139,14 @@ export class VendorService {
       return { date: query.date, durationMinutes, slots: [] };
     }
 
-    const hours = await this.resolveOpenHours(vendorId, dayStart.getDay());
+    let hours: OpenHours = (await this.resolveOpenHours(vendorId, dayStart.getDay())) ?? DEFAULT_OPEN_HOURS;
+    const staffBreaks: BusyInterval[] = [];
+    if (query.staffId) {
+      const window = staffWorkingWindow(hours, await loadStaffDay(this.db, query.staffId, query.date));
+      if (!window) return { date: query.date, durationMinutes, slots: [] };
+      hours = window.hours;
+      staffBreaks.push(...window.breaks);
+    }
 
     const conflicts = await this.db
       .select({
@@ -151,16 +162,14 @@ export class VendorService {
         ),
       );
 
-    const busyIntervals: BusyInterval[] = conflicts
+    const bookedIntervals: BusyInterval[] = conflicts
       .filter((row) => row.scheduledAt >= dayStart && row.scheduledAt < dayEnd)
       .map((row) => {
         const startMinutes = minutesSinceMidnight(row.scheduledAt);
         return { startMinutes, endMinutes: startMinutes + row.durationMinutes };
       });
 
-    const offsets = hours
-      ? computeAvailableSlotOffsets(durationMinutes, busyIntervals, hours)
-      : computeAvailableSlotOffsets(durationMinutes, busyIntervals);
+    const offsets = computeAvailableSlotOffsets(durationMinutes, [...bookedIntervals, ...staffBreaks], hours);
 
     return {
       date: query.date,

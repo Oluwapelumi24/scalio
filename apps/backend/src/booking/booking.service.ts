@@ -1,19 +1,22 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql, sum } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { bookings, customers, users, vendors, services } from '../db/schema';
+import { bookings, customers, users, vendors, services, staff } from '../db/schema';
 import {
   PaystackService,
   type InitializeTransactionResult,
 } from '../payments/paystack.service';
 import { PushService } from '../notifications/push.service';
 import { SlotLockService } from './slot-lock.service';
+import { loadStaffDay } from '../staff-schedule/staff-day';
+import { fitsWorkingWindow, localIsoDate, minutesSinceMidnight, staffWorkingWindow } from '../vendor/availability';
 import {
   applyBookingEvent,
   BookingEvent,
@@ -51,6 +54,7 @@ export class BookingService {
   async createPendingBooking(input: CreatePendingBookingInput): Promise<{
     booking: typeof bookings.$inferSelect;
   }> {
+    const { totalPriceKobo } = await this.resolveBookingTerms(input);
     const customerId = await this.findOrCreateCrmCustomer(
       input.vendorId,
       input.userId,
@@ -81,6 +85,7 @@ export class BookingService {
           durationMinutes: input.durationMinutes,
           paymentMode: 'pay_on_arrival',
           amountDueKobo: 0,
+          totalPriceKobo,
           paystackReference: null,
           lockToken: lock.token,
         })
@@ -98,6 +103,60 @@ export class BookingService {
       throw new ConflictException(
         'This slot was just taken. Please pick another time.',
       );
+    }
+  }
+
+  /**
+   * Checks what the booking is allowed to be before anything is locked or
+   * written: the staff member (if one was picked) belongs to this business and
+   * is working at that time, and the price of the chosen services is captured
+   * so sales figures don't depend on later price changes.
+   */
+  private async resolveBookingTerms(input: CreatePendingBookingInput): Promise<{ totalPriceKobo: number }> {
+    if (input.staffId) {
+      const [member] = await this.db
+        .select({ id: staff.id })
+        .from(staff)
+        .where(and(eq(staff.id, input.staffId), eq(staff.vendorId, input.vendorId)));
+      if (!member) throw new BadRequestException('That staff member does not work at this business.');
+
+      const day = await loadStaffDay(this.db, input.staffId, localIsoDate(input.scheduledAt));
+      // Staff with no pattern and no leave keep the old behaviour: business hours apply.
+      if (day.hasSchedule || day.onTimeOff) {
+        const window = staffWorkingWindow({ startMinutes: 0, endMinutes: 24 * 60 }, day);
+        if (!window || !fitsWorkingWindow(window, minutesSinceMidnight(input.scheduledAt), input.durationMinutes)) {
+          throw new ConflictException('That staff member is not working at this time. Please pick another time.');
+        }
+      }
+    }
+
+    const [price] = await this.db
+      .select({ total: sum(services.priceKobo).mapWith(Number) })
+      .from(services)
+      .where(and(eq(services.vendorId, input.vendorId), inArray(services.id, input.serviceIds)));
+    return { totalPriceKobo: price?.total ?? 0 };
+  }
+
+  /**
+   * Keeps the CRM record's visit history true to what happened. Runs once per
+   * booking: the status update before it only succeeds for one caller.
+   */
+  private async updateCustomerStats(booking: typeof bookings.$inferSelect) {
+    if (booking.status === 'completed') {
+      await this.db
+        .update(customers)
+        .set({
+          visitCount: sql`${customers.visitCount} + 1`,
+          lifetimeValueKobo: sql`${customers.lifetimeValueKobo} + ${booking.totalPriceKobo}`,
+          lastVisitAt: sql`greatest(${customers.lastVisitAt}, ${booking.scheduledAt})`,
+          updatedAt: new Date(),
+        })
+        .where(eq(customers.id, booking.customerId));
+    } else if (booking.status === 'no_show') {
+      await this.db
+        .update(customers)
+        .set({ noShowCount: sql`${customers.noShowCount} + 1`, updatedAt: new Date() })
+        .where(eq(customers.id, booking.customerId));
     }
   }
 
@@ -306,7 +365,7 @@ export class BookingService {
       scheduledAt: b.scheduledAt,
       durationMinutes: b.durationMinutes,
       paymentMode: b.paymentMode,
-      totalAmountKobo: b.amountDueKobo,
+      totalAmountKobo: b.totalPriceKobo,
       customer: c ? { id: c.id, name: c.name, email: c.email } : null,
       services: b.serviceIds
         .map((id) => serviceMap.get(id))
@@ -397,6 +456,8 @@ export class BookingService {
       // someone else may have legitimately acquired after ours expired.
       await this.slotLock.release({ key: lockKey, token: updated.lockToken });
     }
+
+    await this.updateCustomerStats(updated);
 
     if (nextStatus === 'confirmed') {
       await this.push.notifyCustomer(updated.customerId, {

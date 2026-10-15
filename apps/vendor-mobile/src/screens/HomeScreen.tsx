@@ -35,6 +35,7 @@ const ATTENTION_TEXT: Record<string, (n: number) => string> = {
   awaiting_payment: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`,
   starting_soon: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`,
   unassigned_today: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff assigned`,
+  bookings_on_leave: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`,
 };
 
 const RECOMMENDATION_TEXT: Record<string, (d: Record<string, any>) => string> = {
@@ -90,6 +91,7 @@ export function HomeScreen({ navigation }: Props) {
       case 'awaiting_payment':
       case 'starting_soon':
       case 'unassigned_today':
+      case 'bookings_on_leave':
       case 'today_bookings':
       case 'upcoming_bookings':
       case 'view_bookings':
@@ -112,6 +114,12 @@ export function HomeScreen({ navigation }: Props) {
       case 'business_hours':
       case 'setup_hours':
         navigation.navigate('BusinessHours');
+        return;
+      case 'clock_in':
+        navigation.navigate('Attendance');
+        return;
+      case 'staff_performance':
+        navigation.navigate('Performance');
         return;
       case 'choose_interests':
         navigation.navigate('InterestSelection', { fromSettings: true });
@@ -182,7 +190,9 @@ export function HomeScreen({ navigation }: Props) {
                     <View style={styles.actionIcon}>
                       <Feather name={item.icon as FeatherName} size={20} color={colors.accent} />
                     </View>
-                    <Text style={styles.actionLabel} numberOfLines={2}>{item.title}</Text>
+                    <Text style={styles.actionLabel} numberOfLines={2}>
+                      {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
+                    </Text>
                   </Pressable>
                 ))}
               </View>

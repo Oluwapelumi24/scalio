@@ -1,4 +1,4 @@
-import { computeAvailableSlotOffsets, BUSINESS_HOURS_START_MINUTES, BUSINESS_HOURS_END_MINUTES } from './availability';
+import { computeAvailableSlotOffsets, BUSINESS_HOURS_START_MINUTES, BUSINESS_HOURS_END_MINUTES, fitsWorkingWindow, staffWorkingWindow } from './availability';
 
 describe('computeAvailableSlotOffsets', () => {
   it('returns every granularity-aligned start when there are no bookings', () => {
@@ -36,5 +36,41 @@ describe('computeAvailableSlotOffsets', () => {
     ]);
 
     expect(offsets).toHaveLength(0);
+  });
+});
+
+describe('staffWorkingWindow', () => {
+  const business = { startMinutes: 9 * 60, endMinutes: 18 * 60 };
+  const day = { startsAtMinutes: 10 * 60, endsAtMinutes: 20 * 60, breakStartsAtMinutes: 13 * 60, breakEndsAtMinutes: 14 * 60 };
+
+  it('uses business hours for staff without a weekly pattern', () => {
+    expect(staffWorkingWindow(business, { hasSchedule: false, day: undefined, onTimeOff: false })).toEqual({ hours: business, breaks: [] });
+  });
+
+  it('is closed on leave and on days off', () => {
+    expect(staffWorkingWindow(business, { hasSchedule: false, day: undefined, onTimeOff: true })).toBeNull();
+    expect(staffWorkingWindow(business, { hasSchedule: true, day: undefined, onTimeOff: false })).toBeNull();
+  });
+
+  it('overlaps the shift with business hours and blocks the break', () => {
+    expect(staffWorkingWindow(business, { hasSchedule: true, day, onTimeOff: false })).toEqual({
+      hours: { startMinutes: 10 * 60, endMinutes: 18 * 60 },
+      breaks: [{ startMinutes: 13 * 60, endMinutes: 14 * 60 }],
+    });
+  });
+
+  it('is closed when the shift falls entirely outside business hours', () => {
+    const evening = { ...day, startsAtMinutes: 19 * 60, endsAtMinutes: 22 * 60 };
+    expect(staffWorkingWindow(business, { hasSchedule: true, day: evening, onTimeOff: false })).toBeNull();
+  });
+});
+
+describe('fitsWorkingWindow', () => {
+  const window = { hours: { startMinutes: 600, endMinutes: 1080 }, breaks: [{ startMinutes: 780, endMinutes: 840 }] };
+  it('accepts bookings inside the shift and rejects ones that cross the break or the edges', () => {
+    expect(fitsWorkingWindow(window, 600, 60)).toBe(true);
+    expect(fitsWorkingWindow(window, 750, 60)).toBe(false); // runs into the break
+    expect(fitsWorkingWindow(window, 1050, 60)).toBe(false); // runs past the end
+    expect(fitsWorkingWindow(window, 540, 30)).toBe(false); // before the start
   });
 });

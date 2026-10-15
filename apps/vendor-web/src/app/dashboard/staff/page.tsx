@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { CreateStaffForm } from './StaffForm'
@@ -60,7 +61,11 @@ export default async function StaffPage() {
             <tbody className="divide-y divide-gray-50">
               {staffList.map((s) => (
                 <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{s.name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    <Link href={`/dashboard/staff/${s.id}`} className="hover:text-indigo-600">
+                      {s.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-gray-600">{s.email ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{ROLE_LABELS[s.role] ?? s.role}</td>
                   <td className="px-4 py-3">
@@ -79,6 +84,9 @@ export default async function StaffPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
+                    <Link href={`/dashboard/staff/${s.id}`} className="mr-3 text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                      Hours &amp; time off
+                    </Link>
                     <DeleteStaffButton staffId={s.id} />
                   </td>
                 </tr>

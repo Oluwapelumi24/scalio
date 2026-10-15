@@ -19,6 +19,7 @@ import { SuperAdminAuthModule } from './super-admin-auth/super-admin-auth.module
 import { SuperAdminModule } from './super-admin/super-admin.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { PersonalisationModule } from './personalisation/personalisation.module';
+import { StaffScheduleModule } from './staff-schedule/staff-schedule.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PersonalisationModule } from './personalisation/personalisation.module'
     NotificationsModule,
     WaitlistModule,
     PersonalisationModule,
+    StaffScheduleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

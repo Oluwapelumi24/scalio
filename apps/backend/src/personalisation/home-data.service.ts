@@ -31,6 +31,7 @@ export class HomeDataService {
     const [vendor] = await this.db
       .select({
         slug: vendors.slug,
+        businessName: vendors.businessName,
         timezone: vendors.timezone,
         averageDaysBetweenVisits: vendors.averageDaysBetweenVisits,
       })
@@ -133,6 +134,7 @@ export class HomeDataService {
     ]);
 
     return {
+      businessName: vendor.businessName,
       bookingLink: this.bookingLinkFor(vendor.slug),
       todayBookings: b?.today ?? 0,
       todaySalesKobo: b?.todaySales ?? 0,

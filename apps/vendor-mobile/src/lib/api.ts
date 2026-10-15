@@ -342,6 +342,7 @@ export interface HomeItem {
 
 export interface HomeResponse {
   generatedAt: string;
+  business: { name: string };
   layers: Record<HomeLayer, HomeItem[]>;
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
 }

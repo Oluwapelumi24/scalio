@@ -3,6 +3,7 @@ import { buildHome, type HomePreferences, type HomeSnapshot } from './home';
 const now = new Date('2026-10-15T08:00:00Z');
 
 const snapshot: HomeSnapshot = {
+  businessName: 'Fade House',
   bookingLink: 'http://localhost:3003/book/fade-house',
   todayBookings: 8,
   todaySalesKobo: 4_500_000,

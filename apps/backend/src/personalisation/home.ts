@@ -11,6 +11,7 @@ export interface UpcomingBooking {
 
 /** Real figures for one business (and, for practitioners, one staff member). */
 export interface HomeSnapshot {
+  businessName: string;
   bookingLink: string;
   todayBookings: number;
   todaySalesKobo: number;
@@ -53,6 +54,7 @@ export interface HomeItem {
 
 export interface HomeResponse {
   generatedAt: string;
+  business: { name: string };
   layers: Record<HomeLayer, HomeItem[]>;
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
 }
@@ -143,6 +145,7 @@ export function buildHome(
 
   return {
     generatedAt: now.toISOString(),
+    business: { name: snapshot.businessName },
     layers: {
       attention: ranked.layers.attention.map(toItem),
       overview: ranked.layers.overview.map(toItem),

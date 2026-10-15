@@ -1,4 +1,4 @@
-import { getSession } from './session';
+import { expireSession, getSession } from './session';
 
 const BASE = 'http://localhost:3000';
 
@@ -80,6 +80,11 @@ async function req<T>(
   if (res.status === 204) return undefined as unknown as T;
 
   const data = await res.json().catch(() => ({}));
+  // A 401 on a signed-in request means the token expired or was revoked.
+  if (res.status === 401 && session) {
+    await expireSession();
+    throw new Error('Your session has ended. Please sign in again.');
+  }
   if (!res.ok) throw new Error(data?.message ?? `HTTP ${res.status}`);
   return data as T;
 }

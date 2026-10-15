@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { MainTabNavigator } from './MainTabNavigator';
@@ -25,9 +25,10 @@ import { PaymentsSetupScreen } from '../screens/PaymentsSetupScreen';
 import { PayrollScreen } from '../screens/PayrollScreen';
 import { StaffPayScreen } from '../screens/StaffPayScreen';
 import { MoneyScreen } from '../screens/MoneyScreen';
-import { loadSession } from '../lib/session';
+import { loadSession, onSessionExpired } from '../lib/session';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 export function RootNavigator() {
   const [initialRoute, setInitialRoute] = useState<'Onboarding' | 'Login' | 'Main' | null>(null);
@@ -38,10 +39,14 @@ export function RootNavigator() {
     });
   }, []);
 
+  useEffect(() => onSessionExpired(() => {
+    if (navigationRef.isReady()) navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
+  }), []);
+
   if (!initialRoute) return null;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />

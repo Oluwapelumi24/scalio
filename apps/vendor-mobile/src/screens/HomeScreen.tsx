@@ -321,20 +321,6 @@ export function HomeScreen({ navigation }: Props) {
         <Text style={styles.greeting}>Hey, {firstName}</Text>
         <Text style={styles.greetingSub}>Here's your business today.</Text>
 
-        {quick.length > 0 && (
-          <View style={styles.quick}>
-            {quick.map((item) => (
-              <Pressable key={item.id} style={styles.quickItem} onPress={() => open(item)} accessibilityRole="button">
-                <View style={styles.quickDisc}>
-                  <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
-                </View>
-                <Text style={styles.quickLabel} numberOfLines={2}>
-                  {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
       </LinearGradient>
 
       {loading ? (
@@ -373,6 +359,22 @@ export function HomeScreen({ navigation }: Props) {
               )}
             </View>
           </View>
+
+          {/* Quick actions sit right under what needs attention */}
+          {quick.length > 0 && (
+            <View style={styles.quick}>
+              {quick.map((item) => (
+                <Pressable key={item.id} style={styles.quickItem} onPress={() => open(item)} accessibilityRole="button">
+                  <View style={styles.quickDisc}>
+                    <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
+                  </View>
+                  <Text style={styles.quickLabel} numberOfLines={2}>
+                    {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
 
           {slides.length > 0 && <Carousel slides={slides} />}
 
@@ -467,7 +469,7 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: fonts.bold, fontSize: 12, color: colors.white },
   greeting: { fontFamily: fonts.displaySemiBold, fontSize: 24, lineHeight: 30, letterSpacing: -0.4, color: colors.text, marginTop: 24 },
   greetingSub: { fontFamily: fonts.medium, fontSize: 14, color: colors.textSecondary, marginTop: 6 },
-  quick: { flexDirection: 'row', marginTop: 26 },
+  quick: { flexDirection: 'row', paddingHorizontal: GUTTER - 4 },
   quickItem: { flex: 1, alignItems: 'center', gap: 10, paddingHorizontal: 2 },
   quickDisc: {
     width: 60, height: 60, borderRadius: 30, backgroundColor: colors.background,

@@ -8,6 +8,8 @@ import { RegisterScreen } from '../screens/RegisterScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '../screens/ResetPasswordScreen';
+import { InterestSelectionScreen } from '../screens/InterestSelectionScreen';
+import { CustomiseHomeScreen } from '../screens/CustomiseHomeScreen';
 import { BookingDetailScreen } from '../screens/BookingDetailScreen';
 import { ServiceFormScreen } from '../screens/ServiceFormScreen';
 import { CustomerDetailScreen } from '../screens/CustomerDetailScreen';
@@ -39,7 +41,9 @@ export function RootNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        <Stack.Screen name="InterestSelection" component={InterestSelectionScreen} />
         <Stack.Screen name="Main" component={MainTabNavigator} />
+        <Stack.Screen name="CustomiseHome" component={CustomiseHomeScreen} />
         <Stack.Screen name="BookingDetail" component={BookingDetailScreen} />
         <Stack.Screen name="Services" component={ServicesScreen} />
         <Stack.Screen name="ServiceForm" component={ServiceFormScreen} />

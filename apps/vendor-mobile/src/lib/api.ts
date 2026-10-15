@@ -211,6 +211,66 @@ export function removeBlackoutDate(id: string): Promise<void> {
   return req('DELETE', `/vendor-admin/schedule/blackout-dates/${id}`);
 }
 
+// ─── Personalisation ─────────────────────────────────────────────────────────
+
+export type HomeLayer = 'attention' | 'overview' | 'quick_action' | 'recommendation';
+
+export interface Interest { id: string; label: string; icon: string }
+export interface InterestGroup { id: string; title: string; interests: Interest[] }
+
+export interface Preferences {
+  interests: string[];
+  pinnedModules: string[];
+  hiddenModules: string[];
+  interestsCompletedAt: string | null;
+}
+
+export interface HomeItem {
+  id: string;
+  layer: HomeLayer;
+  title: string;
+  icon: string;
+  status: 'available' | 'coming_soon';
+  pinned: boolean;
+  data: Record<string, any>;
+}
+
+export interface HomeResponse {
+  generatedAt: string;
+  layers: Record<HomeLayer, HomeItem[]>;
+  hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
+}
+
+export function getInterestGroups(): Promise<InterestGroup[]> {
+  return req('GET', '/vendor-admin/personalisation/interests');
+}
+
+export function getPreferences(): Promise<Preferences> {
+  return req('GET', '/vendor-admin/preferences');
+}
+
+export function updatePreferences(data: Partial<{
+  interests: string[];
+  pinnedModules: string[];
+  hiddenModules: string[];
+  completeInterests: boolean;
+}>): Promise<Preferences> {
+  return req('PUT', '/vendor-admin/preferences', data);
+}
+
+export function resetHome(): Promise<Preferences> {
+  return req('POST', '/vendor-admin/preferences/reset-home');
+}
+
+export function getHome(): Promise<HomeResponse> {
+  return req('GET', '/vendor-admin/home');
+}
+
+/** Best-effort: usage only nudges ranking, so a failed call is ignored. */
+export function recordModuleUsage(moduleId: string): void {
+  req('POST', '/vendor-admin/home/usage', { moduleId }).catch(() => {});
+}
+
 // ─── Formatting ──────────────────────────────────────────────────────────────
 
 export function formatNaira(kobo: number | null | undefined): string {

@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import type { MainTabParamList } from './types';
-import { DashboardScreen } from '../screens/DashboardScreen';
+import { HomeScreen } from '../screens/HomeScreen';
 import { BookingsScreen } from '../screens/BookingsScreen';
 import { CustomersScreen } from '../screens/CustomersScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
@@ -30,7 +30,7 @@ export function MainTabNavigator() {
         },
         tabBarIcon: ({ color, size }) => {
           const icons: Record<string, keyof typeof Feather.glyphMap> = {
-            Dashboard: 'grid',
+            Home: 'home',
             Bookings: 'calendar',
             Customers: 'users',
             Settings: 'settings',
@@ -39,7 +39,7 @@ export function MainTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Bookings" component={BookingsScreen} />
       <Tab.Screen name="Customers" component={CustomersScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />

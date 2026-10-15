@@ -16,6 +16,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { vendorRegister } from '../lib/api';
 import { saveSession } from '../lib/session';
+import { routeAfterSignIn } from '../lib/postAuth';
 import { colors, radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
@@ -50,7 +51,7 @@ export function RegisterScreen({ navigation }: Props) {
         role: res.staff.role,
         token: res.accessToken,
       });
-      navigation.replace('Main');
+      navigation.replace(await routeAfterSignIn(res.staff.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {

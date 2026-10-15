@@ -16,6 +16,8 @@ export const vendors = pgTable('vendors', {
   rating: real('rating'),
   reviewCount: integer('review_count'),
   registrationNumber: text('registration_number'),
+  // IANA zone; drives business-day boundaries (today's bookings, salary windows, reminders).
+  timezone: text('timezone').notNull().default('Africa/Lagos'),
   approvalStatus: text('approval_status', { enum: ['pending_review', 'approved', 'rejected'] }).notNull().default('pending_review'),
   reviewNote: text('review_note'),
   reviewedAt: timestamp('reviewed_at', { withTimezone: true }),

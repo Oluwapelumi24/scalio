@@ -78,6 +78,13 @@
       "when": 1786785306007,
       "tag": "0010_add_users_password_hash",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792058896851,
+      "tag": "0011_business_preferences",
+      "breakpoints": true
     }
   ]
 }

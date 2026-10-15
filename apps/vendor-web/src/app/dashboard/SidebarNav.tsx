@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const ALL_NAV = [
+  { href: '/dashboard', label: 'Home', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/bookings', label: 'Bookings', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/services', label: 'Services', roles: ['owner', 'manager'] },
   { href: '/dashboard/staff', label: 'Staff', roles: ['owner', 'manager'] },
   { href: '/dashboard/schedule', label: 'Schedule', roles: ['owner', 'manager'] },
   { href: '/dashboard/customers', label: 'Customers', roles: ['owner', 'manager', 'front_desk'] },
+  { href: '/dashboard/interests', label: 'Your interests', roles: ['owner', 'manager'] },
 ]
 
 export function SidebarNav({ role }: { role: string }) {
@@ -18,7 +20,8 @@ export function SidebarNav({ role }: { role: string }) {
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">
       {navItems.map(({ href, label }) => {
-        const active = pathname.startsWith(href)
+        // Home is the dashboard root, so it must match exactly or it would always be active.
+        const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href)
         return (
           <Link
             key={href}

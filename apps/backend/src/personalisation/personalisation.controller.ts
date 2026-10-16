@@ -48,7 +48,7 @@ export class PersonalisationController {
     const now = new Date();
     const practitionerId = staff.role === 'practitioner' ? staff.staffId : undefined;
     const [snapshot, prefs] = await Promise.all([
-      this.homeData.load(staff.vendorId, now, staff.staffId, practitionerId),
+      this.homeData.load(staff.vendorId, now, practitionerId),
       this.preferences.get(staff.vendorId),
     ]);
     return buildHome(snapshot, prefs, staff.role, now);

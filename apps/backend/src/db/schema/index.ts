@@ -9,3 +9,4 @@ export * from './preferences';
 export * from './staff-schedule';
 export * from './finance';
 export * from './growth';
+export * from './insights';

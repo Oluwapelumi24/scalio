@@ -1,12 +1,14 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { and, asc, count, eq, gt, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, eq, gt, inArray, sql, type SQL } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { attendanceRecords, bookings, businessHours, contentPosts, customers, leads, payrollSchedules, salaryPayouts, salaryRuns, services, staff, staffPay, staffTimeOff, vendorPayoutAccounts, vendors } from '../db/schema';
+import { bookings, businessHours, contentPosts, customers, feedbackRequests, leads, payrollSchedules, salaryPayouts, salaryRuns, services, staff, staffPay, staffTimeOff, vendorPayoutAccounts, vendors } from '../db/schema';
 import { salaryWindow } from '../finance/payroll-window';
 import { businessToday } from '../staff-schedule/period';
 import { businessDayBounds } from '../common/business-day';
 import { leadDueCondition } from '../leads/lead-due';
+import { LOW_RATING } from '../feedback/feedback.service';
+import { noShowAdvice, quietestDay } from './insights';
 import type { HomeSnapshot } from './home';
 
 const DAY_MS = 86_400_000;
@@ -26,11 +28,10 @@ export class HomeDataService {
   }
 
   /**
-   * @param viewerStaffId whoever is looking — for their own clock-in status.
    * @param practitionerStaffId when set, booking figures cover only this staff
    *   member's bookings (practitioners see their own work, as in the bookings list).
    */
-  async load(vendorId: string, now: Date, viewerStaffId: string, practitionerStaffId?: string): Promise<HomeSnapshot> {
+  async load(vendorId: string, now: Date, practitionerStaffId?: string): Promise<HomeSnapshot> {
     const [vendor] = await this.db
       .select({
         slug: vendors.slug,
@@ -103,30 +104,24 @@ export class HomeDataService {
     const inTwoWeeks = new Date(now.getTime() + 14 * DAY_MS);
     // A booking clashes with leave when its date, in the business's calendar,
     // falls inside a time-off range for the staff member it's assigned to.
-    const [[leaveRow], [openShift]] = await Promise.all([
-      this.db
-        .select({ n: count() })
-        .from(bookings)
-        .innerJoin(
-          staffTimeOff,
-          and(
-            eq(staffTimeOff.staffId, bookings.staffId),
-            sql`(${bookings.scheduledAt} at time zone ${vendor.timezone})::date between ${staffTimeOff.startDate} and ${staffTimeOff.endDate}`,
-          ),
-        )
-        .where(
-          and(
-            ...bookingScope,
-            inArray(bookings.status, ['pending_payment', 'confirmed']),
-            gt(bookings.scheduledAt, now),
-            sql`${bookings.scheduledAt} <= ${inTwoWeeks}`,
-          ),
+    const [leaveRow] = await this.db
+      .select({ n: count() })
+      .from(bookings)
+      .innerJoin(
+        staffTimeOff,
+        and(
+          eq(staffTimeOff.staffId, bookings.staffId),
+          sql`(${bookings.scheduledAt} at time zone ${vendor.timezone})::date between ${staffTimeOff.startDate} and ${staffTimeOff.endDate}`,
         ),
-      this.db
-        .select({ id: attendanceRecords.id })
-        .from(attendanceRecords)
-        .where(and(eq(attendanceRecords.staffId, viewerStaffId), isNull(attendanceRecords.clockOutAt))),
-    ]);
+      )
+      .where(
+        and(
+          ...bookingScope,
+          inArray(bookings.status, ['pending_payment', 'confirmed']),
+          gt(bookings.scheduledAt, now),
+          sql`${bookings.scheduledAt} <= ${inTwoWeeks}`,
+        ),
+      );
 
     // Finance: payout account, payroll schedule, and whether the salary window needs the owner.
     const [[payoutAcct], [schedule], [payableRow]] = await Promise.all([
@@ -164,6 +159,38 @@ export class HomeDataService {
         .where(eq(contentPosts.vendorId, vendorId)),
     ]);
 
+    // Insights (Phase 5): ratings, unhappy customers, quiet days, no-shows.
+    const ratingScope: SQL[] = [eq(feedbackRequests.vendorId, vendorId)];
+    if (practitionerStaffId) ratingScope.push(eq(feedbackRequests.staffId, practitionerStaffId));
+    const twoWeeksAgo = new Date(now.getTime() - 14 * DAY_MS);
+    const eightWeeksAgo = new Date(now.getTime() - 56 * DAY_MS);
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * DAY_MS);
+    const [[fb], weekdayRows, openDayRows, [ns], [payOnArrival]] = await Promise.all([
+      this.db
+        .select({
+          avg: sql<number | null>`round(avg(${feedbackRequests.rating})::numeric, 1)`.mapWith((v) => (v === null ? null : Number(v))),
+          rated: countWhere(sql`${feedbackRequests.rating} is not null`),
+          unhappy: countWhere(sql`${feedbackRequests.rating} <= ${LOW_RATING} and ${feedbackRequests.followedUpAt} is null`),
+          toSend: countWhere(sql`${feedbackRequests.submittedAt} is null and ${feedbackRequests.emailedAt} is null and ${feedbackRequests.createdAt} >= ${twoWeeksAgo} and ${feedbackRequests.expiresAt} > ${now}`),
+        })
+        .from(feedbackRequests)
+        .where(and(...ratingScope)),
+      this.db
+        .select({ dow: sql<number>`extract(dow from ${bookings.scheduledAt} at time zone ${vendor.timezone})`.mapWith(Number), n: count() })
+        .from(bookings)
+        .where(and(eq(bookings.vendorId, vendorId), sql`${bookings.status} not in ('cancelled_by_customer', 'cancelled_by_vendor')`, sql`${bookings.scheduledAt} >= ${eightWeeksAgo} and ${bookings.scheduledAt} < ${now}`))
+        .groupBy(sql`1`),
+      this.db.select({ dow: businessHours.dayOfWeek }).from(businessHours).where(eq(businessHours.vendorId, vendorId)),
+      this.db
+        .select({ completed: countWhere(sql`${bookings.status} = 'completed'`), noShows: countWhere(sql`${bookings.status} = 'no_show'`) })
+        .from(bookings)
+        .where(and(eq(bookings.vendorId, vendorId), sql`${bookings.scheduledAt} >= ${sixtyDaysAgo} and ${bookings.scheduledAt} < ${now}`)),
+      this.db.select({ n: count() }).from(services).where(and(eq(services.vendorId, vendorId), eq(services.paymentMode, 'pay_on_arrival'))),
+    ]);
+    const weekdayCounts = [0, 0, 0, 0, 0, 0, 0];
+    for (const r of weekdayRows) weekdayCounts[r.dow] = r.n;
+    const openDays = openDayRows.length ? new Set(openDayRows.map((r) => r.dow)) : null;
+
     return {
       businessName: vendor.businessName,
       bookingLink: this.bookingLinkFor(vendor.slug),
@@ -179,7 +206,6 @@ export class HomeDataService {
       startingSoon: b?.startingSoon ?? 0,
       unassignedToday: b?.unassignedToday ?? 0,
       bookingsOnLeave: leaveRow?.n ?? 0,
-      viewerClockedIn: !!openShift,
       payoutAccountSet: !!payoutAcct,
       payrollSetUp: !!schedule,
       payrollOpen,
@@ -194,6 +220,11 @@ export class HomeDataService {
       leadsDue: leadRow?.n ?? 0,
       postsPlannedToday: postRow?.plannedToday ?? 0,
       postCount: postRow?.total ?? 0,
+      rating: fb?.avg != null && fb.rated > 0 ? { average: fb.avg, count: fb.rated } : null,
+      unhappyToCall: fb?.unhappy ?? 0,
+      feedbackToSend: fb?.toSend ?? 0,
+      quietDay: quietestDay(weekdayCounts, openDays),
+      noShows: noShowAdvice(ns?.completed ?? 0, ns?.noShows ?? 0, payOnArrival?.n ?? 0),
     };
   }
 }

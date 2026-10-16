@@ -22,7 +22,6 @@ const HREF: Record<string, string> = {
   starting_soon: '/dashboard/bookings?status=confirmed',
   unassigned_today: '/dashboard/bookings',
   bookings_on_leave: '/dashboard/bookings',
-  clock_in: '/dashboard/attendance',
   staff_performance: '/dashboard/performance',
   upcoming_bookings: '/dashboard/bookings',
   view_bookings: '/dashboard/bookings',
@@ -235,7 +234,7 @@ export default async function DashboardHome() {
                         href={HREF[item.id] ?? '/dashboard'}
                         className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 hover:border-indigo-300"
                       >
-                        {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
+                        {item.title}
                         <span className="text-gray-400">→</span>
                       </ModuleLink>
                     ),

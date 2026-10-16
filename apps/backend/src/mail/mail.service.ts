@@ -43,4 +43,15 @@ export class MailService {
     });
     if (error) throw new Error(`${error.name}: ${error.message}`);
   }
+
+  /** Asks a customer to rate a visit. Throws if Resend rejects it, so the caller can log why. */
+  async sendFeedbackRequestEmail(to: string, customerName: string, businessName: string, link: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.config.get<string>('MAIL_FROM') ?? 'Scalio <onboarding@resend.dev>',
+      to,
+      subject: `How was your visit to ${businessName}?`,
+      text: `Hi ${customerName},\n\nThanks for visiting ${businessName}. How did it go? It takes 10 seconds:\n\n${link}\n\nYour feedback goes to ${businessName} so they can keep doing what you liked and fix what you didn't.`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+  }
 }

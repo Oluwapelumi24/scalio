@@ -12,7 +12,6 @@ const snapshot: HomeSnapshot = {
   startingSoon: 0,
   unassignedToday: 0,
   bookingsOnLeave: 0,
-  viewerClockedIn: false,
   payoutAccountSet: true,
   payrollSetUp: false,
   payrollOpen: null,
@@ -27,6 +26,11 @@ const snapshot: HomeSnapshot = {
   leadsDue: 0,
   postsPlannedToday: 0,
   postCount: 0,
+  rating: null,
+  unhappyToCall: 0,
+  feedbackToSend: 0,
+  quietDay: null,
+  noShows: null,
 };
 
 const prefs = (interests: string[], extra: Partial<HomePreferences> = {}): HomePreferences => ({
@@ -96,9 +100,11 @@ describe('buildHome — rules', () => {
     expect(home.layers.attention.map((i) => i.id)).toEqual(['bookings_on_leave']);
   });
 
-  it('tells the clock-in action whether the viewer is on shift', () => {
-    const home = buildHome({ ...snapshot, viewerClockedIn: true }, prefs([]), 'practitioner', now);
-    expect(home.layers.quick_action.find((i) => i.id === 'clock_in')?.data).toEqual({ clockedIn: true });
+  it('offers Add a service on Home in place of Clock in, to owners and managers only', () => {
+    const ids = (role: string) => buildHome(snapshot, prefs([]), role, now).layers.quick_action.map((i) => i.id);
+    expect(ids('owner')).toContain('add_service');
+    expect(ids('owner')).not.toContain('clock_in');
+    expect(ids('practitioner')).not.toContain('add_service');
   });
 
   it('hides alerts that have nothing to report', () => {
@@ -174,5 +180,25 @@ describe('buildHome — growth (Phase 4)', () => {
     expect(ids).not.toContain('create_post');
     expect(ids).not.toContain('posts_planned_today');
     expect(ids).toContain('view_leads');
+  });
+});
+
+describe('buildHome — insights (Phase 5)', () => {
+  it('asks owners to call back unhappy customers, whatever their interests', () => {
+    const home = buildHome({ ...snapshot, unhappyToCall: 2 }, prefs(['social_posts']), 'owner', now);
+    expect(home.layers.attention.find((i) => i.id === 'unhappy_customers')?.data).toEqual({ count: 2 });
+    expect(buildHome({ ...snapshot, unhappyToCall: 2 }, prefs([]), 'practitioner', now).layers.attention.map((i) => i.id)).not.toContain('unhappy_customers');
+  });
+
+  it('suggests filling the quiet day and deposits only when the data says so', () => {
+    const quiet = { weekday: 2, day: 'Tuesday', bookings: 3, averageBookings: 9 };
+    const recs = (s: Partial<typeof snapshot>) => buildHome({ ...snapshot, ...s }, prefs(['find_customers', 'manage_bookings']), 'owner', now).layers.recommendation.map((i) => i.id);
+    expect(recs({})).not.toEqual(expect.arrayContaining(['quiet_day_offer']));
+    expect(recs({ quietDay: quiet, noShows: { noShows: 4, rate: 0.15 } })).toEqual(expect.arrayContaining(['quiet_day_offer', 'deposits_for_no_shows']));
+  });
+
+  it('shows the rating tile once there are ratings', () => {
+    const home = buildHome({ ...snapshot, rating: { average: 4.6, count: 12 } }, prefs(['reviews_feedback']), 'owner', now);
+    expect(home.layers.overview.find((i) => i.id === 'customer_rating')?.data).toEqual({ average: 4.6, count: 12 });
   });
 });

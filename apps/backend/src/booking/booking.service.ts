@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, sql, sum } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
@@ -13,6 +7,7 @@ import {
   PaystackService,
   type InitializeTransactionResult,
 } from '../payments/paystack.service';
+import { FeedbackService } from '../feedback/feedback.service';
 import { PushService } from '../notifications/push.service';
 import { SlotLockService } from './slot-lock.service';
 import { loadStaffDay } from '../staff-schedule/staff-day';
@@ -41,6 +36,7 @@ export class BookingService {
     private readonly slotLock: SlotLockService,
     private readonly paystack: PaystackService,
     private readonly push: PushService,
+    @Optional() private readonly feedback?: FeedbackService,
   ) {}
 
   /**
@@ -486,6 +482,10 @@ export class BookingService {
     }
 
     await this.updateCustomerStats(updated);
+
+    if (nextStatus === 'completed') {
+      await this.feedback?.requestForBooking(updated.id);
+    }
 
     if (nextStatus === 'confirmed') {
       await this.push.notifyCustomer(updated.customerId, {

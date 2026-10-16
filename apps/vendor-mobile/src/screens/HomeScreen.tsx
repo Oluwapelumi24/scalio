@@ -224,9 +224,6 @@ export function HomeScreen({ navigation }: Props) {
       case 'setup_payments':
         navigation.navigate('PaymentsSetup');
         return;
-      case 'clock_in':
-        navigation.navigate('Attendance');
-        return;
       case 'staff_performance':
         navigation.navigate('Performance');
         return;
@@ -396,7 +393,7 @@ export function HomeScreen({ navigation }: Props) {
                     <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
                   </View>
                   <Text style={styles.quickLabel} numberOfLines={2}>
-                    {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
+                    {item.title}
                   </Text>
                 </Pressable>
               ))}

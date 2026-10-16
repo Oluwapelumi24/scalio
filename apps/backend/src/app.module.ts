@@ -23,6 +23,8 @@ import { StaffScheduleModule } from './staff-schedule/staff-schedule.module';
 import { FinanceModule } from './finance/finance.module';
 import { ContentStudioModule } from './content-studio/content-studio.module';
 import { LeadsModule } from './leads/leads.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { ReportingModule } from './reporting/reporting.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { LeadsModule } from './leads/leads.module';
     FinanceModule,
     ContentStudioModule,
     LeadsModule,
+    FeedbackModule,
+    ReportingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

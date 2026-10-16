@@ -21,6 +21,8 @@ import { WaitlistModule } from './waitlist/waitlist.module';
 import { PersonalisationModule } from './personalisation/personalisation.module';
 import { StaffScheduleModule } from './staff-schedule/staff-schedule.module';
 import { FinanceModule } from './finance/finance.module';
+import { ContentStudioModule } from './content-studio/content-studio.module';
+import { LeadsModule } from './leads/leads.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { FinanceModule } from './finance/finance.module';
     PersonalisationModule,
     StaffScheduleModule,
     FinanceModule,
+    ContentStudioModule,
+    LeadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

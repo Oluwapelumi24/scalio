@@ -36,6 +36,10 @@ export interface HomeSnapshot {
   staffCount: number;
   serviceCount: number;
   hasBusinessHours: boolean;
+  /** Phase 4 growth. Leads are the viewer's own for practitioners. */
+  leadsDue: number;
+  postsPlannedToday: number;
+  postCount: number;
 }
 
 export interface HomePreferences {
@@ -110,6 +114,12 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.hasBusinessHours ? null : {};
     case 'share_link_first':
       return s.totalBookings === 0 ? { url: s.bookingLink } : null;
+    case 'leads_due':
+      return s.leadsDue > 0 ? { count: s.leadsDue } : null;
+    case 'posts_planned_today':
+      return s.postsPlannedToday > 0 ? { count: s.postsPlannedToday } : null;
+    case 'first_post':
+      return s.postCount === 0 && def.interests.some((i) => prefs.interests.includes(i)) ? {} : null;
     case 'follow_up_lapsed':
       return s.lapsedCustomers > 0 ? { count: s.lapsedCustomers } : null;
     default:

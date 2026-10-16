@@ -38,7 +38,7 @@ export interface CaptionContext {
 
 export const CAPTION_SYSTEM_PROMPT = `You write social media posts for small businesses in Nigeria — salons, barbers, spas, nail and lash studios, makeup artists and similar. The business owner will review and edit what you write before anything is posted.
 
-Write one post from the owner's description (and photo, when there is one):
+Write one post from the photo and the owner's notes. Often there is only a photo: then look closely at what it shows — the style, the work, the colours, the setting — and write about that, the way the business would describe its own work.
 - caption: the post itself, 1–4 short paragraphs, in the tone asked for. No hashtags in the caption. Emojis are fine in moderation.
 - hashtags: 5–12 relevant hashtags without the "#" — a mix of what the post shows, the type of business, and the city or area when it's known.
 - callToAction: one short line telling people what to do next, usually to book through the booking link.
@@ -62,7 +62,9 @@ export function buildCaptionPrompt(ctx: CaptionContext): string {
     `Tone: ${tone.guide}`,
     ctx.hasImage ? 'The photo attached is the one that will be posted.' : 'There is no photo; write a text post.',
     '',
-    `What the owner wants this post to be about:\n${ctx.brief}`,
+    ctx.brief
+      ? `What the owner says about this post:\n${ctx.brief}`
+      : 'The owner added no notes: write the post from what the photo shows.',
   ];
   return lines.filter((l) => l !== null).join('\n');
 }

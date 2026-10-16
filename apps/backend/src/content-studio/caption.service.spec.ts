@@ -55,6 +55,12 @@ describe('buildCaptionPrompt', () => {
     expect(text).toContain('There is no photo');
     expect(text.trim().endsWith('New autumn colours are in')).toBe(true);
   });
+
+  it('writes from the photo alone when the owner adds no notes', () => {
+    const text = buildCaptionPrompt({ ...ctx, brief: '', hasImage: true });
+    expect(text).toContain('The owner added no notes: write the post from what the photo shows.');
+    expect(text).not.toContain('What the owner says');
+  });
 });
 
 describe('CaptionService', () => {

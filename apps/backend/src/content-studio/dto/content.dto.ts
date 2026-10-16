@@ -1,4 +1,4 @@
-import { ArrayMaxSize, IsArray, IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { contentPlatformValues, contentPostStatusValues } from '../../db/schema';
 import { CAPTION_TONE_IDS } from '../caption-writer';
 
@@ -16,8 +16,9 @@ export class UploadMediaDto {
 }
 
 export class GenerateCaptionDto {
-  @IsString() @MinLength(3, { message: 'Say a few words about what the post is for.' }) @MaxLength(1000)
-  brief!: string;
+  /** Optional with a photo: Claude writes from what the photo shows. Needed when there's no photo. */
+  @IsOptional() @IsString() @MaxLength(1000)
+  brief?: string;
 
   @IsIn(CAPTION_TONE_IDS)
   tone!: string;

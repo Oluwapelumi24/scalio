@@ -86,14 +86,14 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
 
   const aiBlocked = !studio.ai.available ? "AI captions aren't switched on yet."
     : aiUsed >= studio.ai.dailyLimit ? `You've used today's ${studio.ai.dailyLimit} AI captions.`
-    : brief.trim().length < 3 ? 'Say what the post is about first.'
+    : !mediaId && brief.trim().length < 3 ? 'Add a photo, or say what the post is about.'
     : platforms.length === 0 ? 'Choose at least one platform.'
     : null
 
   const generate = () => {
     if (caption.trim() && !confirm('Replace your caption? AI will write a new caption, call to action and hashtags.')) return
     void run('ai', async () => {
-      const r = await writeCaption({ brief: brief.trim(), tone, platforms, mediaId: mediaId ?? undefined })
+      const r = await writeCaption({ brief: brief.trim() || undefined, tone, platforms, mediaId: mediaId ?? undefined })
       if (r.error || !r.data) throw new Error(r.error ?? 'Could not write a caption.')
       setCaption(r.data.caption); setCta(r.data.callToAction); setTags(tagsText(r.data.hashtags))
       setAiGenerated(true); setDirty(true); setAiUsed((n) => n + 1)
@@ -198,9 +198,9 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) pickPhoto(f); e.target.value = '' }} />
             <div className="flex-1 space-y-1">
-              <label className={label} htmlFor="brief">What&apos;s this post about?</label>
+              <label className={label} htmlFor="brief">Anything to add? <span className="font-normal text-gray-400">(optional)</span></label>
               <textarea id="brief" value={brief} onChange={(e) => edit(setBrief)(e.target.value)} rows={3} maxLength={1000}
-                placeholder="e.g. New knotless braids style, 20% off this week only" className={input} />
+                placeholder="AI writes from your photo. Add a price, offer or style name if you like, e.g. 20% off this week" className={input} />
               {mediaId && <button type="button" onClick={() => { setMediaId(null); setDirty(true) }} className="text-xs font-medium text-indigo-600">Remove photo</button>}
             </div>
           </div>
@@ -224,7 +224,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
               {busy === 'ai' ? 'Writing…' : caption.trim() ? 'Write again with AI' : 'Write with AI'}
             </button>
             <p className="text-xs text-gray-500">
-              {aiBlocked ?? `AI drafts from your description and photo, using only facts you give it. Check it before posting. ${studio.ai.dailyLimit - aiUsed} left today.`}
+              {aiBlocked ?? `AI drafts from your photo and notes, and won’t make up prices or offers. Check it before posting. ${studio.ai.dailyLimit - aiUsed} left today.`}
             </p>
           </div>
         </section>

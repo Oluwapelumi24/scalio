@@ -105,6 +105,8 @@ export class ContentStudioService {
   // ── AI captions ────────────────────────────────────────────────────────────
 
   async generate(vendorId: string, dto: GenerateCaptionDto) {
+    const brief = dto.brief?.trim() ?? '';
+    if (!dto.mediaId && brief.length < 3) throw new BadRequestException('Add a photo, or say a few words about the post.');
     const [vendor] = await this.db
       .select({ businessName: vendors.businessName, category: vendors.category, description: vendors.description, address: vendors.address, slug: vendors.slug })
       .from(vendors)
@@ -130,7 +132,7 @@ export class ContentStudioService {
         address: vendor.address,
         services: serviceRows,
         bookingLink: this.homeData.bookingLinkFor(vendor.slug),
-        brief: dto.brief.trim(),
+        brief,
         tone: dto.tone as CaptionToneId,
         platforms: dto.platforms as ContentPlatform[],
         hasImage: !!image,

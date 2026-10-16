@@ -27,7 +27,7 @@ export async function uploadMedia(mimeType: string, dataBase64: string) {
   return call<{ id: string }>('/vendor-admin/content/media', json('POST', { mimeType, dataBase64 }), [])
 }
 
-export async function writeCaption(data: { brief: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }) {
+export async function writeCaption(data: { brief?: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }) {
   return call<CaptionDraft>('/vendor-admin/content/captions', json('POST', data), [])
 }
 

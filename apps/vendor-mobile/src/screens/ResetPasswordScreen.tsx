@@ -175,15 +175,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     fontSize: typography.size.md,
-    // Explicit, or iOS can carry the code field's wide spacing into these placeholders.
-    letterSpacing: 0,
     color: colors.text,
     backgroundColor: colors.surface,
   },
+  // No letterSpacing on inputs: iOS reuses text-field views across screens and the
+  // spacing leaks into other fields' placeholders (it stretched them across the box).
   codeInput: {
     fontSize: typography.size.xl,
-    letterSpacing: 8,
     textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
   btn: {
     height: 52,

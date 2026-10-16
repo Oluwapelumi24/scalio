@@ -680,7 +680,7 @@ export function mediaSource(id: string) {
   return { uri: `${BASE}/vendor-admin/content/media/${id}`, headers: session ? { Authorization: `Bearer ${session.token}` } : undefined };
 }
 
-export function writeCaption(data: { brief: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }): Promise<CaptionDraft> {
+export function writeCaption(data: { brief?: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }): Promise<CaptionDraft> {
   return req('POST', '/vendor-admin/content/captions', data);
 }
 

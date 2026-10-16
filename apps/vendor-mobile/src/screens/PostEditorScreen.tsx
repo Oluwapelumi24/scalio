@@ -128,13 +128,13 @@ export function PostEditorScreen({ navigation, route }: Props) {
   const aiBlocked = !studio ? 'Loading…'
     : !studio.ai.available ? "AI captions aren't switched on yet."
     : studio.ai.usedToday >= studio.ai.dailyLimit ? `You've used today's ${studio.ai.dailyLimit} AI captions.`
-    : brief.trim().length < 3 ? 'Say what the post is about first.'
+    : !mediaId && brief.trim().length < 3 ? 'Add a photo, or say what the post is about.'
     : platforms.length === 0 ? 'Choose at least one platform.'
     : null;
 
   const generate = () => {
     const go = () => run('ai', 'Could not write a caption', async () => {
-      const draft = await writeCaption({ brief: brief.trim(), tone, platforms, mediaId: mediaId ?? undefined });
+      const draft = await writeCaption({ brief: brief.trim() || undefined, tone, platforms, mediaId: mediaId ?? undefined });
       setCaption(draft.caption); setCta(draft.callToAction); setTags(tagsText(draft.hashtags));
       setAiGenerated(true); setDirty(true);
       setStudio((s) => (s ? { ...s, ai: { ...s.ai, usedToday: s.ai.usedToday + 1 } } : s));
@@ -235,9 +235,9 @@ export function PostEditorScreen({ navigation, route }: Props) {
         )}
 
         {/* 2. What it's about → AI */}
-        <Text style={styles.label}>What's this post about?</Text>
+        <Text style={styles.label}>Anything to add? (optional)</Text>
         <TextInput style={[styles.input, styles.multiline]} value={brief} onChangeText={edit(setBrief)} multiline maxLength={1000}
-          placeholder="e.g. New knotless braids style, 20% off this week only" placeholderTextColor={colors.textMuted} />
+          placeholder="AI writes from your photo. Add a price, offer or style name if you like, e.g. 20% off this week" placeholderTextColor={colors.textMuted} />
 
         <Text style={styles.label}>Tone</Text>
         <View style={styles.wrap}>
@@ -262,7 +262,7 @@ export function PostEditorScreen({ navigation, route }: Props) {
           <Text style={styles.aiText}>{busy === 'ai' ? 'Writing…' : caption.trim() ? 'Write again with AI' : 'Write with AI'}</Text>
         </Pressable>
         <Text style={styles.meta}>
-          {aiBlocked ?? `AI writes a draft from your description and photo. Check it before posting — it only uses facts you give it. ${studio.ai.dailyLimit - studio.ai.usedToday} left today.`}
+          {aiBlocked ?? `AI writes a draft from your photo and notes. Check it before posting — it won’t make up prices or offers. ${studio.ai.dailyLimit - studio.ai.usedToday} left today.`}
         </Text>
 
         {/* 3. The post itself */}

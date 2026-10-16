@@ -607,8 +607,23 @@ export interface PlatformSpec {
   captionMaxChars: number;
   hashtagMax: number;
   needsMedia: boolean;
+  /** Per business: `automatic` once its account is connected. */
   publishing: 'manual' | 'automatic';
   manualReason: string;
+  connection: { displayName: string; status: 'active' | 'needs_reconnect'; lastError: string | null } | null;
+  canConnect: boolean;
+}
+
+export type PublicationStatus = 'queued' | 'publishing' | 'published' | 'failed' | 'cancelled';
+export interface Publication {
+  id: string;
+  platform: 'facebook' | 'instagram';
+  status: PublicationStatus;
+  runAt: string;
+  attempts: number;
+  permalink: string | null;
+  error: string | null;
+  publishedAt: string | null;
 }
 
 export interface StudioInfo {
@@ -635,6 +650,7 @@ export interface ContentPost {
   aiGenerated: boolean;
   updatedAt: string;
   checks: PlatformCheck[];
+  publications: Publication[];
 }
 
 export interface CaptionDraft { caption: string; hashtags: string[]; callToAction: string }
@@ -699,6 +715,38 @@ export function markPosted(id: string, platforms: ContentPlatform[]): Promise<Co
 
 export function deletePost(id: string): Promise<void> {
   return req('DELETE', `/vendor-admin/content/posts/${id}`);
+}
+
+export interface SocialConnections {
+  available: boolean;
+  unavailableReason: string | null;
+  connections: { platform: 'facebook' | 'instagram'; displayName: string; status: 'active' | 'needs_reconnect'; lastError: string | null; connectedAt: string }[];
+}
+
+export function getSocialConnections(): Promise<SocialConnections> {
+  return req('GET', '/vendor-admin/social/connections');
+}
+
+/** The Facebook Login page to open in the browser. */
+export function metaConnectUrl(): Promise<{ url: string }> {
+  return req('POST', '/vendor-admin/social/meta/connect', { from: 'mobile' });
+}
+
+export function disconnectMeta(): Promise<void> {
+  return req('DELETE', '/vendor-admin/social/meta');
+}
+
+/** Publish now, or at `at` (ISO). */
+export function publishPost(id: string, platforms: ('facebook' | 'instagram')[], at?: string): Promise<Publication[]> {
+  return req('POST', `/vendor-admin/content/posts/${id}/publish`, at ? { platforms, at } : { platforms });
+}
+
+export function retryPublication(id: string): Promise<Publication[]> {
+  return req('POST', `/vendor-admin/content/publications/${id}/retry`, {});
+}
+
+export function cancelPublication(id: string): Promise<void> {
+  return req('POST', `/vendor-admin/content/publications/${id}/cancel`, {});
 }
 
 export type LeadSource = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp' | 'booking_page' | 'referral' | 'walk_in' | 'other';

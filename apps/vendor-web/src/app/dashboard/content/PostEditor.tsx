@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
-import { deletePost, markPosted, planPost, savePost, unplanPost, uploadMedia, writeCaption } from '@/app/actions/growth'
-import { mediaUrl, type ContentPlatform, type ContentPost, type PostFields, type StudioInfo } from '@/lib/growth'
+import Link from 'next/link'
+import { cancelPublication, deletePost, getPostAction, markPosted, planPost, publishPost, retryPublication, savePost, unplanPost, uploadMedia, writeCaption } from '@/app/actions/growth'
+import { mediaUrl, type ContentPlatform, type ContentPost, type PostFields, type Publication, type StudioInfo } from '@/lib/growth'
 
 const MAX_EDGE = 1600
 const parseTags = (text: string) => text.split(/[\s,]+/).map((t) => t.replace(/^#+/, '')).filter(Boolean)
@@ -44,7 +45,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
   const [tags, setTags] = useState(tagsText(initial?.hashtags ?? []))
   const [aiGenerated, setAiGenerated] = useState(initial?.aiGenerated ?? false)
   // Planned posts open at their time; others suggest two hours from now.
-  const [when, setWhen] = useState(() => localInput(initial?.plannedFor ? new Date(initial.plannedFor) : new Date(Date.now() + 2 * 3_600_000)))
+  const [whenAt, setWhen] = useState(() => localInput(initial?.plannedFor ? new Date(initial.plannedFor) : new Date(Date.now() + 2 * 3_600_000)))
   const [postedOn, setPostedOn] = useState<ContentPlatform[]>(initial ? (initial.status === 'posted' ? initial.postedPlatforms : initial.platforms) : ['instagram'])
 
   const specs = new Map(studio.platforms.map((p) => [p.id, p]))
@@ -108,7 +109,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
   })
 
   const plan = () => run('plan', async () => {
-    const at = new Date(when)
+    const at = new Date(whenAt)
     if (Number.isNaN(at.getTime()) || at.getTime() < Date.now()) throw new Error('Pick a time in the future.')
     const saved = await ensureSaved()
     const r = await planPost(saved.id, at.toISOString())
@@ -127,6 +128,44 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
     const r = await markPosted(saved.id, postedOn)
     if (r.error || !r.data) throw new Error(r.error ?? 'Could not mark as posted.')
     fill(r.data); setFlash('Marked as posted.')
+  })
+
+  /** Platforms this post goes to that Scalio can publish to itself. */
+  const autoTargets = studio.platforms
+    .filter((p) => p.publishing === 'automatic' && platforms.includes(p.id))
+    .map((p) => p.id as 'facebook' | 'instagram')
+  const targetNames = autoTargets.map((p) => specs.get(p)!.name).join(' & ')
+
+  async function refresh(id: string) {
+    const r = await getPostAction(id)
+    if (r.data) fill(r.data)
+  }
+
+  const publish = (when: 'now' | 'scheduled') => run('posted', async () => {
+    const saved = await ensureSaved()
+    let at: string | undefined
+    if (when === 'scheduled') {
+      const t = new Date(whenAt)
+      if (Number.isNaN(t.getTime()) || t.getTime() < Date.now()) throw new Error('Pick a time in the future.')
+      at = t.toISOString()
+    }
+    const r = await publishPost(saved.id, autoTargets, at)
+    if (r.error) throw new Error(r.error)
+    await refresh(saved.id)
+    setFlash(at ? `Scheduled for ${targetNames}.` : `Sending to ${targetNames}…`)
+    if (!at) setTimeout(() => { void refresh(saved.id) }, 8000)
+  })
+
+  const retry = (pub: Publication) => run('posted', async () => {
+    const r = await retryPublication(pub.id)
+    if (r.error) throw new Error(r.error)
+    await refresh(post!.id)
+  })
+
+  const cancelPub = (pub: Publication) => run('posted', async () => {
+    const r = await cancelPublication(pub.id)
+    if (r.error) throw new Error(r.error)
+    await refresh(post!.id)
   })
 
   const remove = () => {
@@ -243,6 +282,49 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
       <aside className="space-y-6">
         {!isPosted && (
           <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+            <h2 className="text-base font-semibold text-gray-900">Publish</h2>
+            {autoTargets.length > 0 ? (
+              <>
+                <p className="text-sm text-gray-700">Scalio can post this to {targetNames} for you.</p>
+                <button type="button" onClick={() => publish('now')} disabled={!caption.trim() || busy !== null}
+                  className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
+                  {busy === 'posted' ? 'Sending…' : 'Publish now'}
+                </button>
+                <p className="text-xs text-gray-500">Or pick a time under “Plan it” and schedule it.</p>
+              </>
+            ) : studio.platforms.some((p) => p.canConnect) ? (
+              <p className="text-sm text-gray-700">
+                <Link href="/dashboard/content/connections" className="font-medium text-indigo-600">Connect Facebook and Instagram</Link> to publish and schedule straight from Scalio.
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">Publishing from Scalio isn’t available yet. Copy the caption from the preview and post from each app.</p>
+            )}
+          </section>
+        )}
+
+        {post && post.publications.length > 0 && (
+          <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+            <h2 className="text-base font-semibold text-gray-900">Sent from Scalio</h2>
+            {post.publications.map((pub) => (
+              <div key={pub.id} className="text-sm">
+                <p className="font-medium text-gray-900">
+                  {specs.get(pub.platform)?.name}:{' '}
+                  {pub.status === 'queued' ? (new Date(pub.runAt) > new Date() ? `scheduled for ${new Date(pub.runAt).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}` : 'sending…')
+                    : pub.status === 'publishing' ? 'sending…' : pub.status === 'published' ? 'published' : pub.status === 'failed' ? 'didn’t go out' : 'cancelled'}
+                </p>
+                {pub.status === 'failed' && pub.error && <p className="text-xs text-red-600">{pub.error}</p>}
+                <div className="mt-1 flex gap-3 text-xs font-medium">
+                  {pub.status === 'published' && pub.permalink && <a href={pub.permalink} target="_blank" rel="noreferrer" className="text-indigo-600">View post</a>}
+                  {(pub.status === 'failed' || pub.status === 'cancelled') && <button type="button" onClick={() => retry(pub)} disabled={busy !== null} className="text-indigo-600">Try again</button>}
+                  {pub.status === 'queued' && <button type="button" onClick={() => cancelPub(pub)} disabled={busy !== null} className="text-indigo-600">Cancel</button>}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {!isPosted && (
+          <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
             <h2 className="text-base font-semibold text-gray-900">Plan it</h2>
             {post?.status === 'planned' && post.plannedFor && (
               <div className="text-sm text-gray-700">
@@ -251,12 +333,22 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
                 <button type="button" onClick={unplan} disabled={busy !== null} className="mt-2 text-xs font-medium text-indigo-600">Take off the calendar</button>
               </div>
             )}
-            <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className={input} aria-label="Date and time" />
+            <input type="datetime-local" value={whenAt} onChange={(e) => setWhen(e.target.value)} className={input} aria-label="Date and time" />
             <button type="button" onClick={plan} disabled={!caption.trim() || busy !== null}
               className="w-full rounded-lg border border-slate-900 px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-40">
               {busy === 'plan' ? 'Planning…' : post?.status === 'planned' ? 'Move to this time' : 'Add to calendar'}
             </button>
-            {!caption.trim() && <p className="text-xs text-gray-500">Add a caption before planning.</p>}
+            {autoTargets.length > 0 && (
+              <button type="button" onClick={() => publish('scheduled')} disabled={!caption.trim() || busy !== null}
+                className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
+                Schedule for {targetNames}
+              </button>
+            )}
+            <p className="text-xs text-gray-500">
+              {!caption.trim() ? 'Add a caption before planning.'
+                : autoTargets.length > 0 ? '“Schedule” posts automatically at that time. “Add to calendar” only reminds you on the day.'
+                : 'It shows on your home screen on the day, as a reminder to post.'}
+            </p>
           </section>
         )}
 

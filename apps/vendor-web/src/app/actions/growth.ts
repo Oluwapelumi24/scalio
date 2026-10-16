@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { ApiError, apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
-import type { CaptionDraft, ContentPlatform, ContentPost, Lead, LeadFields, LeadSource, PostFields } from '@/lib/growth'
+import type { CaptionDraft, ContentPlatform, ContentPost, Lead, LeadFields, LeadSource, PostFields, Publication } from '@/lib/growth'
 
 async function call<T = unknown>(path: string, init: RequestInit, paths: string[]): Promise<{ data?: T; error?: string }> {
   const token = await requireToken()
@@ -51,6 +51,32 @@ export async function markPosted(id: string, platforms: ContentPlatform[]) {
 
 export async function deletePost(id: string) {
   return call(`/vendor-admin/content/posts/${id}`, { method: 'DELETE' }, CONTENT)
+}
+
+export async function getPostAction(id: string) {
+  return call<ContentPost>(`/vendor-admin/content/posts/${id}`, { method: 'GET' }, [])
+}
+
+/** Publish now, or at `at` (ISO), through the connected Facebook Page / Instagram account. */
+export async function publishPost(id: string, platforms: ('facebook' | 'instagram')[], at?: string) {
+  return call<Publication[]>(`/vendor-admin/content/posts/${id}/publish`, json('POST', at ? { platforms, at } : { platforms }), CONTENT)
+}
+
+export async function retryPublication(id: string) {
+  return call<Publication[]>(`/vendor-admin/content/publications/${id}/retry`, json('POST'), CONTENT)
+}
+
+export async function cancelPublication(id: string) {
+  return call(`/vendor-admin/content/publications/${id}/cancel`, json('POST'), CONTENT)
+}
+
+/** The Facebook Login page to send the person to. */
+export async function metaConnectUrl() {
+  return call<{ url: string }>('/vendor-admin/social/meta/connect', json('POST', { from: 'web' }), [])
+}
+
+export async function disconnectMeta() {
+  return call('/vendor-admin/social/meta', { method: 'DELETE' }, ['/dashboard/content/connections', '/dashboard/content'])
 }
 
 // ── Leads ───────────────────────────────────────────────────────────────────

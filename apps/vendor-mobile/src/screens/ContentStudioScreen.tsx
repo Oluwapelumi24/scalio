@@ -82,6 +82,15 @@ export function ContentStudioScreen({ navigation, route }: Props) {
           contentContainerStyle={styles.content}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
         >
+          {studio && studio.platforms.some((p) => p.canConnect && p.publishing === 'manual') && (
+            <Pressable style={styles.notice} onPress={() => navigation.navigate('SocialAccounts')} accessibilityRole="button">
+              <Feather name="share-2" size={16} color={colors.textSecondary} />
+              <Text style={styles.noticeText}>
+                {studio.platforms.some((p) => p.connection?.status === 'needs_reconnect') ? 'Your Facebook/Instagram connection needs renewing. Tap to reconnect.' : 'Connect Facebook and Instagram to publish and schedule from Scalio.'}
+              </Text>
+              <Feather name="chevron-right" size={16} color={colors.textMuted} />
+            </Pressable>
+          )}
           {studio && !studio.ai.available && (
             <View style={styles.notice}>
               <Feather name="info" size={16} color={colors.textSecondary} />

@@ -4,7 +4,27 @@
 export type ContentPlatform = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp'
 export type PostStatus = 'draft' | 'planned' | 'posted'
 
-export interface PlatformSpec { id: ContentPlatform; name: string; captionMaxChars: number; hashtagMax: number; needsMedia: boolean; publishing: 'manual' | 'automatic'; manualReason: string }
+export interface PlatformSpec {
+  id: ContentPlatform
+  name: string
+  captionMaxChars: number
+  hashtagMax: number
+  needsMedia: boolean
+  /** Per business: `automatic` once its account is connected. */
+  publishing: 'manual' | 'automatic'
+  manualReason: string
+  connection: { displayName: string; status: 'active' | 'needs_reconnect'; lastError: string | null } | null
+  canConnect: boolean
+}
+
+export type PublicationStatus = 'queued' | 'publishing' | 'published' | 'failed' | 'cancelled'
+export interface Publication { id: string; platform: 'facebook' | 'instagram'; status: PublicationStatus; runAt: string; attempts: number; permalink: string | null; error: string | null; publishedAt: string | null }
+
+export interface SocialConnections {
+  available: boolean
+  unavailableReason: string | null
+  connections: { platform: 'facebook' | 'instagram'; displayName: string; status: 'active' | 'needs_reconnect'; lastError: string | null; connectedAt: string }[]
+}
 export interface StudioInfo { ai: { available: boolean; dailyLimit: number; usedToday: number }; tones: { id: string; label: string }[]; platforms: PlatformSpec[] }
 export interface PlatformCheck { platform: ContentPlatform; text: string; problems: string[]; notes: string[] }
 
@@ -24,6 +44,7 @@ export interface ContentPost {
   aiGenerated: boolean
   updatedAt: string
   checks: PlatformCheck[]
+  publications: Publication[]
 }
 
 export interface PostFields {

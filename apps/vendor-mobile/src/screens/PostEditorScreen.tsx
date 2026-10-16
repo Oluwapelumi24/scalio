@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,8 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import {
-  createPost, deletePost, getPost, getStudio, markPosted, mediaSource, planPost, unplanPost, updatePost, uploadMedia, writeCaption,
-  type ContentPlatform, type ContentPost, type PostFields, type StudioInfo,
+  cancelPublication, createPost, deletePost, getPost, getStudio, markPosted, mediaSource, planPost, publishPost, retryPublication,
+  unplanPost, updatePost, uploadMedia, writeCaption,
+  type ContentPlatform, type ContentPost, type PostFields, type Publication, type StudioInfo,
 } from '../lib/api';
 import { colors, radius, spacing, typography } from '../theme';
 
@@ -99,15 +100,30 @@ export function PostEditorScreen({ navigation, route }: Props) {
     } finally { setBusy(null); }
   }
 
-  const pickPhoto = () => run('photo', 'Could not add the photo', async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], base64: true, quality: 0.7 });
+  const usePhoto = (source: 'camera' | 'library') => run('photo', 'Could not add the photo', async () => {
+    const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], base64: true, quality: 0.7 };
+    let result: ImagePicker.ImagePickerResult;
+    if (source === 'camera') {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) throw new Error('Allow camera access for Scalio in your phone’s Settings to take photos.');
+      result = await ImagePicker.launchCameraAsync(options);
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync(options);
+    }
     if (result.canceled) return;
     const asset = result.assets[0];
     if (!asset.base64) throw new Error('That photo could not be read. Try another one.');
     if (asset.base64.length > MAX_PHOTO_BASE64) throw new Error('That photo is too large. Choose one under 3.5 MB.');
-    const media = await uploadMedia(asset.mimeType ?? 'image/jpeg', asset.base64);
+    // The picker hands back JPEG data (what Instagram needs); the server checks the bytes anyway.
+    const media = await uploadMedia('image/jpeg', asset.base64);
     setMediaId(media.id); setLocalUri(asset.uri); setDirty(true);
   });
+
+  const pickPhoto = () => Alert.alert(mediaId ? 'Change photo' : 'Add a photo', undefined, [
+    { text: 'Take photo', onPress: () => usePhoto('camera') },
+    { text: 'Choose from library', onPress: () => usePhoto('library') },
+    { text: 'Cancel', style: 'cancel' },
+  ]);
 
   const aiBlocked = !studio ? 'Loading…'
     : !studio.ai.available ? "AI captions aren't switched on yet."
@@ -156,6 +172,28 @@ export function PostEditorScreen({ navigation, route }: Props) {
     const saved = await ensureSaved();
     fill(await markPosted(saved.id, postedOn));
   });
+
+  /** Platforms this post goes to that Scalio can publish to itself. */
+  const autoTargets = (studio?.platforms ?? [])
+    .filter((p) => p.publishing === 'automatic' && platforms.includes(p.id))
+    .map((p) => p.id as 'facebook' | 'instagram');
+
+  const publish = (when: 'now' | 'scheduled') => run('posted', 'Could not publish', async () => {
+    const saved = await ensureSaved();
+    let at: string | undefined;
+    if (when === 'scheduled') {
+      const d = nextDays(7)[dayIndex].date;
+      const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour);
+      if (t.getTime() < Date.now()) throw new Error('That time has passed. Pick a later time.');
+      at = t.toISOString();
+    }
+    await publishPost(saved.id, autoTargets, at);
+    fill(await getPost(saved.id));
+    if (when === 'now') setTimeout(() => { getPost(saved.id).then(fill).catch(() => {}); }, 8000);
+  });
+
+  const retry = (pub: Publication) => run('posted', 'Could not try again', async () => { await retryPublication(pub.id); fill(await getPost(post!.id)); });
+  const cancelPub = (pub: Publication) => run('posted', 'Could not cancel', async () => { await cancelPublication(pub.id); fill(await getPost(post!.id)); });
 
   const remove = () => Alert.alert('Delete this post?', 'The caption and photo will be removed from Scalio.', [
     { text: 'Cancel', style: 'cancel' },
@@ -266,7 +304,48 @@ export function PostEditorScreen({ navigation, route }: Props) {
           </>
         )}
 
-        {/* 5. Plan it */}
+        {/* 5. Publish from Scalio (connected platforms) */}
+        {!isPosted && (
+          <>
+            <Text style={styles.section}>Publish</Text>
+            {autoTargets.length > 0 ? (
+              <View style={styles.card}>
+                <Text style={styles.lineLabel}>Scalio can post this to {autoTargets.map((p) => specs.get(p)!.name).join(' and ')} for you.</Text>
+                <Pressable style={[styles.primary, (!caption.trim() || busy) && styles.disabled]} onPress={() => publish('now')} disabled={!caption.trim() || busy !== null} accessibilityRole="button">
+                  <Text style={styles.primaryText}>{busy === 'posted' ? 'Sending…' : 'Publish now'}</Text>
+                </Pressable>
+                <Text style={styles.meta}>Or pick a day and time under “Plan it” and tap “Schedule”.</Text>
+              </View>
+            ) : studio.platforms.some((p) => p.canConnect) ? (
+              <Pressable onPress={() => navigation.navigate('SocialAccounts')} style={styles.card} accessibilityRole="button">
+                <Text style={styles.lineLabel}>Connect Facebook and Instagram to publish and schedule straight from Scalio.</Text>
+                <Text style={styles.link}>Connect accounts</Text>
+              </Pressable>
+            ) : (
+              <Text style={styles.meta}>Publishing from Scalio isn’t available yet. Copy the caption from the preview above and post from each app.</Text>
+            )}
+          </>
+        )}
+        {post && post.publications.length > 0 && (
+          <View style={styles.card}>
+            {post.publications.map((pub) => (
+              <View key={pub.id} style={{ gap: 4 }}>
+                <Text style={styles.lineLabel}>
+                  {specs.get(pub.platform)?.name}: {pub.status === 'queued' ? (new Date(pub.runAt) > new Date() ? `scheduled for ${new Date(pub.runAt).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}` : 'sending…')
+                    : pub.status === 'publishing' ? 'sending…' : pub.status === 'published' ? 'published' : pub.status === 'failed' ? 'didn’t go out' : 'cancelled'}
+                </Text>
+                {pub.status === 'failed' && pub.error && <Text style={styles.problem}>{pub.error}</Text>}
+                <View style={styles.wrap}>
+                  {pub.status === 'published' && pub.permalink && <Pressable onPress={() => Linking.openURL(pub.permalink!)}><Text style={styles.link}>View post</Text></Pressable>}
+                  {(pub.status === 'failed' || pub.status === 'cancelled') && <Pressable onPress={() => retry(pub)} disabled={busy !== null}><Text style={styles.link}>Try again</Text></Pressable>}
+                  {pub.status === 'queued' && <Pressable onPress={() => cancelPub(pub)} disabled={busy !== null}><Text style={styles.link}>Cancel</Text></Pressable>}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* 6. Plan it */}
         {!isPosted && (
           <>
             <Text style={styles.section}>Plan it</Text>
@@ -296,11 +375,20 @@ export function PostEditorScreen({ navigation, route }: Props) {
             <Pressable style={[styles.secondary, (!caption.trim() || busy) && styles.disabled]} onPress={plan} disabled={!caption.trim() || busy !== null} accessibilityRole="button">
               <Text style={styles.secondaryText}>{busy === 'plan' ? 'Planning…' : post?.status === 'planned' ? 'Move to this time' : 'Add to calendar'}</Text>
             </Pressable>
-            {!caption.trim() && <Text style={styles.meta}>Add a caption before planning.</Text>}
+            {autoTargets.length > 0 && (
+              <Pressable style={[styles.primary, (!caption.trim() || busy) && styles.disabled]} onPress={() => publish('scheduled')} disabled={!caption.trim() || busy !== null} accessibilityRole="button">
+                <Text style={styles.primaryText}>Schedule for {autoTargets.map((p) => specs.get(p)!.name).join(' & ')}</Text>
+              </Pressable>
+            )}
+            <Text style={styles.meta}>
+              {!caption.trim() ? 'Add a caption before planning.'
+                : autoTargets.length > 0 ? '“Schedule” posts automatically at that time. “Add to calendar” only reminds you on the day.'
+                : 'It shows on your home screen on the day, as a reminder to post.'}
+            </Text>
           </>
         )}
 
-        {/* 6. Posted */}
+        {/* 7. Posted by hand */}
         <Text style={styles.section}>{isPosted ? 'Posted on' : 'Already posted it?'}</Text>
         <View style={styles.wrap}>
           {studio.platforms.map((p) => (

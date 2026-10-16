@@ -28,6 +28,7 @@ export type RootStackParamList = {
   PostEditor: { postId?: string };
   Leads: { filter?: 'due' | 'open' | 'won' | 'lost' } | undefined;
   LeadDetail: { leadId?: string };
+  SocialAccounts: undefined;
 };
 
 export type MainTabParamList = {

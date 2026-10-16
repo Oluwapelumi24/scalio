@@ -29,6 +29,7 @@ import { ContentStudioScreen } from '../screens/ContentStudioScreen';
 import { PostEditorScreen } from '../screens/PostEditorScreen';
 import { LeadsScreen } from '../screens/LeadsScreen';
 import { LeadDetailScreen } from '../screens/LeadDetailScreen';
+import { SocialAccountsScreen } from '../screens/SocialAccountsScreen';
 import { loadSession, onSessionExpired } from '../lib/session';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -79,6 +80,7 @@ export function RootNavigator() {
         <Stack.Screen name="PostEditor" component={PostEditorScreen} />
         <Stack.Screen name="Leads" component={LeadsScreen} />
         <Stack.Screen name="LeadDetail" component={LeadDetailScreen} />
+        <Stack.Screen name="SocialAccounts" component={SocialAccountsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

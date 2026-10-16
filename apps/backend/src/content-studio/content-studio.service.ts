@@ -54,6 +54,8 @@ export class ContentStudioService {
       return {
         ...spec,
         publishing: automatic ? ('automatic' as const) : ('manual' as const),
+        /** The business could switch this platform to automatic by connecting it. */
+        canConnect: available && (spec.id === 'facebook' || spec.id === 'instagram'),
         connection: conn ? { displayName: conn.displayName, status: conn.status, lastError: conn.lastError } : null,
         /** Why it's manual here, and what would change that. */
         manualReason: automatic ? '' : conn?.status === 'needs_reconnect' ? 'Reconnect your account to publish from Scalio again.'

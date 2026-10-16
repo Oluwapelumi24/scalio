@@ -61,6 +61,17 @@ export default async function ContentStudioPage({ searchParams }: { searchParams
         <Link href="/dashboard/content/new" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">New post</Link>
       </div>
 
+      {studio.platforms.some((p) => p.canConnect && p.publishing === 'manual') && (
+        <Link href="/dashboard/content/connections" className="block rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+          {studio.platforms.some((p) => p.connection?.status === 'needs_reconnect')
+            ? 'Your Facebook/Instagram connection needs renewing. Reconnect →'
+            : 'Connect Facebook and Instagram to publish and schedule straight from Scalio →'}
+        </Link>
+      )}
+      {studio.platforms.some((p) => p.publishing === 'automatic') && (
+        <p className="text-sm text-gray-500"><Link href="/dashboard/content/connections" className="text-indigo-600">Social accounts</Link></p>
+      )}
+
       {!studio.ai.available && (
         <p className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-gray-600">
           AI captions aren&apos;t switched on yet. You can still write, plan and track posts.

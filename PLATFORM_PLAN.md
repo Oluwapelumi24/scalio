@@ -58,6 +58,8 @@ two copies of its data.
 | D6 | Vendor bottom nav: proposed **Home / Business / Customers / Money / More** — test with real vendors before locking. | Phase 1 design |
 | D8 | Vendor sign-in: add phone OTP + Google + Apple alongside email. SMS provider: **Mono** chosen, but Mono's site lists no SMS/OTP product (its products are Connect, DirectPay, DirectDebit, Disburse, Lookup, Prove) — **confirm** which Mono product sends the codes, or pick an SMS provider. Hide the provider behind an `SmsProvider` adapter so it can change. | Phase 1 |
 | D9 | Worth evaluating Mono for other parts of the plan: **Disburse** (staff payouts, D2), **Connect / Creditworthiness** (financing eligibility, Phase 6), **Lookup / Prove** (verifying staff payout accounts and vendor identity). | Phases 3, 6 |
+| D10 | **Meta setup (owner: you).** Create a Meta developer app (free), add Facebook Login for Business, set `META_APP_ID`/`META_APP_SECRET`/`PUBLIC_API_URL`, add `$PUBLIC_API_URL/social/meta/callback` as a redirect URI and the deauthorise/data-deletion URLs; complete business verification and app review for `pages_manage_posts`, `instagram_content_publish` etc. Needs a public HTTPS backend and a privacy policy URL. | Phase 4 publishing for all vendors |
+| D11 | **Trending sounds.** Instagram/Facebook/TikTok don't expose their licensed music through posting APIs. Options: (a) publish without sound; (b) send to the app as a draft to finish there (TikTok supports this; Instagram doesn't); (c) Scalio adds royalty-free music to a short video (needs video support + a licensed track library). | Phase 4 sound |
 
 **Start long-lead approvals now** (they run in parallel with Phases 1–3): Meta app
 review (Instagram/Facebook publishing, messaging, ads), TikTok Content Posting API,
@@ -169,7 +171,10 @@ Built 2026-10-16 without the platform approvals: everything up to the moment of 
 - [x] AI runs on the backend only, with a daily allowance per business (`CONTENT_AI_DAILY_LIMIT`, default 40); a failed call doesn't use it up. Without `ANTHROPIC_API_KEY` the studio still works and says AI isn't switched on.
 - [x] One platform registry (`content-studio/platforms.ts`): caption length, hashtag limit, photo required, and whether posting is manual or automatic with the reason shown. WhatsApp Status stays manual for good (no API).
 - [x] Content calendar (month grid on web, by day on mobile), drafts and posted history. "Posts planned for today" on the home screen.
-- [ ] Publishing adapters that submit and report status, with retry on failure — waits on Meta app review and TikTok Content Posting API. Flip a platform to `automatic` in the registry when its adapter lands.
+- [x] Facebook Page + Instagram publishing through Meta (Graph API v25): one Facebook Login connects the Page and its linked Instagram business account; publish now or schedule; per-platform status with retry (1m/5m/30m) and cancel; revoked tokens flag the connection for reconnecting; a send that never reported back is failed rather than repeated, so nothing posts twice. Deauthorise and data-deletion callbacks for Meta review. Works for app admins/testers now; **other vendors need Meta app review + business verification** (D10).
+- [x] Take a photo with the camera, or choose from the library (mobile).
+- [ ] TikTok publishing — waits on TikTok's Content Posting API audit.
+- [ ] Trending sounds — see D11. Platform music libraries aren't available through any posting API.
 - [ ] Photos are stored in Postgres (one small image per post). Move to object storage before media volume grows or video is added.
 - [ ] Ads (Meta): objective, audience, budget, duration, preview, approval status, spend/reach/clicks/leads; pause/resume where the API allows. *(Needs Meta approval.)*
 - [x] Leads: source, status (new → contacted → customer / not interested), assignee, follow-up date; convert to a customer (reuses an existing record with the same phone or email). Practitioners only see their own. "Leads to follow up" on the home screen for every business.

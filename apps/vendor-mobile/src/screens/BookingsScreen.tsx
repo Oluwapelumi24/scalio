@@ -23,7 +23,7 @@ import {
   type BookingStatus,
   type TodaySummary,
 } from '../lib/api';
-import { colors, fonts, radius, spacing, typography } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Bookings'>,
@@ -185,8 +185,8 @@ const styles = StyleSheet.create({
   },
   todayStat: { flex: 1, paddingVertical: spacing.lg, paddingHorizontal: 18, gap: 2 },
   todayDivider: { borderLeftWidth: 1, borderLeftColor: colors.border },
-  todayValue: { fontFamily: fonts.displayExtraBold, fontSize: 28, letterSpacing: -0.6, color: colors.text, fontVariant: ['tabular-nums'] },
-  todayLabel: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted },
+  todayValue: { fontWeight: '800', fontSize: 28, letterSpacing: -0.6, color: colors.text, fontVariant: ['tabular-nums'] },
+  todayLabel: { fontWeight: '500', fontSize: 12, color: colors.textMuted },
   root: { flex: 1, backgroundColor: colors.surface },
   header: {
     paddingHorizontal: spacing.xl,

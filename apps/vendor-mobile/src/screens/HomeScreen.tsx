@@ -21,7 +21,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
 import { formatDateTime, getHome, recordModuleUsage, type HomeItem, type HomeResponse } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, fonts, radius, spacing } from '../theme';
+import { colors, radius, spacing } from '../theme';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Home'>,
@@ -495,9 +495,9 @@ const styles = StyleSheet.create({
     width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
     borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
   },
-  logoText: { fontFamily: fonts.displayExtraBold, fontSize: 16, color: colors.accent },
-  bizName: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  bizRole: { fontFamily: fonts.medium, fontSize: 11, color: colors.textMuted, textTransform: 'capitalize', marginTop: 1 },
+  logoText: { fontWeight: '800', fontSize: 16, color: colors.accent },
+  bizName: { fontWeight: '700', fontSize: 15, color: colors.text },
+  bizRole: { fontWeight: '500', fontSize: 11, color: colors.textMuted, textTransform: 'capitalize', marginTop: 1 },
   roundBtn: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
     borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
@@ -506,17 +506,17 @@ const styles = StyleSheet.create({
     position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
     backgroundColor: colors.error, borderWidth: 2, borderColor: colors.background, alignItems: 'center', justifyContent: 'center',
   },
-  badgeText: { fontFamily: fonts.bold, fontSize: 10, color: colors.white },
+  badgeText: { fontWeight: '700', fontSize: 10, color: colors.white },
   search: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 20,
     backgroundColor: colors.field, borderWidth: 1, borderColor: colors.fieldBorder,
     borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 13,
   },
-  searchText: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
+  searchText: { fontWeight: '500', fontSize: 13, color: colors.textMuted },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: fonts.bold, fontSize: 12, color: colors.white },
-  greeting: { fontFamily: fonts.displaySemiBold, fontSize: 24, lineHeight: 30, letterSpacing: -0.4, color: colors.text, marginTop: 24 },
-  greetingSub: { fontFamily: fonts.medium, fontSize: 14, color: colors.textSecondary, marginTop: 6 },
+  avatarText: { fontWeight: '700', fontSize: 12, color: colors.white },
+  greeting: { fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.4, color: colors.text, marginTop: 24 },
+  greetingSub: { fontWeight: '500', fontSize: 14, color: colors.textSecondary, marginTop: 6 },
   quick: { flexDirection: 'row', paddingHorizontal: GUTTER - 4 },
   quickItem: { flex: 1, alignItems: 'center', gap: 10, paddingHorizontal: 2 },
   quickDisc: {
@@ -524,41 +524,41 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
     shadowColor: colors.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 2,
   },
-  quickLabel: { fontFamily: fonts.semibold, fontSize: 12, lineHeight: 15, color: colors.text, textAlign: 'center' },
+  quickLabel: { fontWeight: '600', fontSize: 12, lineHeight: 15, color: colors.text, textAlign: 'center' },
 
   // Body
   body: { gap: 32, paddingTop: spacing.sm },
   section: { paddingHorizontal: GUTTER, gap: spacing.md },
   sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  sectionTitle: { fontFamily: fonts.displayBold, fontSize: 19, letterSpacing: -0.4, color: colors.text },
-  sectionLink: { fontFamily: fonts.semibold, fontSize: 13, color: colors.accent },
+  sectionTitle: { fontWeight: '700', fontSize: 19, letterSpacing: -0.4, color: colors.text },
+  sectionLink: { fontWeight: '600', fontSize: 13, color: colors.accent },
   panel: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: 18 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
-  rowText: { flex: 1, fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: colors.text },
-  rowStrong: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
-  value: { fontFamily: fonts.bold, fontSize: 14, color: colors.text, fontVariant: ['tabular-nums'] },
-  metaText: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: 2 },
+  rowText: { flex: 1, fontWeight: '500', fontSize: 14, lineHeight: 20, color: colors.text },
+  rowStrong: { fontWeight: '600', fontSize: 14, color: colors.text },
+  value: { fontWeight: '700', fontSize: 14, color: colors.text, fontVariant: ['tabular-nums'] },
+  metaText: { fontWeight: '400', fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: 2 },
   flag: { width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: colors.warning },
   darkBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: spacing.lg, paddingVertical: 10 },
   darkBtnOff: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  darkBtnText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.white },
+  darkBtnText: { fontWeight: '600', fontSize: 13, color: colors.white },
   person: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
-  personInitial: { fontFamily: fonts.bold, fontSize: 14, color: colors.accent },
+  personInitial: { fontWeight: '700', fontSize: 14, color: colors.accent },
   empty: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 18 },
-  emptyText: { flex: 1, fontFamily: fonts.medium, fontSize: 13, lineHeight: 19, color: colors.textSecondary },
+  emptyText: { flex: 1, fontWeight: '500', fontSize: 13, lineHeight: 19, color: colors.textSecondary },
 
   // Carousel
   slide: { flexDirection: 'row', alignItems: 'center', borderRadius: 22, paddingVertical: 22, paddingLeft: 22, paddingRight: 16, minHeight: 172, gap: spacing.sm },
-  slideTitle: { fontFamily: fonts.displayExtraBold, fontSize: 20, lineHeight: 23, letterSpacing: -0.4, color: colors.text },
-  slideBody: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 19, color: colors.textSecondary, marginTop: 8, marginBottom: 16 },
+  slideTitle: { fontWeight: '800', fontSize: 20, lineHeight: 23, letterSpacing: -0.4, color: colors.text },
+  slideBody: { fontWeight: '400', fontSize: 13, lineHeight: 19, color: colors.textSecondary, marginTop: 8, marginBottom: 16 },
   slideCta: {
     alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10,
   },
-  slideCtaText: { fontFamily: fonts.bold, fontSize: 13, color: colors.white },
+  slideCtaText: { fontWeight: '700', fontSize: 13, color: colors.white },
   soonTag: { alignSelf: 'flex-start', backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
-  soonText: { fontFamily: fonts.bold, fontSize: 11, color: colors.textSecondary },
+  soonText: { fontWeight: '700', fontSize: 11, color: colors.textSecondary },
   art: { width: 104, height: 120 },
   artBlob: { position: 'absolute', left: 4, top: 6, right: 0, bottom: 0, borderRadius: 52, backgroundColor: 'rgba(255,255,255,0.65)' },
   artChip: {

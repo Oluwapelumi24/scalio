@@ -106,8 +106,8 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'pay_staff', layer: 'quick_action', title: 'Pay staff', icon: 'credit-card', interests: ['pay_staff', 'manage_staff', 'track_sales'], basePriority: 18, roles: MANAGERS },
   { id: 'staff_performance', layer: 'quick_action', title: 'Staff performance', icon: 'award', interests: ['manage_staff', 'business_insights', 'pay_staff'], basePriority: 12, roles: [...MANAGERS, 'practitioner'] },
   { id: 'manage_team', layer: 'quick_action', title: 'Manage staff', icon: 'user-check', interests: ['manage_staff', 'pay_staff'], basePriority: 20, roles: MANAGERS },
-  // Took Clock in's place on Home (clocking in lives under Settings → Attendance).
-  { id: 'add_service', layer: 'quick_action', title: 'Add a service', icon: 'plus-circle', interests: ['manage_bookings', 'manage_stock_orders'], basePriority: 30, roles: MANAGERS },
+  // Took Clock in's place on Home, with its priority and interests (clocking in lives under Settings → Attendance).
+  { id: 'add_service', layer: 'quick_action', title: 'Add a service', icon: 'plus-circle', interests: ['manage_bookings', 'manage_stock_orders', 'manage_staff', 'pay_staff'], basePriority: 30, roles: MANAGERS },
   { id: 'create_post', layer: 'quick_action', title: 'Create a post', icon: 'edit-3', interests: ['social_posts', 'manage_social', 'find_customers', 'run_ads'], basePriority: 22, roles: MARKETING },
   { id: 'view_leads', layer: 'quick_action', title: 'Leads', icon: 'inbox', interests: ['find_customers', 'run_ads', 'chat_customers', 'social_posts'], basePriority: 16 },
   { id: 'view_reports', layer: 'quick_action', title: 'Reports', icon: 'bar-chart-2', interests: ['business_insights', 'track_sales', 'get_financing'], basePriority: 14, roles: MANAGERS },

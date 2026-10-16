@@ -72,15 +72,3 @@ export const typography = {
   },
 } as const;
 
-// Loaded in App.tsx. With custom fonts each weight is its own family, so use
-// these instead of `fontWeight`. Bricolage Grotesque sets headings and big
-// figures; Figtree sets everything else.
-export const fonts = {
-  displaySemiBold: 'BricolageGrotesque_600SemiBold',
-  displayBold: 'BricolageGrotesque_700Bold',
-  displayExtraBold: 'BricolageGrotesque_800ExtraBold',
-  regular: 'Figtree_400Regular',
-  medium: 'Figtree_500Medium',
-  semibold: 'Figtree_600SemiBold',
-  bold: 'Figtree_700Bold',
-} as const;

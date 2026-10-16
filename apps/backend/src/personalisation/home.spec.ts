@@ -24,6 +24,9 @@ const snapshot: HomeSnapshot = {
   staffCount: 4,
   serviceCount: 6,
   hasBusinessHours: true,
+  leadsDue: 0,
+  postsPlannedToday: 0,
+  postCount: 0,
 };
 
 const prefs = (interests: string[], extra: Partial<HomePreferences> = {}): HomePreferences => ({
@@ -47,12 +50,12 @@ describe('buildHome — reference businesses', () => {
     expect(top(home, 'quick_action', 1)).toEqual(['share_booking_link']);
   });
 
-  it('Business B, growth-focused (fashion retailer): new customers and sharing first', () => {
+  it('Business B, growth-focused (fashion retailer): new customers, posting and sharing first', () => {
     const home = buildHome(snapshot, prefs(['find_customers', 'run_ads', 'social_posts']), 'owner', now);
     expect(top(home, 'overview', 1)).toEqual(['new_customers']);
-    expect(top(home, 'quick_action', 1)).toEqual(['share_booking_link']);
+    expect(top(home, 'quick_action', 3)).toEqual(['create_post', 'view_leads', 'share_booking_link']);
     expect(home.layers.recommendation.map((i) => i.id)).toEqual(
-      expect.arrayContaining(['content_studio_soon', 'ads_soon']),
+      expect.arrayContaining(['first_post', 'ads_soon']),
     );
   });
 
@@ -150,5 +153,26 @@ describe('buildHome — rules', () => {
     expect(shown).not.toContain('sales_30d');
     expect(shown).not.toContain('choose_interests');
     expect(shown).not.toContain('setup_services');
+  });
+});
+
+describe('buildHome — growth (Phase 4)', () => {
+  it('raises due leads for every business, whatever its interests', () => {
+    const home = buildHome({ ...snapshot, leadsDue: 3 }, prefs(['track_sales']), 'owner', now);
+    expect(home.layers.attention.find((i) => i.id === 'leads_due')?.data).toEqual({ count: 3 });
+  });
+
+  it('suggests a first post only to businesses that asked for social posts, and only until they make one', () => {
+    expect(buildHome(snapshot, prefs(['social_posts']), 'owner', now).layers.recommendation.map((i) => i.id)).toContain('first_post');
+    expect(buildHome(snapshot, prefs(['track_sales']), 'owner', now).layers.recommendation.map((i) => i.id)).not.toContain('first_post');
+    expect(buildHome({ ...snapshot, postCount: 1 }, prefs(['social_posts']), 'owner', now).layers.recommendation.map((i) => i.id)).not.toContain('first_post');
+  });
+
+  it('keeps the content studio from practitioners', () => {
+    const home = buildHome({ ...snapshot, postsPlannedToday: 1 }, prefs(['social_posts']), 'practitioner', now);
+    const ids = Object.values(home.layers).flat().map((i) => i.id);
+    expect(ids).not.toContain('create_post');
+    expect(ids).not.toContain('posts_planned_today');
+    expect(ids).toContain('view_leads');
   });
 });

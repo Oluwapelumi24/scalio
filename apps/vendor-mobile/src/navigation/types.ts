@@ -24,6 +24,11 @@ export type RootStackParamList = {
   Payroll: undefined;
   StaffPay: { staffId: string; name: string; pay: TeamPay };
   Money: undefined;
+  ContentStudio: { tab?: 'draft' | 'planned' | 'posted' } | undefined;
+  PostEditor: { postId?: string };
+  Leads: { filter?: 'due' | 'open' | 'won' | 'lost' } | undefined;
+  LeadDetail: { leadId?: string };
+  SocialAccounts: undefined;
 };
 
 export type MainTabParamList = {

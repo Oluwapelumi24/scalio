@@ -2,10 +2,11 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { and, asc, count, eq, gt, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { attendanceRecords, bookings, businessHours, customers, payrollSchedules, salaryPayouts, salaryRuns, services, staff, staffPay, staffTimeOff, vendorPayoutAccounts, vendors } from '../db/schema';
+import { attendanceRecords, bookings, businessHours, contentPosts, customers, leads, payrollSchedules, salaryPayouts, salaryRuns, services, staff, staffPay, staffTimeOff, vendorPayoutAccounts, vendors } from '../db/schema';
 import { salaryWindow } from '../finance/payroll-window';
 import { businessToday } from '../staff-schedule/period';
 import { businessDayBounds } from '../common/business-day';
+import { leadDueCondition } from '../leads/lead-due';
 import type { HomeSnapshot } from './home';
 
 const DAY_MS = 86_400_000;
@@ -149,6 +150,20 @@ export class HomeDataService {
       this.db.select({ n: count() }).from(businessHours).where(eq(businessHours.vendorId, vendorId)),
     ]);
 
+    // Growth: leads to chase (practitioners see their own) and today's planned posts.
+    const leadScope: SQL[] = [eq(leads.vendorId, vendorId), leadDueCondition(now)];
+    if (practitionerStaffId) leadScope.push(eq(leads.assignedStaffId, practitionerStaffId));
+    const [[leadRow], [postRow]] = await Promise.all([
+      this.db.select({ n: count() }).from(leads).where(and(...leadScope)),
+      this.db
+        .select({
+          total: count(),
+          plannedToday: countWhere(sql`${contentPosts.status} = 'planned' and ${contentPosts.plannedFor} >= ${start} and ${contentPosts.plannedFor} < ${end}`),
+        })
+        .from(contentPosts)
+        .where(eq(contentPosts.vendorId, vendorId)),
+    ]);
+
     return {
       businessName: vendor.businessName,
       bookingLink: this.bookingLinkFor(vendor.slug),
@@ -176,6 +191,9 @@ export class HomeDataService {
       staffCount: staffRow?.n ?? 0,
       serviceCount: serviceRow?.n ?? 0,
       hasBusinessHours: (hoursRow?.n ?? 0) > 0,
+      leadsDue: leadRow?.n ?? 0,
+      postsPlannedToday: postRow?.plannedToday ?? 0,
+      postCount: postRow?.total ?? 0,
     };
   }
 }

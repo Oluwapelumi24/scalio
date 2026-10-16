@@ -53,11 +53,13 @@ two copies of its data.
 | D1 | ✅ **Decided:** 2.3% is the interest rate **per month** — 27.6% a year simple (12 × 2.3%), about 31.4% a year if it compounds monthly. Still to settle with the lender: flat on the original amount vs. on the reducing balance (changes the total repaid), and whether it is the same for every business. Never shown as guaranteed. | Phase 6 |
 | D2 | ✅ **Decided (2026-10-16):** Scalio never holds money. Customer payments use **Paystack split payments** — each business gets a Paystack subaccount and Paystack settles to its own bank (`PLATFORM_COMMISSION_PERCENT` is Scalio's cut). Salaries use **option 1**: Scalio works out who to pay and when, the owner pays from their own bank and records it. A licensed banking partner (option 3, true wallet + transfers) can come later. Still to confirm: Paystack approves the split-payment setup; a fintech lawyer confirms no CBN licence is needed while non-custodial (NDPC registration is likely needed for the bank details we store). | Phase 3 |
 | D3 | ✅ **Decided:** financing comes through a lending partner, who makes the credit decision and holds the licence. Partner still to be chosen. | Phase 6 |
-| D4 | AI provider for captions; WhatsApp Business Solution Provider. | Phase 4 |
+| D4 | ✅ **AI provider decided (2026-10-16): Claude** (`claude-opus-5-5`, backend only, `ANTHROPIC_API_KEY`). Still open: WhatsApp Business Solution Provider. | Phase 4 |
 | D5 | Business size: worked out from staff/branch counts (recommended) rather than a self-picked label. | Home, settings |
 | D6 | Vendor bottom nav: proposed **Home / Business / Customers / Money / More** — test with real vendors before locking. | Phase 1 design |
 | D8 | Vendor sign-in: add phone OTP + Google + Apple alongside email. SMS provider: **Mono** chosen, but Mono's site lists no SMS/OTP product (its products are Connect, DirectPay, DirectDebit, Disburse, Lookup, Prove) — **confirm** which Mono product sends the codes, or pick an SMS provider. Hide the provider behind an `SmsProvider` adapter so it can change. | Phase 1 |
 | D9 | Worth evaluating Mono for other parts of the plan: **Disburse** (staff payouts, D2), **Connect / Creditworthiness** (financing eligibility, Phase 6), **Lookup / Prove** (verifying staff payout accounts and vendor identity). | Phases 3, 6 |
+| D10 | **Meta setup (owner: you).** Create a Meta developer app (free), add Facebook Login for Business, set `META_APP_ID`/`META_APP_SECRET`/`PUBLIC_API_URL`, add `$PUBLIC_API_URL/social/meta/callback` as a redirect URI and the deauthorise/data-deletion URLs; complete business verification and app review for `pages_manage_posts`, `instagram_content_publish` etc. Needs a public HTTPS backend and a privacy policy URL. | Phase 4 publishing for all vendors |
+| D11 | ✅ **Decided (2026-10-16): post without sound for now.** Revisit later. **Trending sounds.** Instagram/Facebook/TikTok don't expose their licensed music through posting APIs. Options: (a) publish without sound; (b) send to the app as a draft to finish there (TikTok supports this; Instagram doesn't); (c) Scalio adds royalty-free music to a short video (needs video support + a licensed track library). | Phase 4 sound |
 
 **Start long-lead approvals now** (they run in parallel with Phases 1–3): Meta app
 review (Instagram/Facebook publishing, messaging, ads), TikTok Content Posting API,
@@ -163,11 +165,20 @@ Website
 
 ### Phase 4 — Growth: content, ads, leads (depends on D4 + platform approvals)
 
-- [ ] Content studio: add media → AI caption, hashtags, call to action → edit tone and pick platforms → preview → publish or schedule.
-- [ ] One publishing interface with an adapter per platform (Instagram, Facebook, TikTok). Each adapter validates, submits and reports its own status. No automated WhatsApp Status; music limited to what each platform licenses.
-- [ ] Content calendar, drafts, publishing history, retry on failure.
-- [ ] Ads (Meta): objective, audience, budget, duration, preview, approval status, spend/reach/clicks/leads; pause/resume where the API allows.
-- [ ] Leads linked to `customers`; unified inbox for supported channels with staff assignment and follow-up status.
+Built 2026-10-16 without the platform approvals: everything up to the moment of posting. Vendors post by hand from each app (copy the checked caption, paste, mark as posted) until the APIs are approved.
+
+- [x] Content studio: add a photo → AI caption, hashtags and call to action (Claude, structured output, only uses facts the vendor gave) → edit, pick tone and platforms → per-platform preview → save, plan or mark as posted. Mobile and web.
+- [x] AI runs on the backend only, with a daily allowance per business (`CONTENT_AI_DAILY_LIMIT`, default 40); a failed call doesn't use it up. Without `ANTHROPIC_API_KEY` the studio still works and says AI isn't switched on.
+- [x] One platform registry (`content-studio/platforms.ts`): caption length, hashtag limit, photo required, and whether posting is manual or automatic with the reason shown. WhatsApp Status stays manual for good (no API).
+- [x] Content calendar (month grid on web, by day on mobile), drafts and posted history. "Posts planned for today" on the home screen.
+- [x] Facebook Page + Instagram publishing through Meta (Graph API v25): one Facebook Login connects the Page and its linked Instagram business account; publish now or schedule; per-platform status with retry (1m/5m/30m) and cancel; revoked tokens flag the connection for reconnecting; a send that never reported back is failed rather than repeated, so nothing posts twice. Deauthorise and data-deletion callbacks for Meta review. Works for app admins/testers now; **other vendors need Meta app review + business verification** (D10).
+- [x] Take a photo with the camera, or choose from the library (mobile).
+- [ ] TikTok publishing — waits on TikTok's Content Posting API audit.
+- [ ] Trending sounds — deferred (D11: posts go out without sound for now). Platform music libraries aren't available through any posting API.
+- [ ] Photos are stored in Postgres (one small image per post). Move to object storage before media volume grows or video is added.
+- [ ] Ads (Meta): objective, audience, budget, duration, preview, approval status, spend/reach/clicks/leads; pause/resume where the API allows. *(Needs Meta approval.)*
+- [x] Leads: source, status (new → contacted → customer / not interested), assignee, follow-up date; convert to a customer (reuses an existing record with the same phone or email). Practitioners only see their own. "Leads to follow up" on the home screen for every business.
+- [ ] Unified inbox for supported channels with staff assignment and follow-up status. *(Needs the WhatsApp provider — D4 — and Meta messaging approval.)*
 
 ### Phase 5 — Insights and retention
 
@@ -202,7 +213,7 @@ Website
 apps/
   backend/src/            + personalisation/ locations/ staff-schedule/
                           + finance/ payroll/ financing/
-                          + content-studio/ marketing/ reporting/
+                          + content-studio/ leads/ marketing/ reporting/
                           + integrations/{payments,social,messaging,ai,lending}/
   vendor-mobile/          control centre on mobile
   vendor-web/             full dashboard
@@ -229,7 +240,7 @@ packages/
 - [ ] Users only see businesses and records their role allows.
 - [ ] Payouts can't start outside the salary window or with setup incomplete.
 - [ ] Every payout has a traceable status and ledger record; duplicate requests are safe.
-- [ ] AI content can be reviewed and edited before publishing; each platform shows what it actually supports.
+- [x] AI content can be reviewed and edited before publishing; each platform shows what it actually supports.
 - [ ] Leads and supported conversations link to customer records.
 - [ ] Every module has loading, empty, error and success states.
 - [ ] Existing booking flows (consumer booking, Paystack checkout, vendor booking management) still work.

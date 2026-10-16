@@ -1,6 +1,6 @@
 import { expireSession, getSession } from './session';
 
-const BASE = 'http://localhost:3000';
+export const BASE = 'http://localhost:3000';
 
 // ─── Shared types ────────────────────────────────────────────────────────────
 
@@ -592,4 +592,229 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
 
 export function statusLabel(s: BookingStatus): string {
   return STATUS_LABEL[s] ?? s;
+}
+
+// ─── Growth: content studio and leads ────────────────────────────────────────
+// Posting to Instagram/Facebook/TikTok is manual until those platforms approve
+// Scalio; the backend says so per platform in `manualReason`.
+
+export type ContentPlatform = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp';
+export type PostStatus = 'draft' | 'planned' | 'posted';
+
+export interface PlatformSpec {
+  id: ContentPlatform;
+  name: string;
+  captionMaxChars: number;
+  hashtagMax: number;
+  needsMedia: boolean;
+  /** Per business: `automatic` once its account is connected. */
+  publishing: 'manual' | 'automatic';
+  manualReason: string;
+  connection: { displayName: string; status: 'active' | 'needs_reconnect'; lastError: string | null } | null;
+  canConnect: boolean;
+}
+
+export type PublicationStatus = 'queued' | 'publishing' | 'published' | 'failed' | 'cancelled';
+export interface Publication {
+  id: string;
+  platform: 'facebook' | 'instagram';
+  status: PublicationStatus;
+  runAt: string;
+  attempts: number;
+  permalink: string | null;
+  error: string | null;
+  publishedAt: string | null;
+}
+
+export interface StudioInfo {
+  ai: { available: boolean; dailyLimit: number; usedToday: number };
+  tones: { id: string; label: string }[];
+  platforms: PlatformSpec[];
+}
+
+export interface PlatformCheck { platform: ContentPlatform; text: string; problems: string[]; notes: string[] }
+
+export interface ContentPost {
+  id: string;
+  mediaId: string | null;
+  brief: string | null;
+  tone: string | null;
+  caption: string;
+  hashtags: string[];
+  callToAction: string | null;
+  platforms: ContentPlatform[];
+  status: PostStatus;
+  plannedFor: string | null;
+  postedAt: string | null;
+  postedPlatforms: ContentPlatform[];
+  aiGenerated: boolean;
+  updatedAt: string;
+  checks: PlatformCheck[];
+  publications: Publication[];
+}
+
+export interface CaptionDraft { caption: string; hashtags: string[]; callToAction: string }
+
+export interface PostFields {
+  mediaId?: string | null;
+  brief?: string | null;
+  tone?: string | null;
+  caption?: string;
+  hashtags?: string[];
+  callToAction?: string | null;
+  platforms?: ContentPlatform[];
+  aiGenerated?: boolean;
+}
+
+export function getStudio(): Promise<StudioInfo> {
+  return req('GET', '/vendor-admin/content/studio');
+}
+
+export function uploadMedia(mimeType: string, dataBase64: string): Promise<{ id: string; mimeType: string; byteSize: number }> {
+  return req('POST', '/vendor-admin/content/media', { mimeType, dataBase64 });
+}
+
+/** Source for <Image>: the photo is behind sign-in, so it carries the session header. */
+export function mediaSource(id: string) {
+  const session = getSession();
+  return { uri: `${BASE}/vendor-admin/content/media/${id}`, headers: session ? { Authorization: `Bearer ${session.token}` } : undefined };
+}
+
+export function writeCaption(data: { brief: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }): Promise<CaptionDraft> {
+  return req('POST', '/vendor-admin/content/captions', data);
+}
+
+export function listPosts(params: { status?: PostStatus; from?: string; to?: string } = {}): Promise<ContentPost[]> {
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v) as [string, string][]).toString();
+  return req('GET', `/vendor-admin/content/posts${qs ? `?${qs}` : ''}`);
+}
+
+export function getPost(id: string): Promise<ContentPost> {
+  return req('GET', `/vendor-admin/content/posts/${id}`);
+}
+
+export function createPost(fields: PostFields): Promise<ContentPost> {
+  return req('POST', '/vendor-admin/content/posts', fields);
+}
+
+export function updatePost(id: string, fields: PostFields): Promise<ContentPost> {
+  return req('PATCH', `/vendor-admin/content/posts/${id}`, fields);
+}
+
+export function planPost(id: string, plannedFor: string): Promise<ContentPost> {
+  return req('POST', `/vendor-admin/content/posts/${id}/plan`, { plannedFor });
+}
+
+export function unplanPost(id: string): Promise<ContentPost> {
+  return req('POST', `/vendor-admin/content/posts/${id}/unplan`, {});
+}
+
+export function markPosted(id: string, platforms: ContentPlatform[]): Promise<ContentPost> {
+  return req('POST', `/vendor-admin/content/posts/${id}/posted`, { platforms });
+}
+
+export function deletePost(id: string): Promise<void> {
+  return req('DELETE', `/vendor-admin/content/posts/${id}`);
+}
+
+export interface SocialConnections {
+  available: boolean;
+  unavailableReason: string | null;
+  connections: { platform: 'facebook' | 'instagram'; displayName: string; status: 'active' | 'needs_reconnect'; lastError: string | null; connectedAt: string }[];
+}
+
+export function getSocialConnections(): Promise<SocialConnections> {
+  return req('GET', '/vendor-admin/social/connections');
+}
+
+/** The Facebook Login page to open in the browser. */
+export function metaConnectUrl(): Promise<{ url: string }> {
+  return req('POST', '/vendor-admin/social/meta/connect', { from: 'mobile' });
+}
+
+export function disconnectMeta(): Promise<void> {
+  return req('DELETE', '/vendor-admin/social/meta');
+}
+
+/** Publish now, or at `at` (ISO). */
+export function publishPost(id: string, platforms: ('facebook' | 'instagram')[], at?: string): Promise<Publication[]> {
+  return req('POST', `/vendor-admin/content/posts/${id}/publish`, at ? { platforms, at } : { platforms });
+}
+
+export function retryPublication(id: string): Promise<Publication[]> {
+  return req('POST', `/vendor-admin/content/publications/${id}/retry`, {});
+}
+
+export function cancelPublication(id: string): Promise<void> {
+  return req('POST', `/vendor-admin/content/publications/${id}/cancel`, {});
+}
+
+export type LeadSource = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp' | 'booking_page' | 'referral' | 'walk_in' | 'other';
+export type LeadStatus = 'new' | 'contacted' | 'won' | 'lost';
+
+export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
+  instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', whatsapp: 'WhatsApp',
+  booking_page: 'Booking page', referral: 'Referral', walk_in: 'Walk-in', other: 'Other',
+};
+
+export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
+  new: 'New', contacted: 'Contacted', won: 'Became a customer', lost: 'Not interested',
+};
+
+export interface Lead {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  source: LeadSource;
+  note: string | null;
+  status: LeadStatus;
+  followUpAt: string | null;
+  createdAt: string;
+  assignedStaff: { id: string; name: string | null } | null;
+  customer: { id: string; name: string | null } | null;
+  due: boolean;
+}
+
+export interface LeadFields {
+  name?: string;
+  phone?: string | null;
+  email?: string | null;
+  source?: LeadSource;
+  note?: string | null;
+  status?: 'new' | 'contacted' | 'lost';
+  assignedStaffId?: string | null;
+  followUpAt?: string | null;
+}
+
+export function listLeads(params: { status?: LeadStatus; due?: boolean } = {}): Promise<Lead[]> {
+  const qs = new URLSearchParams();
+  if (params.status) qs.set('status', params.status);
+  if (params.due) qs.set('due', '1');
+  const s = qs.toString();
+  return req('GET', `/vendor-admin/leads${s ? `?${s}` : ''}`);
+}
+
+export function getLeadSummary(): Promise<{ open: number; due: number; won30d: number }> {
+  return req('GET', '/vendor-admin/leads/summary');
+}
+
+export function getLead(id: string): Promise<Lead> {
+  return req('GET', `/vendor-admin/leads/${id}`);
+}
+
+export function createLead(fields: LeadFields & { name: string; source: LeadSource }): Promise<Lead> {
+  return req('POST', '/vendor-admin/leads', fields);
+}
+
+export function updateLead(id: string, fields: LeadFields): Promise<Lead> {
+  return req('PATCH', `/vendor-admin/leads/${id}`, fields);
+}
+
+export function convertLead(id: string): Promise<Lead> {
+  return req('POST', `/vendor-admin/leads/${id}/convert`, {});
+}
+
+export function deleteLead(id: string): Promise<void> {
+  return req('DELETE', `/vendor-admin/leads/${id}`);
 }

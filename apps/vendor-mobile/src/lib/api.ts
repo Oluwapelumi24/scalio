@@ -276,6 +276,8 @@ export interface StaffPerformance {
   uniqueCustomers: number;
   repeatCustomers: number;
   attendance: { workedMinutes: number; scheduledMinutes: number | null; rate: number | null; clockedInNow: boolean } | null;
+  /** Customer ratings for this person's bookings in the period; null when nobody rated. */
+  rating: { average: number; count: number } | null;
 }
 
 export interface PerformanceReport {
@@ -817,4 +819,92 @@ export function convertLead(id: string): Promise<Lead> {
 
 export function deleteLead(id: string): Promise<void> {
   return req('DELETE', `/vendor-admin/leads/${id}`);
+}
+
+// ─── Insights: reports and feedback ──────────────────────────────────────────
+
+export type ReportKind = 'sales' | 'bookings' | 'expenses' | 'cashflow' | 'customers' | 'retention';
+export interface ReportGroup { key: string; label: string; count: number; amountKobo?: number }
+
+export interface ReportsOverview {
+  from: string;
+  to: string;
+  definitions: Record<string, string>;
+  sales: { salesKobo: number; completed: number; averageSaleKobo: number | null; byService: ReportGroup[]; byStaff: ReportGroup[]; byDay: ReportGroup[] };
+  bookings: { total: number; cancellationRate: number | null; noShowRate: number | null; byStatus: ReportGroup[]; byWeekday: ReportGroup[] };
+  expenses: { totalKobo: number; byCategory: ReportGroup[] };
+  cashflow: { inKobo: number; outKobo: number; netKobo: number; groups: ReportGroup[] };
+  customers: { newCustomers: number; visited: number; bySource: ReportGroup[] };
+  retention: { served: number; returning: number; firstVisits: number; returningRate: number | null; repeatRate: number | null; lapsed: number; groups: ReportGroup[] };
+}
+
+/** One record behind a report group. Fields depend on the record type. */
+export interface ReportRecord {
+  type: 'booking' | 'expense' | 'ledger' | 'customer';
+  id: string;
+  at: string | null;
+  amountKobo?: number;
+  customerName?: string | null;
+  name?: string;
+  phone?: string | null;
+  staffName?: string | null;
+  services?: string[];
+  status?: string;
+  label?: string;
+  note?: string | null;
+  direction?: 'in' | 'out';
+  visits?: number;
+}
+
+export function getReports(from: string, to: string): Promise<ReportsOverview> {
+  return req('GET', `/vendor-admin/reports?from=${from}&to=${to}`);
+}
+
+export function getReportRecords(kind: ReportKind, from: string, to: string, key?: string): Promise<ReportRecord[]> {
+  const qs = new URLSearchParams({ from, to, ...(key ? { key } : {}) });
+  return req('GET', `/vendor-admin/reports/${kind}/records?${qs}`);
+}
+
+export interface FeedbackItem {
+  id: string;
+  rating: number;
+  comment: string | null;
+  submittedAt: string;
+  followedUpAt: string | null;
+  needsFollowUp: boolean;
+  bookingId: string;
+  scheduledAt: string;
+  customer: { id: string; name: string; phone: string | null };
+  staffName: string | null;
+}
+
+export interface FeedbackOverview {
+  from: string;
+  to: string;
+  average: number | null;
+  count: number;
+  asked: number;
+  needsFollowUp: number;
+  distribution: { stars: number; count: number }[];
+  items: FeedbackItem[];
+}
+
+export function getFeedback(from: string, to: string): Promise<FeedbackOverview> {
+  return req('GET', `/vendor-admin/feedback?from=${from}&to=${to}`);
+}
+
+export function markFeedbackFollowedUp(id: string): Promise<void> {
+  return req('POST', `/vendor-admin/feedback/${id}/followed-up`, {});
+}
+
+/** The rating link for a completed booking, with a ready-made WhatsApp message. */
+export function getFeedbackShare(bookingId: string): Promise<{ url: string; submitted: boolean; emailed: boolean; phone: string | null; message: string }> {
+  return req('GET', `/vendor-admin/feedback/booking/${bookingId}`);
+}
+
+/** wa.me wants the number in international form without '+' — assume Nigeria for local 0-numbers. */
+export function whatsappUrl(phone: string | null, text: string): string {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  const intl = digits.startsWith('0') ? `234${digits.slice(1)}` : digits;
+  return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
 }

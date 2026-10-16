@@ -37,6 +37,7 @@ export interface StaffPerformance {
   uniqueCustomers: number
   repeatCustomers: number
   attendance: { workedMinutes: number; scheduledMinutes: number | null; rate: number | null; clockedInNow: boolean } | null
+  rating: { average: number; count: number } | null
 }
 
 export interface PerformanceReport {

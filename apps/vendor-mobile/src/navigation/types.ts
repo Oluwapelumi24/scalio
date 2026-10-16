@@ -1,4 +1,4 @@
-import type { VendorBooking, VendorService, Customer, StaffMember, TeamPay } from '../lib/api';
+import type { VendorBooking, VendorService, Customer, StaffMember, TeamPay, ReportKind } from '../lib/api';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -25,10 +25,14 @@ export type RootStackParamList = {
   StaffPay: { staffId: string; name: string; pay: TeamPay };
   Money: undefined;
   ContentStudio: { tab?: 'draft' | 'planned' | 'posted' } | undefined;
-  PostEditor: { postId?: string };
+  /** `brief` pre-fills the notes, e.g. from a home suggestion. */
+  PostEditor: { postId?: string; brief?: string };
   Leads: { filter?: 'due' | 'open' | 'won' | 'lost' } | undefined;
   LeadDetail: { leadId?: string };
   SocialAccounts: undefined;
+  Reports: undefined;
+  ReportRecords: { kind: ReportKind; key?: string; title: string; from: string; to: string };
+  Feedback: undefined;
 };
 
 export type MainTabParamList = {

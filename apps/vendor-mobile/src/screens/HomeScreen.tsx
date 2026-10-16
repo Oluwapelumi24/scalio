@@ -38,6 +38,7 @@ const ATTENTION: Record<string, { text: (n: number) => string; action: string }>
   unassigned_today: { text: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff`, action: 'Assign' },
   bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`, action: 'Review' },
   payroll_open: { text: (n) => `Payroll is open: ${n} ${n === 1 ? 'person' : 'people'} to pay`, action: 'Pay' },
+  unhappy_customers: { text: (n) => `${n} unhappy ${n === 1 ? 'customer' : 'customers'} to call back`, action: 'Call back' },
   leads_due: { text: (n) => `${n} ${n === 1 ? 'lead is' : 'leads are'} waiting for a follow-up`, action: 'Follow up' },
   posts_planned_today: { text: (n) => `${n} ${n === 1 ? 'post is' : 'posts are'} planned for today`, action: 'Open' },
 };
@@ -58,6 +59,7 @@ function overviewValue(item: HomeItem): string {
   const d = item.data;
   if (typeof d.amountKobo === 'number') return `₦${(d.amountKobo / 100).toLocaleString('en-NG')}`;
   if (item.id === 'repeat_customers') return `${d.count} of ${d.totalCustomers}`;
+  if (item.id === 'customer_rating') return `${d.average}★ (${d.count})`;
   if (typeof d.count === 'number') return String(d.count);
   return '—';
 }
@@ -231,6 +233,22 @@ export function HomeScreen({ navigation }: Props) {
       case 'first_post':
         navigation.navigate('PostEditor', {});
         return;
+      case 'quiet_day_offer':
+        navigation.navigate('PostEditor', { brief: `Something special for ${item.data.day} — our quietest day` });
+        return;
+      case 'unhappy_customers':
+      case 'customer_rating':
+        navigation.navigate('Feedback');
+        return;
+      case 'view_reports':
+        navigation.navigate('Reports');
+        return;
+      case 'deposits_for_no_shows':
+        navigation.navigate('Services');
+        return;
+      case 'ask_for_feedback':
+        navigation.navigate('Bookings');
+        return;
       case 'posts_planned_today':
         navigation.navigate('ContentStudio', { tab: 'planned' });
         return;
@@ -289,6 +307,12 @@ export function HomeScreen({ navigation }: Props) {
       body: `${lapsed?.data.count} ${lapsed?.data.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
       cta: 'Review', tint: colors.amberSoft, tone: colors.warning, icons: ['repeat', 'heart', 'message-circle'],
     });
+    const quiet = byId('quiet_day_offer');
+    add(quiet, { title: `Fill your quiet ${quiet?.data.day ?? 'day'}`, body: `${quiet?.data.day}s get about ${quiet?.data.bookings} bookings when other days average ${quiet?.data.averageBookings} (last 8 weeks). Post an offer for that day.`, cta: 'Create post', tint: colors.accentLight, tone: colors.accent, icons: ['trending-up', 'calendar', 'image'] });
+    const noShows = byId('deposits_for_no_shows');
+    add(noShows, { title: 'Cut no-shows with deposits', body: `${noShows?.data.noShows} no-shows in the last 60 days (${Math.round((noShows?.data.rate ?? 0) * 100)}% of visits). Ask for a deposit on your busiest services.`, cta: 'Review services', tint: colors.amberSoft, tone: colors.warning, icons: ['shield', 'credit-card', 'calendar'] });
+    const ask = byId('ask_for_feedback');
+    add(ask, { title: 'Ask customers how it went', body: `${ask?.data.count} recent ${ask?.data.count === 1 ? 'customer has' : 'customers have'} no email. Open a completed booking and send the rating link on WhatsApp.`, cta: 'Open bookings', tint: colors.mintSoft, tone: colors.success, icons: ['star', 'message-circle', 'heart'] });
     add(byId('first_post'), { title: 'Make your first post', body: 'Add a photo, say what it’s about, and AI writes the caption and hashtags.', cta: 'Create post', tint: colors.accentLight, tone: colors.accent, icons: ['image', 'zap', 'share-2'] });
     // Features on the way, for businesses that asked for them. Never actionable.
     for (const r of recs.filter((x) => x.status === 'coming_soon')) {

@@ -30,6 +30,9 @@ import { PostEditorScreen } from '../screens/PostEditorScreen';
 import { LeadsScreen } from '../screens/LeadsScreen';
 import { LeadDetailScreen } from '../screens/LeadDetailScreen';
 import { SocialAccountsScreen } from '../screens/SocialAccountsScreen';
+import { ReportsScreen } from '../screens/ReportsScreen';
+import { ReportRecordsScreen } from '../screens/ReportRecordsScreen';
+import { FeedbackScreen } from '../screens/FeedbackScreen';
 import { loadSession, onSessionExpired } from '../lib/session';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -81,6 +84,9 @@ export function RootNavigator() {
         <Stack.Screen name="Leads" component={LeadsScreen} />
         <Stack.Screen name="LeadDetail" component={LeadDetailScreen} />
         <Stack.Screen name="SocialAccounts" component={SocialAccountsScreen} />
+        <Stack.Screen name="Reports" component={ReportsScreen} />
+        <Stack.Screen name="ReportRecords" component={ReportRecordsScreen} />
+        <Stack.Screen name="Feedback" component={FeedbackScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

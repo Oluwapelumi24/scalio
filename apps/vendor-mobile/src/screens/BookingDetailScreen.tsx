@@ -2,8 +2,10 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -19,6 +21,8 @@ import {
   formatNaira,
   formatDateTime,
   statusLabel,
+  getFeedbackShare,
+  whatsappUrl,
   type VendorBooking,
   type BookingStatus,
 } from '../lib/api';
@@ -63,6 +67,24 @@ export function BookingDetailScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
 
   const canAct = ['pending_payment', 'confirmed'].includes(booking.status);
+
+  /** Sends the customer their rating link — on WhatsApp if we have their number, else the share sheet. */
+  async function askForFeedback() {
+    setLoading('feedback');
+    try {
+      const share = await getFeedbackShare(booking.id);
+      if (share.submitted) {
+        Alert.alert('Already rated', 'This customer has already rated the visit. See it under Settings → Customer feedback.');
+        return;
+      }
+      if (share.phone) await Linking.openURL(whatsappUrl(share.phone, share.message));
+      else await Share.share({ message: share.message });
+    } catch (err) {
+      Alert.alert('Could not get the feedback link', err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setLoading(null);
+    }
+  }
 
   async function act(action: 'complete' | 'cancel' | 'no-show') {
     const label = action === 'complete' ? 'Mark complete' : action === 'cancel' ? 'Cancel booking' : 'Mark no-show';
@@ -131,6 +153,19 @@ export function BookingDetailScreen({ route, navigation }: Props) {
           <InfoRow icon="dollar-sign" label="Mode" value={booking.paymentMode.replace(/_/g, ' ')} />
         </View>
 
+        {booking.status === 'completed' && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Feedback</Text>
+            <Text style={styles.feedbackText}>
+              Customers with an email get a rating link automatically. Send it yourself on WhatsApp, or remind them.
+            </Text>
+            <Pressable style={[styles.feedbackBtn, loading === 'feedback' && { opacity: 0.6 }]} onPress={askForFeedback} disabled={loading !== null} accessibilityRole="button">
+              <Feather name="star" size={16} color={colors.accent} />
+              <Text style={styles.feedbackBtnText}>{loading === 'feedback' ? 'Getting link…' : 'Ask for feedback'}</Text>
+            </Pressable>
+          </View>
+        )}
+
         {booking.notes ? (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Notes</Text>
@@ -191,6 +226,9 @@ export function BookingDetailScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  feedbackText: { fontSize: typography.size.sm, color: colors.textSecondary, lineHeight: 19 },
+  feedbackBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, borderWidth: 1.5, borderColor: colors.accent, borderRadius: radius.pill, paddingVertical: spacing.md },
+  feedbackBtnText: { color: colors.accent, fontWeight: typography.weight.bold, fontSize: typography.size.md },
   root: { flex: 1, backgroundColor: colors.surface },
   headerSafe: {
     backgroundColor: colors.background,

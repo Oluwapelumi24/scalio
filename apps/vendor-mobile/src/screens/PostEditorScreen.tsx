@@ -40,7 +40,7 @@ export function PostEditorScreen({ navigation, route }: Props) {
 
   const [mediaId, setMediaId] = useState<string | null>(null);
   const [localUri, setLocalUri] = useState<string | null>(null);
-  const [brief, setBrief] = useState('');
+  const [brief, setBrief] = useState(route.params.brief ?? '');
   const [tone, setTone] = useState('friendly');
   const [platforms, setPlatforms] = useState<ContentPlatform[]>(['instagram']);
   const [caption, setCaption] = useState('');

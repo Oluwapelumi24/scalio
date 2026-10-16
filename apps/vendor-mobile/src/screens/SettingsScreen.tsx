@@ -107,6 +107,8 @@ export function SettingsScreen({ navigation }: Props) {
             </>
           )}
           <SettingsRow icon="inbox" label="Leads" subtitle="People who asked about your business, and when to follow up" onPress={() => navigation.navigate('Leads')} />
+          <View style={styles.divider} />
+          <SettingsRow icon="star" label="Customer feedback" subtitle="Ratings after each visit, and who to call back" onPress={() => navigation.navigate('Feedback')} />
         </View>
       </View>
 
@@ -115,6 +117,8 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Money</Text>
           <View style={styles.group}>
+            <SettingsRow icon="bar-chart-2" label="Reports" subtitle="Sales, bookings, cash flow and customers — tap any figure for the details" onPress={() => navigation.navigate('Reports')} />
+            <View style={styles.divider} />
             <SettingsRow icon="pie-chart" label="Money" subtitle="Sales, payments received, salaries and expenses" onPress={() => navigation.navigate('Money')} />
             <View style={styles.divider} />
             <SettingsRow icon="credit-card" label="Payroll" subtitle="Pay day, salaries and staff bank accounts" onPress={() => navigation.navigate('Payroll')} />

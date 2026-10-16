@@ -60,6 +60,7 @@ two copies of its data.
 | D9 | Worth evaluating Mono for other parts of the plan: **Disburse** (staff payouts, D2), **Connect / Creditworthiness** (financing eligibility, Phase 6), **Lookup / Prove** (verifying staff payout accounts and vendor identity). | Phases 3, 6 |
 | D10 | **Meta setup (owner: you).** Create a Meta developer app (free), add Facebook Login for Business, set `META_APP_ID`/`META_APP_SECRET`/`PUBLIC_API_URL`, add `$PUBLIC_API_URL/social/meta/callback` as a redirect URI and the deauthorise/data-deletion URLs; complete business verification and app review for `pages_manage_posts`, `instagram_content_publish` etc. Needs a public HTTPS backend and a privacy policy URL. | Phase 4 publishing for all vendors |
 | D11 | ✅ **Decided (2026-10-16): post without sound for now.** Revisit later. **Trending sounds.** Instagram/Facebook/TikTok don't expose their licensed music through posting APIs. Options: (a) publish without sound; (b) send to the app as a draft to finish there (TikTok supports this; Instagram doesn't); (c) Scalio adds royalty-free music to a short video (needs video support + a licensed track library). | Phase 4 sound |
+| D12 | **Public rating.** Should customer ratings collected through Scalio update the star rating shown in the customer app (`vendors.rating`)? Existing values (e.g. 4.7 from 156) would be replaced, or need to be blended. Until decided, ratings stay private to the business. | Phase 5 public rating |
 
 **Start long-lead approvals now** (they run in parallel with Phases 1–3): Meta app
 review (Instagram/Facebook publishing, messaging, ads), TikTok Content Posting API,
@@ -182,9 +183,11 @@ Built 2026-10-16 without the platform approvals: everything up to the moment of 
 
 ### Phase 5 — Insights and retention
 
-- [ ] Reports: sales, expenses, cash flow, bookings/cancellations, staff, acquisition, retention, per-location — each summary drills down to the records.
-- [ ] Feedback requests after completed bookings; ratings feed staff performance.
-- [ ] Better home recommendations from real data.
+- [x] Reports (owners/managers, mobile + web): sales by service/staff/day, bookings by status and weekday with cancellation and no-show rates, cash flow from the ledger, expenses by category, new customers by source, and returning / first-visit / overdue customers. Every group drills down to the records behind it; every figure carries a plain-language definition. *(Per-location waits on `business_locations`.)*
+- [x] Feedback after completed bookings: a private single-use rating link per visit (30 days), emailed when the customer has an email, or sent by the business on WhatsApp from the booking. Public page at website `/feedback/[token]`. Ratings feed staff performance; low ratings (≤2) raise "Unhappy customers to call back" until followed up.
+- [ ] Decide whether Scalio ratings update the public star rating customers see (D12). Until then they're private to the business.
+- [x] Better home recommendations from real data: fill your quiet day (open days only, ≥20 bookings in 8 weeks), deposits when no-shows reach 10% (≥10 visits in 60 days), send feedback links to customers without email; rating tile and Reports shortcut.
+- [ ] Push "rate your visit" to customer-app users — needs the customer app to open the rating page from a notification.
 
 ### Phase 6 — Expansion: financing and larger businesses (depends on D1 + D3)
 

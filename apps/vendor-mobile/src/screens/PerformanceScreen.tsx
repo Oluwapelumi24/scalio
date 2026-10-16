@@ -53,6 +53,7 @@ function StaffCard({ p }: { p: StaffPerformance }) {
         <Metric label="Completed" value={String(p.completed)} note={p.noShows ? `${p.noShows} no-show${p.noShows === 1 ? '' : 's'}` : undefined} />
         <Metric label="Completion rate" value={pct(p.completionRate)} />
         <Metric label="Repeat customers" value={`${p.repeatCustomers} of ${p.uniqueCustomers}`} />
+        <Metric label="Customer rating" value={p.rating ? `${p.rating.average}★` : '—'} note={p.rating ? `${p.rating.count} rating${p.rating.count === 1 ? '' : 's'}` : 'no ratings yet'} />
         {p.attendance && (
           <Metric
             label="Attendance"

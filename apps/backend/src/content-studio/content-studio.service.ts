@@ -1,12 +1,14 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, desc, eq, gte, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, or, sql, type SQL } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { contentMedia, contentPosts, services, vendors, type ContentPlatform } from '../db/schema';
+import { contentMedia, contentPosts, contentPublications, services, vendors, type ContentPlatform } from '../db/schema';
 import { HomeDataService } from '../personalisation/home-data.service';
 import { CAPTION_TONES, type CaptionToneId } from './caption-writer';
 import { CaptionService, type CaptionImage } from './caption.service';
 import type { GenerateCaptionDto, ListPostsDto, SavePostDto, UploadMediaDto } from './dto/content.dto';
 import { PLATFORMS, checkPost, cleanHashtags } from './platforms';
+import { PublisherService } from '../social/publisher.service';
+import { SocialConnectionsService } from '../social/social-connections.service';
 
 type PostRow = typeof contentPosts.$inferSelect;
 
@@ -24,6 +26,8 @@ export class ContentStudioService {
     @Inject(DB) private readonly db: Database,
     private readonly captions: CaptionService,
     private readonly homeData: HomeDataService,
+    private readonly connections: SocialConnectionsService,
+    private readonly publisher: PublisherService,
   ) {}
 
   async studio(vendorId: string) {
@@ -34,8 +38,30 @@ export class ContentStudioService {
         usedToday: this.captions.available ? await this.captions.usedToday(vendorId) : 0,
       },
       tones: CAPTION_TONES.map(({ id, label }) => ({ id, label })),
-      platforms: PLATFORMS,
+      platforms: await this.platformStatus(vendorId),
     };
+  }
+
+  /**
+   * Each platform as this business can use it today: Facebook and Instagram
+   * switch to automatic publishing once the business connects them.
+   */
+  private async platformStatus(vendorId: string) {
+    const { available, unavailableReason, connections } = await this.connections.list(vendorId);
+    return PLATFORMS.map((spec) => {
+      const conn = connections.find((c) => c.platform === spec.id);
+      const automatic = available && conn?.status === 'active';
+      return {
+        ...spec,
+        publishing: automatic ? ('automatic' as const) : ('manual' as const),
+        connection: conn ? { displayName: conn.displayName, status: conn.status, lastError: conn.lastError } : null,
+        /** Why it's manual here, and what would change that. */
+        manualReason: automatic ? '' : conn?.status === 'needs_reconnect' ? 'Reconnect your account to publish from Scalio again.'
+          : (spec.id === 'facebook' || spec.id === 'instagram') && available ? `Connect your ${spec.id === 'facebook' ? 'Facebook Page' : 'Instagram business account'} to publish from Scalio. Until then, copy the caption and post from the ${spec.name} app.`
+          : (spec.id === 'facebook' || spec.id === 'instagram') && unavailableReason ? `${unavailableReason} Copy the caption and post from the ${spec.name} app for now.`
+          : spec.manualReason,
+      };
+    });
   }
 
   // ── Media ──────────────────────────────────────────────────────────────────
@@ -52,6 +78,16 @@ export class ContentStudioService {
       .insert(contentMedia)
       .values({ vendorId, mimeType, dataBase64: data, byteSize, createdById: actorStaffId })
       .returning({ id: contentMedia.id, mimeType: contentMedia.mimeType, byteSize: contentMedia.byteSize });
+    return row;
+  }
+
+  /** For signed public links only — the signature is the access check. */
+  async mediaById(id: string) {
+    const [row] = await this.db
+      .select({ mimeType: contentMedia.mimeType, dataBase64: contentMedia.dataBase64 })
+      .from(contentMedia)
+      .where(eq(contentMedia.id, id));
+    if (!row) throw new NotFoundException('Photo not found');
     return row;
   }
 
@@ -103,12 +139,31 @@ export class ContentStudioService {
 
   // ── Posts ──────────────────────────────────────────────────────────────────
 
-  private present(row: PostRow) {
+  private async publicationsFor(postIds: string[]) {
+    if (postIds.length === 0) return [];
+    return this.db
+      .select({
+        id: contentPublications.id, postId: contentPublications.postId, platform: contentPublications.platform, status: contentPublications.status,
+        runAt: contentPublications.runAt, attempts: contentPublications.attempts, permalink: contentPublications.permalink,
+        error: contentPublications.error, publishedAt: contentPublications.publishedAt,
+      })
+      .from(contentPublications)
+      .where(inArray(contentPublications.postId, postIds));
+  }
+
+  private withChecks(row: PostRow, publications: Awaited<ReturnType<typeof this.publicationsFor>>) {
     const post = { caption: row.caption, hashtags: row.hashtags, callToAction: row.callToAction, hasMedia: !!row.mediaId };
     return {
       ...row,
       checks: row.platforms.map((p) => checkPost(post, p)),
+      publications: publications
+        .filter((p) => p.postId === row.id)
+        .map((p) => ({ id: p.id, platform: p.platform, status: p.status, runAt: p.runAt, attempts: p.attempts, permalink: p.permalink, error: p.error, publishedAt: p.publishedAt })),
     };
+  }
+
+  private async present(row: PostRow) {
+    return this.withChecks(row, await this.publicationsFor([row.id]));
   }
 
   async list(vendorId: string, q: ListPostsDto) {
@@ -133,7 +188,8 @@ export class ContentStudioService {
         q.status === 'planned' ? asc(contentPosts.plannedFor) : desc(sql`coalesce(${contentPosts.postedAt}, ${contentPosts.updatedAt})`),
       )
       .limit(200);
-    return rows.map((r) => this.present(r));
+    const pubs = await this.publicationsFor(rows.map((r) => r.id));
+    return rows.map((r) => this.withChecks(r, pubs));
   }
 
   private async own(vendorId: string, id: string): Promise<PostRow> {
@@ -200,6 +256,7 @@ export class ContentStudioService {
   async unplan(vendorId: string, id: string) {
     const current = await this.own(vendorId, id);
     if (current.status !== 'planned') return this.present(current);
+    await this.publisher.cancelQueuedForPost(id);
     const [row] = await this.db
       .update(contentPosts)
       .set({ status: 'draft', plannedFor: null, updatedAt: new Date() })

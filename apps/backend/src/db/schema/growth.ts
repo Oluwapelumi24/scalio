@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { customers } from './customers';
 import { staff, vendors } from './vendors';
 
@@ -79,4 +79,63 @@ export const leads = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index('leads_vendor_status_idx').on(t.vendorId, t.status)],
+);
+
+// ── Social publishing (Meta) ─────────────────────────────────────────────────
+// One Facebook Login connects a business's Facebook Page and the Instagram
+// business account linked to it. Both are posted to with the Page access token.
+
+export const socialPlatformValues = ['facebook', 'instagram'] as const;
+export const socialConnectionStatusValues = ['active', 'needs_reconnect'] as const;
+
+export const socialConnections = pgTable(
+  'social_connections',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
+    platform: text('platform', { enum: socialPlatformValues }).notNull(),
+    /** Page id for Facebook, Instagram user id for Instagram. */
+    externalId: text('external_id').notNull(),
+    /** Page name, or the Instagram @username. */
+    displayName: text('display_name').notNull(),
+    /** Encrypted Page access token (long-lived; doesn't expire unless revoked). */
+    accessTokenEnc: text('access_token_enc').notNull(),
+    /** App-scoped Meta user id of whoever connected it — used by Meta's deauthorise and data-deletion callbacks. */
+    metaUserId: text('meta_user_id').notNull(),
+    status: text('status', { enum: socialConnectionStatusValues }).notNull().default('active'),
+    lastError: text('last_error'),
+    connectedById: uuid('connected_by_id').references(() => staff.id, { onDelete: 'set null' }),
+    connectedAt: timestamp('connected_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [unique('social_connections_vendor_platform_unique').on(t.vendorId, t.platform), index('social_connections_meta_user_idx').on(t.metaUserId)],
+);
+
+export const publicationStatusValues = ['queued', 'publishing', 'published', 'failed', 'cancelled'] as const;
+
+/** One post going out to one platform through its API, with retries. */
+export const contentPublications = pgTable(
+  'content_publications',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    postId: uuid('post_id').notNull().references(() => contentPosts.id, { onDelete: 'cascade' }),
+    vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
+    platform: text('platform', { enum: socialPlatformValues }).notNull(),
+    status: text('status', { enum: publicationStatusValues }).notNull().default('queued'),
+    /** When to (next) try. */
+    runAt: timestamp('run_at', { withTimezone: true }).notNull(),
+    /** Failed attempts so far; retries stop at the limit. */
+    attempts: integer('attempts').notNull().default(0),
+    /** Instagram media container, kept while Instagram processes the photo. */
+    containerId: text('container_id'),
+    containerCreatedAt: timestamp('container_created_at', { withTimezone: true }),
+    externalId: text('external_id'),
+    permalink: text('permalink'),
+    error: text('error'),
+    requestedById: uuid('requested_by_id').references(() => staff.id, { onDelete: 'set null' }),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [unique('content_publications_post_platform_unique').on(t.postId, t.platform), index('content_publications_due_idx').on(t.status, t.runAt)],
 );

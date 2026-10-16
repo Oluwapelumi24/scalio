@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Header, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Query, StreamableFile, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Header, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post, Query, StreamableFile, UseGuards } from '@nestjs/common';
+import { verifyMediaSignature } from './media-url';
 import { CurrentStaff } from '../vendor-auth/current-staff.decorator';
 import { Roles } from '../vendor-auth/roles.decorator';
 import { RolesGuard } from '../vendor-auth/roles.guard';
@@ -81,5 +82,19 @@ export class ContentStudioController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@CurrentStaff() me: VendorPrincipal, @Param('id', ParseUUIDPipe) id: string) {
     await this.studio.remove(me.vendorId, id);
+  }
+}
+
+/** Signed, expiring photo links for Instagram and Facebook to fetch when publishing. */
+@Controller('public/content-media')
+export class PublicMediaController {
+  constructor(private readonly studio: ContentStudioService) {}
+
+  @Get(':id')
+  @Header('Cache-Control', 'private, max-age=3600')
+  async media(@Param('id', ParseUUIDPipe) id: string, @Query('exp') exp: string, @Query('sig') sig: string) {
+    if (!verifyMediaSignature(id, exp, sig)) throw new ForbiddenException('This link has expired.');
+    const m = await this.studio.mediaById(id);
+    return new StreamableFile(Buffer.from(m.dataBase64, 'base64'), { type: m.mimeType });
   }
 }

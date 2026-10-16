@@ -101,8 +101,10 @@ export class CaptionService {
       return new ServiceUnavailableException('The caption writer is busy. Please try again in a minute.');
     }
     if (err instanceof Anthropic.BadRequestError) {
+      // Covers an unreadable photo but also account problems (e.g. no API credits),
+      // so the vendor gets a neutral message and the real reason goes to the log.
       this.logger.warn(`Caption request rejected: ${err.message}`);
-      return new UnprocessableEntityException("We couldn't use that photo. Try a different one, or write without a photo.");
+      return new UnprocessableEntityException("We couldn't write a caption just now. If you added a photo, try another one or write without it.");
     }
     this.logger.error('Caption request failed', err instanceof Error ? err.stack : String(err));
     return new BadGatewayException("We couldn't write a caption just now. Please try again.");

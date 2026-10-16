@@ -3,9 +3,8 @@ import { buildHome, type HomePreferences, type HomeSnapshot } from './home';
 const now = new Date('2026-10-15T08:00:00Z');
 
 const snapshot: HomeSnapshot = {
+  businessName: 'Fade House',
   bookingLink: 'http://localhost:3003/book/fade-house',
-  todayBookings: 8,
-  todaySalesKobo: 4_500_000,
   sales30dKobo: 92_000_000,
   upcoming: [{ id: 'b1', scheduledAt: '2026-10-15T10:00:00Z', status: 'confirmed', customerName: 'Tunde' }],
   totalBookings: 120,
@@ -14,6 +13,10 @@ const snapshot: HomeSnapshot = {
   unassignedToday: 0,
   bookingsOnLeave: 0,
   viewerClockedIn: false,
+  payoutAccountSet: true,
+  payrollSetUp: false,
+  payrollOpen: null,
+  wantsPayroll: false,
   totalCustomers: 60,
   repeatCustomers: 25,
   newCustomers30d: 9,
@@ -40,7 +43,7 @@ const top = (home: ReturnType<typeof buildHome>, layer: keyof ReturnType<typeof 
 describe('buildHome — reference businesses', () => {
   it('Business A, booking-focused (solo barber): bookings first', () => {
     const home = buildHome(snapshot, prefs(['manage_bookings', 'repeat_customers']), 'owner', now);
-    expect(top(home, 'overview')).toEqual(['today_bookings', 'upcoming_bookings']);
+    expect(top(home, 'overview')).toEqual(['upcoming_bookings', 'repeat_customers']);
     expect(top(home, 'quick_action', 1)).toEqual(['share_booking_link']);
   });
 
@@ -55,7 +58,7 @@ describe('buildHome — reference businesses', () => {
 
   it('Business C, finance-focused: sales first', () => {
     const home = buildHome(snapshot, prefs(['track_sales', 'get_financing']), 'owner', now);
-    expect(top(home, 'overview')).toEqual(['today_sales', 'sales_30d']);
+    expect(top(home, 'overview')).toEqual(['sales_30d', 'upcoming_bookings']);
   });
 });
 
@@ -64,6 +67,25 @@ describe('buildHome — rules', () => {
     const home = buildHome({ ...snapshot, awaitingPayment: 2 }, prefs(['run_ads'], { hiddenModules: ['awaiting_payment'] }), 'owner', now);
     expect(home.layers.attention.map((i) => i.id)).toEqual(['awaiting_payment']);
     expect(home.layers.attention[0].data).toEqual({ count: 2 });
+  });
+
+  it('raises an alert while payroll is open and people are still to be paid', () => {
+    const home = buildHome({ ...snapshot, payrollSetUp: true, payrollOpen: { period: '2026-10', toPay: 3, closesOn: '2026-10-30' } }, prefs([]), 'owner', now);
+    expect(home.layers.attention.find((i) => i.id === 'payroll_open')?.data).toEqual({ period: '2026-10', toPay: 3, closesOn: '2026-10-30' });
+    expect(home.layers.quick_action.map((i) => i.id)).toContain('pay_staff');
+  });
+
+  it('suggests taking payments online until the owner adds a payout account', () => {
+    const fresh = buildHome({ ...snapshot, payoutAccountSet: false }, prefs([]), 'owner', now);
+    expect(fresh.layers.recommendation.map((i) => i.id)).toContain('setup_payments');
+    const manager = buildHome({ ...snapshot, payoutAccountSet: false }, prefs([]), 'manager', now);
+    expect(manager.layers.recommendation.map((i) => i.id)).not.toContain('setup_payments');
+  });
+
+  it('suggests payroll set-up to teams, and to anyone who asked for help paying staff', () => {
+    expect(buildHome({ ...snapshot, wantsPayroll: true }, prefs([]), 'owner', now).layers.recommendation.map((i) => i.id)).toContain('setup_payroll');
+    expect(buildHome(snapshot, prefs(['pay_staff']), 'owner', now).layers.recommendation.map((i) => i.id)).toContain('setup_payroll');
+    expect(buildHome(snapshot, prefs([]), 'owner', now).layers.recommendation.map((i) => i.id)).not.toContain('setup_payroll');
   });
 
   it('flags upcoming bookings with staff who will be on leave', () => {
@@ -91,8 +113,8 @@ describe('buildHome — rules', () => {
     const none = buildHome(snapshot, prefs([]), 'owner', now);
     expect(none.layers.recommendation.filter((i) => i.status === 'coming_soon')).toEqual([]);
 
-    const payroll = buildHome(snapshot, prefs(['pay_staff']), 'owner', now);
-    const item = payroll.layers.recommendation.find((i) => i.id === 'payroll_soon');
+    const ads = buildHome(snapshot, prefs(['run_ads']), 'owner', now);
+    const item = ads.layers.recommendation.find((i) => i.id === 'ads_soon');
     expect(item?.status).toBe('coming_soon');
   });
 
@@ -124,7 +146,7 @@ describe('buildHome — rules', () => {
       now,
     );
     const shown = Object.values(home.layers).flat().map((i) => i.id);
-    expect(shown).not.toEqual(expect.arrayContaining(['today_sales']));
+    expect(shown).toContain('upcoming_bookings');
     expect(shown).not.toContain('sales_30d');
     expect(shown).not.toContain('choose_interests');
     expect(shown).not.toContain('setup_services');

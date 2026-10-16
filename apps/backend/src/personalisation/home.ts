@@ -11,9 +11,8 @@ export interface UpcomingBooking {
 
 /** Real figures for one business (and, for practitioners, one staff member). */
 export interface HomeSnapshot {
+  businessName: string;
   bookingLink: string;
-  todayBookings: number;
-  todaySalesKobo: number;
   sales30dKobo: number;
   upcoming: UpcomingBooking[];
   totalBookings: number;
@@ -24,6 +23,12 @@ export interface HomeSnapshot {
   bookingsOnLeave: number;
   /** Whether the person viewing is clocked in right now. */
   viewerClockedIn: boolean;
+  /** Finance set-up and the salary window (Phase 3). */
+  payoutAccountSet: boolean;
+  payrollSetUp: boolean;
+  /** Set while the salary window is open and someone is still to be paid. */
+  payrollOpen: { period: string; toPay: number; closesOn: string } | null;
+  wantsPayroll: boolean;
   totalCustomers: number;
   repeatCustomers: number;
   newCustomers30d: number;
@@ -53,6 +58,7 @@ export interface HomeItem {
 
 export interface HomeResponse {
   generatedAt: string;
+  business: { name: string };
   layers: Record<HomeLayer, HomeItem[]>;
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
 }
@@ -74,14 +80,18 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.unassignedToday > 0 && s.staffCount > 1 ? { count: s.unassignedToday } : null;
     case 'bookings_on_leave':
       return s.bookingsOnLeave > 0 ? { count: s.bookingsOnLeave } : null;
+    case 'payroll_open':
+      return s.payrollOpen ? { ...s.payrollOpen } : null;
+    case 'pay_staff':
+      return s.payrollSetUp ? {} : null;
+    case 'setup_payments':
+      return s.payoutAccountSet ? null : {};
+    case 'setup_payroll':
+      return !s.payrollSetUp && (s.wantsPayroll || prefs.interests.includes('pay_staff')) ? {} : null;
     case 'clock_in':
       return { clockedIn: s.viewerClockedIn };
-    case 'today_bookings':
-      return { count: s.todayBookings };
     case 'upcoming_bookings':
       return { bookings: s.upcoming };
-    case 'today_sales':
-      return { amountKobo: s.todaySalesKobo };
     case 'sales_30d':
       return { amountKobo: s.sales30dKobo };
     case 'repeat_customers':
@@ -143,6 +153,7 @@ export function buildHome(
 
   return {
     generatedAt: now.toISOString(),
+    business: { name: snapshot.businessName },
     layers: {
       attention: ranked.layers.attention.map(toItem),
       overview: ranked.layers.overview.map(toItem),

@@ -21,6 +21,19 @@ export const colors = {
   cancelled: '#dc2626',
   cancelledLight: '#fef2f2',
   white: '#ffffff',
+  // Calm ledger Home: the soft blue wash behind the header, and supporting tints.
+  ink: '#0b1638',
+  mist: '#e8eef9',
+  sky: '#eaf2ff',
+  // Neutral light grey for inputs on the blue wash (surface is too blue to show there).
+  field: '#f1f2f4',
+  fieldBorder: '#e3e6ec',
+  mintSoft: '#dff5f1',
+  amberSoft: '#fff4e0',
+  onDark: '#ffffff',
+  onDarkMuted: 'rgba(255,255,255,0.72)',
+  onDarkFaint: 'rgba(255,255,255,0.14)',
+  onDarkLine: 'rgba(255,255,255,0.22)',
 } as const;
 
 export const spacing = {
@@ -57,4 +70,17 @@ export const typography = {
     title: 22,
     xl: 28,
   },
+} as const;
+
+// Loaded in App.tsx. With custom fonts each weight is its own family, so use
+// these instead of `fontWeight`. Bricolage Grotesque sets headings and big
+// figures; Figtree sets everything else.
+export const fonts = {
+  displaySemiBold: 'BricolageGrotesque_600SemiBold',
+  displayBold: 'BricolageGrotesque_700Bold',
+  displayExtraBold: 'BricolageGrotesque_800ExtraBold',
+  regular: 'Figtree_400Regular',
+  medium: 'Figtree_500Medium',
+  semibold: 'Figtree_600SemiBold',
+  bold: 'Figtree_700Bold',
 } as const;

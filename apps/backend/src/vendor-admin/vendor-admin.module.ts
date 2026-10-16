@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BookingModule } from '../booking/booking.module';
 import { VendorAuthModule } from '../vendor-auth/vendor-auth.module';
 import { VendorBookingsController } from './bookings.controller';
+import { BookingsSummaryService } from './bookings-summary.service';
 import { VendorCustomersController } from './customers.controller';
 import { VendorCustomersService } from './customers.service';
 import { VendorMetricsController } from './metrics.controller';
@@ -24,6 +25,7 @@ import { VendorStaffService } from './staff.service';
     VendorMetricsController,
   ],
   providers: [
+    BookingsSummaryService,
     VendorServicesService,
     VendorStaffService,
     VendorScheduleService,

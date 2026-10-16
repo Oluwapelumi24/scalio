@@ -72,6 +72,7 @@ describe('BookingService', () => {
   beforeEach(() => {
     jest.spyOn(BookingService.prototype as any, 'resolveBookingTerms').mockResolvedValue({ totalPriceKobo: 0 });
     jest.spyOn(BookingService.prototype as any, 'updateCustomerStats').mockResolvedValue(undefined);
+    jest.spyOn(BookingService.prototype as any, 'paymentAccountFor').mockResolvedValue('ACCT_vendor1');
   });
   afterEach(() => jest.restoreAllMocks());
 
@@ -681,6 +682,7 @@ describe('BookingService', () => {
         email: 'jane@example.com',
         amountKobo: 5000,
         reference: expect.any(String) as string,
+        subaccountCode: 'ACCT_vendor1',
       });
       expect(result).toEqual({
         booking: updated,
@@ -824,5 +826,30 @@ describe('BookingService booking rules', () => {
     expect(set).toHaveBeenCalledWith(expect.objectContaining({ noShowCount: expect.anything() }));
     await (service(db) as any).updateCustomerStats({ status: 'cancelled_by_vendor', customerId: 'c-1' });
     expect(db.update).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('BookingService online payment rules', () => {
+  const svc = (db: any) => new BookingService(db, makeSlotLock() as any, makePaystack() as any, makePush() as any);
+  const row = (over: Record<string, unknown> = {}) => ({ booking: { id: 'b-1', vendorId: 'v-1', status: 'confirmed', totalPriceKobo: 1_000_000, ...over }, email: 'jane@example.com' });
+  afterEach(() => jest.restoreAllMocks());
+
+  it('refuses online payment when the business has no payout account, so Scalio never holds the money', async () => {
+    const db = makeDb();
+    db.select.mockReturnValueOnce(selectResult([row()]));
+    jest.spyOn(BookingService.prototype as any, 'paymentAccountFor').mockResolvedValue(null);
+    await expect(svc(db).initiateBookingPayment('b-1', 'deposit', 300_000)).rejects.toThrow("isn't set up to take online payments");
+  });
+
+  it('rejects a full payment that does not match the booking price', async () => {
+    const db = makeDb();
+    db.select.mockReturnValueOnce(selectResult([row()]));
+    await expect(svc(db).initiateBookingPayment('b-1', 'full_prepayment', 5000)).rejects.toThrow('must match the booking price');
+  });
+
+  it('rejects a deposit larger than the booking price', async () => {
+    const db = makeDb();
+    db.select.mockReturnValueOnce(selectResult([row()]));
+    await expect(svc(db).initiateBookingPayment('b-1', 'deposit', 2_000_000)).rejects.toThrow('cannot be more than the booking price');
   });
 });

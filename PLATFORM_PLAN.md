@@ -51,8 +51,8 @@ two copies of its data.
 | # | Decision | Blocks |
 |---|---|---|
 | D1 | ✅ **Decided:** 2.3% is the interest rate **per month** — 27.6% a year simple (12 × 2.3%), about 31.4% a year if it compounds monthly. Still to settle with the lender: flat on the original amount vs. on the reducing balance (changes the total repaid), and whether it is the same for every business. Never shown as guaranteed. | Phase 6 |
-| D2 | Licensed partner for wallet custody and transfers (Paystack Transfers/Balance vs. a bank or licensed MMO). The wallet UI alone gives no right to hold funds. | Phase 3 |
-| D3 | Lending partner and who makes the credit decision. | Phase 6 |
+| D2 | ✅ **Decided (2026-10-16):** Scalio never holds money. Customer payments use **Paystack split payments** — each business gets a Paystack subaccount and Paystack settles to its own bank (`PLATFORM_COMMISSION_PERCENT` is Scalio's cut). Salaries use **option 1**: Scalio works out who to pay and when, the owner pays from their own bank and records it. A licensed banking partner (option 3, true wallet + transfers) can come later. Still to confirm: Paystack approves the split-payment setup; a fintech lawyer confirms no CBN licence is needed while non-custodial (NDPC registration is likely needed for the bank details we store). | Phase 3 |
+| D3 | ✅ **Decided:** financing comes through a lending partner, who makes the credit decision and holds the licence. Partner still to be chosen. | Phase 6 |
 | D4 | AI provider for captions; WhatsApp Business Solution Provider. | Phase 4 |
 | D5 | Business size: worked out from staff/branch counts (recommended) rather than a self-picked label. | Home, settings |
 | D6 | Vendor bottom nav: proposed **Home / Business / Customers / Money / More** — test with real vendors before locking. | Phase 1 design |
@@ -149,15 +149,17 @@ Website
 - [ ] Customer follow-ups and rebook reminders (uses `vendors.averageDaysBetweenVisits` already in the schema).
 - [ ] Orders for businesses that don't take appointments (`services.serviceType` already distinguishes types).
 
-### Phase 3 — Finance: wallet, salary windows, payouts (depends on D2)
+### Phase 3 — Finance: payments, salary windows, payroll (non-custodial — D2)
 
-- [ ] `ledger_entries` as the authoritative record; balances derived as available / pending / reserved.
-- [ ] Payout beneficiaries per staff: masked in the UI, verified on add or change.
-- [ ] Salary schedule per business (e.g. monthly on the 25th, in the business timezone); paused/unset → payouts disabled with the reason and next date shown.
-- [ ] `salary_runs` + `payouts`: select staff → total + fees + source balance → authorise (re-auth) → per-person status (pending / successful / failed / reversed) → receipts on mobile and web.
-- [ ] Idempotency key per payout, verified provider webhooks, daily reconciliation job, audit log of every authorisation and status change.
-- [ ] Expenses and simple cash-flow view.
-- [ ] Admin web: payout and reconciliation oversight.
+- [x] Online payments settle straight to the business: payout account checked with the bank, Paystack subaccount created, bookings charged with the split. Server checks the amount against the booking price; businesses without an account can't take online payments.
+- [x] `ledger_entries` as the authoritative record of money in and out (booking payments, salaries, expenses), append-only with a dedupe key so repeats are safe. No balances — Scalio holds none.
+- [x] Staff pay: monthly salary and bank account per person, name checked with the bank, account number encrypted (AES-256-GCM) and masked except on the transfer list.
+- [x] Salary schedule per business (pay day 1–28, opens 3 days before, closes 5 after, in the business timezone); unset/paused/closed → payroll can't start, with the reason and dates shown.
+- [x] `salary_runs` + `salary_payouts`: start once per month → transfer list → owner pays from their bank → mark each paid (optional bank reference) or skip. Home alert while people are still unpaid.
+- [x] Audit log of account changes, schedule changes, runs and every paid/skipped payout.
+- [x] Expenses and a monthly money summary (sales, received online, salaries, expenses, left over) on mobile and web.
+- [ ] Admin web: payout account and Paystack subaccount oversight.
+- [ ] Later, with a banking partner (option 3): wallet balances, transfers from Scalio, provider webhooks for transfer status, daily reconciliation.
 
 ### Phase 4 — Growth: content, ads, leads (depends on D4 + platform approvals)
 

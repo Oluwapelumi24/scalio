@@ -1,29 +1,27 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   RefreshControl,
   ScrollView,
   Share,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, type CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
-import {
-  formatDateTime,
-  formatNaira,
-  getHome,
-  recordModuleUsage,
-  type HomeItem,
-  type HomeResponse,
-} from '../lib/api';
+import { formatDateTime, getHome, recordModuleUsage, type HomeItem, type HomeResponse } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { colors, fonts, radius, spacing } from '../theme';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Home'>,
@@ -31,34 +29,133 @@ type Props = CompositeScreenProps<
 >;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
 
-const ATTENTION_TEXT: Record<string, (n: number) => string> = {
-  awaiting_payment: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`,
-  starting_soon: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`,
-  unassigned_today: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff assigned`,
-  bookings_on_leave: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`,
+const GUTTER = 24;
+const SLIDE_GAP = 12;
+
+const ATTENTION: Record<string, { text: (n: number) => string; action: string }> = {
+  awaiting_payment: { text: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`, action: 'View' },
+  starting_soon: { text: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`, action: 'View' },
+  unassigned_today: { text: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff`, action: 'Assign' },
+  bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`, action: 'Review' },
+  payroll_open: { text: (n) => `Payroll is open: ${n} ${n === 1 ? 'person' : 'people'} to pay`, action: 'Pay' },
 };
 
-const RECOMMENDATION_TEXT: Record<string, (d: Record<string, any>) => string> = {
-  choose_interests: () => 'Pick what you want help with and we will set up your home screen.',
-  setup_services: () => 'Customers can only book once you have at least one service.',
-  setup_hours: () => 'Let customers know when you are open.',
-  share_link_first: () => 'Share your booking link on WhatsApp or Instagram.',
-  follow_up_lapsed: (d) => `${d.count} ${d.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
-};
+/** One carousel slide: copy, a tint, and three icons for the small illustration. */
+interface Slide {
+  key: string;
+  title: string;
+  body: string;
+  cta?: string;
+  tint: string;
+  tone: string;
+  icons: [FeatherName, FeatherName, FeatherName];
+  onPress?: () => void;
+}
 
-function tileValue(item: HomeItem): string {
+function overviewValue(item: HomeItem): string {
   const d = item.data;
-  if (typeof d.amountKobo === 'number') return formatNaira(d.amountKobo);
+  if (typeof d.amountKobo === 'number') return `₦${(d.amountKobo / 100).toLocaleString('en-NG')}`;
   if (item.id === 'repeat_customers') return `${d.count} of ${d.totalCustomers}`;
   if (typeof d.count === 'number') return String(d.count);
   return '—';
 }
 
-async function shareLink(url: string) {
-  await Share.share({ message: `Book an appointment with us on Scalio: ${url}` });
+function SectionHeading({ title, link, onLink }: { title: string; link?: string; onLink?: () => void }) {
+  return (
+    <View style={styles.sectionHead}>
+      <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
+      {link && onLink ? (
+        <Pressable onPress={onLink} hitSlop={8} accessibilityRole="button">
+          <Text style={styles.sectionLink}>{link}</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+/** A tinted blob with one large icon chip and two small ones — the slide's illustration. */
+function SlideArt({ slide }: { slide: Slide }) {
+  return (
+    <View style={styles.art} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View style={styles.artBlob} />
+      <View style={[styles.artChip, { width: 62, height: 62, borderRadius: 31, left: 22, top: 28, backgroundColor: slide.tone }]}>
+        <Feather name={slide.icons[0]} size={28} color={colors.white} />
+      </View>
+      <View style={[styles.artChip, { width: 40, height: 40, borderRadius: 20, left: 62, top: 2, backgroundColor: colors.white }]}>
+        <Feather name={slide.icons[1]} size={18} color={slide.tone} />
+      </View>
+      <View style={[styles.artChip, { width: 36, height: 36, borderRadius: 18, left: 68, top: 80, backgroundColor: colors.white }]}>
+        <Feather name={slide.icons[2]} size={16} color={slide.tone} />
+      </View>
+    </View>
+  );
+}
+
+function Carousel({ slides }: { slides: Slide[] }) {
+  const { width } = useWindowDimensions();
+  const slideWidth = width - GUTTER * 2;
+  const [index, setIndex] = useState(0);
+  const scroller = useRef<ScrollView>(null);
+
+  function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    const i = Math.round(e.nativeEvent.contentOffset.x / (slideWidth + SLIDE_GAP));
+    setIndex(Math.max(0, Math.min(slides.length - 1, i)));
+  }
+
+  return (
+    <View style={{ gap: spacing.md }}>
+      <ScrollView
+        ref={scroller}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={slideWidth + SLIDE_GAP}
+        decelerationRate="fast"
+        contentContainerStyle={{ paddingHorizontal: GUTTER, gap: SLIDE_GAP }}
+        onScroll={onScroll}
+        scrollEventThrottle={32}
+      >
+        {slides.map((s, i) => (
+          <View
+            key={s.key}
+            style={[styles.slide, { width: slideWidth, backgroundColor: s.tint }]}
+            accessibilityLabel={`${i + 1} of ${slides.length}: ${s.title}`}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.slideTitle}>{s.title}</Text>
+              <Text style={styles.slideBody}>{s.body}</Text>
+              {s.cta && s.onPress ? (
+                <Pressable style={styles.slideCta} onPress={s.onPress} accessibilityRole="button">
+                  <Text style={styles.slideCtaText}>{s.cta}</Text>
+                  <Feather name="arrow-right" size={15} color={colors.white} />
+                </Pressable>
+              ) : (
+                <View style={styles.soonTag}><Text style={styles.soonText}>Coming soon</Text></View>
+              )}
+            </View>
+            <SlideArt slide={s} />
+          </View>
+        ))}
+      </ScrollView>
+      {slides.length > 1 && (
+        <View style={styles.dots}>
+          {slides.map((s, i) => (
+            <Pressable
+              key={s.key}
+              hitSlop={8}
+              onPress={() => scroller.current?.scrollTo({ x: i * (slideWidth + SLIDE_GAP), animated: true })}
+              accessibilityRole="button"
+              accessibilityLabel={`Show slide ${i + 1}`}
+              style={[styles.dot, i === index && styles.dotOn]}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
 }
 
 export function HomeScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const session = getSession();
   const [home, setHome] = useState<HomeResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,19 +177,21 @@ export function HomeScreen({ navigation }: Props) {
   // Reload whenever Home comes back into view — interests or setup may have changed.
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
+  const isManager = session?.role === 'owner' || session?.role === 'manager';
+  const firstName = (session?.name ?? '').split(' ')[0] || 'there';
+
   function open(item: HomeItem) {
     if (item.status === 'coming_soon') return;
     recordModuleUsage(item.id);
     switch (item.id) {
       case 'share_booking_link':
       case 'share_link_first':
-        void shareLink(item.data.url);
+        void Share.share({ message: `Book an appointment with us on Scalio: ${item.data.url}` });
         return;
       case 'awaiting_payment':
       case 'starting_soon':
       case 'unassigned_today':
       case 'bookings_on_leave':
-      case 'today_bookings':
       case 'upcoming_bookings':
       case 'view_bookings':
         navigation.navigate('Bookings');
@@ -115,6 +214,14 @@ export function HomeScreen({ navigation }: Props) {
       case 'setup_hours':
         navigation.navigate('BusinessHours');
         return;
+      case 'pay_staff':
+      case 'payroll_open':
+      case 'setup_payroll':
+        navigation.navigate('Payroll');
+        return;
+      case 'setup_payments':
+        navigation.navigate('PaymentsSetup');
+        return;
       case 'clock_in':
         navigation.navigate('Attendance');
         return;
@@ -127,300 +234,305 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
-  const canCustomise = session?.role === 'owner' || session?.role === 'manager';
+  const attention = home?.layers.attention ?? [];
+  const quick = home?.layers.quick_action.slice(0, 4) ?? [];
+  const overview = home?.layers.overview.filter((i) => i.id !== 'upcoming_bookings') ?? [];
+  const upcoming = home?.layers.overview.find((i) => i.id === 'upcoming_bookings');
+  const slides = home ? buildSlides(home) : [];
+
+  /** Carousel slides from the ranked suggestions, plus sharing and staff set-up when they apply. */
+  function buildSlides(h: HomeResponse): Slide[] {
+    const byId = (id: string) =>
+      [...h.layers.recommendation, ...h.layers.quick_action, ...h.layers.overview].find((i) => i.id === id);
+    const recs = h.layers.recommendation;
+    const out: Slide[] = [];
+    const add = (item: HomeItem | undefined, s: Omit<Slide, 'key' | 'onPress'>) => {
+      if (item && !out.some((o) => o.key === item.id)) out.push({ ...s, key: item.id, onPress: () => open(item) });
+    };
+
+    // Set-up steps first: nothing else matters until customers can book.
+    add(byId('choose_interests'), { title: 'Make Scalio yours', body: "Tell us what you want help with and we'll set up your home.", cta: 'Start', tint: colors.accentLight, tone: colors.accent, icons: ['sliders', 'star', 'compass'] });
+    add(byId('setup_payments'), { title: 'Take payments online', body: 'Add your bank account. Customer deposits go straight into it.', cta: 'Set up', tint: colors.accentLight, tone: colors.accent, icons: ['credit-card', 'shield', 'check-circle'] });
+    add(byId('setup_services'), { title: 'Add your first service', body: 'Customers can only book once you have at least one.', cta: 'Add service', tint: colors.mintSoft, tone: colors.success, icons: ['plus-circle', 'scissors', 'tag'] });
+    add(byId('setup_hours'), { title: 'Set your opening hours', body: "Let customers know when you're open.", cta: 'Set hours', tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'calendar', 'sun'] });
+
+    const share = byId('share_link_first') ?? byId('share_booking_link');
+    if (share) {
+      out.push({
+        key: 'share', title: 'Get your next booking', body: 'Share your booking link on WhatsApp and Instagram.', cta: 'Share link',
+        tint: colors.accentLight, tone: colors.accent, icons: ['message-circle', 'share-2', 'calendar'], onPress: () => open(share),
+      });
+    }
+    const team = byId('team');
+    if (isManager && team && (team.data.count ?? 0) > 1) {
+      out.push({
+        key: 'staff', title: "Know who's working", body: 'Set staff hours and let your team clock in from their phones.', cta: 'Set up',
+        tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'user-check', 'users'], onPress: () => navigation.navigate('StaffManagement'),
+      });
+    }
+    add(byId('setup_payroll'), { title: 'Pay your team on time', body: 'Set a pay day and salaries. Scalio reminds you when payroll opens.', cta: 'Set up', tint: colors.mintSoft, tone: colors.success, icons: ['credit-card', 'calendar', 'users'] });
+    const lapsed = byId('follow_up_lapsed');
+    add(lapsed, {
+      title: 'Bring customers back',
+      body: `${lapsed?.data.count} ${lapsed?.data.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
+      cta: 'Review', tint: colors.amberSoft, tone: colors.warning, icons: ['repeat', 'heart', 'message-circle'],
+    });
+    // Features on the way, for businesses that asked for them. Never actionable.
+    for (const r of recs.filter((x) => x.status === 'coming_soon')) {
+      out.push({
+        key: r.id, title: r.title, body: "Coming soon. We'll let you know when it's ready.",
+        tint: colors.surface, tone: colors.textMuted, icons: [r.icon as FeatherName, 'clock', 'bell'],
+      });
+    }
+    return out;
+  }
 
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={{ paddingBottom: spacing.xxxl }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Good {greeting()}</Text>
-          <Text style={styles.name}>{session?.name ?? 'Vendor'}</Text>
-          <Text style={styles.subtitle}>Here's your business today.</Text>
+      {/* Header: soft Scalio-blue wash fading into the page */}
+      <LinearGradient
+        colors={[colors.accentLight, colors.sky, colors.background]}
+        locations={[0, 0.55, 1]}
+        style={[styles.header, { paddingTop: insets.top + spacing.md }]}
+      >
+        <View style={styles.topRow}>
+          <View style={styles.logo}>
+            <Text style={styles.logoText}>{(home?.business.name ?? 'S').charAt(0).toUpperCase()}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bizName} numberOfLines={1}>{home?.business.name ?? 'Your business'}</Text>
+            <Text style={styles.bizRole}>{session?.role?.replace('_', ' ') ?? ''}</Text>
+          </View>
+          <Pressable
+            style={styles.roundBtn}
+            onPress={() => navigation.navigate('Bookings')}
+            accessibilityRole="button"
+            accessibilityLabel={`${attention.length} items need your attention`}
+          >
+            <Feather name="bell" size={18} color={colors.text} />
+            {attention.length > 0 && (
+              <View style={styles.badge}><Text style={styles.badgeText}>{attention.length > 9 ? '9+' : attention.length}</Text></View>
+            )}
+          </Pressable>
+          <Pressable style={styles.avatar} onPress={() => navigation.navigate('Settings')} accessibilityRole="button" accessibilityLabel="Settings">
+            <Text style={styles.avatarText}>{(session?.name ?? 'V').slice(0, 2).toUpperCase()}</Text>
+          </Pressable>
         </View>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarInitial}>{(session?.name ?? 'V').charAt(0).toUpperCase()}</Text>
-        </View>
-      </View>
+
+        <Pressable style={styles.search} onPress={() => navigation.navigate('Customers')} accessibilityRole="search">
+          <Feather name="search" size={17} color={colors.textMuted} />
+          <Text style={styles.searchText}>Search customers</Text>
+        </Pressable>
+
+        <Text style={styles.greeting}>Hey, {firstName}</Text>
+        <Text style={styles.greetingSub}>Here's your business today.</Text>
+
+      </LinearGradient>
 
       {loading ? (
         <ActivityIndicator style={{ marginVertical: spacing.xxl }} color={colors.accent} />
       ) : !home ? (
         <View style={styles.errorBox}>
-          <Feather name="wifi-off" size={28} color={colors.textMuted} />
-          <Text style={styles.emptyText}>{error}</Text>
+          <Feather name="wifi-off" size={26} color={colors.textMuted} />
+          <Text style={styles.metaText}>{error}</Text>
           <Pressable style={styles.retry} onPress={() => { setLoading(true); void load(); }}>
-            <Text style={styles.retryText}>Try again</Text>
+            <Text style={styles.sectionLink}>Try again</Text>
           </Pressable>
         </View>
       ) : (
-        <>
-          {/* Layer: needs your attention — always shown when there is something to act on */}
-          {home.layers.attention.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Needs your attention</Text>
-              {home.layers.attention.map((item) => (
-                <Pressable key={item.id} style={styles.alert} onPress={() => open(item)} accessibilityRole="button">
-                  <Feather name={item.icon as FeatherName} size={18} color={colors.warning} />
-                  <Text style={styles.alertText}>
-                    {ATTENTION_TEXT[item.id]?.(item.data.count) ?? item.title}
+        <View style={styles.body}>
+          {/* Needs your attention — always present, so "all clear" is visible too */}
+          <View style={styles.section}>
+            <SectionHeading title="Needs your attention" />
+            <View style={styles.panel}>
+              {attention.length === 0 ? (
+                <View style={styles.row}>
+                  <Text style={[styles.rowText, { color: colors.textMuted }]}>Nothing needs you right now</Text>
+                  <View style={[styles.darkBtn, styles.darkBtnOff]}>
+                    <Text style={[styles.darkBtnText, { color: colors.textMuted }]}>All clear</Text>
+                  </View>
+                </View>
+              ) : (
+                attention.map((item, i) => (
+                  <View key={item.id} style={[styles.row, i > 0 && styles.divider]}>
+                    <View style={styles.flag} />
+                    <Text style={styles.rowText}>{ATTENTION[item.id]?.text(item.data.count ?? item.data.toPay) ?? item.title}</Text>
+                    <Pressable style={styles.darkBtn} onPress={() => open(item)} accessibilityRole="button">
+                      <Text style={styles.darkBtnText}>{ATTENTION[item.id]?.action ?? 'View'}</Text>
+                    </Pressable>
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
+
+          {/* Quick actions sit right under what needs attention */}
+          {quick.length > 0 && (
+            <View style={styles.quick}>
+              {quick.map((item) => (
+                <Pressable key={item.id} style={styles.quickItem} onPress={() => open(item)} accessibilityRole="button">
+                  <View style={styles.quickDisc}>
+                    <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
+                  </View>
+                  <Text style={styles.quickLabel} numberOfLines={2}>
+                    {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
                   </Text>
-                  <Feather name="chevron-right" size={16} color={colors.warning} />
                 </Pressable>
               ))}
             </View>
           )}
 
-          {/* Layer: business overview, in ranked order */}
-          <View style={styles.section}>
-            <Overview items={home.layers.overview} onOpen={open} />
-          </View>
+          {slides.length > 0 && <Carousel slides={slides} />}
 
-          {/* Layer: quick actions */}
-          {home.layers.quick_action.length > 0 && (
+          {upcoming && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Quick actions</Text>
-              <View style={styles.actions}>
-                {home.layers.quick_action.map((item) => (
-                  <Pressable key={item.id} style={styles.action} onPress={() => open(item)} accessibilityRole="button">
-                    <View style={styles.actionIcon}>
-                      <Feather name={item.icon as FeatherName} size={20} color={colors.accent} />
-                    </View>
-                    <Text style={styles.actionLabel} numberOfLines={2}>
-                      {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
-                    </Text>
+              <SectionHeading title="Up next" link="View all" onLink={() => open(upcoming)} />
+              <View style={styles.panel}>
+                {upcoming.data.bookings.length === 0 ? (
+                  <View style={styles.empty}>
+                    <Feather name="calendar" size={18} color={colors.textMuted} />
+                    <Text style={styles.emptyText}>No upcoming bookings yet. Share your booking link to get some.</Text>
+                  </View>
+                ) : (
+                  upcoming.data.bookings.map(
+                    (b: { id: string; customerName: string | null; scheduledAt: string; status: string }, i: number) => (
+                      <Pressable key={b.id} style={[styles.row, i > 0 && styles.divider]} onPress={() => open(upcoming)}>
+                        <View style={styles.person}>
+                          <Text style={styles.personInitial}>{(b.customerName ?? 'C').charAt(0).toUpperCase()}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.rowStrong} numberOfLines={1}>{b.customerName ?? 'Customer'}</Text>
+                          <Text style={styles.metaText}>
+                            {formatDateTime(b.scheduledAt)}
+                            {b.status === 'pending_payment' ? ' · awaiting payment' : ''}
+                          </Text>
+                        </View>
+                        <Feather name="chevron-right" size={16} color={colors.borderStrong} />
+                      </Pressable>
+                    ),
+                  )
+                )}
+              </View>
+            </View>
+          )}
+
+          {overview.length > 0 && (
+            <View style={styles.section}>
+              <SectionHeading title="Your business" />
+              <View style={styles.panel}>
+                {overview.map((item, i) => (
+                  <Pressable key={item.id} style={[styles.row, i > 0 && styles.divider]} onPress={() => open(item)} accessibilityRole="button">
+                    <Feather name={item.icon as FeatherName} size={18} color={colors.textMuted} />
+                    <Text style={styles.rowText}>{item.title}</Text>
+                    <Text style={styles.value}>{overviewValue(item)}</Text>
                   </Pressable>
                 ))}
               </View>
             </View>
           )}
 
-          {/* Layer: recommendations */}
-          {home.layers.recommendation.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Suggested for you</Text>
-              {home.layers.recommendation.map((item) => {
-                const soon = item.status === 'coming_soon';
-                return (
-                  <Pressable
-                    key={item.id}
-                    style={[styles.rec, soon && styles.recSoon]}
-                    onPress={() => open(item)}
-                    disabled={soon}
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: soon }}
-                  >
-                    <View style={[styles.recIcon, soon && { backgroundColor: colors.surface }]}>
-                      <Feather name={item.icon as FeatherName} size={18} color={soon ? colors.textMuted : colors.accent} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.recTitle, soon && { color: colors.textSecondary }]}>{item.title}</Text>
-                      <Text style={styles.recText}>
-                        {soon ? 'Coming soon — we will let you know when it is ready.' : RECOMMENDATION_TEXT[item.id]?.(item.data) ?? ''}
-                      </Text>
-                    </View>
-                    {soon ? (
-                      <View style={styles.soonBadge}><Text style={styles.soonText}>Soon</Text></View>
-                    ) : (
-                      <Feather name="chevron-right" size={16} color={colors.textMuted} />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-
-          {canCustomise && (
+          {isManager && (
             <Pressable style={styles.customise} onPress={() => navigation.navigate('CustomiseHome')} accessibilityRole="button">
               <Feather name="sliders" size={15} color={colors.accent} />
-              <Text style={styles.customiseText}>Customise home</Text>
+              <Text style={styles.sectionLink}>Customise home</Text>
             </Pressable>
           )}
-        </>
+        </View>
       )}
     </ScrollView>
   );
 }
 
-/** Stat tiles in ranked order, then the upcoming-bookings list if it made the cut. */
-function Overview({ items, onOpen }: { items: HomeItem[]; onOpen: (item: HomeItem) => void }) {
-  const tiles = items.filter((i) => i.id !== 'upcoming_bookings');
-  const upcoming = items.find((i) => i.id === 'upcoming_bookings');
-
-  return (
-    <>
-      <View style={styles.tiles}>
-        {tiles.map((item) => (
-          <Pressable key={item.id} style={styles.tile} onPress={() => onOpen(item)} accessibilityRole="button">
-            <Feather name={item.icon as FeatherName} size={16} color={colors.accent} />
-            <Text style={styles.tileValue}>{tileValue(item)}</Text>
-            <Text style={styles.tileLabel}>{item.title}</Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {upcoming && (
-        <View style={styles.upcoming}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{upcoming.title}</Text>
-            <Pressable onPress={() => onOpen(upcoming)} hitSlop={8}>
-              <Text style={styles.seeAll}>See all</Text>
-            </Pressable>
-          </View>
-          {upcoming.data.bookings.length === 0 ? (
-            <View style={styles.empty}>
-              <Feather name="calendar" size={28} color={colors.textMuted} />
-              <Text style={styles.emptyText}>No upcoming bookings</Text>
-            </View>
-          ) : (
-            upcoming.data.bookings.map((b: { id: string; customerName: string | null; scheduledAt: string; status: string }) => (
-              <Pressable key={b.id} style={styles.bookingRow} onPress={() => onOpen(upcoming)}>
-                <Text style={styles.bookingCustomer} numberOfLines={1}>{b.customerName ?? 'Customer'}</Text>
-                <Text style={styles.bookingMeta}>
-                  {formatDateTime(b.scheduledAt)}{b.status === 'pending_payment' ? ' · awaiting payment' : ''}
-                </Text>
-              </Pressable>
-            ))
-          )}
-        </View>
-      )}
-    </>
-  );
-}
-
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return 'morning';
-  if (h < 17) return 'afternoon';
-  return 'evening';
-}
-
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  content: { paddingBottom: spacing.xxxl },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: 96,
-    paddingBottom: spacing.xl,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+  root: { flex: 1, backgroundColor: colors.background },
+
+  // Header
+  header: { paddingHorizontal: GUTTER, paddingBottom: spacing.xxl },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  logo: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
   },
-  greeting: { fontSize: typography.size.sm, color: colors.textMuted },
-  name: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text, marginTop: 2 },
-  subtitle: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4 },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoText: { fontFamily: fonts.displayExtraBold, fontSize: 16, color: colors.accent },
+  bizName: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
+  bizRole: { fontFamily: fonts.medium, fontSize: 11, color: colors.textMuted, textTransform: 'capitalize', marginTop: 1 },
+  roundBtn: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
   },
-  avatarInitial: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.white },
-  section: { marginTop: spacing.xl, paddingHorizontal: spacing.xl },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
-  sectionTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text, marginBottom: spacing.md },
-  seeAll: { fontSize: typography.size.sm, color: colors.accent, fontWeight: typography.weight.semibold, marginBottom: spacing.md },
-  alert: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.warningLight,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: '#fde68a',
+  badge: {
+    position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
+    backgroundColor: colors.error, borderWidth: 2, borderColor: colors.background, alignItems: 'center', justifyContent: 'center',
   },
-  alertText: { flex: 1, fontSize: typography.size.base, color: colors.text, fontWeight: typography.weight.medium },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.md },
-  tile: {
-    width: '47.8%',
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.xs,
+  badgeText: { fontFamily: fonts.bold, fontSize: 10, color: colors.white },
+  search: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 20,
+    backgroundColor: colors.field, borderWidth: 1, borderColor: colors.fieldBorder,
+    borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 13,
   },
-  tileValue: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text, marginTop: spacing.xs },
-  tileLabel: { fontSize: typography.size.sm, color: colors.textMuted },
-  upcoming: { marginTop: spacing.sm, marginBottom: spacing.md },
-  bookingRow: {
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
+  searchText: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: fonts.bold, fontSize: 12, color: colors.white },
+  greeting: { fontFamily: fonts.displaySemiBold, fontSize: 24, lineHeight: 30, letterSpacing: -0.4, color: colors.text, marginTop: 24 },
+  greetingSub: { fontFamily: fonts.medium, fontSize: 14, color: colors.textSecondary, marginTop: 6 },
+  quick: { flexDirection: 'row', paddingHorizontal: GUTTER - 4 },
+  quickItem: { flex: 1, alignItems: 'center', gap: 10, paddingHorizontal: 2 },
+  quickDisc: {
+    width: 60, height: 60, borderRadius: 30, backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
+    shadowColor: colors.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 2,
   },
-  bookingCustomer: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
-  bookingMeta: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  action: {
-    width: '30.5%',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
+  quickLabel: { fontFamily: fonts.semibold, fontSize: 12, lineHeight: 15, color: colors.text, textAlign: 'center' },
+
+  // Body
+  body: { gap: 32, paddingTop: spacing.sm },
+  section: { paddingHorizontal: GUTTER, gap: spacing.md },
+  sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  sectionTitle: { fontFamily: fonts.displayBold, fontSize: 19, letterSpacing: -0.4, color: colors.text },
+  sectionLink: { fontFamily: fonts.semibold, fontSize: 13, color: colors.accent },
+  panel: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: 18 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
+  divider: { borderTopWidth: 1, borderTopColor: colors.border },
+  rowText: { flex: 1, fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: colors.text },
+  rowStrong: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
+  value: { fontFamily: fonts.bold, fontSize: 14, color: colors.text, fontVariant: ['tabular-nums'] },
+  metaText: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: 2 },
+  flag: { width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: colors.warning },
+  darkBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: spacing.lg, paddingVertical: 10 },
+  darkBtnOff: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  darkBtnText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.white },
+  person: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
+  personInitial: { fontFamily: fonts.bold, fontSize: 14, color: colors.accent },
+  empty: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 18 },
+  emptyText: { flex: 1, fontFamily: fonts.medium, fontSize: 13, lineHeight: 19, color: colors.textSecondary },
+
+  // Carousel
+  slide: { flexDirection: 'row', alignItems: 'center', borderRadius: 22, paddingVertical: 22, paddingLeft: 22, paddingRight: 16, minHeight: 172, gap: spacing.sm },
+  slideTitle: { fontFamily: fonts.displayExtraBold, fontSize: 20, lineHeight: 23, letterSpacing: -0.4, color: colors.text },
+  slideBody: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 19, color: colors.textSecondary, marginTop: 8, marginBottom: 16 },
+  slideCta: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10,
   },
-  actionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+  slideCtaText: { fontFamily: fonts.bold, fontSize: 13, color: colors.white },
+  soonTag: { alignSelf: 'flex-start', backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
+  soonText: { fontFamily: fonts.bold, fontSize: 11, color: colors.textSecondary },
+  art: { width: 104, height: 120 },
+  artBlob: { position: 'absolute', left: 4, top: 6, right: 0, bottom: 0, borderRadius: 52, backgroundColor: 'rgba(255,255,255,0.65)' },
+  artChip: {
+    position: 'absolute', alignItems: 'center', justifyContent: 'center',
+    shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 3,
   },
-  actionLabel: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, color: colors.text, textAlign: 'center' },
-  rec: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  recSoon: { backgroundColor: colors.surface, borderStyle: 'dashed' },
-  recIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  recTitle: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
-  recText: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
-  soonBadge: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: colors.border },
-  soonText: { fontSize: typography.size.xs, fontWeight: typography.weight.semibold, color: colors.textSecondary },
-  customise: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-    paddingVertical: spacing.md,
-  },
-  customiseText: { fontSize: typography.size.base, color: colors.accent, fontWeight: typography.weight.semibold },
-  empty: { alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.sm },
-  emptyText: { fontSize: typography.size.base, color: colors.textMuted, textAlign: 'center' },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.border },
+  dotOn: { backgroundColor: colors.accent },
+
+  customise: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
   errorBox: { alignItems: 'center', paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.md },
-  retry: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: radius.pill, backgroundColor: colors.background },
-  retryText: { color: colors.accent, fontWeight: typography.weight.semibold },
+  retry: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
 });

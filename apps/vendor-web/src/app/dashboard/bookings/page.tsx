@@ -52,6 +52,9 @@ export default async function BookingsPage({
   const { status = '' } = await searchParams
   const token = await requireToken()
 
+  // Today's figures sit above the filters and don't change with them.
+  const today = await apiFetch<{ bookings: number; salesKobo: number | null }>('/vendor-admin/bookings/summary', token).catch(() => null)
+
   let bookings: Booking[] = []
   try {
     const url = status ? `/vendor-admin/bookings?status=${status}` : '/vendor-admin/bookings'
@@ -63,6 +66,21 @@ export default async function BookingsPage({
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Bookings</h1>
+
+      {today && (
+        <div className="mb-6 inline-flex rounded-xl border border-gray-200 bg-white divide-x divide-gray-200">
+          <div className="px-6 py-4">
+            <p className="text-2xl font-bold text-gray-900 tabular-nums">{today.bookings}</p>
+            <p className="text-sm text-gray-500">Today&apos;s bookings</p>
+          </div>
+          {today.salesKobo != null && (
+            <div className="px-6 py-4">
+              <p className="text-2xl font-bold text-gray-900 tabular-nums">₦{(today.salesKobo / 100).toLocaleString('en-NG')}</p>
+              <p className="text-sm text-gray-500">Today&apos;s sales</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Status filter tabs */}
       <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">

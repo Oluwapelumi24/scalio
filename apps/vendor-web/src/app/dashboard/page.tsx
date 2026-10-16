@@ -24,7 +24,6 @@ const HREF: Record<string, string> = {
   bookings_on_leave: '/dashboard/bookings',
   clock_in: '/dashboard/attendance',
   staff_performance: '/dashboard/performance',
-  today_bookings: '/dashboard/bookings',
   upcoming_bookings: '/dashboard/bookings',
   view_bookings: '/dashboard/bookings',
   repeat_customers: '/dashboard/customers',
@@ -38,19 +37,26 @@ const HREF: Record<string, string> = {
   business_hours: '/dashboard/schedule',
   setup_hours: '/dashboard/schedule',
   choose_interests: '/dashboard/interests',
+  payroll_open: '/dashboard/payroll',
+  pay_staff: '/dashboard/payroll',
+  setup_payroll: '/dashboard/payroll',
+  setup_payments: '/dashboard/payments',
 }
 
-const ATTENTION_TEXT: Record<string, (n: number) => string> = {
+const ATTENTION_TEXT: Record<string, (n: number, d: Record<string, number>) => string> = {
   awaiting_payment: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`,
   starting_soon: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`,
   unassigned_today: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff assigned`,
   bookings_on_leave: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`,
+  payroll_open: (_n, d) => `Payroll is open: ${d.toPay} ${d.toPay === 1 ? 'person' : 'people'} still to pay`,
 }
 
 const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number>) => string> = {
   choose_interests: () => 'Pick what you want help with and we will set up your home screen.',
   setup_services: () => 'Customers can only book once you have at least one service.',
   setup_hours: () => 'Let customers know when you are open.',
+  setup_payments: () => 'Add your bank account so customers can pay deposits online.',
+  setup_payroll: () => 'Set a pay day and salaries so payroll reminds you each month.',
   share_link_first: () => 'Share your booking link on WhatsApp or Instagram.',
   follow_up_lapsed: (d) => `${d.count} ${d.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
 }
@@ -125,7 +131,7 @@ export default async function DashboardHome() {
                     href={HREF[item.id] ?? '/dashboard/bookings'}
                     className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-amber-100"
                   >
-                    <span>{ATTENTION_TEXT[item.id]?.(item.data.count) ?? item.title}</span>
+                    <span>{ATTENTION_TEXT[item.id]?.(item.data.count, item.data) ?? item.title}</span>
                     <span className="text-amber-700">View →</span>
                   </ModuleLink>
                 ))}

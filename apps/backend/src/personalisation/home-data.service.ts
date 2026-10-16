@@ -2,7 +2,9 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { and, asc, count, eq, gt, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { attendanceRecords, bookings, businessHours, customers, services, staff, staffTimeOff, vendors } from '../db/schema';
+import { attendanceRecords, bookings, businessHours, customers, payrollSchedules, salaryPayouts, salaryRuns, services, staff, staffPay, staffTimeOff, vendorPayoutAccounts, vendors } from '../db/schema';
+import { salaryWindow } from '../finance/payroll-window';
+import { businessToday } from '../staff-schedule/period';
 import { businessDayBounds } from '../common/business-day';
 import type { HomeSnapshot } from './home';
 
@@ -31,6 +33,7 @@ export class HomeDataService {
     const [vendor] = await this.db
       .select({
         slug: vendors.slug,
+        businessName: vendors.businessName,
         timezone: vendors.timezone,
         averageDaysBetweenVisits: vendors.averageDaysBetweenVisits,
       })
@@ -55,8 +58,6 @@ export class HomeDataService {
     const [b] = await this.db
       .select({
         total: count(),
-        today: countWhere(sql`${isToday} and ${bookings.status} in ('pending_payment', 'confirmed', 'completed')`),
-        todaySales: sumValueWhere(sql`${isToday} and ${bookings.status} = 'completed'`),
         sales30d: sumValueWhere(sql`${bookings.scheduledAt} >= ${thirtyDaysAgo} and ${bookings.status} = 'completed'`),
         awaitingPayment: countWhere(sql`${bookings.status} = 'pending_payment' and ${bookings.scheduledAt} > ${now}`),
         startingSoon: countWhere(
@@ -126,6 +127,22 @@ export class HomeDataService {
         .where(and(eq(attendanceRecords.staffId, viewerStaffId), isNull(attendanceRecords.clockOutAt))),
     ]);
 
+    // Finance: payout account, payroll schedule, and whether the salary window needs the owner.
+    const [[payoutAcct], [schedule], [payableRow]] = await Promise.all([
+      this.db.select({ id: vendorPayoutAccounts.vendorId }).from(vendorPayoutAccounts).where(eq(vendorPayoutAccounts.vendorId, vendorId)),
+      this.db.select().from(payrollSchedules).where(eq(payrollSchedules.vendorId, vendorId)),
+      this.db.select({ n: count() }).from(staffPay).where(and(eq(staffPay.vendorId, vendorId), sql`${staffPay.monthlySalaryKobo} > 0`)),
+    ]);
+    const window = salaryWindow(schedule ?? null, businessToday(now, vendor.timezone));
+    let payrollOpen: { period: string; toPay: number; closesOn: string } | null = null;
+    if (window.state === 'open' && window.period && (payableRow?.n ?? 0) > 0) {
+      const [run] = await this.db.select({ id: salaryRuns.id }).from(salaryRuns).where(and(eq(salaryRuns.vendorId, vendorId), eq(salaryRuns.period, window.period)));
+      const [pending] = run
+        ? await this.db.select({ n: count() }).from(salaryPayouts).where(and(eq(salaryPayouts.runId, run.id), eq(salaryPayouts.status, 'pending')))
+        : [{ n: payableRow!.n }];
+      if ((pending?.n ?? 0) > 0) payrollOpen = { period: window.period, toPay: pending!.n, closesOn: window.closesOn! };
+    }
+
     const [[staffRow], [serviceRow], [hoursRow]] = await Promise.all([
       this.db.select({ n: count() }).from(staff).where(eq(staff.vendorId, vendorId)),
       this.db.select({ n: count() }).from(services).where(eq(services.vendorId, vendorId)),
@@ -133,9 +150,8 @@ export class HomeDataService {
     ]);
 
     return {
+      businessName: vendor.businessName,
       bookingLink: this.bookingLinkFor(vendor.slug),
-      todayBookings: b?.today ?? 0,
-      todaySalesKobo: b?.todaySales ?? 0,
       sales30dKobo: b?.sales30d ?? 0,
       upcoming: upcomingRows.map((r) => ({
         id: r.id,
@@ -149,6 +165,10 @@ export class HomeDataService {
       unassignedToday: b?.unassignedToday ?? 0,
       bookingsOnLeave: leaveRow?.n ?? 0,
       viewerClockedIn: !!openShift,
+      payoutAccountSet: !!payoutAcct,
+      payrollSetUp: !!schedule,
+      payrollOpen,
+      wantsPayroll: (staffRow?.n ?? 0) > 1,
       totalCustomers: c?.total ?? 0,
       repeatCustomers: c?.repeat ?? 0,
       newCustomers30d: c?.new30d ?? 0,

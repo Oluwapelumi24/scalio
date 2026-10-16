@@ -8,7 +8,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, sql, sum } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { bookings, customers, users, vendors, services, staff } from '../db/schema';
+import { bookings, customers, users, vendors, services, staff, vendorPayoutAccounts } from '../db/schema';
 import {
   PaystackService,
   type InitializeTransactionResult,
@@ -137,6 +137,15 @@ export class BookingService {
     return { totalPriceKobo: price?.total ?? 0 };
   }
 
+  /** The vendor's Paystack subaccount code, or null if they haven't set up payouts. */
+  private async paymentAccountFor(vendorId: string): Promise<string | null> {
+    const [acct] = await this.db
+      .select({ code: vendorPayoutAccounts.paystackSubaccountCode })
+      .from(vendorPayoutAccounts)
+      .where(eq(vendorPayoutAccounts.vendorId, vendorId));
+    return acct?.code ?? null;
+  }
+
   /**
    * Keeps the CRM record's visit history true to what happened. Runs once per
    * booking: the status update before it only succeeds for one caller.
@@ -189,12 +198,31 @@ export class BookingService {
         `Booking ${bookingId} is not awaiting payment`,
       );
     }
+    // The amount comes from the client, so it's checked against the booking's price.
+    const price = row.booking.totalPriceKobo;
+    if (price > 0) {
+      if (paymentMode === 'full_prepayment' && amountDueKobo !== price) {
+        throw new BadRequestException('Full payment must match the booking price.');
+      }
+      if (paymentMode === 'deposit' && amountDueKobo > price) {
+        throw new BadRequestException('A deposit cannot be more than the booking price.');
+      }
+    }
+    // Online payments settle straight to the vendor's own bank via their Paystack
+    // subaccount. Without one, Scalio would be holding the money, so don't take it.
+    const subaccountCode = await this.paymentAccountFor(row.booking.vendorId);
+    if (!subaccountCode) {
+      throw new ConflictException(
+        "This business isn't set up to take online payments yet. You can pay at the appointment.",
+      );
+    }
 
     const reference = randomUUID();
     const payment = await this.paystack.initializeTransaction({
       email: row.email,
       amountKobo: amountDueKobo,
       reference,
+      subaccountCode,
     });
 
     const [updated] = await this.db

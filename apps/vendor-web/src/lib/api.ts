@@ -34,5 +34,7 @@ export async function apiFetch<T = unknown>(
     throw new ApiError(res.status, msg)
   }
 
-  return res.json() as Promise<T>
+  // Nest sends an empty 200 when a handler returns null (e.g. no payout account yet).
+  const text = await res.text()
+  return (text ? JSON.parse(text) : null) as T
 }

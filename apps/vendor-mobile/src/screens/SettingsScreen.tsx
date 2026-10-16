@@ -94,6 +94,20 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
       )}
 
+      {/* Money — owners and managers */}
+      {(session?.role === 'owner' || session?.role === 'manager') && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Money</Text>
+          <View style={styles.group}>
+            <SettingsRow icon="pie-chart" label="Money" subtitle="Sales, payments received, salaries and expenses" onPress={() => navigation.navigate('Money')} />
+            <View style={styles.divider} />
+            <SettingsRow icon="credit-card" label="Payroll" subtitle="Pay day, salaries and staff bank accounts" onPress={() => navigation.navigate('Payroll')} />
+            <View style={styles.divider} />
+            <SettingsRow icon="shield" label="Online payments" subtitle="The account customers' payments go to" onPress={() => navigation.navigate('PaymentsSetup')} />
+          </View>
+        </View>
+      )}
+
       {/* Services */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Services</Text>

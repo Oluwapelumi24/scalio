@@ -1,4 +1,4 @@
-import type { VendorBooking, VendorService, Customer, StaffMember } from '../lib/api';
+import type { VendorBooking, VendorService, Customer, StaffMember, TeamPay } from '../lib/api';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -20,6 +20,10 @@ export type RootStackParamList = {
   StaffSchedule: { staffId: string; name: string };
   Attendance: undefined;
   Performance: undefined;
+  PaymentsSetup: undefined;
+  Payroll: undefined;
+  StaffPay: { staffId: string; name: string; pay: TeamPay };
+  Money: undefined;
 };
 
 export type MainTabParamList = {

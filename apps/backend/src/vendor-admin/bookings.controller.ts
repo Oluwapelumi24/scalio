@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BookingService } from '../booking/booking.service';
+import { BookingsSummaryService } from './bookings-summary.service';
 import type { BookingStatus } from '../booking/booking-state-machine';
 import { bookingStatusValues } from '../db/schema';
 import { CurrentStaff } from '../vendor-auth/current-staff.decorator';
@@ -27,7 +28,19 @@ function parseStatus(status?: string): BookingStatus | undefined {
 @UseGuards(VendorAuthGuard, RolesGuard)
 @Roles('owner', 'manager', 'practitioner', 'front_desk')
 export class VendorBookingsController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private readonly summary: BookingsSummaryService,
+  ) {}
+
+  /** Today's bookings and sales, shown at the top of the Bookings screen. */
+  @Get('summary')
+  today(@CurrentStaff() staff: VendorPrincipal) {
+    return this.summary.today(staff.vendorId, {
+      staffId: staff.role === 'practitioner' ? staff.staffId : undefined,
+      includeSales: staff.role === 'owner' || staff.role === 'manager',
+    });
+  }
 
   @Get()
   list(

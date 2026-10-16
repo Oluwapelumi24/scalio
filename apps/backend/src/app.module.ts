@@ -20,6 +20,7 @@ import { SuperAdminModule } from './super-admin/super-admin.module';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { PersonalisationModule } from './personalisation/personalisation.module';
 import { StaffScheduleModule } from './staff-schedule/staff-schedule.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { StaffScheduleModule } from './staff-schedule/staff-schedule.module';
     WaitlistModule,
     PersonalisationModule,
     StaffScheduleModule,
+    FinanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

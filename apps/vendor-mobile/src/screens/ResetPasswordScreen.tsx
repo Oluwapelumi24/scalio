@@ -175,6 +175,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     fontSize: typography.size.md,
+    // Explicit, or iOS can carry the code field's wide spacing into these placeholders.
+    letterSpacing: 0,
     color: colors.text,
     backgroundColor: colors.surface,
   },

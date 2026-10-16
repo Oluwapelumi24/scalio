@@ -32,7 +32,8 @@ export class MailService {
   }
 
   async sendPasswordResetEmail(to: string, code: string): Promise<void> {
-    await this.resend.emails.send({
+    // Resend reports failures in the result rather than throwing.
+    const { error } = await this.resend.emails.send({
       from:
         this.config.get<string>('MAIL_FROM') ??
         'Scalio <onboarding@resend.dev>',
@@ -40,5 +41,6 @@ export class MailService {
       subject: 'Reset your Scalio Vendor password',
       text: `Your password reset code is: ${code}\n\nEnter this code in the app to set a new password. It expires in 15 minutes.\n\nIf you didn't request this, you can ignore this email.`,
     });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
   }
 }

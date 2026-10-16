@@ -11,6 +11,16 @@
     },
     "android": {
       "package": "com.scalio.vendor"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Scalio uses your photos so you can add them to social media posts.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ]
   }
 }

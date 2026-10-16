@@ -38,6 +38,8 @@ const ATTENTION: Record<string, { text: (n: number) => string; action: string }>
   unassigned_today: { text: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff`, action: 'Assign' },
   bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`, action: 'Review' },
   payroll_open: { text: (n) => `Payroll is open: ${n} ${n === 1 ? 'person' : 'people'} to pay`, action: 'Pay' },
+  leads_due: { text: (n) => `${n} ${n === 1 ? 'lead is' : 'leads are'} waiting for a follow-up`, action: 'Follow up' },
+  posts_planned_today: { text: (n) => `${n} ${n === 1 ? 'post is' : 'posts are'} planned for today`, action: 'Open' },
 };
 
 /** One carousel slide: copy, a tint, and three icons for the small illustration. */
@@ -228,6 +230,19 @@ export function HomeScreen({ navigation }: Props) {
       case 'staff_performance':
         navigation.navigate('Performance');
         return;
+      case 'create_post':
+      case 'first_post':
+        navigation.navigate('PostEditor', {});
+        return;
+      case 'posts_planned_today':
+        navigation.navigate('ContentStudio', { tab: 'planned' });
+        return;
+      case 'leads_due':
+        navigation.navigate('Leads', { filter: 'due' });
+        return;
+      case 'view_leads':
+        navigation.navigate('Leads');
+        return;
       case 'choose_interests':
         navigation.navigate('InterestSelection', { fromSettings: true });
         return;
@@ -277,6 +292,7 @@ export function HomeScreen({ navigation }: Props) {
       body: `${lapsed?.data.count} ${lapsed?.data.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
       cta: 'Review', tint: colors.amberSoft, tone: colors.warning, icons: ['repeat', 'heart', 'message-circle'],
     });
+    add(byId('first_post'), { title: 'Make your first post', body: 'Add a photo, say what it’s about, and AI writes the caption and hashtags.', cta: 'Create post', tint: colors.accentLight, tone: colors.accent, icons: ['image', 'zap', 'share-2'] });
     // Features on the way, for businesses that asked for them. Never actionable.
     for (const r of recs.filter((x) => x.status === 'coming_soon')) {
       out.push({

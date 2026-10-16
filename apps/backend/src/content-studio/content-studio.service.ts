@@ -10,6 +10,14 @@ import { PLATFORMS, checkPost, cleanHashtags } from './platforms';
 
 type PostRow = typeof contentPosts.$inferSelect;
 
+/** Image type from the first bytes of base64 data, or null if it isn't one we accept. */
+export function sniffImageType(base64: string): 'image/jpeg' | 'image/png' | 'image/webp' | null {
+  if (base64.startsWith('/9j/')) return 'image/jpeg';
+  if (base64.startsWith('iVBORw0KGgo')) return 'image/png';
+  if (base64.startsWith('UklGR') && Buffer.from(base64.slice(0, 16), 'base64').subarray(8, 12).toString() === 'WEBP') return 'image/webp';
+  return null;
+}
+
 @Injectable()
 export class ContentStudioService {
   constructor(
@@ -35,10 +43,14 @@ export class ContentStudioService {
   async uploadMedia(vendorId: string, actorStaffId: string, dto: UploadMediaDto) {
     const data = dto.dataBase64.replace(/^data:[^;]+;base64,/, '');
     if (!/^[A-Za-z0-9+/]+={0,2}$/.test(data)) throw new BadRequestException("That file isn't a valid image.");
+    // Trust the file's own bytes over the declared type: phone pickers can report one
+    // format and hand back another, and Claude rejects a mismatched media type.
+    const mimeType = sniffImageType(data);
+    if (!mimeType) throw new BadRequestException('Use a JPEG, PNG or WebP image.');
     const byteSize = Math.floor((data.length * 3) / 4) - (data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0);
     const [row] = await this.db
       .insert(contentMedia)
-      .values({ vendorId, mimeType: dto.mimeType, dataBase64: data, byteSize, createdById: actorStaffId })
+      .values({ vendorId, mimeType, dataBase64: data, byteSize, createdById: actorStaffId })
       .returning({ id: contentMedia.id, mimeType: contentMedia.mimeType, byteSize: contentMedia.byteSize });
     return row;
   }

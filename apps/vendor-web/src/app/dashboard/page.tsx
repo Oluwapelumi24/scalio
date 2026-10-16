@@ -41,6 +41,11 @@ const HREF: Record<string, string> = {
   pay_staff: '/dashboard/payroll',
   setup_payroll: '/dashboard/payroll',
   setup_payments: '/dashboard/payments',
+  create_post: '/dashboard/content/new',
+  first_post: '/dashboard/content/new',
+  posts_planned_today: '/dashboard/content',
+  leads_due: '/dashboard/leads',
+  view_leads: '/dashboard/leads?filter=open',
 }
 
 const ATTENTION_TEXT: Record<string, (n: number, d: Record<string, number>) => string> = {
@@ -49,6 +54,8 @@ const ATTENTION_TEXT: Record<string, (n: number, d: Record<string, number>) => s
   unassigned_today: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff assigned`,
   bookings_on_leave: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`,
   payroll_open: (_n, d) => `Payroll is open: ${d.toPay} ${d.toPay === 1 ? 'person' : 'people'} still to pay`,
+  leads_due: (n) => `${n} ${n === 1 ? 'lead is' : 'leads are'} waiting for a follow-up`,
+  posts_planned_today: (n) => `${n} ${n === 1 ? 'post is' : 'posts are'} planned for today`,
 }
 
 const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number>) => string> = {
@@ -58,6 +65,7 @@ const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number>) => string>
   setup_payments: () => 'Add your bank account so customers can pay deposits online.',
   setup_payroll: () => 'Set a pay day and salaries so payroll reminds you each month.',
   share_link_first: () => 'Share your booking link on WhatsApp or Instagram.',
+  first_post: () => 'Add a photo, say what it is about, and AI writes the caption and hashtags.',
   follow_up_lapsed: (d) => `${d.count} ${d.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
 }
 

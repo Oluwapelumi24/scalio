@@ -25,6 +25,10 @@ import { PaymentsSetupScreen } from '../screens/PaymentsSetupScreen';
 import { PayrollScreen } from '../screens/PayrollScreen';
 import { StaffPayScreen } from '../screens/StaffPayScreen';
 import { MoneyScreen } from '../screens/MoneyScreen';
+import { ContentStudioScreen } from '../screens/ContentStudioScreen';
+import { PostEditorScreen } from '../screens/PostEditorScreen';
+import { LeadsScreen } from '../screens/LeadsScreen';
+import { LeadDetailScreen } from '../screens/LeadDetailScreen';
 import { loadSession, onSessionExpired } from '../lib/session';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -71,6 +75,10 @@ export function RootNavigator() {
         <Stack.Screen name="Payroll" component={PayrollScreen} />
         <Stack.Screen name="StaffPay" component={StaffPayScreen} />
         <Stack.Screen name="Money" component={MoneyScreen} />
+        <Stack.Screen name="ContentStudio" component={ContentStudioScreen} />
+        <Stack.Screen name="PostEditor" component={PostEditorScreen} />
+        <Stack.Screen name="Leads" component={LeadsScreen} />
+        <Stack.Screen name="LeadDetail" component={LeadDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

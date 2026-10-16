@@ -94,6 +94,20 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
       )}
 
+      {/* Grow — posts for marketing roles; everyone works their leads */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Grow</Text>
+        <View style={styles.group}>
+          {session?.role !== 'practitioner' && (
+            <>
+              <SettingsRow icon="edit-3" label="Content studio" subtitle="Write posts with AI, plan them and track what went out" onPress={() => navigation.navigate('ContentStudio')} />
+              <View style={styles.divider} />
+            </>
+          )}
+          <SettingsRow icon="inbox" label="Leads" subtitle="People who asked about your business, and when to follow up" onPress={() => navigation.navigate('Leads')} />
+        </View>
+      </View>
+
       {/* Money — owners and managers */}
       {(session?.role === 'owner' || session?.role === 'manager') && (
         <View style={styles.section}>

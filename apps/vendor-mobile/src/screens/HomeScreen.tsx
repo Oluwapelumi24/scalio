@@ -383,49 +383,6 @@ export function HomeScreen({ navigation }: Props) {
         </View>
       ) : (
         <View style={styles.body}>
-          {/* Needs your attention — always present, so "all clear" is visible too */}
-          <View style={styles.section}>
-            <SectionHeading title="Needs your attention" />
-            <View style={styles.panel}>
-              {attention.length === 0 ? (
-                <View style={styles.row}>
-                  <Text style={[styles.rowText, { color: colors.textMuted }]}>Nothing needs you right now</Text>
-                  <View style={[styles.darkBtn, styles.darkBtnOff]}>
-                    <Text style={[styles.darkBtnText, { color: colors.textMuted }]}>All clear</Text>
-                  </View>
-                </View>
-              ) : (
-                attention.map((item, i) => (
-                  <View key={item.id} style={[styles.row, i > 0 && styles.divider]}>
-                    <View style={styles.flag} />
-                    <Text style={styles.rowText}>{ATTENTION[item.id]?.text(item.data.count ?? item.data.toPay) ?? item.title}</Text>
-                    <Pressable style={styles.darkBtn} onPress={() => open(item)} accessibilityRole="button">
-                      <Text style={styles.darkBtnText}>{ATTENTION[item.id]?.action ?? 'View'}</Text>
-                    </Pressable>
-                  </View>
-                ))
-              )}
-            </View>
-          </View>
-
-          {/* Quick actions sit right under what needs attention */}
-          {quick.length > 0 && (
-            <View style={styles.quick}>
-              {quick.map((item) => (
-                <Pressable key={item.id} style={styles.quickItem} onPress={() => open(item)} accessibilityRole="button">
-                  <View style={styles.quickDisc}>
-                    <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
-                  </View>
-                  <Text style={styles.quickLabel} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-
-          {slides.length > 0 && <Carousel slides={slides} />}
-
           {upcoming && (
             <View style={styles.section}>
               <SectionHeading title="Up next" link="View all" onLink={() => open(upcoming)} />
@@ -457,6 +414,49 @@ export function HomeScreen({ navigation }: Props) {
               </View>
             </View>
           )}
+
+          {/* Quick actions sit right under what's coming up */}
+          {quick.length > 0 && (
+            <View style={styles.quick}>
+              {quick.map((item) => (
+                <Pressable key={item.id} style={styles.quickItem} onPress={() => open(item)} accessibilityRole="button">
+                  <View style={styles.quickDisc}>
+                    <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
+                  </View>
+                  <Text style={styles.quickLabel} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          {slides.length > 0 && <Carousel slides={slides} />}
+
+          {/* Needs your attention — always present, so "all clear" is visible too */}
+          <View style={styles.section}>
+            <SectionHeading title="Needs your attention" />
+            <View style={styles.panel}>
+              {attention.length === 0 ? (
+                <View style={styles.row}>
+                  <Text style={[styles.rowText, { color: colors.textMuted }]}>Nothing needs you right now</Text>
+                  <View style={[styles.darkBtn, styles.darkBtnOff]}>
+                    <Text style={[styles.darkBtnText, { color: colors.textMuted }]}>All clear</Text>
+                  </View>
+                </View>
+              ) : (
+                attention.map((item, i) => (
+                  <View key={item.id} style={[styles.row, i > 0 && styles.divider]}>
+                    <View style={styles.flag} />
+                    <Text style={styles.rowText}>{ATTENTION[item.id]?.text(item.data.count ?? item.data.toPay) ?? item.title}</Text>
+                    <Pressable style={styles.darkBtn} onPress={() => open(item)} accessibilityRole="button">
+                      <Text style={styles.darkBtnText}>{ATTENTION[item.id]?.action ?? 'View'}</Text>
+                    </Pressable>
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
 
           {overview.length > 0 && (
             <View style={styles.section}>

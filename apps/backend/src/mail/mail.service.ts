@@ -54,4 +54,15 @@ export class MailService {
     });
     if (error) throw new Error(`${error.name}: ${error.message}`);
   }
+
+  /** Tells the owner the inbox AI stopped on a chat and it needs a person. */
+  async sendInboxHandoffEmail(to: string, businessName: string, customerName: string, channel: string, reason: string, link: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.config.get<string>('MAIL_FROM') ?? 'Scalio <onboarding@resend.dev>',
+      to,
+      subject: `${customerName} on ${channel} needs a reply from you`,
+      text: `${reason}, so Scalio's AI has stopped replying to ${customerName} on ${channel} and left the chat for you.\n\nOpen the chat: ${link}\n\nWhen it's sorted, you can turn the AI back on for this chat from the same screen.\n\n— Scalio for ${businessName}`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+  }
 }

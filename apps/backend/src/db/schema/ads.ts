@@ -65,6 +65,9 @@ export const metaWebhookEvents = pgTable(
     payload: jsonb('payload').notNull(),
     receivedAt: timestamp('received_at', { withTimezone: true }).defaultNow().notNull(),
     processedAt: timestamp('processed_at', { withTimezone: true }),
+    /** Failed processing tries; the event is given up on (processedAt set, error kept) after a few. */
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
   },
   (t) => [index('meta_webhook_events_unprocessed_idx').on(t.processedAt, t.receivedAt)],
 );

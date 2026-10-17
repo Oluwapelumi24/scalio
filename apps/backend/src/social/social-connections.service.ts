@@ -193,6 +193,11 @@ export class SocialConnectionsService {
       await tx.delete(socialConnections).where(eq(socialConnections.vendorId, st.vendorId));
       await tx.insert(socialConnections).values(rows);
     });
+    if (this.meta.adsEnabled) {
+      // The inbox only hears about a Page's chats once the app is subscribed to it.
+      await this.meta.graph!.subscribePageToMessages(page.id, page.accessToken).catch((err: unknown) =>
+        this.logger.warn(`Couldn't subscribe Page ${page.id} to message webhooks: ${err instanceof Error ? err.message : String(err)}`));
+    }
     return {
       kind: 'connected', title: 'Connected', returnUrl: this.returnUrl(st.returnTo),
       message: page.instagram

@@ -31,6 +31,9 @@ import { LeadsScreen } from '../screens/LeadsScreen';
 import { LeadDetailScreen } from '../screens/LeadDetailScreen';
 import { SocialAccountsScreen } from '../screens/SocialAccountsScreen';
 import { AdsSetupScreen } from '../screens/AdsSetupScreen';
+import { InboxScreen } from '../screens/InboxScreen';
+import { InboxChatScreen } from '../screens/InboxChatScreen';
+import { InboxSettingsScreen } from '../screens/InboxSettingsScreen';
 import { ReportsScreen } from '../screens/ReportsScreen';
 import { ReportRecordsScreen } from '../screens/ReportRecordsScreen';
 import { FeedbackScreen } from '../screens/FeedbackScreen';
@@ -86,6 +89,9 @@ export function RootNavigator() {
         <Stack.Screen name="LeadDetail" component={LeadDetailScreen} />
         <Stack.Screen name="SocialAccounts" component={SocialAccountsScreen} />
         <Stack.Screen name="AdsSetup" component={AdsSetupScreen} />
+        <Stack.Screen name="Inbox" component={InboxScreen} />
+        <Stack.Screen name="InboxChat" component={InboxChatScreen} />
+        <Stack.Screen name="InboxSettings" component={InboxSettingsScreen} />
         <Stack.Screen name="Reports" component={ReportsScreen} />
         <Stack.Screen name="ReportRecords" component={ReportRecordsScreen} />
         <Stack.Screen name="Feedback" component={FeedbackScreen} />

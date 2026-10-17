@@ -266,17 +266,23 @@ Each phase ships behind a feature flag. It is tested with Scalio's own Page and 
   - subscribe the webhook in the Meta app (`messages`, `leadgen`, `feed`);
   - add the new permissions to the Login for Business configuration if one is used.
 
-### Phase 2 — Inbox & AI auto-replies (≈2.5 weeks)
+### Phase 2 — Inbox & AI auto-replies (≈2.5 weeks) — built 2026-10-17, behind `ADS_MANAGER_ENABLED`
 
-- [ ] Tables `conversations` and `messages`: channel, external ids, `lastCustomerMessageAt` for the 24h window.
-- [ ] Unified inbox UI with channel icons, a 24h timer, and a composer that changes outside the window.
-- [ ] `ai-replies` service:
-  - Claude with business profile, services, prices, hours and FAQ as cached context.
-  - Modes "Reply for me" / "Suggest".
-  - Hand-off rules.
-  - Never replies outside the 24h window.
-- [ ] Each new chat creates or updates a row in `leads` with its source.
-- [ ] Vendor FAQ editor with an AI-drafted first version.
+- [x] Tables `conversations`, `messages` and `inbox_settings` (migration `0018_inbox`): channel, external ids, `lastCustomerMessageAt` for the 24h window. `meta_webhook_events` gains `attempts` / `last_error`.
+- [x] Worker (`inbox/inbox-worker.service.ts`, every 4s) turns stored Messenger and Instagram webhooks into chats. Duplicate deliveries are stored once (unique Meta message id). Echoes of the business's own replies are stored as the vendor's.
+- [x] Facebook connect subscribes the Page to `messages`, `messaging_postbacks`, `messaging_referrals` and `message_echoes`.
+- [x] Unified inbox UI (vendor-mobile Settings → Inbox; vendor-web `/dashboard/inbox`) with channel icons, a 24h timer, and a composer that changes outside the window ("Human reply (7 days)" tag; WhatsApp "Send template (paid)" shown as coming soon).
+- [x] `ai-replies` service:
+  - Claude (`claude-opus-5-5`) with business profile, services, prices, hours and FAQ as a cached system prefix.
+  - Modes "Reply for me" / "Suggest, I send", set per channel, and paused per chat.
+  - Hand-off rules: keyword rules (complaint, refund, asks for a person) run before Claude. Claude can also hand off when it doesn't know. Any price it quotes must match the vendor's own prices. Hand-off pauses the AI on that chat, marks it "Needs you" and emails the owner.
+  - Never replies outside the 24h window (checked before the AI call and again just before sending).
+  - Daily cap `INBOX_AI_DAILY_LIMIT` (default 300 per business).
+- [x] Each new chat creates a row in `leads` with its source (Messenger → facebook) and "from the ad …" when it came from a click-to-chat ad; later messages update it.
+- [x] Vendor FAQ editor with an AI-drafted first version. Answers left as `[placeholders]` are not used until filled in.
+- [ ] WhatsApp inbound and sending (after D4). WhatsApp events stay unprocessed in `meta_webhook_events` until then.
+- [ ] Push notification for hand-offs (staff have no push tokens yet; email only for now).
+- [ ] "Book" button and Paystack link inside the chat.
 
 ### Phase 3 — Campaign builder + paywall, both payment routes (≈4.5 weeks)
 

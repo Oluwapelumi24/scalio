@@ -11,3 +11,4 @@ export * from './finance';
 export * from './growth';
 export * from './insights';
 export * from './ads';
+export * from './inbox';

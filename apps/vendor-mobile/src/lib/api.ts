@@ -790,6 +790,94 @@ export function refreshAdAccount(): Promise<AdsSetup> {
   return req('POST', '/vendor-admin/ads/ad-account/refresh', {});
 }
 
+// ── Inbox (Ads Manager Phase 2) ──────────────────────────────────────────────
+
+export type InboxChannel = 'instagram' | 'messenger' | 'whatsapp';
+export type AiReplyMode = 'off' | 'suggest' | 'reply';
+export type HandoffReason = 'complaint' | 'refund' | 'unknown' | 'human_requested';
+
+/** open: free replies; human_agent: a person may reply until closesAt; template: WhatsApp needs a paid template; closed/none: can't reply. */
+export interface ReplyWindow {
+  state: 'open' | 'human_agent' | 'template' | 'closed' | 'none';
+  closesAt: string | null;
+}
+
+export interface InboxConversation {
+  id: string;
+  channel: InboxChannel;
+  customerName: string;
+  preview: string | null;
+  lastMessageAt: string;
+  unreadCount: number;
+  window: ReplyWindow;
+  aiMode: AiReplyMode;
+  aiPaused: boolean;
+  leadId: string | null;
+  /** Set when the chat started from an ad. */
+  adTitle: string | null;
+  handoff: { reason: HandoffReason; label: string; at: string } | null;
+}
+
+export interface InboxMessage {
+  id: string;
+  direction: 'in' | 'out';
+  sentBy: 'customer' | 'vendor' | 'ai';
+  text: string;
+  attachments: { type: string; url: string | null }[];
+  status: 'received' | 'sent' | 'failed';
+  humanAgentTag: boolean;
+  sentAt: string;
+}
+
+export interface InboxConversationDetail extends InboxConversation {
+  aiSuggestion: string | null;
+  messages: InboxMessage[];
+}
+
+export interface FaqEntry { question: string; answer: string }
+
+export interface InboxSettings {
+  aiAvailable: boolean;
+  channels: { channel: InboxChannel; connected: boolean; accountName: string | null; comingSoon: boolean; mode: AiReplyMode }[];
+  faq: FaqEntry[];
+}
+
+export const CHANNEL_LABELS: Record<InboxChannel, string> = { instagram: 'Instagram', messenger: 'Messenger', whatsapp: 'WhatsApp' };
+export const AI_MODE_LABELS: Record<AiReplyMode, string> = { off: 'Off', suggest: 'Suggest, I send', reply: 'Reply for me' };
+
+export function listConversations(filter: 'all' | 'needs_you' = 'all'): Promise<InboxConversation[]> {
+  return req('GET', `/vendor-admin/inbox/conversations?filter=${filter}`);
+}
+
+export function getConversation(id: string): Promise<InboxConversationDetail> {
+  return req('GET', `/vendor-admin/inbox/conversations/${id}`);
+}
+
+export function sendInboxReply(id: string, text: string): Promise<InboxConversationDetail> {
+  return req('POST', `/vendor-admin/inbox/conversations/${id}/messages`, { text });
+}
+
+export function suggestInboxReply(id: string): Promise<{ suggestion: string | null; handoff: { reason: HandoffReason; label: string } | null }> {
+  return req('POST', `/vendor-admin/inbox/conversations/${id}/suggest`, {});
+}
+
+/** paused: false hands the chat back to the AI and clears "Needs you". */
+export function setConversationAiPaused(id: string, paused: boolean): Promise<InboxConversationDetail> {
+  return req('PUT', `/vendor-admin/inbox/conversations/${id}/ai`, { paused });
+}
+
+export function getInboxSettings(): Promise<InboxSettings> {
+  return req('GET', '/vendor-admin/inbox/settings');
+}
+
+export function updateInboxSettings(patch: { aiModes?: Partial<Record<InboxChannel, AiReplyMode>>; faq?: FaqEntry[] }): Promise<InboxSettings> {
+  return req('PUT', '/vendor-admin/inbox/settings', patch);
+}
+
+export function draftInboxFaq(): Promise<{ faq: FaqEntry[] }> {
+  return req('POST', '/vendor-admin/inbox/faq/draft', {});
+}
+
 /** Publish now, or at `at` (ISO). */
 export function publishPost(id: string, platforms: ('facebook' | 'instagram')[], at?: string): Promise<Publication[]> {
   return req('POST', `/vendor-admin/content/posts/${id}/publish`, at ? { platforms, at } : { platforms });

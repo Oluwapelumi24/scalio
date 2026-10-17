@@ -26,6 +26,7 @@ import { LeadsModule } from './leads/leads.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { ReportingModule } from './reporting/reporting.module';
 import { AdsModule } from './ads/ads.module';
+import { InboxModule } from './inbox/inbox.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { AdsModule } from './ads/ads.module';
     FeedbackModule,
     ReportingModule,
     AdsModule,
+    InboxModule,
   ],
   controllers: [AppController],
   providers: [AppService],

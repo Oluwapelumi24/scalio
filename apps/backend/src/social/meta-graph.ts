@@ -208,6 +208,44 @@ export class MetaGraph {
     const r = await this.call<{ permalink?: string }>('GET', `/${mediaId}`, { fields: 'permalink', access_token: pageToken });
     return r.permalink ?? null;
   }
+
+  // ── Messaging (Messenger Send API + Instagram Messaging, via the Page token) ─
+
+  /**
+   * Sends a text reply. `/me/messages` with a Page token is the Page itself, and
+   * the same endpoint delivers to Instagram users (IGSIDs) of the linked account.
+   * `humanAgent` adds Meta's HUMAN_AGENT tag: a person replying 24h–7d after the
+   * customer's last message. Never used for automated messages.
+   */
+  async sendMessage(pageToken: string, recipientId: string, text: string, humanAgent = false): Promise<{ messageId: string }> {
+    const params: Record<string, string> = {
+      recipient: JSON.stringify({ id: recipientId }),
+      message: JSON.stringify({ text }),
+      messaging_type: humanAgent ? 'MESSAGE_TAG' : 'RESPONSE',
+      access_token: pageToken,
+    };
+    if (humanAgent) params.tag = 'HUMAN_AGENT';
+    const r = await this.call<{ message_id: string }>('POST', '/me/messages', params);
+    return { messageId: r.message_id };
+  }
+
+  /** The customer's display name, when Meta shares it. */
+  async chatUserName(channel: 'messenger' | 'instagram', userId: string, pageToken: string): Promise<string | null> {
+    if (channel === 'instagram') {
+      const r = await this.call<{ name?: string; username?: string }>('GET', `/${userId}`, { fields: 'name,username', access_token: pageToken });
+      return r.name || (r.username ? `@${r.username}` : null);
+    }
+    const r = await this.call<{ first_name?: string; last_name?: string }>('GET', `/${userId}`, { fields: 'first_name,last_name', access_token: pageToken });
+    return [r.first_name, r.last_name].filter(Boolean).join(' ') || null;
+  }
+
+  /** Subscribes Scalio's app to the Page's message webhooks (Messenger, and Instagram DMs of the linked account). */
+  async subscribePageToMessages(pageId: string, pageToken: string): Promise<void> {
+    await this.call('POST', `/${pageId}/subscribed_apps`, {
+      subscribed_fields: 'messages,messaging_postbacks,messaging_referrals,message_echoes',
+      access_token: pageToken,
+    });
+  }
 }
 
 /** Checks Meta's `X-Hub-Signature-256: sha256=<hex>` header against the exact request bytes. */

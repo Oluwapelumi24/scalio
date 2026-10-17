@@ -127,6 +127,13 @@
       "when": 1792147775011,
       "tag": "0017_ads_manager",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792151375011,
+      "tag": "0018_inbox",
+      "breakpoints": true
     }
   ]
 }

@@ -31,6 +31,9 @@ export type RootStackParamList = {
   LeadDetail: { leadId?: string };
   SocialAccounts: undefined;
   AdsSetup: undefined;
+  Inbox: undefined;
+  InboxChat: { conversationId: string; name?: string };
+  InboxSettings: undefined;
   Reports: undefined;
   ReportRecords: { kind: ReportKind; key?: string; title: string; from: string; to: string };
   Feedback: undefined;

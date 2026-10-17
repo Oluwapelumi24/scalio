@@ -30,6 +30,7 @@ export type RootStackParamList = {
   Leads: { filter?: 'due' | 'open' | 'won' | 'lost' } | undefined;
   LeadDetail: { leadId?: string };
   SocialAccounts: undefined;
+  AdsSetup: undefined;
   Reports: undefined;
   ReportRecords: { kind: ReportKind; key?: string; title: string; from: string; to: string };
   Feedback: undefined;

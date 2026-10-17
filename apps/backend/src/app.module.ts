@@ -25,6 +25,7 @@ import { ContentStudioModule } from './content-studio/content-studio.module';
 import { LeadsModule } from './leads/leads.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { ReportingModule } from './reporting/reporting.module';
+import { AdsModule } from './ads/ads.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ReportingModule } from './reporting/reporting.module';
     LeadsModule,
     FeedbackModule,
     ReportingModule,
+    AdsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

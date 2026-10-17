@@ -10,3 +10,4 @@ export * from './staff-schedule';
 export * from './finance';
 export * from './growth';
 export * from './insights';
+export * from './ads';

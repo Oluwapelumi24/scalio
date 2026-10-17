@@ -12,6 +12,7 @@ const ALL_NAV = [
   { href: '/dashboard/customers', label: 'Customers', roles: ['owner', 'manager', 'front_desk'] },
   { href: '/dashboard/attendance', label: 'Attendance', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/content', label: 'Content studio', roles: ['owner', 'manager', 'front_desk'] },
+  { href: '/dashboard/ads', label: 'Ads', roles: ['owner', 'manager', 'front_desk'] },
   { href: '/dashboard/leads', label: 'Leads', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/feedback', label: 'Customer feedback', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/reports', label: 'Reports', roles: ['owner', 'manager'] },

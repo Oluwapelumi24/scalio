@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Header, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Header, Headers, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query, Req, UseGuards, type RawBodyRequest } from '@nestjs/common';
+import type { Request } from 'express';
 import { IsDateString, IsIn, IsOptional, IsArray, ArrayMinSize, ArrayMaxSize } from 'class-validator';
 import { randomBytes } from 'node:crypto';
 import { CurrentStaff } from '../vendor-auth/current-staff.decorator';
@@ -8,12 +9,13 @@ import { VendorAuthGuard } from '../vendor-auth/vendor-auth.guard';
 import type { VendorPrincipal } from '../vendor-auth/vendor-jwt.strategy';
 import { renderConnectPage } from './connect-page';
 import { MetaConfig } from './meta-config';
-import { parseSignedRequest } from './meta-graph';
+import { parseSignedRequest, verifyWebhookSignature } from './meta-graph';
+import { MetaWebhookService } from './meta-webhook.service';
 import { PublisherService } from './publisher.service';
 import { SocialConnectionsService, type ReturnTo } from './social-connections.service';
 
 export class ConnectDto {
-  @IsOptional() @IsIn(['web', 'mobile'])
+  @IsOptional() @IsIn(['web', 'web-ads', 'mobile'])
   from?: ReturnTo;
 }
 
@@ -80,7 +82,33 @@ export class MetaCallbackController {
   constructor(
     private readonly connections: SocialConnectionsService,
     private readonly meta: MetaConfig,
+    private readonly webhooks: MetaWebhookService,
   ) {}
+
+  /** Meta checks the webhook URL once when it's added: echo the challenge if the token matches. */
+  @Get('webhook')
+  @Header('Content-Type', 'text/plain')
+  verifyWebhook(@Query('hub.mode') mode?: string, @Query('hub.verify_token') token?: string, @Query('hub.challenge') challenge?: string) {
+    if (mode !== 'subscribe' || !this.meta.webhookVerifyToken || token !== this.meta.webhookVerifyToken) {
+      throw new ForbiddenException();
+    }
+    return challenge ?? '';
+  }
+
+  /**
+   * Messages, comments and lead forms from connected Pages, Instagram and
+   * WhatsApp. Signed with the app secret over the exact bytes (hence rawBody
+   * in main.ts). Stored, then answered at once — Meta retries slow replies.
+   */
+  @Post('webhook')
+  @HttpCode(HttpStatus.OK)
+  async receiveWebhook(@Req() req: RawBodyRequest<Request>, @Headers('x-hub-signature-256') signature?: string) {
+    if (!this.meta.appSecret || !req.rawBody || !verifyWebhookSignature(req.rawBody, signature, this.meta.appSecret)) {
+      throw new ForbiddenException('Bad signature');
+    }
+    await this.webhooks.store(req.body as unknown);
+    return 'EVENT_RECEIVED';
+  }
 
   /** Facebook Login returns here. The single-use `state` ties it to the business that asked. */
   @Get('callback')

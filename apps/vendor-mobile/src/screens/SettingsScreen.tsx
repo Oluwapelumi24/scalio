@@ -104,6 +104,8 @@ export function SettingsScreen({ navigation }: Props) {
               <View style={styles.divider} />
               <SettingsRow icon="share-2" label="Social accounts" subtitle="Connect Facebook and Instagram to publish from Scalio" onPress={() => navigation.navigate('SocialAccounts')} />
               <View style={styles.divider} />
+              <SettingsRow icon="trending-up" label="Ads" subtitle="Get more customers with Facebook and Instagram ads" onPress={() => navigation.navigate('AdsSetup')} />
+              <View style={styles.divider} />
             </>
           )}
           <SettingsRow icon="inbox" label="Leads" subtitle="People who asked about your business, and when to follow up" onPress={() => navigation.navigate('Leads')} />

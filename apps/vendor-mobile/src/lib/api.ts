@@ -738,6 +738,58 @@ export function disconnectMeta(): Promise<void> {
   return req('DELETE', '/vendor-admin/social/meta');
 }
 
+// ── Ads Manager ──────────────────────────────────────────────────────────────
+
+export type AdsStepAction =
+  | { kind: 'connect' }
+  | { kind: 'choose_ad_account' }
+  | { kind: 'open_url'; url: string; label: string };
+
+export interface AdsSetupStep {
+  key: 'facebook' | 'instagram' | 'ad_access' | 'ad_account' | 'payment_method' | 'whatsapp';
+  title: string;
+  state: 'done' | 'todo' | 'attention' | 'waiting' | 'coming_soon';
+  detail: string;
+  optional: boolean;
+  action: AdsStepAction | null;
+}
+
+export interface AdsSetup {
+  available: boolean;
+  unavailableReason: string | null;
+  ready: boolean;
+  steps: AdsSetupStep[];
+}
+
+export interface MetaAdAccountOption {
+  id: string;
+  name: string;
+  currency: string;
+  businessName: string | null;
+  hasPaymentMethod: boolean;
+  paymentMethodLabel: string | null;
+  /** Why it can't run ads right now, or null. */
+  problem: string | null;
+  chosen: boolean;
+}
+
+export function getAdsSetup(): Promise<AdsSetup> {
+  return req('GET', '/vendor-admin/ads/setup');
+}
+
+export function getMetaAdAccounts(): Promise<MetaAdAccountOption[]> {
+  return req('GET', '/vendor-admin/ads/ad-accounts');
+}
+
+export function chooseAdAccount(adAccountId: string): Promise<AdsSetup> {
+  return req('PUT', '/vendor-admin/ads/ad-account', { adAccountId });
+}
+
+/** Re-checks the ad account with Meta, e.g. after adding a card there. */
+export function refreshAdAccount(): Promise<AdsSetup> {
+  return req('POST', '/vendor-admin/ads/ad-account/refresh', {});
+}
+
 /** Publish now, or at `at` (ISO). */
 export function publishPost(id: string, platforms: ('facebook' | 'instagram')[], at?: string): Promise<Publication[]> {
   return req('POST', `/vendor-admin/content/posts/${id}/publish`, at ? { platforms, at } : { platforms });

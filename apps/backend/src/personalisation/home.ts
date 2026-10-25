@@ -68,6 +68,16 @@ export interface HomeItem {
 export interface HomeResponse {
   generatedAt: string;
   business: { name: string };
+  /**
+   * The basics every business needs, whatever its interests or home settings:
+   * its booking link, what's coming up and what still stops customers booking.
+   */
+  bookings: {
+    link: string;
+    upcoming: UpcomingBooking[];
+    total: number;
+    setup: { services: boolean; hours: boolean; payments: boolean };
+  };
   layers: Record<HomeLayer, HomeItem[]>;
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
 }
@@ -179,6 +189,16 @@ export function buildHome(
   return {
     generatedAt: now.toISOString(),
     business: { name: snapshot.businessName },
+    bookings: {
+      link: snapshot.bookingLink,
+      upcoming: snapshot.upcoming,
+      total: snapshot.totalBookings,
+      setup: {
+        services: snapshot.serviceCount > 0,
+        hours: snapshot.hasBusinessHours,
+        payments: snapshot.payoutAccountSet,
+      },
+    },
     layers: {
       attention: ranked.layers.attention.map(toItem),
       overview: ranked.layers.overview.map(toItem),

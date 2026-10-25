@@ -853,3 +853,93 @@ describe('BookingService online payment rules', () => {
     await expect(svc(db).initiateBookingPayment('b-1', 'deposit', 2_000_000)).rejects.toThrow('cannot be more than the booking price');
   });
 });
+
+describe('BookingService bookings made by the business', () => {
+  afterEach(() => jest.restoreAllMocks());
+  const svc = (db: any, slotLock = makeSlotLock()) =>
+    new BookingService(db, slotLock as any, makePaystack() as any, makePush() as any);
+  const input = {
+    vendorId: 'vendor-1',
+    staffId: 'staff-1',
+    serviceIds: ['service-1', 'service-2'],
+    scheduledAt: new Date('2026-06-10T10:00:00Z'),
+  };
+
+  it('books an existing client, taking the duration from the chosen services', async () => {
+    const db = makeDb();
+    const slotLock = makeSlotLock();
+    slotLock.acquire.mockResolvedValue({ key: 'k', token: 'tok-1' });
+    jest.spyOn(BookingService.prototype as any, 'resolveBookingTerms').mockResolvedValue({ totalPriceKobo: 900_000 });
+    db.select
+      .mockReturnValueOnce(selectResult([{ id: 'service-1', durationMinutes: 45 }, { id: 'service-2', durationMinutes: 30 }]))
+      .mockReturnValueOnce(selectResult([{ id: 'cust-1' }]));
+    const row = { id: 'booking-1', scheduledAt: input.scheduledAt };
+    db.insert.mockReturnValueOnce(insertResult([row]));
+
+    const result = await svc(db, slotLock).createByVendor({ ...input, customerId: 'cust-1' });
+
+    expect(result).toBe(row);
+    const [values] = (db.insert.mock.results[0].value as ReturnType<typeof insertResult>).values.mock.calls[0] as any[];
+    expect(values).toMatchObject({
+      customerId: 'cust-1',
+      staffId: 'staff-1',
+      status: 'confirmed',
+      paymentMode: 'pay_on_arrival',
+      durationMinutes: 75,
+      totalPriceKobo: 900_000,
+    });
+  });
+
+  it('adds a new walk-in client when there is no match on phone', async () => {
+    const db = makeDb();
+    const slotLock = makeSlotLock();
+    slotLock.acquire.mockResolvedValue({ key: 'k', token: 'tok-1' });
+    jest.spyOn(BookingService.prototype as any, 'resolveBookingTerms').mockResolvedValue({ totalPriceKobo: 0 });
+    db.select
+      .mockReturnValueOnce(selectResult([{ id: 'service-1', durationMinutes: 30 }]))
+      .mockReturnValueOnce(selectResult([])); // nobody with that phone yet
+    db.insert
+      .mockReturnValueOnce(insertResult([{ id: 'cust-new' }]))
+      .mockReturnValueOnce(insertResult([{ id: 'booking-1', scheduledAt: input.scheduledAt }]));
+
+    await svc(db, slotLock).createByVendor({
+      ...input,
+      serviceIds: ['service-1'],
+      newCustomer: { name: ' Ada Obi ', phone: '0803 000 0000' },
+    });
+
+    const [client] = (db.insert.mock.results[0].value as ReturnType<typeof insertResult>).values.mock.calls[0] as any[];
+    expect(client).toEqual({ vendorId: 'vendor-1', name: 'Ada Obi', phone: '0803 000 0000', email: null });
+    const [booking] = (db.insert.mock.results[1].value as ReturnType<typeof insertResult>).values.mock.calls[0] as any[];
+    expect(booking.customerId).toBe('cust-new');
+  });
+
+  it('reuses the client with the same phone instead of adding them twice', async () => {
+    const db = makeDb();
+    db.select.mockReturnValueOnce(selectResult([{ id: 'cust-1' }]));
+    await expect(
+      (svc(db) as any).resolveClient({ vendorId: 'vendor-1', newCustomer: { name: 'Ada', phone: '0803' } }),
+    ).resolves.toBe('cust-1');
+    expect(db.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects a service the business does not offer', async () => {
+    const db = makeDb();
+    db.select.mockReturnValueOnce(selectResult([{ id: 'service-1', durationMinutes: 30 }]));
+    await expect(svc(db).createByVendor({ ...input, customerId: 'cust-1' })).rejects.toThrow('not offered');
+  });
+
+  it('rejects a client from another business', async () => {
+    const db = makeDb();
+    db.select.mockReturnValueOnce(selectResult([]));
+    await expect((svc(db) as any).resolveClient({ vendorId: 'vendor-1', customerId: 'cust-x' })).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('needs a name for a new client', async () => {
+    await expect(
+      (svc(makeDb()) as any).resolveClient({ vendorId: 'vendor-1', newCustomer: { name: '  ' } }),
+    ).rejects.toThrow('client’s name');
+  });
+});

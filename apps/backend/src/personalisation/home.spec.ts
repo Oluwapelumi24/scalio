@@ -162,6 +162,28 @@ describe('buildHome — rules', () => {
   });
 });
 
+describe('buildHome — bookings basics', () => {
+  it('always returns the booking link, what is coming up and set-up, even when the modules are hidden', () => {
+    const home = buildHome(
+      { ...snapshot, payoutAccountSet: false },
+      prefs(['track_sales'], { hiddenModules: ['upcoming_bookings', 'share_booking_link'] }),
+      'owner',
+      now,
+    );
+    expect(home.bookings).toEqual({
+      link: 'http://localhost:3003/book/fade-house',
+      upcoming: snapshot.upcoming,
+      total: 120,
+      setup: { services: true, hours: true, payments: false },
+    });
+  });
+
+  it('reports a brand-new business as not bookable yet', () => {
+    const home = buildHome({ ...snapshot, serviceCount: 0, hasBusinessHours: false }, prefs([]), 'owner', now);
+    expect(home.bookings.setup).toEqual({ services: false, hours: false, payments: true });
+  });
+});
+
 describe('buildHome — growth (Phase 4)', () => {
   it('raises due leads for every business, whatever its interests', () => {
     const home = buildHome({ ...snapshot, leadsDue: 3 }, prefs(['track_sales']), 'owner', now);

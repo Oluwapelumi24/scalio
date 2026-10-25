@@ -17,6 +17,13 @@ import { Roles } from '../vendor-auth/roles.decorator';
 import { RolesGuard } from '../vendor-auth/roles.guard';
 import { VendorAuthGuard } from '../vendor-auth/vendor-auth.guard';
 import type { VendorPrincipal } from '../vendor-auth/vendor-jwt.strategy';
+import { CreateVendorBookingDto } from './dto/create-vendor-booking.dto';
+
+function parseDate(value?: string): Date | undefined {
+  if (!value) return undefined;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
 
 function parseStatus(status?: string): BookingStatus | undefined {
   return status && (bookingStatusValues as readonly string[]).includes(status)
@@ -46,9 +53,29 @@ export class VendorBookingsController {
   list(
     @CurrentStaff() staff: VendorPrincipal,
     @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
     const staffIdFilter = staff.role === 'practitioner' ? staff.staffId : undefined;
-    return this.bookingService.listForVendor(staff.vendorId, parseStatus(status), staffIdFilter);
+    return this.bookingService.listForVendor(staff.vendorId, parseStatus(status), staffIdFilter, {
+      from: parseDate(from),
+      to: parseDate(to),
+    });
+  }
+
+  /** Books a client in from the app: a walk-in, a phone call, a DM. Practitioners can only book themselves. */
+  @Post()
+  create(@CurrentStaff() staff: VendorPrincipal, @Body() dto: CreateVendorBookingDto) {
+    return this.bookingService.createByVendor({
+      vendorId: staff.vendorId,
+      customerId: dto.customerId,
+      newCustomer: dto.customerId
+        ? undefined
+        : { name: dto.customerName ?? '', phone: dto.customerPhone, email: dto.customerEmail },
+      staffId: staff.role === 'practitioner' ? staff.staffId : (dto.staffId ?? null),
+      serviceIds: dto.serviceIds,
+      scheduledAt: new Date(dto.scheduledAt),
+    });
   }
 
   @Post(':id/cancel')

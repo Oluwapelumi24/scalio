@@ -12,6 +12,7 @@ import type { Request } from 'express';
 import { BookingService } from '../booking/booking.service';
 import { PaystackService } from './paystack.service';
 import { LedgerService } from '../finance/ledger.service';
+import { AdCampaignsService } from '../ads/ad-campaigns.service';
 
 interface PaystackWebhookEvent {
   event: string;
@@ -27,6 +28,7 @@ export class PaystackWebhookController {
     private readonly paystack: PaystackService,
     private readonly bookingService: BookingService,
     private readonly ledger: LedgerService,
+    private readonly adCampaigns: AdCampaignsService,
   ) {}
 
   /**
@@ -54,6 +56,13 @@ export class PaystackWebhookController {
     const event = JSON.parse(
       req.rawBody.toString('utf8'),
     ) as PaystackWebhookEvent;
+
+    // Ads Manager payments (reference `ads_…`) pay Scalio for ad spend, not a booking.
+    if (event.data.reference?.startsWith('ads_')) {
+      if (event.event === 'charge.success') await this.adCampaigns.markPaid(event.data.reference, event.data.amount);
+      else if (event.event === 'charge.failed') await this.adCampaigns.markFailed(event.data.reference);
+      return { received: true };
+    }
 
     switch (event.event) {
       case 'charge.success': {

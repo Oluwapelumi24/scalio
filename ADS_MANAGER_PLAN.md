@@ -284,16 +284,25 @@ Each phase ships behind a feature flag. It is tested with Scalio's own Page and 
 - [ ] Push notification for hand-offs (staff have no push tokens yet; email only for now).
 - [ ] "Book" button and Paystack link inside the chat.
 
-### Phase 3 — Campaign builder + paywall, both payment routes (≈4.5 weeks)
+### Phase 3 — Campaign builder + paywall, both payment routes (≈4.5 weeks) — built 2026-10-17, behind `ADS_MANAGER_ENABLED`
 
-- [ ] `ads` module: create campaign → ad set → creative → ad, all as `PAUSED`; activate after payment.
-- [ ] Simple mode with Engagement and click-to-chat defaults, and Advanced mode with all 6 objectives (§3 mapping table in code as one config).
-- [ ] Interest search and suggestions (cached), location search, audience-size and reach estimate.
-- [ ] AI creative: 3 variants, welcome message and ice breakers. Image upload to `adimages`.
-- [ ] Paywall with route choice. Route 1: Paystack charge for spend + VAT + fee → set `spend_cap` → activate. Route 2: "Add a card to Meta" direct link + funding check → Paystack charge for fee → activate.
-- [ ] Scalio-owned ad accounts: create per vendor under Scalio's Business Manager, request Page ad access from the vendor, attach Scalio's funding source.
-- [ ] Ad wallet ledger (`ad_topup` / `ad_spend` / `ad_refund`), daily reconciliation with Meta spend, unspent budget back as ad credit.
-- [ ] Meta ad-review status shown to the vendor, with rejection reasons in plain language.
+Tested locally only, with fake Meta and Paystack keys. No real ad has run yet.
+
+- [x] `ads` module (`ad-campaigns.*`, `meta-ads-api.ts`, migration `0019_ad_campaigns`): campaign → ad set → creative → ad, all created `PAUSED` and activated after payment. Launch is retry-safe ("Try again" never charges twice) and a duplicate Paystack webhook is processed once.
+- [x] Simple mode (5 steps, Engagement + click-to-chat by default) and Advanced mode (all 6 objectives plus a placements step). The §3 mapping lives in one config, `campaign-rules.ts`.
+- [x] Interest search and suggestions, location search (city/state with a 5/10/25 km radius) and a live audience-size meter. Results are not cached yet.
+- [x] AI creative: "Write it for me" gives 3 variants plus the welcome message and ice breakers (`ad-copy.ts`). Photo upload to `adimages`.
+- [x] Paywall with route choice and a live cost breakdown. Route 1: Paystack charge for spend + VAT + fee, ad credit applied first → `spend_cap` → activate. Route 2: funding check → Paystack charge for the fee only → activate. Route 2 is greyed out with the reason when the vendor's account has no card.
+- [x] Default run of 7 days, with 14/30 days or day-by-day changes; "Extend" on a live ad charges the extra days first (Route 1). Cancel before launch returns spend + VAT as ad credit.
+- [x] Meta ad-review status synced every 10 minutes and shown on the ad page with an animated tracker (Payment → Sent to Meta → In review → Live → Finished). Rejections show Meta's reason as a plain sentence; rejected ads are paused.
+- [x] Mobile and web: wizard with an animated step progress bar, "Your ads" list with ad credit, ad page with Pay now / Try again / Extend / Cancel. Design pass: bold only on page titles, the amount due and main buttons; line icons instead of emoji.
+- [~] Scalio-owned ad accounts. **Built differently from the plan:** Scalio uses a pool of its own ad accounts (`META_SCALIO_AD_ACCOUNT_IDS`) instead of creating one per vendor, and asks for Page ad access through `client_pages` (`scalio_page_access` table). Creating an account per vendor can come later if Meta's limits or reporting need it.
+- [~] Ad credit ledger. **Built as `ad_credit_entries`** (`unspent_budget`, `used_for_payment`, `cancelled_before_launch`, `adjustment`) plus `ad_payments`, instead of `ad_topup`/`ad_spend`/`ad_refund`. Spend is read from Meta on each sync and unspent budget comes back as credit when an ad ends. A separate daily reconciliation report is not built.
+- [ ] Before launch:
+  - run one ad on a real Meta test ad account to confirm field names, especially the chat welcome message and WhatsApp destination settings;
+  - set `META_SCALIO_BUSINESS_ID`, `META_SCALIO_SYSTEM_TOKEN` and `META_SCALIO_AD_ACCOUNT_IDS`, and fund those ad accounts (D13 follow-ups: lawyer sign-off, funding source);
+  - decide pricing (D14). Until then the fee is a placeholder: 10% of spend, minimum ₦1,000 (`ADS_FEE_PERCENT`, `ADS_FEE_MIN_KOBO`);
+  - walk through the mobile wizard by eye after the design pass (only checked in code against the web screens so far).
 
 ### Phase 4 — Results & growth (≈1.5 weeks)
 

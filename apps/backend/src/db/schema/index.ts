@@ -12,3 +12,4 @@ export * from './growth';
 export * from './insights';
 export * from './ads';
 export * from './inbox';
+export * from './ad-campaigns';

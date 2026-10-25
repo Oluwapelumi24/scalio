@@ -26,7 +26,9 @@ import { VendorServicesService } from './services.service';
 export class VendorServicesController {
   constructor(private readonly servicesService: VendorServicesService) {}
 
+  /** Everyone can read the menu: front desk and practitioners book clients in. */
   @Get()
+  @Roles('owner', 'manager', 'practitioner', 'front_desk')
   list(@CurrentStaff() staff: VendorPrincipal) {
     return this.servicesService.list(staff.vendorId);
   }

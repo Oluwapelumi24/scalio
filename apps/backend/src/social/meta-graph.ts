@@ -116,6 +116,19 @@ export class MetaGraph {
     return body;
   }
 
+  /**
+   * Any Graph call, for the Marketing API code in `ads/`. Objects and arrays
+   * are sent as JSON strings, which is how Graph takes them.
+   */
+  async request<T>(method: 'GET' | 'POST' | 'DELETE', path: string, params: Record<string, unknown>, token: string): Promise<T> {
+    const flat: Record<string, string> = { access_token: token };
+    for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === null) continue;
+      flat[k] = typeof v === 'string' ? v : typeof v === 'number' || typeof v === 'boolean' ? String(v) : JSON.stringify(v);
+    }
+    return this.call<T>(method === 'DELETE' ? 'POST' : method, path, method === 'DELETE' ? { ...flat, method: 'delete' } : flat);
+  }
+
   /** The Facebook Login dialog. `configId` is used for Facebook Login for Business; otherwise `scopes`. */
   loginUrl(redirectUri: string, state: string, opts: { configId?: string; scopes: readonly string[] }): string {
     const qs = new URLSearchParams({ client_id: this.appId, redirect_uri: redirectUri, state, response_type: 'code' });

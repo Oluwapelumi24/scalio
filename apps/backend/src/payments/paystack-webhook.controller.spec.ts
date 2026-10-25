@@ -17,9 +17,22 @@ function makeRequest(payload: unknown): { rawBody: Buffer } {
 }
 
 const ledger = { record: jest.fn().mockResolvedValue(true) };
+const adCampaigns = { markPaid: jest.fn().mockResolvedValue(undefined), markFailed: jest.fn().mockResolvedValue(undefined) };
 
 describe('PaystackWebhookController', () => {
-  beforeEach(() => ledger.record.mockClear());
+  beforeEach(() => {
+    ledger.record.mockClear();
+    adCampaigns.markPaid.mockClear();
+  });
+
+  it('sends ad payments to the Ads Manager, not bookings', async () => {
+    const bookingService = makeBookingService();
+    const controller = new PaystackWebhookController(makePaystack(true) as any, bookingService as any, ledger as any, adCampaigns as any);
+    await controller.handleWebhook(makeRequest({ event: 'charge.success', data: { reference: 'ads_123', amount: 4_112_500 } }) as any, 'sig');
+    expect(adCampaigns.markPaid).toHaveBeenCalledWith('ads_123', 4_112_500);
+    expect(bookingService.confirmPaymentByReference).not.toHaveBeenCalled();
+    expect(ledger.record).not.toHaveBeenCalled();
+  });
 
   it('rejects requests with a missing or invalid signature', async () => {
     const paystack = makePaystack(false);
@@ -28,6 +41,7 @@ describe('PaystackWebhookController', () => {
       paystack as any,
       bookingService as any,
       ledger as any,
+      adCampaigns as any,
     );
 
     await expect(
@@ -49,6 +63,7 @@ describe('PaystackWebhookController', () => {
       paystack as any,
       bookingService as any,
       ledger as any,
+      adCampaigns as any,
     );
 
     const result = await controller.handleWebhook(
@@ -73,6 +88,7 @@ describe('PaystackWebhookController', () => {
       paystack as any,
       bookingService as any,
       ledger as any,
+      adCampaigns as any,
     );
 
     await controller.handleWebhook(
@@ -93,6 +109,7 @@ describe('PaystackWebhookController', () => {
       paystack as any,
       bookingService as any,
       ledger as any,
+      adCampaigns as any,
     );
 
     const result = await controller.handleWebhook(
@@ -111,7 +128,7 @@ describe('PaystackWebhookController', () => {
 
 describe('PaystackWebhookController ledger', () => {
   it('records each successful payment in the vendor ledger, keyed by the Paystack reference', async () => {
-    const controller = new PaystackWebhookController(makePaystack(true) as any, makeBookingService() as any, ledger as any);
+    const controller = new PaystackWebhookController(makePaystack(true) as any, makeBookingService() as any, ledger as any, adCampaigns as any);
     await controller.handleWebhook(makeRequest({ event: 'charge.success', data: { reference: 'ref-9', amount: 250000 } }) as any, 'sig');
     expect(ledger.record).toHaveBeenCalledWith(expect.objectContaining({
       vendorId: 'vendor-1', kind: 'booking_payment', direction: 'in', amountKobo: 250000, dedupeKey: 'paystack:ref-9', bookingId: 'booking-1',

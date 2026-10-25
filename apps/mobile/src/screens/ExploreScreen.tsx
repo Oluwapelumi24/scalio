@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import type { Vendor } from '@scalio/shared-types';
 import type { MainTabScreenProps } from '../navigation/types';
 import { listVendors } from '../lib/api';
-import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';
 import { INTERESTS } from '../lib/interests';
 import { colors, radius, spacing, typography } from '../theme';
 
@@ -73,7 +73,7 @@ export function ExploreScreen({ navigation }: Props) {
               renderItem={({ item: vendor }) => (
                 <Pressable style={styles.card} onPress={() => openVendor(vendor)}>
                   <View style={styles.cardImageWrap}>
-                    <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.cardImage} />
+                    <Image source={getVendorImageSource(vendor)} style={styles.cardImage} />
                     <View style={[styles.categoryBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
                       <Feather name={getCategoryMeta(vendor.category).icon} size={12} color={colors.white} />
                     </View>

@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { listServices } from '../lib/api';
-import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';
 import { colors, radius, spacing, typography } from '../theme';
 import { BackButton } from '../components/BackButton';
 
@@ -64,7 +64,7 @@ export function ServiceSelectionScreen({ route, navigation }: Props) {
           <>
             <View style={styles.vendorHeader}>
               <View style={styles.vendorImageWrap}>
-                <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.vendorImage} />
+                <Image source={getVendorImageSource(vendor)} style={styles.vendorImage} />
                 <View style={[styles.categoryBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
                   <Feather name={getCategoryMeta(vendor.category).icon} size={12} color={colors.white} />
                 </View>

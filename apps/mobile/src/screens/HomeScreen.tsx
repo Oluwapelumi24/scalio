@@ -19,7 +19,7 @@ import { Feather } from '@expo/vector-icons';
 import type { Vendor } from '@scalio/shared-types';
 import type { MainTabScreenProps } from '../navigation/types';
 import { listVendors } from '../lib/api';
-import { CATEGORY_META, getVendorImageUrl } from '../lib/categories';
+import { CATEGORY_META, getVendorImageSource } from '../lib/categories';
 import { INTERESTS } from '../lib/interests';
 import { getCurrentUser } from '../lib/session';
 import { colors, radius, spacing, typography } from '../theme';
@@ -59,7 +59,7 @@ function shortAddress(address: string): string {
 function VendorCard({ vendor, onPress }: { vendor: Vendor; onPress: () => void }) {
   return (
     <Pressable style={styles.card} onPress={onPress}>
-      <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.cardImage} />
+      <Image source={getVendorImageSource(vendor)} style={styles.cardImage} />
       <View style={styles.cardBody}>
         <Text style={styles.cardName} numberOfLines={1}>{vendor.businessName}</Text>
         {(vendor.rating != null || vendor.reviewCount != null) && (
@@ -143,7 +143,7 @@ function SectionRow({
 function SearchResultCard({ vendor, onPress }: { vendor: Vendor; onPress: () => void }) {
   return (
     <Pressable style={styles.resultCard} onPress={onPress}>
-      <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.resultImage} />
+      <Image source={getVendorImageSource(vendor)} style={styles.resultImage} />
       <View style={styles.resultBody}>
         <Text style={styles.resultName} numberOfLines={1}>{vendor.businessName}</Text>
         {(vendor.rating != null || vendor.reviewCount != null) && (

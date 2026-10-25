@@ -13,7 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { MainTabScreenProps } from '../navigation/types';
 import type { BookingWithVendor } from '../lib/api';
 import { listBookings } from '../lib/api';
-import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';
 import { getCurrentUser } from '../lib/session';
 import { colors, radius, spacing, typography } from '../theme';
 
@@ -64,7 +64,7 @@ function BookingCard({
   const statusColor = STATUS_COLORS[item.booking.status] ?? colors.textMuted;
   return (
     <View style={styles.card}>
-      <Image source={{ uri: getVendorImageUrl(item.vendor) }} style={styles.cardImage} />
+      <Image source={getVendorImageSource(item.vendor)} style={styles.cardImage} />
       <View style={styles.cardBody}>
         <Text style={styles.cardName} numberOfLines={1}>{item.vendor.businessName}</Text>
         <Text style={styles.cardDate}>{formatDateTime(item.booking.scheduledAt)}</Text>

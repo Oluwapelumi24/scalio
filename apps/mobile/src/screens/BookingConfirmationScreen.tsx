@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { initiateBookingPayment, type PaymentCheckout } from '../lib/api';
-import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';
 import { amountForPaymentMode, PAYMENT_MODE_PRIORITY, resolveMinimumPaymentMode } from '../lib/payments';
 import { NO_SHOW_FEE_NOTICE, PAY_ON_ARRIVAL_CAVEAT } from '../lib/policy';
 import { BackButton } from '../components/BackButton';
@@ -70,7 +70,7 @@ export function BookingConfirmationScreen({ route, navigation }: Props) {
   const vendorHeader = (
     <View style={styles.vendorHeader}>
       <View style={styles.vendorImageWrap}>
-        <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.vendorImage} />
+        <Image source={getVendorImageSource(vendor)} style={styles.vendorImage} />
         <View style={[styles.categoryBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
           <Feather name={getCategoryMeta(vendor.category).icon} size={12} color={colors.white} />
         </View>

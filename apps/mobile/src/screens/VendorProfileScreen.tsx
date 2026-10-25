@@ -13,7 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { listServices } from '../lib/api';
-import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';
 import { colors, radius, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VendorProfile'>;
@@ -52,7 +52,7 @@ export function VendorProfileScreen({ route, navigation }: Props) {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero */}
         <View style={styles.hero}>
-          <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.heroImage} />
+          <Image source={getVendorImageSource(vendor)} style={styles.heroImage} />
           <View style={styles.heroOverlay} />
           <Pressable style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Feather name="arrow-left" size={20} color="#ffffff" />

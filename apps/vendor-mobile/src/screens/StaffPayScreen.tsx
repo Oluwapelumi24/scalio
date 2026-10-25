@@ -6,12 +6,14 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { naira, resolveAccount, setStaffPay, type Bank } from '../lib/api';
 import { BankPicker } from '../components/BankPicker';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StaffPay'>;
 
 /** One person's monthly salary and the account it's paid into (checked with the bank first). */
 export function StaffPayScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { staffId, name, pay } = route.params;
   const [salary, setSalary] = useState(pay.monthlySalaryKobo ? String(pay.monthlySalaryKobo / 100) : '');
   const [bank, setBank] = useState<Bank | null>(null);
@@ -94,14 +96,14 @@ export function StaffPayScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: 2 },
   content: { padding: spacing.xl, gap: spacing.lg },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg },
   label: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: colors.textSecondary },
   current: { fontSize: typography.size.base, fontWeight: typography.weight.semibold, color: colors.text },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: typography.size.base, color: colors.text },
@@ -112,5 +114,5 @@ const styles = StyleSheet.create({
   secondaryText: { fontWeight: typography.weight.semibold, color: colors.text },
   error: { fontSize: typography.size.sm, color: colors.error },
   primary: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.lg, alignItems: 'center' },
-  primaryText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
-});
+  primaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+}));

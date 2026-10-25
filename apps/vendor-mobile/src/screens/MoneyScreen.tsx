@@ -8,7 +8,7 @@ import {
   addExpense, getExpenseCategories, getLedger, getMoneySummary, listExpenses, naira, voidExpense,
   type Expense, type LedgerEntry, type MoneySummary,
 } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Money'>;
 
@@ -21,6 +21,8 @@ function monthRange(offset: number) {
 }
 
 export function MoneyScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [offset, setOffset] = useState(0);
   const [summary, setSummary] = useState<MoneySummary | null>(null);
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
@@ -179,18 +181,18 @@ export function MoneyScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
   chips: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   chip: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6, backgroundColor: colors.background },
   chipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   chipText: { fontSize: typography.size.sm, color: colors.textSecondary, fontWeight: typography.weight.medium },
   chipTextOn: { color: colors.white },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg },
   cardTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text, marginBottom: spacing.sm },
   line: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
@@ -204,5 +206,5 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: typography.size.base, color: colors.text },
   cats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   primary: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.lg, alignItems: 'center' },
-  primaryText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
-});
+  primaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+}));

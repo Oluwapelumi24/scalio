@@ -7,7 +7,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { getFeedback, markFeedbackFollowedUp, whatsappUrl, type FeedbackItem, type FeedbackOverview } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Feedback'>;
 
@@ -19,6 +19,8 @@ const PERIODS = [
 ] as const;
 
 function Stars({ value, size = 14 }: { value: number; size?: number }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={{ flexDirection: 'row', gap: 2 }} accessibilityLabel={`${value} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((n) => <Feather key={n} name="star" size={size} color={n <= Math.round(value) ? colors.warning : colors.border} />)}
@@ -27,6 +29,8 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
 }
 
 export function FeedbackScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [period, setPeriod] = useState<(typeof PERIODS)[number]['id']>('30');
   const [data, setData] = useState<FeedbackOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -130,19 +134,19 @@ export function FeedbackScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.xs },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: spacing.xs },
   chips: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   chip: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6, backgroundColor: colors.background },
   chipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   chipText: { fontSize: typography.size.sm, color: colors.textSecondary, fontWeight: typography.weight.medium },
   chipTextOn: { color: colors.white },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg, gap: spacing.sm },
   alert: { borderColor: colors.warning, backgroundColor: colors.warningLight },
   summary: { flexDirection: 'row', gap: spacing.lg, alignItems: 'center' },
   big: { fontSize: 36, fontWeight: typography.weight.bold, color: colors.text },
@@ -157,4 +161,4 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs },
   action: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6, backgroundColor: colors.background },
   actionText: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
-});
+}));

@@ -1,21 +1,28 @@
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useCallback, useState, type ReactNode } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/types';
 import { ChannelIcon } from '../components/ChannelIcon';
+import { TabFrame } from '../components/TabFrame';
+import { Avatar, Button, EmptyState, IconButton, PageHeader, PillTabs, TipCard } from '../components/ui';
 import { listConversations, type InboxConversation } from '../lib/api';
 import { shortTime, windowStatus } from '../lib/inbox';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { GUTTER, makeStyles, useTheme } from '../theme';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Inbox'>;
 type Filter = 'all' | 'needs_you';
 
-/** One list of chats from Instagram, Messenger and WhatsApp (ADS_MANAGER_PLAN.md §2d). */
-export function InboxScreen({ navigation }: Props) {
+/**
+ * One list of chats from Instagram, Messenger and WhatsApp (ADS_MANAGER_PLAN.md §2d).
+ * Used as the Inbox tab and as a pushed screen from Marketing.
+ */
+export function InboxScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isTab = useRoute().name === 'InboxTab';
   const [filter, setFilter] = useState<Filter>('all');
   const [chats, setChats] = useState<InboxConversation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,112 +51,117 @@ export function InboxScreen({ navigation }: Props) {
     setRefreshing(false);
   }
 
-  return (
-    <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.iconBtn} hitSlop={8} accessibilityLabel="Back">
-            <Feather name="arrow-left" size={20} color={colors.text} />
-          </Pressable>
-          {canManage && (
-            <Pressable onPress={() => navigation.navigate('InboxSettings')} style={styles.iconBtn} hitSlop={8} accessibilityLabel="AI replies and FAQ">
-              <Feather name="settings" size={20} color={colors.text} />
-            </Pressable>
-          )}
-        </View>
-        <Text style={styles.title}>Inbox</Text>
-        <Text style={styles.subtitle}>Messages from Instagram, Messenger and WhatsApp in one place.</Text>
-        <View style={styles.chips}>
-          {(['all', 'needs_you'] as const).map((f) => (
-            <Pressable key={f} onPress={() => { setChats(null); setFilter(f); }} style={[styles.chip, filter === f && styles.chipOn]} accessibilityState={{ selected: filter === f }}>
-              <Text style={[styles.chipText, filter === f && styles.chipTextOn]}>{f === 'all' ? 'All chats' : 'Needs you'}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </SafeAreaView>
+  const needsYou = chats?.filter((c) => c.handoff).length;
+
+  const body = (
+    <ScrollView
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.link} />}
+    >
+      <PageHeader
+        title="Inbox"
+        description="Messages from Instagram, Messenger and WhatsApp in one place."
+        onBack={isTab ? undefined : () => navigation.goBack()}
+        actions={canManage ? <IconButton icon="settings" label="AI replies and FAQ" onPress={() => navigation.navigate('InboxSettings')} /> : undefined}
+      />
+      <PillTabs<Filter>
+        options={[
+          { key: 'all', label: 'All chats' },
+          { key: 'needs_you', label: 'Needs you', count: filter === 'needs_you' ? undefined : needsYou || undefined },
+        ]}
+        value={filter}
+        onChange={(f) => { setChats(null); setFilter(f); }}
+      />
 
       {error && !chats ? (
-        <View style={styles.content}>
-          <View style={styles.note}><Text style={styles.meta}>{error}</Text></View>
-          {canManage && (
-            <Pressable onPress={() => navigation.navigate('AdsSetup')}><Text style={styles.link}>Check your connected accounts</Text></Pressable>
-          )}
+        <View style={{ gap: 16 }}>
+          <TipCard icon="alert-circle" title="Could not load the inbox" body={error} />
+          {canManage ? <Button label="Check connected accounts" variant="secondary" onPress={() => navigation.navigate('AdsSetup')} /> : null}
         </View>
-      ) : !chats ? <ActivityIndicator style={{ flex: 1 }} color={colors.accent} /> : (
-        <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}>
-          {chats.length === 0 ? (
-            <View style={styles.card}>
-              <Text style={[styles.meta, { paddingVertical: spacing.lg }]}>
-                {filter === 'needs_you'
-                  ? 'Nothing needs you right now. Chats the AI hands to you — complaints, refunds, questions it can’t answer — show here.'
-                  : 'No chats yet. When customers message your Instagram or Facebook Page, they’ll show here.'}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.card}>
-              {chats.map((c, i) => {
-                const w = windowStatus(c.window);
-                return (
-                  <Pressable key={c.id} onPress={() => navigation.navigate('InboxChat', { conversationId: c.id, name: c.customerName })}
-                    style={[styles.row, i > 0 && styles.divider]} accessibilityRole="button" accessibilityLabel={`Chat with ${c.customerName}`}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>{c.customerName.slice(0, 1).toUpperCase()}</Text>
-                      <View style={styles.badge}><ChannelIcon channel={c.channel} size={13} /></View>
+      ) : !chats ? (
+        <ActivityIndicator color={colors.link} />
+      ) : chats.length === 0 ? (
+        <EmptyState
+          icon="message-circle"
+          title={filter === 'needs_you' ? 'Nothing needs you' : 'No chats yet'}
+          body={
+            filter === 'needs_you'
+              ? 'Chats the AI hands to you, like complaints, refunds or questions it can’t answer, show here.'
+              : 'When clients message your Instagram or Facebook page, their chats show here.'
+          }
+          action={filter === 'all' && canManage ? 'Connect accounts' : undefined}
+          onAction={() => navigation.navigate('SocialAccounts')}
+        />
+      ) : (
+        <View>
+          {chats.map((c) => {
+            const w = windowStatus(c.window);
+            return (
+              <Pressable
+                key={c.id}
+                onPress={() => navigation.navigate('InboxChat', { conversationId: c.id, name: c.customerName })}
+                style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
+                accessibilityRole="button"
+                accessibilityLabel={`Chat with ${c.customerName}`}
+              >
+                <View>
+                  <Avatar name={c.customerName} size={56} />
+                  <View style={styles.channel}><ChannelIcon channel={c.channel} size={14} /></View>
+                </View>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <View style={styles.titleRow}>
+                    <Text style={[styles.name, c.unreadCount > 0 && styles.bold]} numberOfLines={1}>{c.customerName}</Text>
+                    <Text style={styles.time}>{shortTime(c.lastMessageAt)}</Text>
+                  </View>
+                  <View style={styles.titleRow}>
+                    <Text style={[styles.preview, c.unreadCount > 0 && { color: colors.text }]} numberOfLines={1}>{c.preview ?? ''}</Text>
+                    {c.unreadCount > 0 ? <View style={styles.unread}><Text style={styles.unreadText}>{c.unreadCount}</Text></View> : null}
+                  </View>
+                  {c.handoff || c.adTitle || w.short ? (
+                    <View style={styles.tags}>
+                      {c.handoff ? <Tag tone="alert">Needs you · {c.handoff.label}</Tag> : null}
+                      {c.adTitle ? <Tag>From ad: {c.adTitle}</Tag> : null}
+                      {w.short ? <Tag tone={w.tone === 'warn' ? 'warn' : undefined}>{w.short}</Tag> : null}
                     </View>
-                    <View style={{ flex: 1, gap: 3 }}>
-                      <View style={styles.titleRow}>
-                        <Text style={[styles.name, c.unreadCount > 0 && styles.bold]} numberOfLines={1}>{c.customerName}</Text>
-                        <Text style={styles.time}>{shortTime(c.lastMessageAt)}</Text>
-                      </View>
-                      <Text style={[styles.meta, c.unreadCount > 0 && { color: colors.text }]} numberOfLines={1}>{c.preview ?? ''}</Text>
-                      <View style={styles.tags}>
-                        {c.handoff && <Text style={[styles.tag, styles.tagAlert]}>Needs you · {c.handoff.label}</Text>}
-                        {c.adTitle && <Text style={styles.tag}>From ad: {c.adTitle}</Text>}
-                        {w.short ? <Text style={[styles.tag, w.tone === 'warn' && styles.tagWarn]}>{w.short}</Text> : null}
-                      </View>
-                    </View>
-                    {c.unreadCount > 0 && <View style={styles.unread}><Text style={styles.unreadText}>{c.unreadCount}</Text></View>}
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-        </ScrollView>
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       )}
-    </View>
+    </ScrollView>
   );
+
+  return isTab ? <TabFrame>{body}</TabFrame> : <StackFrame>{body}</StackFrame>;
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.md },
-  iconBtn: { width: 36, height: 36, justifyContent: 'center' },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.xs },
-  chips: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
-  chip: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6, backgroundColor: colors.background },
-  chipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
-  chipText: { fontSize: typography.size.sm, color: colors.textSecondary, fontWeight: typography.weight.medium },
-  chipTextOn: { color: colors.white },
-  content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing.lg },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
-  divider: { borderTopWidth: 1, borderTopColor: colors.border },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.mist, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.accent },
-  badge: { position: 'absolute', right: -4, bottom: -4 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  name: { flex: 1, fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
-  bold: { fontWeight: typography.weight.bold },
-  time: { fontSize: typography.size.xs, color: colors.textMuted },
-  meta: { fontSize: typography.size.sm, color: colors.textMuted, lineHeight: 19 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tag: { fontSize: typography.size.xs, color: colors.textSecondary, backgroundColor: colors.mist, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden' },
+function StackFrame({ children }: { children: ReactNode }) {
+  const insets = useSafeAreaInsets();
+  const styles = useStyles();
+  return <View style={[styles.root, { paddingTop: insets.top }]}>{children}</View>;
+}
+
+function Tag({ children, tone }: { children: ReactNode; tone?: 'alert' | 'warn' }) {
+  const styles = useStyles();
+  return <Text style={[styles.tag, tone === 'alert' && styles.tagAlert, tone === 'warn' && styles.tagWarn]}>{children}</Text>;
+}
+
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { paddingHorizontal: GUTTER, paddingTop: 12, paddingBottom: 40, gap: 22 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, paddingVertical: 12 },
+  channel: { position: 'absolute', right: -2, bottom: -2, backgroundColor: colors.background, borderRadius: 10, padding: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  name: { flex: 1, fontSize: 17, fontWeight: '600', color: colors.text },
+  bold: { fontWeight: '700' },
+  time: { fontSize: 14, color: colors.textMuted },
+  preview: { flex: 1, fontSize: 15, color: colors.textSecondary },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
+  tag: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, backgroundColor: colors.surface, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, overflow: 'hidden' },
   tagAlert: { color: colors.error, backgroundColor: colors.errorLight },
   tagWarn: { color: colors.warning, backgroundColor: colors.warningLight },
-  unread: { minWidth: 20, height: 20, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
-  unreadText: { color: colors.white, fontSize: typography.size.xs, fontWeight: typography.weight.bold },
-  note: { backgroundColor: colors.mist, borderRadius: radius.md, padding: spacing.md },
-  link: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
-});
+  unread: { minWidth: 22, height: 22, borderRadius: 11, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  unreadText: { color: colors.onAccent, fontSize: 12, fontWeight: '700' },
+}));

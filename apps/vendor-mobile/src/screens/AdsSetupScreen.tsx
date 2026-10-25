@@ -10,7 +10,7 @@ import {
   type AdsSetup, type AdsSetupStep, type MetaAdAccountOption,
 } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles, type Colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AdsSetup'>;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
@@ -19,13 +19,12 @@ const ICONS: Record<AdsSetupStep['key'], FeatherName> = {
   facebook: 'facebook', instagram: 'instagram', ad_access: 'shield', ad_account: 'briefcase', payment_method: 'credit-card', whatsapp: 'message-circle',
 };
 
-const STATE_ICON: Record<AdsSetupStep['state'], { icon: FeatherName; color: string } | null> = {
+const STATE_ICON = (colors: Colors): Record<AdsSetupStep['state'], { icon: FeatherName; color: string } | null> => ({
   done: { icon: 'check-circle', color: colors.success },
   attention: { icon: 'alert-circle', color: colors.error },
   todo: null,
   waiting: null,
-  coming_soon: null,
-};
+  coming_soon: null,});
 
 function actionLabel(step: AdsSetupStep): string {
   const a = step.action!;
@@ -36,6 +35,8 @@ function actionLabel(step: AdsSetupStep): string {
 
 /** "Connect your accounts" — the checklist before a business can run ads (ADS_MANAGER_PLAN.md §2a). */
 export function AdsSetupScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [setup, setSetup] = useState<AdsSetup | null>(null);
   const [accounts, setAccounts] = useState<MetaAdAccountOption[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -123,13 +124,27 @@ export function AdsSetupScreen({ navigation }: Props) {
           <View style={[styles.banner, setup.ready && styles.bannerReady]}>
             <Feather name={setup.ready ? 'check-circle' : 'list'} size={18} color={setup.ready ? colors.success : colors.accent} />
             <Text style={styles.bannerText}>
-              {setup.ready ? 'You’re ready to run ads. Creating ads is coming next.' : `${doneCount} of ${required.length} required steps done`}
+              {setup.ready ? 'You’re ready to run ads.' : `${doneCount} of ${required.length} required steps done`}
             </Text>
           </View>
 
+          {setup.ready && (
+            <View style={styles.readyRow}>
+              {canManage && (
+                <Pressable style={styles.readyPrimary} onPress={() => navigation.navigate('AdCampaignWizard')} accessibilityRole="button">
+                  <Feather name="plus" size={16} color={colors.white} />
+                  <Text style={styles.readyPrimaryText}>Create an ad</Text>
+                </Pressable>
+              )}
+              <Pressable style={styles.readySecondary} onPress={() => navigation.navigate('AdCampaigns')} accessibilityRole="button">
+                <Text style={styles.actionText}>Your ads</Text>
+              </Pressable>
+            </View>
+          )}
+
           <View style={styles.card}>
             {setup.steps.map((s, i) => {
-              const mark = STATE_ICON[s.state];
+              const mark = STATE_ICON(colors)[s.state];
               const muted = s.state === 'waiting' || s.state === 'coming_soon';
               return (
                 <View key={s.key} style={[styles.row, i > 0 && styles.divider]}>
@@ -196,17 +211,17 @@ export function AdsSetupScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.xs },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: spacing.xs },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
   banner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.accentLight, borderRadius: radius.md, padding: spacing.md },
   bannerReady: { backgroundColor: colors.successLight },
   bannerText: { flex: 1, fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: colors.text },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing.lg },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: spacing.lg },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: spacing.lg },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -216,6 +231,10 @@ const styles = StyleSheet.create({
   action: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: spacing.xs },
   actionText: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   disabled: { opacity: 0.5 },
+  readyRow: { flexDirection: 'row', gap: spacing.sm },
+  readyPrimary: { flex: 1, flexDirection: 'row', gap: spacing.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.md },
+  readyPrimaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+  readySecondary: { paddingHorizontal: spacing.lg, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.accent },
   note: { backgroundColor: colors.mist, borderRadius: radius.md, padding: spacing.md, gap: 4 },
   noteTitle: { fontSize: typography.size.sm, fontWeight: typography.weight.bold, color: colors.text },
-});
+}));

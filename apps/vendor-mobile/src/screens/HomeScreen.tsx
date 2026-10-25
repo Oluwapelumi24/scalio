@@ -1,575 +1,208 @@
-import { useCallback, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect, type CompositeScreenProps } from '@react-navigation/native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { MainTabParamList, RootStackParamList } from '../navigation/types';
-import { formatDateTime, getHome, recordModuleUsage, type HomeItem, type HomeResponse } from '../lib/api';
-import { getSession } from '../lib/session';
-import { colors, radius, spacing } from '../theme';
+import type { RootStackParamList } from '../navigation/types';
+import {
+  formatDateTime,
+  formatNaira,
+  getHome,
+  getTodaySummary,
+  recordModuleUsage,
+  type HomeItem,
+  type HomeResponse,
+  type TodaySummary,
+} from '../lib/api';
+import { openFeature } from '../lib/features';
+import { Avatar, Button, EmptyState, Page, PageHeader, StatCard, type FeatherName } from '../components/ui';
+import { makeStyles, useTheme } from '../theme';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Home'>,
-  NativeStackScreenProps<RootStackParamList>
->;
-type FeatherName = React.ComponentProps<typeof Feather>['name'];
+type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
 
-const GUTTER = 24;
-const SLIDE_GAP = 12;
-
+/** Plain-English line and button for each thing that needs the owner. */
 const ATTENTION: Record<string, { text: (n: number) => string; action: string }> = {
   awaiting_payment: { text: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`, action: 'View' },
   starting_soon: { text: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`, action: 'View' },
-  unassigned_today: { text: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff`, action: 'Assign' },
-  bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`, action: 'Review' },
+  unassigned_today: { text: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no one assigned`, action: 'Assign' },
+  bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with someone on leave`, action: 'Review' },
   payroll_open: { text: (n) => `Payroll is open: ${n} ${n === 1 ? 'person' : 'people'} to pay`, action: 'Pay' },
-  unhappy_customers: { text: (n) => `${n} unhappy ${n === 1 ? 'customer' : 'customers'} to call back`, action: 'Call back' },
+  unhappy_customers: { text: (n) => `${n} unhappy ${n === 1 ? 'client' : 'clients'} to call back`, action: 'Call back' },
   leads_due: { text: (n) => `${n} ${n === 1 ? 'lead is' : 'leads are'} waiting for a follow-up`, action: 'Follow up' },
   posts_planned_today: { text: (n) => `${n} ${n === 1 ? 'post is' : 'posts are'} planned for today`, action: 'Open' },
 };
 
-/** One carousel slide: copy, a tint, and three icons for the small illustration. */
-interface Slide {
-  key: string;
-  title: string;
-  body: string;
-  cta?: string;
-  tint: string;
-  tone: string;
-  icons: [FeatherName, FeatherName, FeatherName];
-  onPress?: () => void;
-}
-
 function overviewValue(item: HomeItem): string {
   const d = item.data;
-  if (typeof d.amountKobo === 'number') return `₦${(d.amountKobo / 100).toLocaleString('en-NG')}`;
+  if (typeof d.amountKobo === 'number') return formatNaira(d.amountKobo);
   if (item.id === 'repeat_customers') return `${d.count} of ${d.totalCustomers}`;
   if (item.id === 'customer_rating') return `${d.average}★ (${d.count})`;
   if (typeof d.count === 'number') return String(d.count);
   return '—';
 }
 
-function SectionHeading({ title, link, onLink }: { title: string; link?: string; onLink?: () => void }) {
-  return (
-    <View style={styles.sectionHead}>
-      <Text style={styles.sectionTitle} accessibilityRole="header">{title}</Text>
-      {link && onLink ? (
-        <Pressable onPress={onLink} hitSlop={8} accessibilityRole="button">
-          <Text style={styles.sectionLink}>{link}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-/** A tinted blob with one large icon chip and two small ones — the slide's illustration. */
-function SlideArt({ slide }: { slide: Slide }) {
-  return (
-    <View style={styles.art} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <View style={styles.artBlob} />
-      <View style={[styles.artChip, { width: 62, height: 62, borderRadius: 31, left: 22, top: 28, backgroundColor: slide.tone }]}>
-        <Feather name={slide.icons[0]} size={28} color={colors.white} />
-      </View>
-      <View style={[styles.artChip, { width: 40, height: 40, borderRadius: 20, left: 62, top: 2, backgroundColor: colors.white }]}>
-        <Feather name={slide.icons[1]} size={18} color={slide.tone} />
-      </View>
-      <View style={[styles.artChip, { width: 36, height: 36, borderRadius: 18, left: 68, top: 80, backgroundColor: colors.white }]}>
-        <Feather name={slide.icons[2]} size={16} color={slide.tone} />
-      </View>
-    </View>
-  );
-}
-
-function Carousel({ slides }: { slides: Slide[] }) {
-  const { width } = useWindowDimensions();
-  const slideWidth = width - GUTTER * 2;
-  const [index, setIndex] = useState(0);
-  const scroller = useRef<ScrollView>(null);
-
-  function onScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
-    const i = Math.round(e.nativeEvent.contentOffset.x / (slideWidth + SLIDE_GAP));
-    setIndex(Math.max(0, Math.min(slides.length - 1, i)));
-  }
-
-  return (
-    <View style={{ gap: spacing.md }}>
-      <ScrollView
-        ref={scroller}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={slideWidth + SLIDE_GAP}
-        decelerationRate="fast"
-        contentContainerStyle={{ paddingHorizontal: GUTTER, gap: SLIDE_GAP }}
-        onScroll={onScroll}
-        scrollEventThrottle={32}
-      >
-        {slides.map((s, i) => (
-          <View
-            key={s.key}
-            style={[styles.slide, { width: slideWidth, backgroundColor: s.tint }]}
-            accessibilityLabel={`${i + 1} of ${slides.length}: ${s.title}`}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.slideTitle}>{s.title}</Text>
-              <Text style={styles.slideBody}>{s.body}</Text>
-              {s.cta && s.onPress ? (
-                <Pressable style={styles.slideCta} onPress={s.onPress} accessibilityRole="button">
-                  <Text style={styles.slideCtaText}>{s.cta}</Text>
-                  <Feather name="arrow-right" size={15} color={colors.white} />
-                </Pressable>
-              ) : (
-                <View style={styles.soonTag}><Text style={styles.soonText}>Coming soon</Text></View>
-              )}
-            </View>
-            <SlideArt slide={s} />
-          </View>
-        ))}
-      </ScrollView>
-      {slides.length > 1 && (
-        <View style={styles.dots}>
-          {slides.map((s, i) => (
-            <Pressable
-              key={s.key}
-              hitSlop={8}
-              onPress={() => scroller.current?.scrollTo({ x: i * (slideWidth + SLIDE_GAP), animated: true })}
-              accessibilityRole="button"
-              accessibilityLabel={`Show slide ${i + 1}`}
-              style={[styles.dot, i === index && styles.dotOn]}
-            />
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
+/** The business at a glance: today, what needs you, what's next, and the longer view. */
 export function HomeScreen({ navigation }: Props) {
-  const insets = useSafeAreaInsets();
-  const session = getSession();
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [home, setHome] = useState<HomeResponse | null>(null);
+  const [today, setToday] = useState<TodaySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
-      setHome(await getHome());
+      const [h, t] = await Promise.all([getHome(), getTodaySummary().catch(() => null)]);
+      setHome(h);
+      setToday(t);
       setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load your business overview.');
+      setError(err instanceof Error ? err.message : 'Could not load your dashboard.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  // Reload whenever Home comes back into view — interests or setup may have changed.
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
-  const isManager = session?.role === 'owner' || session?.role === 'manager';
-  const firstName = (session?.name ?? '').split(' ')[0] || 'there';
-
-  function open(item: HomeItem) {
-    if (item.status === 'coming_soon') return;
+  function act(item: HomeItem) {
     recordModuleUsage(item.id);
     switch (item.id) {
-      case 'share_booking_link':
-      case 'share_link_first':
-        void Share.share({ message: `Book an appointment with us on Scalio: ${item.data.url}` });
-        return;
-      case 'awaiting_payment':
-      case 'starting_soon':
-      case 'unassigned_today':
-      case 'bookings_on_leave':
-      case 'upcoming_bookings':
-      case 'view_bookings':
-        navigation.navigate('Bookings');
-        return;
-      case 'repeat_customers':
-      case 'new_customers':
-      case 'view_customers':
-      case 'follow_up_lapsed':
-        navigation.navigate('Customers');
-        return;
-      case 'team':
-      case 'manage_team':
-        navigation.navigate('StaffManagement');
-        return;
-      case 'add_service':
-      case 'setup_services':
-        navigation.navigate('ServiceForm', {});
-        return;
-      case 'business_hours':
-      case 'setup_hours':
-        navigation.navigate('BusinessHours');
-        return;
-      case 'pay_staff':
       case 'payroll_open':
-      case 'setup_payroll':
-        navigation.navigate('Payroll');
-        return;
-      case 'setup_payments':
-        navigation.navigate('PaymentsSetup');
-        return;
-      case 'staff_performance':
-        navigation.navigate('Performance');
-        return;
-      case 'create_post':
-      case 'first_post':
-        navigation.navigate('PostEditor', {});
-        return;
-      case 'quiet_day_offer':
-        navigation.navigate('PostEditor', { brief: `Something special for ${item.data.day} — our quietest day` });
-        return;
+        return void openFeature(navigation, 'payroll');
       case 'unhappy_customers':
-      case 'customer_rating':
-        navigation.navigate('Feedback');
-        return;
-      case 'view_reports':
-        navigation.navigate('Reports');
-        return;
-      case 'deposits_for_no_shows':
-        navigation.navigate('Services');
-        return;
-      case 'ask_for_feedback':
-        navigation.navigate('Bookings');
-        return;
-      case 'posts_planned_today':
-        navigation.navigate('ContentStudio', { tab: 'planned' });
-        return;
+        return void openFeature(navigation, 'feedback');
       case 'leads_due':
-        navigation.navigate('Leads', { filter: 'due' });
-        return;
-      case 'view_leads':
-        navigation.navigate('Leads');
-        return;
-      case 'choose_interests':
-        navigation.navigate('InterestSelection', { fromSettings: true });
-        return;
+        return navigation.navigate('Leads', { filter: 'due' });
+      case 'posts_planned_today':
+        return navigation.navigate('ContentStudio', { tab: 'planned' });
+      default:
+        return navigation.navigate('Bookings');
     }
   }
 
-  const attention = home?.layers.attention ?? [];
-  const quick = home?.layers.quick_action.slice(0, 4) ?? [];
+  const attention = home?.layers.attention.filter((i) => i.id in ATTENTION) ?? [];
+  const upcoming = home?.bookings?.upcoming ?? [];
   const overview = home?.layers.overview.filter((i) => i.id !== 'upcoming_bookings') ?? [];
-  const upcoming = home?.layers.overview.find((i) => i.id === 'upcoming_bookings');
-  const slides = home ? buildSlides(home) : [];
-
-  /** Carousel slides from the ranked suggestions, plus sharing and staff set-up when they apply. */
-  function buildSlides(h: HomeResponse): Slide[] {
-    const byId = (id: string) =>
-      [...h.layers.recommendation, ...h.layers.quick_action, ...h.layers.overview].find((i) => i.id === id);
-    const recs = h.layers.recommendation;
-    const out: Slide[] = [];
-    const add = (item: HomeItem | undefined, s: Omit<Slide, 'key' | 'onPress'>) => {
-      if (item && !out.some((o) => o.key === item.id)) out.push({ ...s, key: item.id, onPress: () => open(item) });
-    };
-
-    // Set-up steps first: nothing else matters until customers can book.
-    add(byId('choose_interests'), { title: 'Make Scalio yours', body: "Tell us what you want help with and we'll set up your home.", cta: 'Start', tint: colors.accentLight, tone: colors.accent, icons: ['sliders', 'star', 'compass'] });
-    add(byId('setup_payments'), { title: 'Take payments online', body: 'Add your bank account. Customer deposits go straight into it.', cta: 'Set up', tint: colors.accentLight, tone: colors.accent, icons: ['credit-card', 'shield', 'check-circle'] });
-    add(byId('setup_services'), { title: 'Add your first service', body: 'Customers can only book once you have at least one.', cta: 'Add service', tint: colors.mintSoft, tone: colors.success, icons: ['plus-circle', 'scissors', 'tag'] });
-    add(byId('setup_hours'), { title: 'Set your opening hours', body: "Let customers know when you're open.", cta: 'Set hours', tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'calendar', 'sun'] });
-
-    const share = byId('share_link_first') ?? byId('share_booking_link');
-    if (share) {
-      out.push({
-        key: 'share', title: 'Get your next booking', body: 'Share your booking link on WhatsApp and Instagram.', cta: 'Share link',
-        tint: colors.accentLight, tone: colors.accent, icons: ['message-circle', 'share-2', 'calendar'], onPress: () => open(share),
-      });
-    }
-    const team = byId('team');
-    if (isManager && team && (team.data.count ?? 0) > 1) {
-      out.push({
-        key: 'staff', title: "Know who's working", body: 'Set staff hours and let your team clock in from their phones.', cta: 'Set up',
-        tint: colors.mintSoft, tone: colors.success, icons: ['clock', 'user-check', 'users'], onPress: () => navigation.navigate('StaffManagement'),
-      });
-    }
-    add(byId('setup_payroll'), { title: 'Pay your team on time', body: 'Set a pay day and salaries. Scalio reminds you when payroll opens.', cta: 'Set up', tint: colors.mintSoft, tone: colors.success, icons: ['credit-card', 'calendar', 'users'] });
-    const lapsed = byId('follow_up_lapsed');
-    add(lapsed, {
-      title: 'Bring customers back',
-      body: `${lapsed?.data.count} ${lapsed?.data.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
-      cta: 'Review', tint: colors.amberSoft, tone: colors.warning, icons: ['repeat', 'heart', 'message-circle'],
-    });
-    const quiet = byId('quiet_day_offer');
-    add(quiet, { title: `Fill your quiet ${quiet?.data.day ?? 'day'}`, body: `${quiet?.data.day}s get about ${quiet?.data.bookings} bookings when other days average ${quiet?.data.averageBookings} (last 8 weeks). Post an offer for that day.`, cta: 'Create post', tint: colors.accentLight, tone: colors.accent, icons: ['trending-up', 'calendar', 'image'] });
-    const noShows = byId('deposits_for_no_shows');
-    add(noShows, { title: 'Cut no-shows with deposits', body: `${noShows?.data.noShows} no-shows in the last 60 days (${Math.round((noShows?.data.rate ?? 0) * 100)}% of visits). Ask for a deposit on your busiest services.`, cta: 'Review services', tint: colors.amberSoft, tone: colors.warning, icons: ['shield', 'credit-card', 'calendar'] });
-    const ask = byId('ask_for_feedback');
-    add(ask, { title: 'Ask customers how it went', body: `${ask?.data.count} recent ${ask?.data.count === 1 ? 'customer has' : 'customers have'} no email. Open a completed booking and send the rating link on WhatsApp.`, cta: 'Open bookings', tint: colors.mintSoft, tone: colors.success, icons: ['star', 'message-circle', 'heart'] });
-    add(byId('first_post'), { title: 'Make your first post', body: 'Add a photo, say what it’s about, and AI writes the caption and hashtags.', cta: 'Create post', tint: colors.accentLight, tone: colors.accent, icons: ['image', 'zap', 'share-2'] });
-    // Features on the way, for businesses that asked for them. Never actionable.
-    for (const r of recs.filter((x) => x.status === 'coming_soon')) {
-      out.push({
-        key: r.id, title: r.title, body: "Coming soon. We'll let you know when it's ready.",
-        tint: colors.surface, tone: colors.textMuted, icons: [r.icon as FeatherName, 'clock', 'bell'],
-      });
-    }
-    return out;
-  }
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={{ paddingBottom: spacing.xxxl }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Header: soft Scalio-blue wash fading into the page */}
-      <LinearGradient
-        colors={[colors.accentLight, colors.sky, colors.background]}
-        locations={[0, 0.55, 1]}
-        style={[styles.header, { paddingTop: insets.top + spacing.md }]}
-      >
-        <View style={styles.topRow}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>{(home?.business.name ?? 'S').charAt(0).toUpperCase()}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bizName} numberOfLines={1}>{home?.business.name ?? 'Your business'}</Text>
-            <Text style={styles.bizRole}>{session?.role?.replace('_', ' ') ?? ''}</Text>
-          </View>
-          <Pressable
-            style={styles.roundBtn}
-            onPress={() => navigation.navigate('Bookings')}
-            accessibilityRole="button"
-            accessibilityLabel={`${attention.length} items need your attention`}
-          >
-            <Feather name="bell" size={18} color={colors.text} />
-            {attention.length > 0 && (
-              <View style={styles.badge}><Text style={styles.badgeText}>{attention.length > 9 ? '9+' : attention.length}</Text></View>
-            )}
-          </Pressable>
-          <Pressable style={styles.avatar} onPress={() => navigation.navigate('Settings')} accessibilityRole="button" accessibilityLabel="Settings">
-            <Text style={styles.avatarText}>{(session?.name ?? 'V').slice(0, 2).toUpperCase()}</Text>
-          </Pressable>
-        </View>
-
-        <Pressable style={styles.search} onPress={() => navigation.navigate('Customers')} accessibilityRole="search">
-          <Feather name="search" size={17} color={colors.textMuted} />
-          <Text style={styles.searchText}>Search customers</Text>
-        </Pressable>
-
-        <Text style={styles.greeting}>Hey, {firstName}</Text>
-        <Text style={styles.greetingSub}>Here's your business today.</Text>
-
-      </LinearGradient>
+    <Page refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={colors.link} />}>
+      <PageHeader title="Dashboard" description={home?.business.name ? `How ${home.business.name} is doing.` : undefined} onBack={() => navigation.goBack()} />
 
       {loading ? (
-        <ActivityIndicator style={{ marginVertical: spacing.xxl }} color={colors.accent} />
+        <ActivityIndicator color={colors.link} />
       ) : !home ? (
-        <View style={styles.errorBox}>
-          <Feather name="wifi-off" size={26} color={colors.textMuted} />
-          <Text style={styles.metaText}>{error}</Text>
-          <Pressable style={styles.retry} onPress={() => { setLoading(true); void load(); }}>
-            <Text style={styles.sectionLink}>Try again</Text>
-          </Pressable>
-        </View>
+        <EmptyState icon="wifi-off" title="Could not load your dashboard" body={error} action="Try again" onAction={() => { setLoading(true); void load(); }} />
       ) : (
-        <View style={styles.body}>
-          {upcoming && (
-            <View style={styles.section}>
-              <SectionHeading title="Up next" link="View all" onLink={() => open(upcoming)} />
-              <View style={styles.panel}>
-                {upcoming.data.bookings.length === 0 ? (
-                  <View style={styles.empty}>
-                    <Feather name="calendar" size={18} color={colors.textMuted} />
-                    <Text style={styles.emptyText}>No upcoming bookings yet. Share your booking link to get some.</Text>
-                  </View>
-                ) : (
-                  upcoming.data.bookings.map(
-                    (b: { id: string; customerName: string | null; scheduledAt: string; status: string }, i: number) => (
-                      <Pressable key={b.id} style={[styles.row, i > 0 && styles.divider]} onPress={() => open(upcoming)}>
-                        <View style={styles.person}>
-                          <Text style={styles.personInitial}>{(b.customerName ?? 'C').charAt(0).toUpperCase()}</Text>
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.rowStrong} numberOfLines={1}>{b.customerName ?? 'Customer'}</Text>
-                          <Text style={styles.metaText}>
-                            {formatDateTime(b.scheduledAt)}
-                            {b.status === 'pending_payment' ? ' · awaiting payment' : ''}
-                          </Text>
-                        </View>
-                        <Feather name="chevron-right" size={16} color={colors.borderStrong} />
-                      </Pressable>
-                    ),
-                  )
-                )}
-              </View>
+        <>
+          {today ? (
+            <View style={styles.stats}>
+              <View style={{ flex: 1 }}><StatCard label="Today" value={String(today.bookings)} sub={today.bookings === 1 ? 'booking' : 'bookings'} /></View>
+              {today.salesKobo != null ? (
+                <View style={{ flex: 1 }}><StatCard label="Sales today" value={formatNaira(today.salesKobo)} /></View>
+              ) : null}
             </View>
-          )}
+          ) : null}
 
-          {/* Quick actions sit right under what's coming up */}
-          {quick.length > 0 && (
-            <View style={styles.quick}>
-              {quick.map((item) => (
-                <Pressable key={item.id} style={styles.quickItem} onPress={() => open(item)} accessibilityRole="button">
-                  <View style={styles.quickDisc}>
-                    <Feather name={item.icon as FeatherName} size={22} color={colors.accent} />
-                  </View>
-                  <Text style={styles.quickLabel} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-
-          {slides.length > 0 && <Carousel slides={slides} />}
-
-          {/* Needs your attention — always present, so "all clear" is visible too */}
-          <View style={styles.section}>
-            <SectionHeading title="Needs your attention" />
-            <View style={styles.panel}>
-              {attention.length === 0 ? (
-                <View style={styles.row}>
-                  <Text style={[styles.rowText, { color: colors.textMuted }]}>Nothing needs you right now</Text>
-                  <View style={[styles.darkBtn, styles.darkBtnOff]}>
-                    <Text style={[styles.darkBtnText, { color: colors.textMuted }]}>All clear</Text>
-                  </View>
+          <Card title="Needs your attention" subtitle="Right now">
+            {attention.length === 0 ? (
+              <Empty icon="check-circle" title="All clear" body="Nothing needs you right now." />
+            ) : (
+              attention.map((item) => (
+                <View key={item.id} style={styles.alert}>
+                  <View style={styles.flag} />
+                  <Text style={styles.alertText}>{ATTENTION[item.id].text(item.data.count ?? item.data.toPay)}</Text>
+                  <Button label={ATTENTION[item.id].action} size="sm" onPress={() => act(item)} />
                 </View>
-              ) : (
-                attention.map((item, i) => (
-                  <View key={item.id} style={[styles.row, i > 0 && styles.divider]}>
-                    <View style={styles.flag} />
-                    <Text style={styles.rowText}>{ATTENTION[item.id]?.text(item.data.count ?? item.data.toPay) ?? item.title}</Text>
-                    <Pressable style={styles.darkBtn} onPress={() => open(item)} accessibilityRole="button">
-                      <Text style={styles.darkBtnText}>{ATTENTION[item.id]?.action ?? 'View'}</Text>
-                    </Pressable>
+              ))
+            )}
+          </Card>
+
+          <Card title="Upcoming bookings" subtitle="Next few" action="All bookings" onAction={() => navigation.navigate('Bookings')}>
+            {upcoming.length === 0 ? (
+              <Empty icon="calendar" title="Your schedule is empty" body="New bookings show up here as soon as clients make them." />
+            ) : (
+              upcoming.map((b) => (
+                <Pressable key={b.id} style={styles.person} onPress={() => navigation.navigate('Bookings')} accessibilityRole="button">
+                  <Avatar name={b.customerName ?? 'Client'} size={44} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.personName} numberOfLines={1}>{b.customerName ?? 'Client'}</Text>
+                    <Text style={styles.personSub}>
+                      {formatDateTime(b.scheduledAt)}
+                      {b.status === 'pending_payment' ? ' · waiting for payment' : ''}
+                    </Text>
                   </View>
-                ))
-              )}
-            </View>
-          </View>
+                  <Feather name="chevron-right" size={20} color={colors.text} />
+                </Pressable>
+              ))
+            )}
+          </Card>
 
-          {overview.length > 0 && (
-            <View style={styles.section}>
-              <SectionHeading title="Your business" />
-              <View style={styles.panel}>
-                {overview.map((item, i) => (
-                  <Pressable key={item.id} style={[styles.row, i > 0 && styles.divider]} onPress={() => open(item)} accessibilityRole="button">
-                    <Feather name={item.icon as FeatherName} size={18} color={colors.textMuted} />
-                    <Text style={styles.rowText}>{item.title}</Text>
-                    <Text style={styles.value}>{overviewValue(item)}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {isManager && (
-            <Pressable style={styles.customise} onPress={() => navigation.navigate('CustomiseHome')} accessibilityRole="button">
-              <Feather name="sliders" size={15} color={colors.accent} />
-              <Text style={styles.sectionLink}>Customise home</Text>
-            </Pressable>
-          )}
-        </View>
+          {overview.length > 0 ? (
+            <Card title="Your business" subtitle="Last 30 days">
+              {overview.map((item) => (
+                <View key={item.id} style={styles.metric}>
+                  <Feather name={item.icon as FeatherName} size={20} color={colors.textSecondary} />
+                  <Text style={styles.metricLabel}>{item.title}</Text>
+                  <Text style={styles.metricValue}>{overviewValue(item)}</Text>
+                </View>
+              ))}
+            </Card>
+          ) : null}
+        </>
       )}
-    </ScrollView>
+    </Page>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+function Card({
+  title,
+  subtitle,
+  action,
+  onAction,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: string;
+  onAction?: () => void;
+  children: React.ReactNode;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHead}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle} accessibilityRole="header">{title}</Text>
+          {subtitle ? <Text style={styles.cardSub}>{subtitle}</Text> : null}
+        </View>
+        {action && onAction ? <Text style={styles.link} onPress={onAction}>{action}</Text> : null}
+      </View>
+      {children}
+    </View>
+  );
+}
 
-  // Header
-  header: { paddingHorizontal: GUTTER, paddingBottom: spacing.xxl },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logo: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
-  },
-  logoText: { fontWeight: '800', fontSize: 16, color: colors.accent },
-  bizName: { fontWeight: '700', fontSize: 15, color: colors.text },
-  bizRole: { fontWeight: '500', fontSize: 11, color: colors.textMuted, textTransform: 'capitalize', marginTop: 1 },
-  roundBtn: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
-    borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
-  },
-  badge: {
-    position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
-    backgroundColor: colors.error, borderWidth: 2, borderColor: colors.background, alignItems: 'center', justifyContent: 'center',
-  },
-  badgeText: { fontWeight: '700', fontSize: 10, color: colors.white },
-  search: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 20,
-    backgroundColor: colors.field, borderWidth: 1, borderColor: colors.fieldBorder,
-    borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: 13,
-  },
-  searchText: { fontWeight: '500', fontSize: 13, color: colors.textMuted },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontWeight: '700', fontSize: 12, color: colors.white },
-  greeting: { fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.4, color: colors.text, marginTop: 24 },
-  greetingSub: { fontWeight: '500', fontSize: 14, color: colors.textSecondary, marginTop: 6 },
-  quick: { flexDirection: 'row', paddingHorizontal: GUTTER - 4 },
-  quickItem: { flex: 1, alignItems: 'center', gap: 10, paddingHorizontal: 2 },
-  quickDisc: {
-    width: 60, height: 60, borderRadius: 30, backgroundColor: colors.background,
-    borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center',
-    shadowColor: colors.accent, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 2,
-  },
-  quickLabel: { fontWeight: '600', fontSize: 12, lineHeight: 15, color: colors.text, textAlign: 'center' },
+function Empty({ icon, title, body }: { icon: FeatherName; title: string; body: string }) {
+  return <EmptyState icon={icon} title={title} body={body} boxed={false} />;
+}
 
-  // Body
-  body: { gap: 32, paddingTop: spacing.sm },
-  section: { paddingHorizontal: GUTTER, gap: spacing.md },
-  sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  sectionTitle: { fontWeight: '700', fontSize: 19, letterSpacing: -0.4, color: colors.text },
-  sectionLink: { fontWeight: '600', fontSize: 13, color: colors.accent },
-  panel: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: 18 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
-  divider: { borderTopWidth: 1, borderTopColor: colors.border },
-  rowText: { flex: 1, fontWeight: '500', fontSize: 14, lineHeight: 20, color: colors.text },
-  rowStrong: { fontWeight: '600', fontSize: 14, color: colors.text },
-  value: { fontWeight: '700', fontSize: 14, color: colors.text, fontVariant: ['tabular-nums'] },
-  metaText: { fontWeight: '400', fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: 2 },
+const useStyles = makeStyles((colors) => ({
+  stats: { flexDirection: 'row', gap: 12 },
+  card: { borderWidth: 1, borderColor: colors.border, borderRadius: 22, padding: 22, gap: 8 },
+  cardHead: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
+  cardTitle: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3, color: colors.text },
+  cardSub: { fontSize: 16, color: colors.textSecondary, marginTop: 2 },
+  link: { fontSize: 16, fontWeight: '600', color: colors.link },
+  alert: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
   flag: { width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: colors.warning },
-  darkBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: spacing.lg, paddingVertical: 10 },
-  darkBtnOff: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  darkBtnText: { fontWeight: '600', fontSize: 13, color: colors.white },
-  person: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
-  personInitial: { fontWeight: '700', fontSize: 14, color: colors.accent },
-  empty: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 18 },
-  emptyText: { flex: 1, fontWeight: '500', fontSize: 13, lineHeight: 19, color: colors.textSecondary },
-
-  // Carousel
-  slide: { flexDirection: 'row', alignItems: 'center', borderRadius: 22, paddingVertical: 22, paddingLeft: 22, paddingRight: 16, minHeight: 172, gap: spacing.sm },
-  slideTitle: { fontWeight: '800', fontSize: 20, lineHeight: 23, letterSpacing: -0.4, color: colors.text },
-  slideBody: { fontWeight: '400', fontSize: 13, lineHeight: 19, color: colors.textSecondary, marginTop: 8, marginBottom: 16 },
-  slideCta: {
-    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10,
-  },
-  slideCtaText: { fontWeight: '700', fontSize: 13, color: colors.white },
-  soonTag: { alignSelf: 'flex-start', backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
-  soonText: { fontWeight: '700', fontSize: 11, color: colors.textSecondary },
-  art: { width: 104, height: 120 },
-  artBlob: { position: 'absolute', left: 4, top: 6, right: 0, bottom: 0, borderRadius: 52, backgroundColor: 'rgba(255,255,255,0.65)' },
-  artChip: {
-    position: 'absolute', alignItems: 'center', justifyContent: 'center',
-    shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 3,
-  },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
-  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.border },
-  dotOn: { backgroundColor: colors.accent },
-
-  customise: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
-  errorBox: { alignItems: 'center', paddingVertical: spacing.xxxl, paddingHorizontal: spacing.xl, gap: spacing.md },
-  retry: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
-});
+  alertText: { flex: 1, fontSize: 16, lineHeight: 22, color: colors.text },
+  person: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 10 },
+  personName: { fontSize: 17, fontWeight: '600', color: colors.text },
+  personSub: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
+  metric: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
+  metricLabel: { flex: 1, fontSize: 16, color: colors.text },
+  metricValue: { fontSize: 16, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
+}));

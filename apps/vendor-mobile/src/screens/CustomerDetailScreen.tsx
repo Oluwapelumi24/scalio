@@ -21,11 +21,13 @@ import {
   formatNaira,
   type Customer,
 } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CustomerDetail'>;
 
 export function CustomerDetailScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { customerId } = route.params;
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -152,9 +154,9 @@ export function CustomerDetailScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   loadingRoot: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  root: { flex: 1, backgroundColor: colors.surface },
+  root: { flex: 1, backgroundColor: colors.background },
   headerSafe: {
     backgroundColor: colors.background,
     paddingHorizontal: spacing.xl,
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   screenTitle: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
   content: { padding: spacing.xl, gap: spacing.md },
   profileCard: {
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 32, backgroundColor: colors.border },
   card: {
     backgroundColor: colors.background,
-    borderRadius: radius.xl,
+    borderRadius: 20,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -224,4 +226,4 @@ const styles = StyleSheet.create({
   },
   saveBtnDisabled: { opacity: 0.6 },
   saveNotesBtnLabel: { color: colors.white, fontWeight: typography.weight.semibold, fontSize: typography.size.base },
-});
+}));

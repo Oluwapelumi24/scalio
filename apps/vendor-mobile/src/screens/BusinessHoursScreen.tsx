@@ -1,24 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { getBusinessHours, setBusinessHours, type BusinessHours } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { Button, Page, PageHeader, StickyFooter } from '../components/ui';
+import { GUTTER, makeStyles, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BusinessHours'>;
 
+// Monday first, the way people read a week.
+const ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const DEFAULT_HOURS: BusinessHours[] = DAYS.map((_, i) => ({
@@ -28,17 +21,24 @@ const DEFAULT_HOURS: BusinessHours[] = DAYS.map((_, i) => ({
   isClosed: i === 0,
 }));
 
+/** Every half hour, for the time picker. */
+const TIMES = Array.from({ length: 48 }, (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`);
+
 export function BusinessHoursScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [hours, setHours] = useState<BusinessHours[]>(DEFAULT_HOURS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
       const data = await getBusinessHours();
-      if (data.length > 0) setHours(data);
+      if (data.length > 0) setHours(DEFAULT_HOURS.map((d) => data.find((h) => h.dayOfWeek === d.dayOfWeek) ?? d));
     } catch {
-      // use defaults
+      // Keep the defaults.
     } finally {
       setLoading(false);
     }
@@ -51,139 +51,118 @@ export function BusinessHoursScreen({ navigation }: Props) {
   }
 
   async function handleSave() {
+    const bad = hours.find((h) => !h.isClosed && h.closeTime <= h.openTime);
+    if (bad) {
+      Alert.alert('Check your hours', `On ${DAYS[bad.dayOfWeek]}, closing time must be after opening time.`);
+      return;
+    }
     setSaving(true);
     try {
       await setBusinessHours(hours);
       navigation.goBack();
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Could not save hours.');
+      Alert.alert('Could not save your hours', err instanceof Error ? err.message : 'Please try again.');
     } finally {
       setSaving(false);
     }
   }
 
+  const day = editing != null ? hours.find((h) => h.dayOfWeek === editing)! : null;
+
   return (
-    <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.headerSafe}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
-          <Feather name="arrow-left" size={20} color={colors.text} />
-        </Pressable>
-        <Text style={styles.screenTitle}>Business hours</Text>
-        <Text style={styles.subtitle}>Set your weekly schedule</Text>
-      </SafeAreaView>
+    <Page
+      footer={
+        <StickyFooter>
+          <Button label="Save" onPress={() => void handleSave()} loading={saving} disabled={loading} style={{ flex: 1 }} />
+        </StickyFooter>
+      }
+    >
+      <PageHeader
+        onBack={() => navigation.goBack()}
+        title="Opening hours"
+        description="When clients can book you. Your calendar shades the hours you are closed."
+      />
 
       {loading ? (
-        <ActivityIndicator style={{ flex: 1 }} color={colors.accent} />
+        <ActivityIndicator color={colors.link} />
       ) : (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {hours.map((h) => (
-            <View key={h.dayOfWeek} style={styles.dayRow}>
-              <View style={styles.dayLeft}>
-                <Text style={styles.dayName}>{DAYS[h.dayOfWeek]}</Text>
-                <Switch
-                  value={!h.isClosed}
-                  onValueChange={(open) => update(h.dayOfWeek, { isClosed: !open })}
-                  trackColor={{ false: colors.border, true: colors.accentLight }}
-                  thumbColor={!h.isClosed ? colors.accent : colors.disabled}
-                />
+        <View>
+          {ORDER.map((d) => {
+            const h = hours.find((x) => x.dayOfWeek === d)!;
+            const open = !h.isClosed;
+            return (
+              <View key={d} style={styles.day}>
+                <Pressable
+                  onPress={() => update(d, { isClosed: open })}
+                  style={[styles.check, open && styles.checkOn]}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: open }}
+                  accessibilityLabel={`Open on ${DAYS[d]}`}
+                  hitSlop={8}
+                >
+                  {open ? <Feather name="check" size={18} color={colors.onAccent} /> : null}
+                </Pressable>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dayName}>{DAYS[d]}</Text>
+                  <Text style={[styles.state, { color: open ? colors.success : colors.textMuted }]}>{open ? 'Open' : 'Closed'}</Text>
+                </View>
+                {open ? (
+                  <Pressable onPress={() => setEditing(d)} accessibilityRole="button" accessibilityLabel={`Change hours for ${DAYS[d]}`} hitSlop={8}>
+                    <Text style={styles.times}>{h.openTime} – {h.closeTime}</Text>
+                  </Pressable>
+                ) : null}
               </View>
-              {h.isClosed ? (
-                <View style={styles.closedBadge}>
-                  <Text style={styles.closedText}>Closed</Text>
-                </View>
-              ) : (
-                <View style={styles.timeRow}>
-                  <TextInput
-                    style={styles.timeInput}
-                    value={h.openTime}
-                    onChangeText={(v) => update(h.dayOfWeek, { openTime: v })}
-                    placeholder="09:00"
-                    placeholderTextColor={colors.textMuted}
-                  />
-                  <Text style={styles.timeSep}>—</Text>
-                  <TextInput
-                    style={styles.timeInput}
-                    value={h.closeTime}
-                    onChangeText={(v) => update(h.dayOfWeek, { closeTime: v })}
-                    placeholder="18:00"
-                    placeholderTextColor={colors.textMuted}
-                  />
-                </View>
-              )}
-            </View>
-          ))}
-
-          <Pressable
-            style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
-            onPress={() => void handleSave()}
-            disabled={saving}
-          >
-            {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnLabel}>Save hours</Text>}
-          </Pressable>
-
-          <View style={{ height: spacing.xxxl }} />
-        </ScrollView>
+            );
+          })}
+        </View>
       )}
-    </View>
+
+      <Modal visible={day != null} transparent animationType="slide" onRequestClose={() => setEditing(null)}>
+        <Pressable style={styles.overlay} onPress={() => setEditing(null)} accessibilityLabel="Close" />
+        {day ? (
+          <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+            <View style={styles.grabber} />
+            <Text style={styles.sheetTitle}>{DAYS[day.dayOfWeek]}</Text>
+            <View style={styles.pickers}>
+              {(['openTime', 'closeTime'] as const).map((k) => (
+                <View key={k} style={{ flex: 1, gap: 8 }}>
+                  <Text style={styles.pickerLabel}>{k === 'openTime' ? 'Opens' : 'Closes'}</Text>
+                  <ScrollView style={styles.picker} showsVerticalScrollIndicator={false}>
+                    {TIMES.map((t) => {
+                      const on = day[k] === t;
+                      return (
+                        <Pressable key={t} onPress={() => update(day.dayOfWeek, { [k]: t })} style={[styles.time, on && styles.timeOn]} accessibilityRole="radio" accessibilityState={{ checked: on }}>
+                          <Text style={[styles.timeText, on && { color: colors.onPrimary }]}>{t}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              ))}
+            </View>
+            <Button label="Done" onPress={() => setEditing(null)} />
+          </View>
+        ) : null}
+      </Modal>
+    </Page>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  headerSafe: {
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  screenTitle: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2, marginBottom: spacing.xs },
-  content: { padding: spacing.xl, gap: spacing.sm },
-  dayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.md,
-  },
-  dayLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, width: 140 },
-  dayName: { fontSize: typography.size.base, fontWeight: typography.weight.medium, color: colors.text, flex: 1 },
-  timeRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  timeInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    fontSize: typography.size.base,
-    color: colors.text,
-    textAlign: 'center',
-    backgroundColor: colors.surface,
-  },
-  timeSep: { fontSize: typography.size.lg, color: colors.textMuted },
-  closedBadge: {
-    flex: 1,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closedText: { fontSize: typography.size.sm, color: colors.textMuted, fontWeight: typography.weight.medium },
-  saveBtn: {
-    marginTop: spacing.md,
-    height: 54,
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveBtnDisabled: { opacity: 0.6 },
-  saveBtnLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.white },
-});
+const useStyles = makeStyles((colors) => ({
+  day: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 14 },
+  check: { width: 30, height: 30, borderRadius: 8, borderWidth: 1.5, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  checkOn: { backgroundColor: colors.accent, borderColor: colors.accent },
+  dayName: { fontSize: 18, color: colors.text },
+  state: { fontSize: 15, marginTop: 2 },
+  times: { fontSize: 18, color: colors.link, fontVariant: ['tabular-nums'] },
+  overlay: { flex: 1, backgroundColor: colors.overlay },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: GUTTER, paddingTop: 10, gap: 14 },
+  grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.borderStrong },
+  sheetTitle: { fontSize: 24, fontWeight: '700', color: colors.text },
+  pickers: { flexDirection: 'row', gap: 16 },
+  pickerLabel: { fontSize: 15, fontWeight: '600', color: colors.textSecondary },
+  picker: { height: 260 },
+  time: { height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  timeOn: { backgroundColor: colors.primary },
+  timeText: { fontSize: 17, color: colors.text, fontVariant: ['tabular-nums'] },
+}));

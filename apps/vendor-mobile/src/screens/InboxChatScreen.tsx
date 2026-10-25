@@ -11,7 +11,7 @@ import {
   type InboxConversationDetail, type InboxMessage,
 } from '../lib/api';
 import { shortTime, windowStatus } from '../lib/inbox';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InboxChat'>;
 
@@ -19,6 +19,8 @@ const SENDER_LABEL: Record<InboxMessage['sentBy'], string> = { customer: '', ven
 
 /** One chat, with the 24-hour reply timer and the AI controls for this chat. */
 export function InboxChatScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { conversationId } = route.params;
   const [chat, setChat] = useState<InboxConversationDetail | null>(null);
   const [draft, setDraft] = useState('');
@@ -185,7 +187,7 @@ export function InboxChatScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.surface },
   header: { backgroundColor: colors.background, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.sm },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
@@ -215,4 +217,4 @@ const styles = StyleSheet.create({
   suggestBtn: { backgroundColor: colors.accentLight },
   sendBtn: { backgroundColor: colors.accent },
   disabled: { opacity: 0.4 },
-});
+}));

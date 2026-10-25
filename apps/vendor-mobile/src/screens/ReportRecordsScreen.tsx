@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { getReportRecords, naira, type ReportRecord } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ReportRecords'>;
 
@@ -38,6 +38,8 @@ function describe(r: ReportRecord): { title: string; detail: string; amount: str
 }
 
 export function ReportRecordsScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { kind, key, title, from, to } = route.params;
   const [records, setRecords] = useState<ReportRecord[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,14 +88,14 @@ export function ReportRecordsScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 4 },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md, gap: 4 },
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
   content: { padding: spacing.xl, gap: spacing.sm, paddingBottom: spacing.xxxl },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md },
   rowTitle: { fontSize: typography.size.base, fontWeight: typography.weight.semibold, color: colors.text },
   amount: { fontSize: typography.size.base, fontWeight: typography.weight.bold, color: colors.text, fontVariant: ['tabular-nums'] },
   meta: { fontSize: typography.size.sm, color: colors.textMuted },
-});
+}));

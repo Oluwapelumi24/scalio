@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { createStaff, updateStaff } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StaffForm'>;
 
@@ -24,6 +24,8 @@ const ROLES = ['practitioner', 'front_desk', 'manager', 'owner'] as const;
 type Role = (typeof ROLES)[number];
 
 export function StaffFormScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const existing = route.params?.member;
   const isEdit = !!existing;
 
@@ -156,8 +158,8 @@ export function StaffFormScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
   headerSafe: {
     backgroundColor: colors.background,
     paddingHorizontal: spacing.xl,
@@ -165,9 +167,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   screenTitle: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
+  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: 2 },
   content: { padding: spacing.xl, gap: spacing.lg },
   field: { gap: spacing.sm },
   label: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: colors.text },
@@ -209,4 +211,4 @@ const styles = StyleSheet.create({
   },
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.white },
-});
+}));

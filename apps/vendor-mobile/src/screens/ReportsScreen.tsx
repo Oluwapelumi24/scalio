@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { getReports, naira, type ReportGroup, type ReportKind, type ReportsOverview } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Reports'>;
 
@@ -20,6 +20,8 @@ const pct = (r: number | null) => (r === null ? '—' : `${Math.round(r * 100)}%
 const signed = (k: number) => (k < 0 ? `−${naira(-k)}` : naira(k));
 
 export function ReportsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [period, setPeriod] = useState<(typeof PERIODS)[number]['id']>('month');
   const [data, setData] = useState<ReportsOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -162,25 +164,25 @@ export function ReportsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
   chips: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   chip: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6, backgroundColor: colors.background },
   chipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   chipText: { fontSize: typography.size.sm, color: colors.textSecondary, fontWeight: typography.weight.medium },
   chipTextOn: { color: colors.white },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg, gap: spacing.md },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text },
   stats: { flexDirection: 'row', gap: spacing.md },
   stat: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md },
   statValue: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text, fontVariant: ['tabular-nums'] },
   statLabel: { fontSize: typography.size.xs, color: colors.textMuted, marginTop: 2 },
-  sub: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: colors.textSecondary, marginTop: spacing.xs },
+  sub: { fontSize: 16, lineHeight: 23, fontWeight: typography.weight.semibold, color: colors.textSecondary, marginTop: spacing.xs },
   groupRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   groupTop: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
   groupLabel: { flex: 1, fontSize: typography.size.sm, color: colors.text },
@@ -190,4 +192,4 @@ const styles = StyleSheet.create({
   definition: { fontSize: typography.size.xs, color: colors.textMuted, lineHeight: 16 },
   meta: { fontSize: typography.size.sm, color: colors.textMuted },
   link: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
-});
+}));

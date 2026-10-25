@@ -1,25 +1,17 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { vendorLogin } from '../lib/api';
 import { saveSession } from '../lib/session';
 import { routeAfterSignIn } from '../lib/postAuth';
-import { colors, radius, spacing, typography } from '../theme';
+import { Button, Field, Page, PageHeader, StickyFooter } from '../components/ui';
+import { makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
+  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +20,7 @@ export function LoginScreen({ navigation }: Props) {
   async function handleLogin() {
     setError('');
     if (!email.trim() || !password) {
-      setError('Please enter your email and password.');
+      setError('Enter your email and password.');
       return;
     }
     setLoading(true);
@@ -51,176 +43,59 @@ export function LoginScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      <View style={styles.fill}>
-      <KeyboardAvoidingView
-        style={styles.inner}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.header}>
-          <View style={styles.logo}>
-            <Text style={styles.logoLetter}>S</Text>
-          </View>
-          <Text style={styles.appName}>Scalio Vendor</Text>
-          <Text style={styles.subtitle}>Manage your business on the go</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Email address</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              placeholderTextColor={colors.textMuted}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor={colors.textMuted}
-              secureTextEntry
-              autoComplete="current-password"
-            />
-          </View>
-
-          {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Page
+        footer={
+          <StickyFooter>
+            <View style={{ flex: 1, gap: 18 }}>
+              <Button label="Sign in" onPress={() => void handleLogin()} loading={loading} />
+              <Pressable onPress={() => navigation.navigate('Register')} accessibilityRole="button" hitSlop={8}>
+                <Text style={styles.foot}>
+                  New to Scalio? <Text style={styles.link}>Register your business</Text>
+                </Text>
+              </Pressable>
             </View>
-          ) : null}
-
-          <Pressable
-            style={[styles.btn, loading && styles.btnDisabled]}
-            onPress={() => void handleLogin()}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.btnLabel}>Sign in</Text>
-            )}
-          </Pressable>
-
-          <Pressable style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
-            <Text style={styles.forgotLabel}>Forgot password?</Text>
-          </Pressable>
-
-          <Pressable style={styles.registerRow} onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerPrompt}>New to Scalio?</Text>
-            <Text style={styles.registerLink}>Register your business →</Text>
-          </Pressable>
+          </StickyFooter>
+        }
+      >
+        <PageHeader
+          onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+          title="Sign in"
+          description="Welcome back. Sign in to see your bookings."
+        />
+        <View style={{ gap: 20 }}>
+          <Field
+            label="Email address"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+          />
+          <Field
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Your password"
+            secureTextEntry
+            autoComplete="current-password"
+            textContentType="password"
+            error={error || undefined}
+            onSubmitEditing={() => void handleLogin()}
+            returnKeyType="go"
+          />
+          <Text style={styles.link} onPress={() => navigation.navigate('ForgotPassword')} accessibilityRole="link">
+            Forgot your password?
+          </Text>
         </View>
-      </KeyboardAvoidingView>
-      </View>
-    </SafeAreaView>
+      </Page>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  fill: { flex: 1, backgroundColor: colors.background },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.xl },
-  header: { alignItems: 'center', marginBottom: spacing.xxxl },
-  logo: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  logoLetter: {
-    fontSize: 32,
-    fontWeight: typography.weight.bold,
-    color: colors.white,
-    letterSpacing: -1,
-  },
-  appName: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
-    color: colors.text,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  form: { gap: spacing.lg },
-  fieldGroup: { gap: spacing.sm },
-  label: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textSecondary,
-  },
-  input: {
-    height: 52,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    fontSize: typography.size.md,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  btn: {
-    height: 52,
-    backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.sm,
-  },
-  btnDisabled: { opacity: 0.6 },
-  btnLabel: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.white,
-  },
-  registerRow: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    marginTop: spacing.sm,
-  },
-  registerPrompt: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-  },
-  registerLink: {
-    fontSize: typography.size.lg,
-    color: colors.accent,
-    fontWeight: typography.weight.bold,
-  },
-  forgotBtn: { alignItems: 'center', paddingVertical: spacing.sm },
-  forgotLabel: {
-    fontSize: typography.size.base,
-    color: colors.accent,
-    fontWeight: typography.weight.semibold,
-  },
-  errorBox: {
-    backgroundColor: colors.errorLight,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  errorText: {
-    fontSize: typography.size.sm,
-    color: colors.error,
-    fontWeight: typography.weight.medium,
-  },
-});
+const useStyles = makeStyles((colors) => ({
+  foot: { fontSize: 16, color: colors.textSecondary, textAlign: 'center' },
+  link: { fontSize: 16, fontWeight: '600', color: colors.link },
+}));

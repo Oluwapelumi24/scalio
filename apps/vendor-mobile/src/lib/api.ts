@@ -15,6 +15,8 @@ export interface VendorBooking {
   paymentMode: PaymentMode;
   totalAmountKobo: number;
   customer: { id: string; name: string; email: string } | null;
+  /** Who it's with. Null when anyone can take it. */
+  staff?: { id: string; name: string } | null;
   services: { id: string; name: string; priceKobo: number }[];
   notes: string | null;
   createdAt: string;
@@ -118,6 +120,25 @@ export async function listBookings(status?: BookingStatus): Promise<VendorBookin
   const qs = status ? `?status=${status}` : '';
   const data = await req<VendorBooking[]>('GET', `/vendor-admin/bookings${qs}`);
   return (Array.isArray(data) ? data : []).map((b) => ({ ...b, services: b.services ?? [] }));
+}
+
+/** Bookings that start inside a window, for the calendar. */
+export async function listBookingsBetween(from: Date, to: Date): Promise<VendorBooking[]> {
+  const qs = `?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
+  const data = await req<VendorBooking[]>('GET', `/vendor-admin/bookings${qs}`);
+  return (Array.isArray(data) ? data : []).map((b) => ({ ...b, services: b.services ?? [] }));
+}
+
+/** Book a client in from the app: an existing client, or a new walk-in by name (and phone). */
+export function createBooking(data: {
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  staffId?: string;
+  serviceIds: string[];
+  scheduledAt: string;
+}): Promise<{ id: string }> {
+  return req('POST', '/vendor-admin/bookings', data);
 }
 
 export interface TodaySummary {
@@ -475,12 +496,33 @@ export function updateCustomerNotes(id: string, notes: string): Promise<Customer
 
 // ─── Schedule ────────────────────────────────────────────────────────────────
 
-export function getBusinessHours(): Promise<BusinessHours[]> {
-  return req('GET', '/vendor-admin/schedule/hours');
+/** The API stores open days as minutes since midnight and leaves closed days out. */
+interface HoursRow { dayOfWeek: number; opensAtMinutes: number; closesAtMinutes: number }
+
+const toClock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const toMins = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + (m || 0);
+};
+
+/** The whole week, Sunday first. Empty when the business hasn't set any hours yet. */
+export async function getBusinessHours(): Promise<BusinessHours[]> {
+  const rows = await req<HoursRow[]>('GET', '/vendor-admin/schedule/hours');
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+  return Array.from({ length: 7 }, (_, day) => {
+    const r = rows.find((x) => x.dayOfWeek === day);
+    return r
+      ? { dayOfWeek: day, openTime: toClock(r.opensAtMinutes), closeTime: toClock(r.closesAtMinutes), isClosed: false }
+      : { dayOfWeek: day, openTime: '09:00', closeTime: '18:00', isClosed: true };
+  });
 }
 
-export function setBusinessHours(hours: BusinessHours[]): Promise<BusinessHours[]> {
-  return req('PUT', '/vendor-admin/schedule/hours', { hours });
+export async function setBusinessHours(hours: BusinessHours[]): Promise<BusinessHours[]> {
+  const days = hours
+    .filter((h) => !h.isClosed)
+    .map((h) => ({ dayOfWeek: h.dayOfWeek, opensAtMinutes: toMins(h.openTime), closesAtMinutes: toMins(h.closeTime) }));
+  await req('PUT', '/vendor-admin/schedule/hours', { days });
+  return getBusinessHours();
 }
 
 export function getBlackoutDates(): Promise<BlackoutDate[]> {
@@ -522,6 +564,13 @@ export interface HomeItem {
 export interface HomeResponse {
   generatedAt: string;
   business: { name: string };
+  /** The basics, always present whatever the business's interests or home settings. */
+  bookings: {
+    link: string;
+    upcoming: { id: string; customerName: string | null; scheduledAt: string; status: string }[];
+    total: number;
+    setup: { services: boolean; hours: boolean; payments: boolean };
+  };
   layers: Record<HomeLayer, HomeItem[]>;
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
 }
@@ -877,6 +926,141 @@ export function updateInboxSettings(patch: { aiModes?: Partial<Record<InboxChann
 export function draftInboxFaq(): Promise<{ faq: FaqEntry[] }> {
   return req('POST', '/vendor-admin/inbox/faq/draft', {});
 }
+
+// ── Ads Manager: campaigns ───────────────────────────────────────────────────
+
+export type AdObjective = 'awareness' | 'traffic' | 'engagement' | 'leads' | 'app_promotion' | 'sales';
+export type AdDestination = 'whatsapp' | 'messenger' | 'instagram_direct' | 'website' | 'app';
+export type AdPaymentRoute = 'scalio' | 'own_meta';
+export type AdCampaignStatus = 'awaiting_payment' | 'launching' | 'in_review' | 'active' | 'paused' | 'completed' | 'rejected' | 'failed' | 'cancelled';
+
+export interface AdLocation { key: string; type: 'city' | 'region' | 'country'; name: string; radiusKm?: number }
+export interface AdTargeting {
+  locations: AdLocation[];
+  ageMin: number;
+  ageMax: number;
+  genders: 'all' | 'male' | 'female';
+  interests: { id: string; name: string }[];
+  placements: 'automatic' | { facebook: string[]; instagram: string[]; messenger: string[] };
+}
+export interface AdCreativeFields {
+  mediaId: string;
+  primaryText: string;
+  headline: string;
+  description: string | null;
+  link: string | null;
+  welcomeMessage: string | null;
+  iceBreakers: string[];
+}
+export interface AdExtras { pixelId?: string; appId?: string; appStoreUrl?: string }
+
+export interface AdObjectiveOption { id: AdObjective; label: string; blurb: string; bestFor: string; destinations: AdDestination[]; simple: boolean }
+export interface AdRoutes {
+  scalio: { available: boolean; reason: string | null };
+  own_meta: { available: boolean; reason: string | null; adAccountName: string | null; paymentMethodLabel: string | null };
+}
+
+export interface AdBuilder {
+  name: string;
+  objective: AdObjective;
+  destination: AdDestination;
+  targeting: AdTargeting;
+  dailyBudgetKobo: number;
+  startAt: string;
+  endAt: string;
+  days: number;
+  bookingLink: string;
+  pageName: string | null;
+  instagramName: string | null;
+  objectives: AdObjectiveOption[];
+  fee: { percent: number; minKobo: number };
+  creditKobo: number;
+  routes: AdRoutes;
+  aiAvailable: boolean;
+}
+
+export interface AdQuote {
+  route: AdPaymentRoute;
+  days: number;
+  dailyBudgetKobo: number;
+  spendKobo: number;
+  vatKobo: number;
+  feeKobo: number;
+  creditUsedKobo: number;
+  dueNowKobo: number;
+  metaChargesKobo: number;
+}
+
+export interface AdCopyDraft {
+  variants: { angle: string; primaryText: string; headline: string; description: string }[];
+  welcomeMessage: string;
+  iceBreakers: string[];
+}
+
+export interface InterestOption { id: string; name: string; audienceSize: number | null; topic: string | null }
+export interface LocationOption { key: string; type: 'city' | 'region' | 'country'; name: string; label: string }
+
+export interface AdCampaign {
+  id: string;
+  name: string;
+  mode: 'simple' | 'advanced';
+  objective: AdObjective;
+  objectiveLabel: string;
+  destination: AdDestination;
+  route: AdPaymentRoute;
+  status: AdCampaignStatus;
+  dailyBudgetKobo: number;
+  startAt: string;
+  endAt: string;
+  days: number;
+  paidSpendKobo: number;
+  spentKobo: number;
+  targeting: AdTargeting;
+  creative: AdCreativeFields;
+  mediaId: string | null;
+  reviewNote: string | null;
+  lastError: string | null;
+  launchedAt: string | null;
+  createdAt: string;
+}
+
+export interface AdCampaignDetail extends AdCampaign {
+  payments: { id: string; purpose: 'launch' | 'extend'; extraDays: number | null; status: 'pending' | 'paid' | 'failed'; amountDueKobo: number; paidAt: string | null }[];
+  quoteForExtension: Record<string, AdQuote>;
+}
+
+export interface NewAdCampaign {
+  name: string;
+  mode: 'simple' | 'advanced';
+  objective: AdObjective;
+  destination: AdDestination;
+  route: AdPaymentRoute;
+  dailyBudgetKobo: number;
+  startAt: string;
+  endAt: string;
+  targeting: AdTargeting;
+  creative: AdCreativeFields;
+  extras: AdExtras;
+}
+
+export interface AdCheckout { paid: boolean; authorizationUrl: string | null; quote: AdQuote; campaign: AdCampaign }
+
+export const getAdBuilder = (): Promise<AdBuilder> => req('GET', '/vendor-admin/ads/builder');
+export const searchAdInterests = (q: string): Promise<InterestOption[]> => req('GET', `/vendor-admin/ads/targeting/interests?q=${encodeURIComponent(q)}`);
+export const suggestAdInterests = (names: string[]): Promise<InterestOption[]> =>
+  req('GET', `/vendor-admin/ads/targeting/interest-suggestions?names=${encodeURIComponent(names.join('|'))}`);
+export const searchAdLocations = (q: string): Promise<LocationOption[]> => req('GET', `/vendor-admin/ads/targeting/locations?q=${encodeURIComponent(q)}`);
+export const estimateAdReach = (body: { objective: AdObjective; destination: AdDestination; targeting: AdTargeting }): Promise<{ estimate: { lower: number; upper: number } | null }> =>
+  req('POST', '/vendor-admin/ads/targeting/reach', body);
+export const quoteAd = (body: { dailyBudgetKobo: number; days: number; route: AdPaymentRoute }): Promise<AdQuote> => req('POST', '/vendor-admin/ads/quote', body);
+export const draftAdCopy = (body: { objective: AdObjective; destination: AdDestination; brief: string | null }): Promise<AdCopyDraft> => req('POST', '/vendor-admin/ads/copy', body);
+export const listAdCampaigns = (): Promise<{ campaigns: AdCampaign[]; creditKobo: number }> => req('GET', '/vendor-admin/ads/campaigns');
+export const getAdCampaign = (id: string): Promise<AdCampaignDetail> => req('GET', `/vendor-admin/ads/campaigns/${id}`);
+export const createAdCampaign = (body: NewAdCampaign): Promise<AdCampaign> => req('POST', '/vendor-admin/ads/campaigns', body);
+export const checkoutAdCampaign = (id: string): Promise<AdCheckout> => req('POST', `/vendor-admin/ads/campaigns/${id}/checkout`, { from: 'mobile' });
+export const extendAdCampaign = (id: string, days: number): Promise<AdCheckout> => req('POST', `/vendor-admin/ads/campaigns/${id}/extend`, { days, from: 'mobile' });
+export const retryAdCampaign = (id: string): Promise<AdCampaign> => req('POST', `/vendor-admin/ads/campaigns/${id}/retry`, {});
+export const cancelAdCampaign = (id: string): Promise<AdCampaign> => req('POST', `/vendor-admin/ads/campaigns/${id}/cancel`, {});
 
 /** Publish now, or at `at` (ISO). */
 export function publishPost(id: string, platforms: ('facebook' | 'instagram')[], at?: string): Promise<Publication[]> {

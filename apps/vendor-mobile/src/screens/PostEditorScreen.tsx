@@ -11,7 +11,7 @@ import {
   unplanPost, updatePost, uploadMedia, writeCaption,
   type ContentPlatform, type ContentPost, type PostFields, type Publication, type StudioInfo,
 } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostEditor'>;
 
@@ -32,6 +32,8 @@ function nextDays(n: number) {
 }
 
 export function PostEditorScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [studio, setStudio] = useState<StudioInfo | null>(null);
   const [post, setPost] = useState<ContentPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -409,12 +411,12 @@ export function PostEditorScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md },
-  back: { width: 36, height: 36, justifyContent: 'center' },
-  title: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text },
+  back: { width: 44, height: 44, justifyContent: 'center' },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
   photoBox: { height: 220, borderRadius: radius.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
@@ -433,7 +435,7 @@ const styles = StyleSheet.create({
   meta: { fontSize: typography.size.sm, color: colors.textMuted },
   link: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   section: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text, marginTop: spacing.lg },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg, gap: spacing.sm },
   cardTitle: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text },
   preview: { fontSize: typography.size.base, color: colors.text, backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md },
   problem: { fontSize: typography.size.sm, color: colors.error },
@@ -443,5 +445,5 @@ const styles = StyleSheet.create({
   secondary: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.md, alignItems: 'center' },
   secondaryText: { color: colors.primary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
   primary: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.lg, alignItems: 'center' },
-  primaryText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
-});
+  primaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+}));

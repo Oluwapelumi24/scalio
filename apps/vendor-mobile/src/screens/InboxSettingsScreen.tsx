@@ -11,13 +11,15 @@ import {
   type AiReplyMode, type FaqEntry, type InboxSettings,
 } from '../lib/api';
 import { hasPlaceholder } from '../lib/inbox';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InboxSettings'>;
 const MODES: AiReplyMode[] = ['off', 'suggest', 'reply'];
 
 /** AI replies per channel, and the FAQ the AI answers from. */
 export function InboxSettingsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [settings, setSettings] = useState<InboxSettings | null>(null);
   const [faq, setFaq] = useState<FaqEntry[]>([]);
   const [dirty, setDirty] = useState(false);
@@ -161,15 +163,15 @@ export function InboxSettingsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.xs },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: spacing.xs },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
   section: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing.lg },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: spacing.lg },
   row: { paddingVertical: spacing.md, gap: spacing.sm },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -192,4 +194,4 @@ const styles = StyleSheet.create({
   link: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   disabled: { opacity: 0.5 },
   note: { backgroundColor: colors.mist, borderRadius: radius.md, padding: spacing.md },
-});
+}));

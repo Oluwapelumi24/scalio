@@ -9,7 +9,7 @@ import {
   type Lead, type LeadSource, type StaffMember,
 } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LeadDetail'>;
 
@@ -33,6 +33,8 @@ const waNumber = (phone: string) => {
 };
 
 export function LeadDetailScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const leadId = route.params.leadId;
   const session = getSession();
   const canAssign = session?.role !== 'practitioner';
@@ -239,14 +241,14 @@ export function LeadDetailScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md },
-  back: { width: 36, height: 36, justifyContent: 'center' },
-  title: { flex: 1, fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text, textAlign: 'center' },
+  back: { width: 44, height: 44, justifyContent: 'center' },
+  title: { flex: 1, fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text, textAlign: 'center' },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg, gap: spacing.md },
   statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   status: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text },
   due: { backgroundColor: colors.amberSoft, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 2 },
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
   secondary: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, alignItems: 'center' },
   secondaryText: { color: colors.primary, fontWeight: typography.weight.bold, fontSize: typography.size.sm },
   primary: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.lg, alignItems: 'center' },
-  primaryText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+  primaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
   disabled: { opacity: 0.45 },
   meta: { fontSize: typography.size.sm, color: colors.textMuted },
-});
+}));

@@ -16,11 +16,13 @@ import type { RootStackParamList } from '../navigation/types';
 import { resetPassword } from '../lib/api';
 import { saveSession } from '../lib/session';
 import { routeAfterSignIn } from '../lib/postAuth';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ResetPassword'>;
 
 export function ResetPasswordScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { email } = route.params;
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
@@ -135,7 +137,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   inner: { flex: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
   back: { marginBottom: spacing.xxxl },
@@ -146,15 +148,15 @@ const styles = StyleSheet.create({
   },
   header: { marginBottom: spacing.xxxl },
   title: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontSize: 32,
+    fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
+    fontSize: 16,
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   emailHighlight: {
@@ -199,4 +201,4 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     color: colors.white,
   },
-});
+}));

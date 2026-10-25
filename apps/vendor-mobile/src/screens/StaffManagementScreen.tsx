@@ -14,19 +14,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { listStaff, deleteStaff, type StaffMember } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles, type Colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StaffManagement'>;
 
-const ROLE_COLOR: Record<string, string> = {
+const ROLE_COLOR = (colors: Colors): Record<string, string> => ({
   owner: colors.primary,
   manager: '#172554',
   practitioner: colors.accent,
-  front_desk: colors.textMuted,
-};
+  front_desk: colors.textMuted,});
 
 function RoleBadge({ role }: { role: string }) {
-  const bg = ROLE_COLOR[role] ?? colors.textSecondary;
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const bg = ROLE_COLOR(colors)[role] ?? colors.textSecondary;
   return (
     <View style={[styles.roleBadge, { backgroundColor: bg }]}>
       <Text style={styles.roleLabel}>{role}</Text>
@@ -35,6 +36,8 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export function StaffManagementScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -158,8 +161,8 @@ export function StaffManagementScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
   headerSafe: {
     backgroundColor: colors.background,
     paddingHorizontal: spacing.xl,
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md, marginBottom: spacing.sm },
-  backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -180,13 +183,13 @@ const styles = StyleSheet.create({
   },
   addBtnLabel: { color: colors.white, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   screenTitle: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
+  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: 2 },
   list: { padding: spacing.xl, gap: spacing.sm },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background,
-    borderRadius: radius.xl,
+    borderRadius: 20,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -215,8 +218,8 @@ const styles = StyleSheet.create({
   roleLabel: { fontSize: typography.size.xs, color: colors.white, fontWeight: typography.weight.semibold, textTransform: 'capitalize' },
   actions: { gap: spacing.sm },
   iconBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: radius.md,
     backgroundColor: colors.surface,
     alignItems: 'center',
@@ -231,4 +234,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   emptyAddLabel: { color: colors.white, fontWeight: typography.weight.semibold, fontSize: typography.size.base },
-});
+}));

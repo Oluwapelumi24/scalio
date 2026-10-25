@@ -7,7 +7,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { LEAD_SOURCE_LABELS, LEAD_STATUS_LABELS, getLeadSummary, listLeads, type Lead, type LeadStatus } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Leads'>;
 type Filter = 'due' | 'open' | LeadStatus;
@@ -28,6 +28,8 @@ const EMPTY: Record<Filter, string> = {
 };
 
 export function LeadsScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [filter, setFilter] = useState<Filter>(route.params?.filter ?? 'due');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [summary, setSummary] = useState<{ open: number; due: number; won30d: number } | null>(null);
@@ -117,12 +119,12 @@ export function LeadsScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
+  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
   newBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.primary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   newText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.sm },
   summary: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.sm },
@@ -132,7 +134,7 @@ const styles = StyleSheet.create({
   chipText: { fontSize: typography.size.sm, color: colors.textSecondary, fontWeight: typography.weight.medium },
   chipTextOn: { color: colors.white },
   content: { padding: spacing.xl, gap: spacing.sm, paddingBottom: spacing.xxxl },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg, gap: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md },
   name: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text },
   note: { fontSize: typography.size.sm, color: colors.textSecondary },
@@ -140,4 +142,4 @@ const styles = StyleSheet.create({
   link: { color: colors.accent, fontWeight: typography.weight.bold },
   due: { backgroundColor: colors.amberSoft, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 2 },
   dueText: { fontSize: typography.size.xs, color: colors.warning, fontWeight: typography.weight.bold },
-});
+}));

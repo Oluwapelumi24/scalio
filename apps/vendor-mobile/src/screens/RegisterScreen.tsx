@@ -17,11 +17,13 @@ import type { RootStackParamList } from '../navigation/types';
 import { vendorRegister } from '../lib/api';
 import { saveSession } from '../lib/session';
 import { routeAfterSignIn } from '../lib/postAuth';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 export function RegisterScreen({ navigation }: Props) {
+  const s = useSStyles();
+  const { colors } = useTheme();
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
@@ -181,7 +183,7 @@ export function RegisterScreen({ navigation }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useSStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   fill: { flex: 1, backgroundColor: colors.background },
   kav: { flex: 1 },
@@ -194,15 +196,15 @@ const s = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   title: {
-    fontSize: 26,
-    fontWeight: typography.weight.bold,
+    fontSize: 32,
+    fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
+    fontSize: 16,
+    color: colors.textSecondary,
     lineHeight: 21,
     marginBottom: spacing.xxl,
   },
@@ -252,7 +254,7 @@ const s = StyleSheet.create({
   btnLabel: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   loginRow: {
     flexDirection: 'row',
@@ -268,4 +270,4 @@ const s = StyleSheet.create({
     color: colors.accent,
     fontWeight: typography.weight.semibold,
   },
-});
+}));

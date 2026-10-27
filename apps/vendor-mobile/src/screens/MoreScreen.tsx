@@ -97,12 +97,12 @@ export function MoreScreen({ navigation }: Props) {
 
 const useStyles = makeStyles((colors) => ({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: GUTTER, paddingVertical: 12 },
-  title: { fontSize: 32, fontWeight: '700', letterSpacing: -0.6, color: colors.text },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.6, color: colors.text },
   content: { paddingHorizontal: GUTTER, paddingBottom: 40, gap: 24 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   tile: {
     width: '47.8%', minHeight: 116, borderRadius: 20, borderWidth: 1, borderColor: colors.border,
     backgroundColor: colors.card, padding: 20, justifyContent: 'space-between',
   },
-  tileLabel: { fontSize: 18, fontWeight: '500', color: colors.text },
+  tileLabel: { fontSize: 15, fontWeight: '500', color: colors.text },
 }));

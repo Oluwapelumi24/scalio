@@ -653,8 +653,8 @@ const useStyles = makeStyles((colors) => ({
   btnAccent: { backgroundColor: colors.accent },
   btnSecondary: { borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: 'transparent' },
   btnDisabled: { backgroundColor: colors.surface, borderColor: colors.surface },
-  btnLabel: { fontSize: 17, fontWeight: '600' },
-  btnLabelSm: { fontSize: 15 },
+  btnLabel: { fontSize: 15, fontWeight: '600' },
+  btnLabelSm: { fontSize: 14 },
 
   iconBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   iconBtnOutlined: { borderWidth: 1, borderColor: colors.borderStrong },
@@ -664,7 +664,7 @@ const useStyles = makeStyles((colors) => ({
     flexDirection: 'row', alignItems: 'center', gap: 6, height: 44, paddingHorizontal: 18,
     borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderStrong,
   },
-  addLabel: { fontSize: 16, fontWeight: '600', color: colors.text },
+  addLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
 
   page: { flex: 1, backgroundColor: colors.background },
   pageContent: { paddingHorizontal: GUTTER, paddingBottom: 48, gap: 28 },
@@ -672,8 +672,8 @@ const useStyles = makeStyles((colors) => ({
   headerBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginLeft: -10, minHeight: 48 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  pageTitle: { fontSize: 32, lineHeight: 38, fontWeight: '700', letterSpacing: -0.6, color: colors.text, flexShrink: 1 },
-  pageDescription: { fontSize: 16, lineHeight: 23, color: colors.textSecondary },
+  pageTitle: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.6, color: colors.text, flexShrink: 1 },
+  pageDescription: { fontSize: 14, lineHeight: 19, color: colors.textSecondary },
   link: { color: colors.link, fontWeight: '500' },
 
   footer: {
@@ -682,16 +682,16 @@ const useStyles = makeStyles((colors) => ({
   },
 
   sectionHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3, color: colors.text },
+  sectionTitle: { fontSize: 17, fontWeight: '700', letterSpacing: -0.3, color: colors.text },
 
   group: { gap: spacing.md },
   groupCard: { borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingVertical: 6, backgroundColor: colors.card },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 20, paddingVertical: 15 },
   rowPressed: { backgroundColor: colors.surface },
   rowText: { flex: 1, gap: 2 },
-  rowLabel: { fontSize: 17, fontWeight: '500', color: colors.text },
-  rowSub: { fontSize: 14, lineHeight: 20, color: colors.textSecondary },
-  rowStatus: { fontSize: 14, fontWeight: '500' },
+  rowLabel: { fontSize: 15, fontWeight: '500', color: colors.text },
+  rowSub: { fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  rowStatus: { fontSize: 13, fontWeight: '500' },
   divider: { height: 1, backgroundColor: colors.border },
 
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -699,33 +699,33 @@ const useStyles = makeStyles((colors) => ({
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, paddingHorizontal: 18,
     borderRadius: radius.pill, borderWidth: 1, borderColor: colors.borderStrong,
   },
-  searchInput: { flex: 1, fontSize: 16, color: colors.text, paddingVertical: 0 },
+  searchInput: { flex: 1, fontSize: 14, color: colors.text, paddingVertical: 0 },
 
   field: { gap: 8 },
   fieldLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  fieldLabel: { fontSize: 16, fontWeight: '600', color: colors.text },
-  fieldOptional: { fontSize: 16, fontWeight: '400', color: colors.textMuted },
+  fieldLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
+  fieldOptional: { fontSize: 14, fontWeight: '400', color: colors.textMuted },
   fieldInput: {
     minHeight: 54, borderRadius: 12, borderWidth: 1, borderColor: colors.fieldBorder, backgroundColor: colors.field,
-    paddingHorizontal: 18, fontSize: 17, color: colors.text,
+    paddingHorizontal: 18, fontSize: 15, color: colors.text,
   },
   fieldMultiline: { minHeight: 120, paddingTop: 16, textAlignVertical: 'top' },
-  fieldHelper: { fontSize: 14, lineHeight: 20, color: colors.textSecondary },
-  fieldError: { fontSize: 14, color: colors.error },
+  fieldHelper: { fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  fieldError: { fontSize: 13, color: colors.error },
 
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 6 },
 
   pills: { gap: 8, paddingRight: GUTTER },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, paddingHorizontal: 20, borderRadius: radius.pill },
   pillOn: { backgroundColor: colors.primary },
-  pillLabel: { fontSize: 16, fontWeight: '600', color: colors.text },
+  pillLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
   pillLabelOn: { color: colors.onPrimary },
 
   underlineWrap: { borderBottomWidth: 1, borderBottomColor: colors.border, marginHorizontal: -GUTTER },
   underlineTabs: { paddingHorizontal: GUTTER, gap: 28 },
   underlineTab: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, borderBottomWidth: 3, borderBottomColor: 'transparent', marginBottom: -1 },
   underlineTabOn: { borderBottomColor: colors.text },
-  underlineLabel: { fontSize: 16, fontWeight: '600', color: colors.textSecondary },
+  underlineLabel: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
   underlineLabelOn: { color: colors.text },
 
   badge: { minWidth: 26, height: 26, borderRadius: 13, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
@@ -740,22 +740,22 @@ const useStyles = makeStyles((colors) => ({
     flexDirection: 'row', gap: 14, padding: 20, borderRadius: 18,
     backgroundColor: colors.tip, borderWidth: 1, borderColor: colors.tipBorder,
   },
-  tipTitle: { fontSize: 17, fontWeight: '700', color: colors.text },
-  tipBody: { fontSize: 15, lineHeight: 22, color: colors.text },
+  tipTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  tipBody: { fontSize: 14, lineHeight: 20, color: colors.text },
 
   empty: { alignItems: 'center', gap: 8, paddingVertical: 40, paddingHorizontal: 24 },
   emptyBoxed: { borderWidth: 1, borderColor: colors.border, borderRadius: 20 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', marginTop: 8 },
-  emptyBody: { fontSize: 15, lineHeight: 22, color: colors.textSecondary, textAlign: 'center' },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.text, textAlign: 'center', marginTop: 8 },
+  emptyBody: { fontSize: 14, lineHeight: 20, color: colors.textSecondary, textAlign: 'center' },
 
   stat: { borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 22, gap: 6 },
-  statLabel: { fontSize: 17, fontWeight: '600', color: colors.text },
-  statValue: { fontSize: 34, fontWeight: '700', letterSpacing: -0.5, color: colors.text, fontVariant: ['tabular-nums'] },
+  statLabel: { fontSize: 15, fontWeight: '600', color: colors.text },
+  statValue: { fontSize: 26, fontWeight: '700', letterSpacing: -0.5, color: colors.text, fontVariant: ['tabular-nums'] },
 
   segments: { flexDirection: 'row', gap: 8 },
   segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.border, overflow: 'hidden' },
   segmentFill: { height: 4, backgroundColor: colors.accent },
 
   checkItem: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
-  checkText: { flex: 1, fontSize: 17, lineHeight: 24, color: colors.text },
+  checkText: { flex: 1, fontSize: 15, lineHeight: 20, color: colors.text },
 }));

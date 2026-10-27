@@ -8,13 +8,12 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import type { Vendor } from '@scalio/shared-types';
 import type { MainTabScreenProps } from '../navigation/types';
@@ -22,7 +21,16 @@ import { listVendors } from '../lib/api';
 import { CATEGORY_META, getVendorImageSource } from '../lib/categories';
 import { INTERESTS } from '../lib/interests';
 import { getCurrentUser } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import {
+  Avatar,
+  Button,
+  EmptyState,
+  IconButton,
+  SearchField,
+  SectionTitle,
+  type FeatherName,
+} from '../components/ui';
+import { GUTTER, makeStyles, spacing, useTheme } from '../theme';
 
 type Props = MainTabScreenProps<'Home'>;
 
@@ -48,59 +56,69 @@ const POPULAR_AREAS = [
   'Lekki Phase 2, Lagos',
 ];
 
-const CARD_WIDTH = 168;
-const CARD_IMAGE_HEIGHT = 120;
+const CARD_WIDTH = 176;
+const CARD_IMAGE_HEIGHT = 124;
 
 function shortAddress(address: string): string {
   const parts = address.split(',').map((s) => s.trim());
   return parts.length >= 2 ? parts.slice(-2).join(', ') : address;
 }
 
-function VendorCard({ vendor, onPress }: { vendor: Vendor; onPress: () => void }) {
+function Rating({ vendor }: { vendor: Vendor }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  if (vendor.rating == null && vendor.reviewCount == null) return null;
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <View style={styles.ratingRow}>
+      <Feather name="star" size={13} color={colors.warning} />
+      {vendor.rating != null ? <Text style={styles.ratingValue}>{vendor.rating.toFixed(1)}</Text> : null}
+      {vendor.reviewCount != null ? <Text style={styles.reviewCount}>({vendor.reviewCount})</Text> : null}
+    </View>
+  );
+}
+
+function VendorCard({ vendor, onPress }: { vendor: Vendor; onPress: () => void }) {
+  const styles = useStyles();
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={vendor.businessName}
+    >
       <Image source={getVendorImageSource(vendor)} style={styles.cardImage} />
       <View style={styles.cardBody}>
         <Text style={styles.cardName} numberOfLines={1}>{vendor.businessName}</Text>
-        {(vendor.rating != null || vendor.reviewCount != null) && (
-          <View style={styles.ratingRow}>
-            <Feather name="star" size={11} color="#F5A623" />
-            {vendor.rating != null && (
-              <Text style={styles.ratingValue}>{vendor.rating.toFixed(1)}</Text>
-            )}
-            {vendor.reviewCount != null && (
-              <Text style={styles.reviewCount}>({vendor.reviewCount})</Text>
-            )}
-          </View>
-        )}
+        <Rating vendor={vendor} />
         {vendor.address ? (
-          <Text style={styles.cardAddress} numberOfLines={1}>{shortAddress(vendor.address)}</Text>
+          <Text style={styles.cardSub} numberOfLines={1}>{shortAddress(vendor.address)}</Text>
         ) : null}
-        <View style={styles.tagRow}>
-          <View style={styles.categoryTag}>
-            <Text style={styles.categoryTagText}>{vendor.category}</Text>
-          </View>
-        </View>
+        <Text style={styles.cardTag} numberOfLines={1}>{vendor.category}</Text>
       </View>
     </Pressable>
   );
 }
 
 function CategoryChips({ onSelect }: { onSelect: (category: string) => void }) {
+  const { colors, scheme } = useTheme();
+  const styles = useStyles();
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.categoryScroll}
-    >
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.categoryScroll}>
       {INTERESTS.map((category) => {
         const meta = CATEGORY_META[category as keyof typeof CATEGORY_META];
         return (
-          <Pressable key={category} style={styles.categoryChip} onPress={() => onSelect(category)}>
-            <View style={styles.categoryIconWrap}>
-              <Feather name={meta.icon} size={20} color={colors.textBody} />
+          <Pressable
+            key={category}
+            style={styles.categoryChip}
+            onPress={() => onSelect(category)}
+            accessibilityRole="button"
+            accessibilityLabel={category}
+          >
+            {/* Dark mode: soft grey circle with a black glyph. Light mode: pale navy circle with a navy glyph. */}
+            <View style={[styles.categoryIcon, scheme === 'dark' && { backgroundColor: '#d1d5db' }]}>
+              <Feather name={meta.icon} size={18} color={scheme === 'dark' ? '#0a0a0a' : colors.link} />
             </View>
-            <Text style={styles.categoryChipLabel} numberOfLines={1}>{category}</Text>
+            <Text style={styles.categoryLabel} numberOfLines={1}>{category}</Text>
           </Pressable>
         );
       })}
@@ -119,17 +137,15 @@ function SectionRow({
   onPress: (v: Vendor) => void;
   loading: boolean;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={{ gap: spacing.md }}>
+      <SectionTitle title={title} />
       {loading ? (
-        <ActivityIndicator style={styles.loader} />
+        <ActivityIndicator color={colors.link} style={{ marginVertical: spacing.xl }} />
       ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardScroll}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.cardScroll}>
           {vendors.map((vendor) => (
             <VendorCard key={vendor.id} vendor={vendor} onPress={() => onPress(vendor)} />
           ))}
@@ -139,122 +155,222 @@ function SectionRow({
   );
 }
 
-// ─── Search result card (full-width, horizontal layout) ─────────────────────
+// ─── Search result row (full width) ──────────────────────────────────────────
 function SearchResultCard({ vendor, onPress }: { vendor: Vendor; onPress: () => void }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
-    <Pressable style={styles.resultCard} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [styles.result, pressed && { backgroundColor: colors.surface }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={vendor.businessName}
+    >
       <Image source={getVendorImageSource(vendor)} style={styles.resultImage} />
-      <View style={styles.resultBody}>
-        <Text style={styles.resultName} numberOfLines={1}>{vendor.businessName}</Text>
-        {(vendor.rating != null || vendor.reviewCount != null) && (
-          <View style={styles.ratingRow}>
-            <Feather name="star" size={11} color="#F5A623" />
-            {vendor.rating != null && (
-              <Text style={styles.ratingValue}>{vendor.rating.toFixed(1)}</Text>
-            )}
-            {vendor.reviewCount != null && (
-              <Text style={styles.reviewCount}>({vendor.reviewCount})</Text>
-            )}
-          </View>
-        )}
-        <Text style={styles.resultMeta} numberOfLines={1}>
+      <View style={{ flex: 1, gap: 3 }}>
+        <Text style={styles.cardName} numberOfLines={1}>{vendor.businessName}</Text>
+        <Rating vendor={vendor} />
+        <Text style={styles.cardSub} numberOfLines={1}>
           {vendor.category}{vendor.address ? ` · ${shortAddress(vendor.address)}` : ''}
         </Text>
       </View>
-      <Feather name="chevron-right" size={16} color={colors.border} />
+      <Feather name="chevron-right" size={20} color={colors.text} />
     </Pressable>
   );
 }
 
-// ─── Filter bottom sheet ─────────────────────────────────────────────────────
-function FilterModal({
+// ─── Bottom sheets (same look as the vendor app's Create sheet) ──────────────
+function Sheet({
   visible,
-  draft,
-  onToggle,
-  onClear,
-  onApply,
   onClose,
+  title,
+  children,
+  maxHeight,
 }: {
   visible: boolean;
-  draft: string[];
-  onToggle: (cat: string) => void;
-  onClear: () => void;
-  onApply: () => void;
   onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  maxHeight?: number;
 }) {
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose} />
-      <View style={styles.filterSheet}>
-        <View style={styles.sheetHandle} />
-        <Text style={styles.filterTitle}>Filter results</Text>
-        <Text style={styles.filterSectionLabel}>CATEGORY</Text>
-        <ScrollView style={styles.filterScroll} showsVerticalScrollIndicator={false}>
-          {INTERESTS.map((cat) => {
-            const selected = draft.includes(cat);
-            return (
-              <Pressable key={cat} style={styles.filterRow} onPress={() => onToggle(cat)}>
-                <View style={[styles.checkbox, selected && styles.checkboxActive]}>
-                  {selected && <Feather name="check" size={11} color="#fff" />}
-                </View>
-                <Text style={styles.filterRowText}>{cat}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-        <View style={styles.filterActions}>
-          <Pressable style={styles.clearBtn} onPress={onClear}>
-            <Text style={styles.clearBtnText}>Clear all</Text>
-          </Pressable>
-          <Pressable style={styles.applyBtn} onPress={onApply}>
-            <Text style={styles.applyBtnText}>
-              Apply{draft.length > 0 ? ` (${draft.length})` : ''}
-            </Text>
-          </Pressable>
+      <Pressable style={styles.overlay} onPress={onClose} accessibilityLabel="Close" />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16, maxHeight }]}>
+          <View style={styles.grabber} />
+          <View style={styles.sheetHead}>
+            <Text style={styles.sheetTitle} accessibilityRole="header">{title}</Text>
+            <IconButton icon="x" label="Close" onPress={onClose} />
+          </View>
+          {children}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
-// ─── Location picker components ──────────────────────────────────────────────
+// ─── Filters ─────────────────────────────────────────────────────────────────
+interface Filters {
+  minRating: number | null;
+  areas: string[];
+  categories: string[];
+}
+
+const NO_FILTERS: Filters = { minRating: null, areas: [], categories: [] };
+
+const RATING_OPTIONS: { label: string; value: number | null }[] = [
+  { label: 'Any', value: null },
+  { label: '3.5+', value: 3.5 },
+  { label: '4.0+', value: 4 },
+  { label: '4.5+', value: 4.5 },
+];
+
+function countFilters(f: Filters): number {
+  return (f.minRating ? 1 : 0) + f.areas.length + f.categories.length;
+}
+
+/** The neighbourhood part of an address: "Bariga, Shomolu, Lagos" → "Shomolu". */
+function areaOf(vendor: Vendor): string | null {
+  if (!vendor.address) return null;
+  const parts = vendor.address.split(',').map((s) => s.trim()).filter(Boolean);
+  return parts.length >= 2 ? parts[parts.length - 2] : parts[0] ?? null;
+}
+
+function matchesFilters(vendor: Vendor, f: Filters): boolean {
+  if (f.minRating && (vendor.rating ?? 0) < f.minRating) return false;
+  if (f.areas.length > 0 && !f.areas.includes(areaOf(vendor) ?? '')) return false;
+  if (f.categories.length > 0 && !f.categories.includes(vendor.category)) return false;
+  return true;
+}
+
+function toggle(list: string[], value: string): string[] {
+  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+}
+
+/** Outlined pill that fills navy when chosen. */
+function Chip({ label, selected, onPress, icon }: { label: string; selected: boolean; onPress: () => void; icon?: FeatherName }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={label}
+      style={({ pressed }) => [styles.chip, selected && styles.chipOn, pressed && { opacity: 0.8 }]}
+    >
+      {icon ? <Feather name={icon} size={15} color={selected ? colors.onPrimary : colors.warning} /> : null}
+      <Text style={[styles.chipLabel, selected && styles.chipLabelOn]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useStyles();
+  return (
+    <View style={styles.filterSection}>
+      <Text style={styles.filterTitle}>{title}</Text>
+      <View style={styles.chipWrap}>{children}</View>
+    </View>
+  );
+}
+
+function FilterModal({
+  visible,
+  draft,
+  onChange,
+  onClear,
+  onApply,
+  onClose,
+  areas,
+  resultCount,
+}: {
+  visible: boolean;
+  draft: Filters;
+  onChange: (next: Filters) => void;
+  onClear: () => void;
+  onApply: () => void;
+  onClose: () => void;
+  areas: string[];
+  resultCount: number;
+}) {
+  const styles = useStyles();
+  return (
+    <Sheet visible={visible} onClose={onClose} title="Filter" maxHeight={SCREEN_H * 0.88}>
+      <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
+        <FilterSection title="Rating">
+          {RATING_OPTIONS.map((o) => (
+            <Chip
+              key={o.label}
+              label={o.label}
+              icon={o.value ? 'star' : undefined}
+              selected={draft.minRating === o.value}
+              onPress={() => onChange({ ...draft, minRating: o.value })}
+            />
+          ))}
+        </FilterSection>
+
+        {areas.length > 0 ? (
+          <FilterSection title="Location">
+            {areas.map((a) => (
+              <Chip key={a} label={a} selected={draft.areas.includes(a)} onPress={() => onChange({ ...draft, areas: toggle(draft.areas, a) })} />
+            ))}
+          </FilterSection>
+        ) : null}
+
+        <FilterSection title="Category">
+          {INTERESTS.map((cat) => (
+            <Chip key={cat} label={cat} selected={draft.categories.includes(cat)} onPress={() => onChange({ ...draft, categories: toggle(draft.categories, cat) })} />
+          ))}
+        </FilterSection>
+      </ScrollView>
+      <View style={styles.sheetActions}>
+        <Button label="Clear all" variant="secondary" onPress={onClear} style={{ flex: 1 }} />
+        <Button
+          label={resultCount === 1 ? 'Show 1 result' : `Show ${resultCount} results`}
+          onPress={onApply}
+          disabled={resultCount === 0}
+          style={{ flex: 1.4 }}
+        />
+      </View>
+    </Sheet>
+  );
+}
 
 function LocationRow({
   icon,
   label,
-  sublabel,
-  accent,
   query,
   onPress,
 }: {
-  icon: keyof typeof Feather.glyphMap;
+  icon: FeatherName;
   label: string;
-  sublabel?: string;
-  accent?: boolean;
   query?: string;
   onPress: () => void;
 }) {
-  // Bold the matched portion of the label
-  const parts = query
-    ? label.split(new RegExp(`(${query})`, 'gi'))
-    : [label];
+  const { colors } = useTheme();
+  const styles = useStyles();
+  // Bold the matched part of the label
+  const parts = query ? label.split(new RegExp(`(${query})`, 'gi')) : [label];
 
   return (
-    <Pressable style={ls.locRow} onPress={onPress}>
-      <View style={[ls.locIconWrap, accent && ls.locIconAccent]}>
-        <Feather name={icon} size={15} color={accent ? colors.accent : colors.textMuted} />
-      </View>
-      <View style={ls.locText}>
-        <Text style={ls.locLabel} numberOfLines={1}>
-          {parts.map((part, i) =>
-            part.toLowerCase() === (query ?? '').toLowerCase()
-              ? <Text key={i} style={ls.locHighlight}>{part}</Text>
-              : <Text key={i}>{part}</Text>
-          )}
-        </Text>
-        {sublabel ? <Text style={ls.locSublabel}>{sublabel}</Text> : null}
-      </View>
-      <Feather name="chevron-right" size={14} color={colors.border} />
+    <Pressable
+      style={({ pressed }) => [styles.sheetRow, pressed && { backgroundColor: colors.background }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Feather name={icon} size={20} color={colors.textSecondary} />
+      <Text style={[styles.sheetRowLabel, { flex: 1 }]} numberOfLines={1}>
+        {parts.map((part, i) =>
+          part.toLowerCase() === (query ?? '').toLowerCase()
+            ? <Text key={i} style={{ fontWeight: '700' }}>{part}</Text>
+            : <Text key={i}>{part}</Text>,
+        )}
+      </Text>
     </Pressable>
   );
 }
@@ -270,6 +386,8 @@ function LocationModal({
   onSelect: (loc: string) => void;
   onClose: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [query, setQuery] = useState('');
   const [recents, setRecents] = useState<string[]>([]);
   const [detectingGPS, setDetectingGPS] = useState(false);
@@ -313,164 +431,92 @@ function LocationModal({
   const trimmed = query.trim();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={ls.overlay} onPress={onClose} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={ls.kvWrap}
-      >
-        <View style={[ls.sheet, { maxHeight: SCREEN_H * 0.82 }]}>
-          {/* Handle */}
-          <View style={ls.handle} />
+    <Sheet visible={visible} onClose={onClose} title="Your location" maxHeight={SCREEN_H * 0.85}>
+      <View style={styles.sheetSearch}>
+        <Feather name="search" size={20} color={colors.text} />
+        <TextInput
+          ref={inputRef}
+          style={styles.sheetSearchInput}
+          placeholder="Neighbourhood, street or city"
+          placeholderTextColor={colors.textMuted}
+          value={query}
+          onChangeText={setQuery}
+          returnKeyType="done"
+          onSubmitEditing={() => { if (trimmed) void save(trimmed); }}
+          autoCorrect={false}
+          accessibilityLabel="Search for a location"
+        />
+        {trimmed.length > 0 ? (
+          <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
+            <Feather name="x" size={18} color={colors.textMuted} />
+          </Pressable>
+        ) : null}
+      </View>
 
-          {/* Header */}
-          <View style={ls.header}>
-            <View style={ls.headerIcon}>
-              <Feather name="map-pin" size={22} color={colors.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={ls.title}>Set your location</Text>
-              <Text style={ls.subtitle}>Find services and professionals near you</Text>
-            </View>
-            <Pressable style={ls.closeBtn} onPress={onClose}>
-              <Feather name="x" size={18} color={colors.textMuted} />
-            </Pressable>
+      <ScrollView style={{ flexGrow: 0 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Pressable
+          style={({ pressed }) => [styles.sheetRow, pressed && { backgroundColor: colors.background }]}
+          onPress={handleGPS}
+          disabled={detectingGPS}
+          accessibilityRole="button"
+        >
+          <View style={styles.sheetIcon}>
+            {detectingGPS ? <ActivityIndicator color={colors.link} /> : <Feather name="navigation" size={20} color={colors.link} />}
           </View>
-
-          {/* Search input */}
-          <View style={ls.inputRow}>
-            <Feather name="search" size={16} color={colors.textMuted} />
-            <TextInput
-              ref={inputRef}
-              style={ls.input}
-              placeholder="Search neighbourhood, street or city…"
-              placeholderTextColor={colors.textMuted}
-              value={query}
-              onChangeText={setQuery}
-              returnKeyType="done"
-              onSubmitEditing={() => { if (trimmed) void save(trimmed); }}
-              autoCorrect={false}
-            />
-            {trimmed.length > 0 && (
-              <Pressable onPress={() => setQuery('')} hitSlop={8}>
-                <Feather name="x-circle" size={16} color={colors.textMuted} />
-              </Pressable>
-            )}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sheetRowLabel}>{detectingGPS ? 'Finding you…' : 'Use my current location'}</Text>
+            {current && current !== 'Current Location' ? (
+              <Text style={styles.sheetRowSub}>Now set to {current}</Text>
+            ) : null}
           </View>
+        </Pressable>
 
-          <ScrollView
-            style={ls.scroll}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Use GPS */}
-            <Pressable
-              style={[ls.gpsRow, detectingGPS && ls.gpsRowActive]}
-              onPress={handleGPS}
-              disabled={detectingGPS}
-            >
-              <View style={ls.gpsIconWrap}>
-                <Feather
-                  name={detectingGPS ? 'loader' : 'navigation'}
-                  size={18}
-                  color="#fff"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={ls.gpsLabel}>
-                  {detectingGPS ? 'Detecting location…' : 'Use my current location'}
-                </Text>
-                <Text style={ls.gpsHint}>
-                  {detectingGPS ? 'Please wait' : 'Automatically detect where you are'}
-                </Text>
-              </View>
-              {!detectingGPS && (
-                <Feather name="chevron-right" size={16} color={colors.accentLight} />
-              )}
-            </Pressable>
-
-            {/* Current location indicator */}
-            {current && current !== 'Current Location' && (
-              <View style={ls.currentRow}>
-                <Feather name="check-circle" size={13} color={colors.success} />
-                <Text style={ls.currentText}>Currently set to <Text style={ls.currentBold}>{current}</Text></Text>
-              </View>
-            )}
-
-            <View style={ls.divider} />
-
-            {/* Search mode */}
-            {trimmed.length > 0 ? (
-              suggestions.length > 0 ? (
-                <>
-                  <Text style={ls.sectionLabel}>SUGGESTIONS</Text>
-                  {suggestions.map((area) => (
-                    <LocationRow
-                      key={area}
-                      icon="map-pin"
-                      label={area}
-                      query={trimmed}
-                      onPress={() => void save(area)}
-                    />
-                  ))}
-                </>
-              ) : (
-                /* No known match — let them use exactly what they typed */
-                <Pressable style={ls.useAsRow} onPress={() => void save(trimmed)}>
-                  <Feather name="corner-down-right" size={14} color={colors.accent} />
-                  <Text style={ls.useAsText}>
-                    Use <Text style={ls.useAsBold}>"{trimmed}"</Text> as my location
-                  </Text>
-                </Pressable>
-              )
-            ) : (
-              /* Browse mode */
+        {trimmed.length > 0 ? (
+          suggestions.length > 0 ? (
+            <>
+              <Text style={styles.sheetLabel}>Suggestions</Text>
+              {suggestions.map((area) => (
+                <LocationRow key={area} icon="map-pin" label={area} query={trimmed} onPress={() => void save(area)} />
+              ))}
+            </>
+          ) : (
+            // No known match: let them use exactly what they typed
+            <LocationRow icon="corner-down-right" label={`Use “${trimmed}”`} onPress={() => void save(trimmed)} />
+          )
+        ) : (
+          <>
+            {recents.length > 0 ? (
               <>
-                {recents.length > 0 && (
-                  <>
-                    <Text style={ls.sectionLabel}>RECENT</Text>
-                    {recents.map((loc) => (
-                      <LocationRow
-                        key={loc}
-                        icon="clock"
-                        label={loc}
-                        onPress={() => void save(loc)}
-                      />
-                    ))}
-                    <View style={ls.divider} />
-                  </>
-                )}
-
-                <Text style={ls.sectionLabel}>POPULAR IN LAGOS</Text>
-                {POPULAR_AREAS.map((area) => (
-                  <LocationRow
-                    key={area}
-                    icon="map-pin"
-                    label={area}
-                    onPress={() => void save(area)}
-                  />
+                <Text style={styles.sheetLabel}>Recent</Text>
+                {recents.map((loc) => (
+                  <LocationRow key={loc} icon="clock" label={loc} onPress={() => void save(loc)} />
                 ))}
-                <View style={{ height: spacing.xl }} />
               </>
-            )}
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+            ) : null}
+            <Text style={styles.sheetLabel}>Popular in Lagos</Text>
+            {POPULAR_AREAS.map((area) => (
+              <LocationRow key={area} icon="map-pin" label={area} onPress={() => void save(area)} />
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </Sheet>
   );
 }
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export function HomeScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [vendors, setVendors] = useState<Vendor[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [location, setLocation] = useState('Yaba, Lagos');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [draftFilters, setDraftFilters] = useState<string[]>([]);
+  const [draftFilters, setDraftFilters] = useState<Filters>(NO_FILTERS);
   const [locationModalVisible, setLocationModalVisible] = useState(false);
-  const searchRef = useRef<TextInput>(null);
   const user = getCurrentUser();
 
   useEffect(() => {
@@ -486,139 +532,134 @@ export function HomeScreen({ navigation }: Props) {
   const recommended = useMemo(() => (vendors ?? []).filter((v) => v.featured), [vendors]);
   const rest = useMemo(() => (vendors ?? []).filter((v) => !v.featured), [vendors]);
 
-  const isSearching = searchQuery.trim().length > 0 || activeFilters.length > 0;
+  const filterCount = countFilters(filters);
+  const isSearching = searchQuery.trim().length > 0 || filterCount > 0;
 
-  const searchResults = useMemo(() => {
-    if (!vendors) return [];
-    let results = vendors;
+  const areas = useMemo(
+    () => [...new Set((vendors ?? []).map(areaOf).filter((a): a is string => !!a))].sort(),
+    [vendors],
+  );
+
+  const matchesQuery = useCallback((v: Vendor) => {
     const q = searchQuery.toLowerCase().trim();
-    if (q) {
-      results = results.filter(
-        (v) =>
-          v.businessName.toLowerCase().includes(q) ||
-          v.category.toLowerCase().includes(q) ||
-          (v.address ?? '').toLowerCase().includes(q),
-      );
-    }
-    if (activeFilters.length > 0) {
-      results = results.filter((v) => activeFilters.includes(v.category));
-    }
-    return results;
-  }, [vendors, searchQuery, activeFilters]);
+    if (!q) return true;
+    return (
+      v.businessName.toLowerCase().includes(q) ||
+      v.category.toLowerCase().includes(q) ||
+      (v.address ?? '').toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
+  const searchResults = useMemo(
+    () => (vendors ?? []).filter((v) => matchesQuery(v) && matchesFilters(v, filters)),
+    [vendors, matchesQuery, filters],
+  );
+
+  const draftCount = useMemo(
+    () => (vendors ?? []).filter((v) => matchesQuery(v) && matchesFilters(v, draftFilters)).length,
+    [vendors, matchesQuery, draftFilters],
+  );
 
   function openVendor(vendor: Vendor) {
     navigation.navigate('VendorProfile', { vendor });
   }
 
-  function handleLocationPress() {
-    setLocationModalVisible(true);
-  }
-
   function openFilter() {
-    setDraftFilters(activeFilters);
+    setDraftFilters(filters);
     setFilterVisible(true);
   }
 
-  function toggleDraft(cat: string) {
-    setDraftFilters((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
-    );
-  }
-
   function applyFilter() {
-    setActiveFilters(draftFilters);
+    setFilters(draftFilters);
     setFilterVisible(false);
   }
 
   const firstName = user?.name.split(' ')[0] ?? null;
-  const filtersActive = activeFilters.length > 0;
+  const filtersActive = filterCount > 0;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* ── Sticky top bar ─────────────────────────────────────────────── */}
-      <View style={styles.topBar}>
-        {/* Header row */}
+    <View style={styles.root}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.sm }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Greeting, location and account */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hey{firstName ? `, ${firstName}` : ' there'}</Text>
-            {/* Location strip */}
-            <Pressable style={styles.locationRow} onPress={handleLocationPress}>
-              <Feather name="map-pin" size={12} color={colors.accent} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <Text style={styles.greeting} accessibilityRole="header">
+              Hey{firstName ? `, ${firstName}` : ' there'}
+            </Text>
+            <Pressable
+              style={styles.locationRow}
+              onPress={() => setLocationModalVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`Location: ${location}. Change`}
+            >
+              <Feather name="map-pin" size={16} color={colors.link} />
               <Text style={styles.locationText} numberOfLines={1}>{location}</Text>
-              <Feather name="chevron-down" size={12} color={colors.textMuted} />
+              <Feather name="chevron-down" size={16} color={colors.text} />
             </Pressable>
           </View>
           <View style={styles.headerRight}>
-            <Pressable style={styles.iconBtn}>
-              <Feather name="bell" size={20} color={colors.primary} />
-            </Pressable>
+            <IconButton icon="bell" label="Notifications" onPress={() => {}} />
             {user ? (
-              <View style={styles.avatarBadge}>
-                <Text style={styles.avatarInitial}>{user.name.charAt(0).toUpperCase()}</Text>
-              </View>
-            ) : (
-              <Pressable style={styles.signInBtn} onPress={() => navigation.navigate('SignUp')}>
-                <Text style={styles.signInLabel}>Sign in</Text>
+              <Pressable onPress={() => navigation.navigate('Profile')} accessibilityRole="button" accessibilityLabel="Profile">
+                <Avatar name={user.name} size={44} />
               </Pressable>
+            ) : (
+              <Button label="Sign in" size="sm" onPress={() => navigation.navigate('SignIn')} />
             )}
           </View>
         </View>
 
-        {/* Search bar */}
-        <View style={styles.searchRow}>
-          <View style={styles.searchBar}>
-            <Feather name="search" size={16} color={colors.textMuted} />
-            <TextInput
-              ref={searchRef}
-              style={styles.searchInput}
-              placeholder="Search vendors, services, professionals…"
-              placeholderTextColor={colors.textMuted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-            />
-          </View>
-          {/* Filter button — badge dot when filters are active */}
-          <Pressable
-            style={[styles.filterBtn, filtersActive && styles.filterBtnActive]}
-            onPress={openFilter}
-          >
-            <Feather name="sliders" size={18} color={filtersActive ? '#fff' : colors.primary} />
-            {filtersActive && (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>{activeFilters.length}</Text>
-              </View>
-            )}
-          </Pressable>
+        <View>
+          <SearchField
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search businesses and services"
+            onFilter={openFilter}
+          />
+          {filtersActive ? (
+            <View style={styles.filterBadge} pointerEvents="none">
+              <Text style={styles.filterBadgeText}>{filterCount}</Text>
+            </View>
+          ) : null}
         </View>
-      </View>
 
-      {/* ── Content ────────────────────────────────────────────────────── */}
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error ? <EmptyState icon="wifi-off" title="Couldn’t load businesses" body={error} /> : null}
 
         {isSearching ? (
-          /* Search / filter results */
-          <View style={styles.resultsSection}>
-            <Text style={styles.resultsLabel}>
-              {searchResults.length === 0
-                ? 'No results found'
-                : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''}`}
-            </Text>
+          <View style={{ gap: spacing.md }}>
+            <View style={styles.resultsHead}>
+              <SectionTitle
+                title={
+                  searchResults.length === 0
+                    ? 'No results'
+                    : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''}`
+                }
+              />
+              {filtersActive ? (
+                <Pressable onPress={() => setFilters(NO_FILTERS)} hitSlop={8} accessibilityRole="button">
+                  <Text style={styles.link}>Clear filters</Text>
+                </Pressable>
+              ) : null}
+            </View>
             {vendors === null && !error ? (
-              <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.accent} />
+              <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.link} />
+            ) : searchResults.length > 0 ? (
+              <View style={styles.resultsCard}>
+                {searchResults.map((v) => (
+                  <SearchResultCard key={v.id} vendor={v} onPress={() => openVendor(v)} />
+                ))}
+              </View>
             ) : (
-              searchResults.map((v) => (
-                <SearchResultCard key={v.id} vendor={v} onPress={() => openVendor(v)} />
-              ))
+              <EmptyState icon="search" title="Nothing matches" body="Try a different word or clear the filters." />
             )}
           </View>
         ) : (
-          /* Default browse view */
           <>
-            <CategoryChips onSelect={(cat) => setActiveFilters([cat])} />
+            <CategoryChips onSelect={(cat) => setFilters({ ...NO_FILTERS, categories: [cat] })} />
 
             <SectionRow
               title="Recommended"
@@ -627,630 +668,105 @@ export function HomeScreen({ navigation }: Props) {
               loading={vendors === null && !error}
             />
 
-            {(vendors === null || rest.length > 0) && (
+            {vendors === null || rest.length > 0 ? (
               <SectionRow
                 title="New to Scalio"
                 vendors={rest}
                 onPress={openVendor}
                 loading={vendors === null && !error}
               />
-            )}
+            ) : null}
           </>
         )}
-
-        <View style={{ height: spacing.xxxl }} />
       </ScrollView>
 
-      {/* ── Filter modal ────────────────────────────────────────────────── */}
       <FilterModal
         visible={filterVisible}
         draft={draftFilters}
-        onToggle={toggleDraft}
-        onClear={() => setDraftFilters([])}
+        onChange={setDraftFilters}
+        onClear={() => setDraftFilters(NO_FILTERS)}
         onApply={applyFilter}
         onClose={() => setFilterVisible(false)}
+        areas={areas}
+        resultCount={draftCount}
       />
 
-      {/* ── Location picker modal ────────────────────────────────────────── */}
       <LocationModal
         visible={locationModalVisible}
         current={location}
         onSelect={(loc) => setLocation(loc)}
         onClose={() => setLocationModalVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { paddingHorizontal: GUTTER, paddingBottom: 48, gap: 28 },
+  bleed: { marginHorizontal: -GUTTER },
+  link: { fontSize: 14, fontWeight: '600', color: colors.link },
 
-  // ── Top bar (non-scrolling) ──────────────────────────────────────────────
-  topBar: {
-    backgroundColor: colors.background,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    lineHeight: 29,
-  },
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingTop: 8 },
+  greeting: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.6, color: colors.text },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
+  locationText: { fontSize: 14, fontWeight: '500', color: colors.text, maxWidth: 200 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 
-  // Location strip
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 3,
-  },
-  locationText: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    fontWeight: typography.weight.medium,
-    maxWidth: 180,
-  },
-
-  // Search bar + filter
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  searchBar: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: typography.size.base,
-    color: colors.primary,
-    padding: 0,
-    margin: 0,
-  },
-  filterBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterBtnActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
   filterBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.error,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5,
+    backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background,
   },
-  filterBadgeText: {
-    fontSize: 9,
-    fontWeight: typography.weight.bold,
-    color: '#fff',
-  },
+  filterBadgeText: { fontSize: 11, fontWeight: '700', color: colors.onAccent },
 
-  // ── Search results ────────────────────────────────────────────────────────
-  resultsSection: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-  },
-  resultsLabel: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    fontWeight: typography.weight.semibold,
-    marginBottom: spacing.md,
-  },
-  resultCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: spacing.md,
-  },
-  resultImage: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.lg,
-    backgroundColor: colors.border,
-  },
-  resultBody: {
-    flex: 1,
-    gap: 3,
-  },
-  resultName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  resultMeta: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-  },
+  categoryScroll: { paddingHorizontal: GUTTER, gap: 4 },
+  categoryChip: { width: 76, alignItems: 'center', gap: 6 },
+  categoryIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
+  categoryLabel: { fontSize: 12, fontWeight: '500', color: colors.text, textAlign: 'center' },
 
-  // ── Filter modal ──────────────────────────────────────────────────────────
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.32)',
-  },
-  filterSheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxxl,
-    maxHeight: '75%',
-  },
-  sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginBottom: spacing.lg,
-  },
-  filterTitle: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: spacing.lg,
-  },
-  filterSectionLabel: {
-    fontSize: 10,
-    fontWeight: typography.weight.bold,
-    color: colors.textMuted,
-    letterSpacing: 1.5,
-    marginBottom: spacing.sm,
-  },
-  filterScroll: {
-    flexGrow: 0,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: spacing.md,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  filterRowText: {
-    fontSize: typography.size.base,
-    color: colors.primary,
-  },
-  filterActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingTop: spacing.lg,
-  },
-  clearBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  clearBtnText: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.textMuted,
-  },
-  applyBtn: {
-    flex: 2,
-    paddingVertical: 14,
-    borderRadius: radius.lg,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-  },
-  applyBtnText: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: '#fff',
-  },
+  cardScroll: { paddingHorizontal: GUTTER, gap: 14 },
+  card: { width: CARD_WIDTH, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, overflow: 'hidden' },
+  cardImage: { width: '100%', height: CARD_IMAGE_HEIGHT, backgroundColor: colors.surface },
+  cardBody: { padding: 14, gap: 3 },
+  cardName: { fontSize: 14, fontWeight: '600', color: colors.text },
+  cardSub: { fontSize: 13, color: colors.textSecondary },
+  cardTag: { fontSize: 13, fontWeight: '600', color: colors.link, marginTop: 4 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ratingValue: { fontSize: 13, fontWeight: '600', color: colors.text },
+  reviewCount: { fontSize: 13, color: colors.textSecondary },
 
-  // ── Existing styles below ─────────────────────────────────────────────────
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitial: {
-    color: '#ffffff',
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
-  },
-  signInBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  signInLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  categoryScroll: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.md,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  categoryChip: {
-    alignItems: 'center',
-    gap: 6,
-    width: 64,
-  },
-  categoryIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.xl,
-    backgroundColor: '#f3f3f3',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryChipLabel: {
-    fontSize: 11,
-    fontWeight: typography.weight.semibold,
-    color: colors.textBody,
-    textAlign: 'center',
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  loader: {
-    marginLeft: spacing.xl,
-  },
-  cardScroll: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.md,
-  },
-  card: {
-    width: CARD_WIDTH,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-    overflow: 'hidden',
-  },
-  cardImage: {
-    width: CARD_WIDTH,
-    height: CARD_IMAGE_HEIGHT,
-    backgroundColor: colors.border,
-  },
-  cardBody: {
-    padding: 10,
-    gap: 3,
-  },
-  cardName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  ratingValue: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    color: colors.textBody,
-  },
-  reviewCount: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-  },
-  cardAddress: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  categoryTag: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-    backgroundColor: '#f3f3f3',
-  },
-  categoryTagText: {
-    fontSize: 11,
-    fontWeight: typography.weight.semibold,
-    color: colors.textSecondary,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: typography.size.base,
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.md,
-  },
-});
+  resultsHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  resultsCard: { borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingVertical: 6, backgroundColor: colors.card },
+  result: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 12 },
+  resultImage: { width: 60, height: 60, borderRadius: 14, backgroundColor: colors.surface },
 
-// ─── Location modal styles ────────────────────────────────────────────────────
-const ls = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.38)',
-  },
-  kvWrap: {
-    justifyContent: 'flex-end',
-  },
+  overlay: { flex: 1, backgroundColor: colors.overlay },
   sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingBottom: spacing.xxxl,
-    overflow: 'hidden',
+    backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingHorizontal: GUTTER - 8, paddingTop: 10, gap: 2,
   },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
+  grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.borderStrong, marginBottom: 6 },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 8, marginBottom: 6 },
+  sheetTitle: { fontSize: 19, fontWeight: '700', color: colors.text },
+  sheetLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, paddingHorizontal: 8, marginTop: 14, marginBottom: 4 },
+  sheetRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 8, paddingVertical: 12, borderRadius: 16 },
+  sheetRowLabel: { fontSize: 15, fontWeight: '500', color: colors.text },
+  sheetRowSub: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  sheetIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
+  sheetActions: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: 8, paddingTop: spacing.lg },
+  sheetSearch: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, height: 52, paddingHorizontal: 18, marginHorizontal: 8, marginBottom: 8,
+    borderRadius: 999, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.background,
   },
-
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing.lg,
-    gap: spacing.md,
+  sheetSearchInput: { flex: 1, fontSize: 14, color: colors.text, paddingVertical: 0 },
+  filterSection: { gap: 12, paddingHorizontal: 8, paddingTop: 14, paddingBottom: 6 },
+  filterTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  chip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, height: 40, paddingHorizontal: 16,
+    borderRadius: 999, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.background,
   },
-  headerIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    lineHeight: 22,
-  },
-  subtitle: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Search input
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 11,
-    gap: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    fontSize: typography.size.base,
-    color: colors.primary,
-    padding: 0,
-    margin: 0,
-  },
-
-  // GPS row
-  gpsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.accent,
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    gap: spacing.md,
-  },
-  gpsRowActive: {
-    opacity: 0.75,
-  },
-  gpsIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.20)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gpsLabel: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: '#fff',
-  },
-  gpsHint: {
-    fontSize: typography.size.xs,
-    color: 'rgba(255,255,255,0.72)',
-    marginTop: 2,
-  },
-
-  // Current indicator
-  currentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginHorizontal: spacing.xl,
-    marginTop: spacing.sm,
-    marginBottom: 2,
-  },
-  currentText: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-  },
-  currentBold: {
-    fontWeight: typography.weight.semibold,
-    color: colors.textBody,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginHorizontal: spacing.xl,
-    marginVertical: spacing.md,
-  },
-
-  scroll: {
-    flexGrow: 0,
-  },
-
-  // Section label
-  sectionLabel: {
-    fontSize: 10,
-    fontWeight: typography.weight.bold,
-    color: colors.textMuted,
-    letterSpacing: 1.5,
-    paddingHorizontal: spacing.xl,
-    marginBottom: 4,
-  },
-
-  // Location row item
-  locRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: 13,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: spacing.md,
-  },
-  locIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  locIconAccent: {
-    backgroundColor: colors.accentLight,
-  },
-  locText: {
-    flex: 1,
-  },
-  locLabel: {
-    fontSize: typography.size.base,
-    color: colors.primary,
-  },
-  locHighlight: {
-    fontWeight: typography.weight.bold,
-    color: colors.accent,
-  },
-  locSublabel: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-
-  // "Use as" fallback row
-  useAsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-  },
-  useAsText: {
-    fontSize: typography.size.base,
-    color: colors.textBody,
-  },
-  useAsBold: {
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-});
+  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipLabel: { fontSize: 14, fontWeight: '500', color: colors.text },
+  chipLabelOn: { color: colors.onPrimary, fontWeight: '600' },
+}));

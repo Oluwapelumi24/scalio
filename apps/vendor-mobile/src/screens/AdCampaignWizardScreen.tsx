@@ -707,7 +707,7 @@ const useSStyles = makeStyles((colors) => ({
   center: { alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
   header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md, gap: spacing.md },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md },
-  title: { flex: 1, fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  title: { flex: 1, fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   modeToggle: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.accentLight },
   modeText: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, color: colors.accent },
   content: { padding: spacing.xl, paddingBottom: spacing.xxxl },

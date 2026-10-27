@@ -167,7 +167,7 @@ const useStyles = makeStyles((colors) => ({
   },
   backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   screenTitle: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: 2 },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },
   addCard: {
     margin: spacing.xl,
     backgroundColor: colors.background,

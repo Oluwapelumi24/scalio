@@ -184,7 +184,7 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  profileInitial: { fontSize: 30, fontWeight: typography.weight.bold, color: colors.white },
+  profileInitial: { fontSize: 22, fontWeight: typography.weight.bold, color: colors.white },
   profileName: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
   profileEmail: { fontSize: typography.size.base, color: colors.textMuted, marginTop: spacing.xs },
   statsRow: {
@@ -216,7 +216,7 @@ const useStyles = makeStyles((colors) => ({
     color: colors.text,
     backgroundColor: colors.surface,
     minHeight: 120,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   saveNotesBtn: {
     backgroundColor: colors.accent,

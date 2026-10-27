@@ -164,18 +164,18 @@ export function SetupScreen({ navigation }: Props) {
 }
 
 const useStyles = makeStyles((colors) => ({
-  headline: { fontSize: 32, lineHeight: 39, fontWeight: '700', letterSpacing: -0.6, color: colors.text },
+  headline: { fontSize: 22, lineHeight: 29, fontWeight: '700', letterSpacing: -0.6, color: colors.text },
   step: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 24 },
   stepHead: { flexDirection: 'row', alignItems: 'baseline', gap: 14 },
-  stepNum: { fontSize: 22, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
-  stepTitle: { flex: 1, fontSize: 21, fontWeight: '700', color: colors.text },
-  stepSummary: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, paddingLeft: 30 },
+  stepNum: { fontSize: 17, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
+  stepTitle: { flex: 1, fontSize: 17, fontWeight: '700', color: colors.text },
+  stepSummary: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, paddingLeft: 30 },
   doneText: { color: colors.textMuted },
-  link: { fontSize: 16, fontWeight: '600', color: colors.link, paddingLeft: 30 },
+  link: { fontSize: 14, fontWeight: '600', color: colors.link, paddingLeft: 30 },
   tileWrap: { borderRadius: 18, padding: 4, backgroundColor: colors.surface },
   doneDisc: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.success, alignItems: 'center', justifyContent: 'center' },
   hero: { alignItems: 'center', paddingVertical: 24 },
-  stepLabel: { fontSize: 17, fontWeight: '600', color: colors.text },
-  huge: { fontSize: 40, lineHeight: 46, fontWeight: '700', letterSpacing: -0.8, color: colors.text },
-  body: { fontSize: 18, lineHeight: 27, color: colors.text },
+  stepLabel: { fontSize: 15, fontWeight: '600', color: colors.text },
+  huge: { fontSize: 30, lineHeight: 34, fontWeight: '700', letterSpacing: -0.8, color: colors.text },
+  body: { fontSize: 15, lineHeight: 22, color: colors.text },
 }));

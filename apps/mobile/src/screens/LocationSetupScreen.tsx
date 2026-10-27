@@ -1,23 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { setHasSeenOnboarding, setLocation } from '../lib/preferences';
-import { BackButton } from '../components/BackButton';
-import { colors, radius, spacing, typography } from '../theme';
+import { AppTile, Button, Field, Page, PageHeader, StickyFooter } from '../components/ui';
+import { makeStyles, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LocationSetup'>;
 
@@ -28,9 +17,10 @@ type LocationState =
   | { phase: 'error' };
 
 export function LocationSetupScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [locState, setLocState] = useState<LocationState>({ phase: 'requesting' });
   const [manual, setManual] = useState('');
-  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     void detectLocation();
@@ -93,271 +83,84 @@ export function LocationSetupScreen({ navigation }: Props) {
   const canManualContinue = manual.trim().length > 0;
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.inner}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
-        {/* Header */}
-        <View style={styles.hero}>
-          <BackButton onPress={() => navigation.goBack()} />
-          <View style={styles.iconBadge}>
-            <Feather name="map-pin" size={36} color="#1E3A8A" />
-          </View>
-          <Text style={styles.title}>Where are you based?</Text>
-          <Text style={styles.subtitle}>
-            We'll show you the best services and businesses near you.
-          </Text>
-        </View>
-
-        {/* Detected location card */}
-        {locState.phase === 'requesting' && (
-          <View style={styles.detectingCard}>
-            <ActivityIndicator size="small" color={colors.textMuted} />
-            <Text style={styles.detectingLabel}>Detecting your location…</Text>
-          </View>
-        )}
-
-        {locState.phase === 'detected' && (
-          <Pressable
-            style={({ pressed }) => [styles.detectedCard, pressed && styles.detectedCardPressed]}
-            onPress={() => void handleUseDetected()}
-          >
-            <View style={styles.detectedCardLeft}>
-              <Feather name="navigation" size={18} color="#1E3A8A" />
-              <View>
-                <Text style={styles.detectedCity}>{locState.label}</Text>
-                <Text style={styles.detectedHint}>Tap to use this location</Text>
-              </View>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Page
+        footer={
+          <StickyFooter>
+            <View style={{ flex: 1, gap: 18 }}>
+              <Button label="Confirm location" onPress={() => void handleManualContinue()} disabled={!canManualContinue} />
+              <Pressable onPress={() => void handleSkip()} accessibilityRole="button" hitSlop={8}>
+                <Text style={styles.skip}>Skip for now</Text>
+              </Pressable>
             </View>
-            <Feather name="check-circle" size={20} color="#4CAF50" />
-          </Pressable>
-        )}
+          </StickyFooter>
+        }
+      >
+        <PageHeader
+          onBack={() => navigation.goBack()}
+          eyebrow={<AppTile icon="map-pin" />}
+          title="Where are you based?"
+          description="We’ll show you the best services and businesses near you."
+        />
 
-        {(locState.phase === 'denied' || locState.phase === 'error') && (
-          <Pressable style={styles.retryCard} onPress={() => void detectLocation()}>
-            <Feather name="alert-circle" size={16} color={colors.textMuted} />
-            <Text style={styles.retryLabel}>
-              {locState.phase === 'denied'
-                ? "Location access denied. Grant access in Settings or enter below."
-                : "Couldn't detect location."}
-            </Text>
-            {locState.phase === 'error' && (
-              <Text style={styles.retryAction}>Retry</Text>
-            )}
-          </Pressable>
-        )}
+        {locState.phase === 'requesting' ? (
+          <View style={styles.card}>
+            <ActivityIndicator color={colors.link} />
+            <Text style={styles.cardSub}>Finding your location…</Text>
+          </View>
+        ) : null}
 
-        {/* Divider */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerLabel}>or enter manually</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* Manual input */}
-        <View style={styles.inputWrap}>
-          <Feather name="map" size={16} color={colors.textMuted} style={styles.inputIcon} />
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            placeholder="City or neighbourhood, e.g. Lagos"
-            placeholderTextColor={colors.textMuted}
-            value={manual}
-            onChangeText={setManual}
-            autoCapitalize="words"
-            autoCorrect={false}
-            returnKeyType="done"
-            onSubmitEditing={() => void handleManualContinue()}
-          />
-        </View>
-
-        <View style={{ flex: 1 }} />
-
-        {/* Actions */}
-        <View style={styles.actions}>
+        {locState.phase === 'detected' ? (
           <Pressable
-            style={({ pressed }) => [
-              styles.cta,
-              !canManualContinue && styles.ctaDisabled,
-              pressed && canManualContinue && { opacity: 0.85 },
-            ]}
-            onPress={() => void handleManualContinue()}
-            disabled={!canManualContinue}
+            style={({ pressed }) => [styles.card, styles.cardOn, pressed && { opacity: 0.85 }]}
+            onPress={() => void handleUseDetected()}
+            accessibilityRole="button"
+            accessibilityLabel={`Use ${locState.label}`}
           >
-            <Text style={styles.ctaLabel}>Confirm location</Text>
+            <Feather name="navigation" size={22} color={colors.link} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.cardTitle}>{locState.label}</Text>
+              <Text style={styles.cardSub}>Tap to use this location</Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.text} />
           </Pressable>
+        ) : null}
 
-          <Pressable style={styles.skipBtn} onPress={() => void handleSkip()}>
-            <Text style={styles.skipLabel}>Skip for now</Text>
+        {locState.phase === 'denied' || locState.phase === 'error' ? (
+          <Pressable style={styles.card} onPress={() => void detectLocation()} accessibilityRole="button">
+            <Feather name="alert-circle" size={22} color={colors.warning} />
+            <Text style={[styles.cardSub, { flex: 1 }]}>
+              {locState.phase === 'denied'
+                ? 'Location access is off. Turn it on in Settings, or type your city below.'
+                : 'We couldn’t find your location.'}
+            </Text>
+            {locState.phase === 'error' ? <Text style={styles.retry}>Retry</Text> : null}
           </Pressable>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        ) : null}
+
+        <Field
+          label="Or type your city"
+          placeholder="City or neighbourhood, e.g. Lagos"
+          value={manual}
+          onChangeText={setManual}
+          autoCapitalize="words"
+          autoCorrect={false}
+          returnKeyType="done"
+          onSubmitEditing={() => void handleManualContinue()}
+        />
+      </Page>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
+const useStyles = makeStyles((colors) => ({
+  card: {
+    flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20,
+    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
   },
-  inner: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
-  },
-  hero: {
-    alignItems: 'flex-start',
-    marginBottom: spacing.xxl,
-  },
-  iconBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#1E3A8A22',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-  },
-  title: {
-    fontSize: typography.size.display,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: spacing.sm,
-    lineHeight: 34,
-  },
-  subtitle: {
-    fontSize: typography.size.lg,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
-  detectingCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: '#f8f8f8',
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  detectingLabel: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-  },
-  detectedCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: '#4CAF5044',
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  detectedCardPressed: {
-    backgroundColor: '#f5fdf5',
-  },
-  detectedCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    flex: 1,
-  },
-  detectedCity: {
-    fontSize: typography.size.md,
-    fontWeight: '600',
-    color: colors.primary,
-    marginBottom: 2,
-  },
-  detectedHint: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-  },
-  retryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: '#fafafa',
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  retryLabel: {
-    flex: 1,
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  retryAction: {
-    fontSize: typography.size.sm,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerLabel: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    fontWeight: '500',
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 2,
-    backgroundColor: '#fff',
-  },
-  inputIcon: {
-    marginRight: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    fontSize: typography.size.md,
-    color: colors.primary,
-    paddingVertical: 14,
-  },
-  actions: {
-    gap: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  cta: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-    paddingVertical: 17,
-    alignItems: 'center',
-  },
-  ctaDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  ctaLabel: {
-    fontSize: typography.size.lg,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  skipBtn: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  skipLabel: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-    fontWeight: '500',
-  },
-});
+  cardOn: { borderColor: colors.link, backgroundColor: colors.accentLight },
+  cardTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
+  cardSub: { fontSize: 14, lineHeight: 19, color: colors.textSecondary },
+  retry: { fontSize: 14, fontWeight: '600', color: colors.link },
+  skip: { fontSize: 14, fontWeight: '600', color: colors.link, textAlign: 'center' },
+}));

@@ -56,5 +56,5 @@ const useStyles = makeStyles((colors) => ({
     flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: colors.accent, paddingHorizontal: GUTTER, paddingBottom: 14,
   },
-  barText: { flex: 1, fontSize: 18, fontWeight: '600', color: colors.onAccent },
+  barText: { flex: 1, fontSize: 15, fontWeight: '600', color: colors.onAccent },
 }));

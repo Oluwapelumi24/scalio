@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { listServices } from '../lib/api';
 import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';
-import { colors, radius, spacing, typography } from '../theme';
-import { BackButton } from '../components/BackButton';
+import { Button, EmptyState, PageHeader, StickyFooter } from '../components/ui';
+import { GUTTER, makeStyles, spacing, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ServiceSelection'>;
 
@@ -17,6 +18,9 @@ function formatNaira(kobo: number): string {
 
 export function ServiceSelectionScreen({ route, navigation }: Props) {
   const { vendor } = route.params;
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [services, setServices] = useState<Service[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -52,49 +56,55 @@ export function ServiceSelectionScreen({ route, navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
-      <BackButton onPress={() => navigation.goBack()} />
-
+    <View style={styles.root}>
       <FlatList
-        style={styles.list}
         data={services ?? []}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.list, { paddingTop: insets.top + spacing.sm }]}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <>
-            <View style={styles.vendorHeader}>
-              <View style={styles.vendorImageWrap}>
-                <Image source={getVendorImageSource(vendor)} style={styles.vendorImage} />
-                <View style={[styles.categoryBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
-                  <Feather name={getCategoryMeta(vendor.category).icon} size={12} color={colors.white} />
+          <View style={styles.header}>
+            <PageHeader
+              onBack={() => navigation.goBack()}
+              eyebrow={
+                <View style={styles.vendor}>
+                  <View>
+                    <Image source={getVendorImageSource(vendor)} style={styles.vendorImage} />
+                    <View style={[styles.categoryBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
+                      <Feather name={getCategoryMeta(vendor.category).icon} size={12} color={colors.white} />
+                    </View>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.vendorName}>{vendor.businessName}</Text>
+                    <Text style={styles.vendorCategory}>{vendor.category}</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.vendorHeaderCopy}>
-                <Text style={styles.vendorName}>{vendor.businessName}</Text>
-                <Text style={styles.vendorCategory}>{vendor.category}</Text>
-              </View>
-            </View>
-
-            <Text style={styles.title}>Select services</Text>
-            <Text style={styles.subtitle}>You can choose more than one.</Text>
-
-            {error && <Text style={styles.error}>{error}</Text>}
-            {!error && !services && <ActivityIndicator style={styles.loader} />}
-            {!error && services && services.length === 0 && (
-              <Text style={styles.empty}>This business hasn&apos;t listed any services yet.</Text>
-            )}
-          </>
+              }
+              title="Choose services"
+              description="You can pick more than one."
+            />
+            {error ? <EmptyState icon="wifi-off" title="Couldn’t load services" body={error} /> : null}
+            {!error && !services ? <ActivityIndicator color={colors.link} style={{ marginTop: spacing.xl }} /> : null}
+            {!error && services && services.length === 0 ? (
+              <EmptyState icon="book-open" title="No services yet" body="This business hasn’t listed any services." />
+            ) : null}
+          </View>
         }
         renderItem={({ item }) => {
           const selected = selectedIds.includes(item.id);
           return (
-            <Pressable style={[styles.row, selected && styles.rowSelected]} onPress={() => toggle(item.id)}>
-              <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-                {selected && <Text style={styles.checkboxMark}>✓</Text>}
+            <Pressable
+              style={[styles.row, selected && styles.rowOn]}
+              onPress={() => toggle(item.id)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: selected }}
+            >
+              <View style={[styles.check, selected && styles.checkOn]}>
+                {selected ? <Feather name="check" size={14} color={colors.onAccent} /> : null}
               </View>
-              <View style={styles.rowCopy}>
+              <View style={{ flex: 1, gap: 2 }}>
                 <Text style={styles.rowTitle}>{item.name}</Text>
-                <Text style={styles.rowSubtitle}>{item.durationMinutes} min</Text>
+                <Text style={styles.rowSub}>{item.durationMinutes} min</Text>
               </View>
               <Text style={styles.rowPrice}>{formatNaira(item.priceKobo)}</Text>
             </Pressable>
@@ -102,161 +112,35 @@ export function ServiceSelectionScreen({ route, navigation }: Props) {
         }}
       />
 
-      <Pressable
-        style={[styles.cta, selectedIds.length === 0 && styles.ctaDisabled]}
-        onPress={handleContinue}
-        disabled={selectedIds.length === 0}
-      >
-        <Text style={styles.ctaLabel}>
-          {selectedIds.length === 0 ? 'Select a service' : `Continue with ${selectedIds.length} selected`}
-        </Text>
-      </Pressable>
+      <StickyFooter>
+        <Button
+          label={selectedIds.length === 0 ? 'Choose a service' : `Continue with ${selectedIds.length}`}
+          onPress={handleContinue}
+          disabled={selectedIds.length === 0}
+          style={{ flex: 1 }}
+        />
+      </StickyFooter>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: 96,
-    paddingBottom: spacing.xl,
-    backgroundColor: colors.background,
-  },
-  vendorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  vendorImageWrap: {
-    width: 64,
-    height: 64,
-    marginRight: spacing.md,
-    position: 'relative',
-  },
-  vendorImage: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.lg,
-    backgroundColor: colors.border,
-  },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  list: { paddingHorizontal: GUTTER, paddingBottom: 32, gap: 10 },
+  header: { gap: 20, marginBottom: spacing.sm },
+  vendor: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 6 },
+  vendorImage: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.surface },
   categoryBadge: {
-    position: 'absolute',
-    right: -4,
-    bottom: -4,
-    width: 22,
-    height: 22,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.background,
+    position: 'absolute', right: -4, bottom: -4, width: 22, height: 22, borderRadius: 11,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background,
   },
-  vendorHeaderCopy: {
-    flex: 1,
-  },
-  vendorName: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  vendorCategory: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  title: {
-    fontSize: typography.size.title,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  subtitle: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-    marginTop: 4,
-    marginBottom: 20,
-  },
-  loader: {
-    marginTop: spacing.xl,
-  },
-  error: {
-    color: colors.error,
-    fontSize: typography.size.base,
-    marginBottom: spacing.lg,
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: typography.size.base,
-  },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: 12,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: 14,
-    marginBottom: 10,
-  },
-  rowSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#fafafa',
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
-    borderColor: colors.disabled,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  checkboxSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  checkboxMark: {
-    color: colors.white,
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-  },
-  rowCopy: {
-    flex: 1,
-    marginRight: 8,
-  },
-  rowTitle: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  rowSubtitle: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  rowPrice: {
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  cta: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  ctaDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  ctaLabel: {
-    color: colors.white,
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
-  },
-});
+  vendorName: { fontSize: 15, fontWeight: '600', color: colors.text },
+  vendorCategory: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
+  rowOn: { borderColor: colors.link, backgroundColor: colors.accentLight },
+  check: { width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  checkOn: { backgroundColor: colors.accent, borderColor: colors.accent },
+  rowTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
+  rowSub: { fontSize: 13, color: colors.textSecondary },
+  rowPrice: { fontSize: 14, fontWeight: '600', color: colors.text, fontVariant: ['tabular-nums'] },
+}));

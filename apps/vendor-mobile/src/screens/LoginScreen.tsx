@@ -96,6 +96,6 @@ export function LoginScreen({ navigation }: Props) {
 }
 
 const useStyles = makeStyles((colors) => ({
-  foot: { fontSize: 16, color: colors.textSecondary, textAlign: 'center' },
-  link: { fontSize: 16, fontWeight: '600', color: colors.link },
+  foot: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
+  link: { fontSize: 14, fontWeight: '600', color: colors.link },
 }));

@@ -185,7 +185,7 @@ const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
   back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   chips: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   chip: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6, backgroundColor: colors.background },
   chipOn: { backgroundColor: colors.accent, borderColor: colors.accent },

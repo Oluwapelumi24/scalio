@@ -208,7 +208,7 @@ const useStyles = makeStyles((colors) => ({
   bubbleIn: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: radius.sm },
   bubbleOut: { backgroundColor: colors.accent, borderBottomRightRadius: radius.sm },
   bubbleAi: { backgroundColor: colors.accentLight },
-  bubbleText: { fontSize: typography.size.base, color: colors.text, lineHeight: 20 },
+  bubbleText: { fontSize: typography.size.base, color: colors.text, lineHeight: 18 },
   stamp: { fontSize: typography.size.xs, color: colors.textMuted, paddingHorizontal: 4 },
   composer: { backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.md, paddingTop: spacing.sm, gap: spacing.xs },
   inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, paddingBottom: spacing.sm },

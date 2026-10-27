@@ -181,13 +181,13 @@ const useStyles = makeStyles((colors) => ({
   skip: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.textMuted },
   content: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
   title: {
-    fontSize: 32, letterSpacing: -0.6,
+    fontSize: 22, letterSpacing: -0.6,
     fontWeight: '700',
     color: colors.text,
-    lineHeight: 36,
+    lineHeight: 27,
     marginTop: spacing.sm,
   },
-  subtitle: { fontSize: 16, color: colors.textSecondary, lineHeight: 21, marginTop: spacing.sm },
+  subtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 19, marginTop: spacing.sm },
   group: { marginTop: spacing.xl },
   groupTitle: {
     fontSize: typography.size.sm,

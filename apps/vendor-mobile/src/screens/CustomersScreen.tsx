@@ -135,13 +135,13 @@ export function CustomersScreen({ navigation }: Props) {
 const useStyles = makeStyles((colors) => ({
   content: { paddingHorizontal: GUTTER, paddingTop: 12, paddingBottom: 40 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingVertical: 12 },
-  name: { fontSize: 18, fontWeight: '600', color: colors.text },
-  sub: { fontSize: 15, color: colors.textSecondary },
-  meta: { fontSize: 14, color: colors.textMuted },
+  name: { fontSize: 15, fontWeight: '600', color: colors.text },
+  sub: { fontSize: 14, color: colors.textSecondary },
+  meta: { fontSize: 13, color: colors.textMuted },
   overlay: { flex: 1, backgroundColor: colors.overlay },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: GUTTER, paddingTop: 10 },
   grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.borderStrong, marginBottom: 14 },
-  sheetTitle: { fontSize: 24, fontWeight: '700', color: colors.text, marginBottom: 8 },
+  sheetTitle: { fontSize: 19, fontWeight: '700', color: colors.text, marginBottom: 8 },
   sheetRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16 },
-  sheetLabel: { fontSize: 17, color: colors.text },
+  sheetLabel: { fontSize: 15, color: colors.text },
 }));

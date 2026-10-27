@@ -92,7 +92,7 @@ const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md, gap: 4 },
   back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   content: { padding: spacing.xl, gap: spacing.sm, paddingBottom: spacing.xxxl },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md },
   rowTitle: { fontSize: typography.size.base, fontWeight: typography.weight.semibold, color: colors.text },

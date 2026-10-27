@@ -134,12 +134,12 @@ export function BookingsScreen({ navigation }: Props) {
 const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   content: { paddingHorizontal: GUTTER, paddingBottom: 48 },
-  day: { fontSize: 20, fontWeight: '700', color: colors.text, marginTop: 26, marginBottom: 6 },
+  day: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 26, marginBottom: 6 },
   row: { flexDirection: 'row', gap: 16, paddingVertical: 14 },
   bar: { width: 4, borderRadius: 2 },
-  time: { fontSize: 14, fontWeight: '600', color: colors.textSecondary, fontVariant: ['tabular-nums'] },
-  name: { fontSize: 18, fontWeight: '600', color: colors.text },
-  sub: { fontSize: 15, color: colors.textSecondary },
-  status: { fontSize: 14, fontWeight: '600', marginTop: 2 },
-  price: { fontSize: 16, fontWeight: '600', color: colors.text, fontVariant: ['tabular-nums'] },
+  time: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, fontVariant: ['tabular-nums'] },
+  name: { fontSize: 15, fontWeight: '600', color: colors.text },
+  sub: { fontSize: 14, color: colors.textSecondary },
+  status: { fontSize: 13, fontWeight: '600', marginTop: 2 },
+  price: { fontSize: 14, fontWeight: '600', color: colors.text, fontVariant: ['tabular-nums'] },
 }));

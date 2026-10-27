@@ -98,7 +98,7 @@ const useSStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md },
-  title: { flex: 1, fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  title: { flex: 1, fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
   create: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.accent, borderRadius: radius.lg, padding: spacing.lg },
   createIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },

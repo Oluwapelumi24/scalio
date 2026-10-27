@@ -1,6 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import {
@@ -9,130 +8,70 @@ import {
   SELF_SERVICE_PRICE_KOBO,
   formatNaira,
 } from '../lib/laundry';
-import { colors, radius, spacing, typography } from '../theme';
+import { AppTile, Page, PageHeader, type FeatherName } from '../components/ui';
+import { makeStyles, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LaundryServiceType'>;
 
 export function LaundryServiceTypeScreen({ route, navigation }: Props) {
   const { vendor } = route.params;
+  const { colors } = useTheme();
+  const styles = useStyles();
 
   function select(serviceType: 'self_service' | 'drop_off') {
     navigation.navigate('LaundryBooking', { vendor, serviceType });
   }
 
+  const options: { key: 'self_service' | 'drop_off'; icon: FeatherName; tone: string; title: string; body: string; price: number }[] = [
+    {
+      key: 'self_service',
+      icon: 'rotate-cw',
+      tone: colors.accent,
+      title: 'Self-service',
+      body: 'Use our machines at the laundromat. Pick your own time.',
+      price: SELF_SERVICE_PRICE_KOBO,
+    },
+    {
+      key: 'drop_off',
+      icon: 'package',
+      tone: colors.success,
+      title: 'Drop-off and collect',
+      body: 'Leave it with us. We’ll wash it and have it ready for you.',
+      price: DROPOFF_PRICE_KOBO,
+    },
+  ];
+
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.header} edges={['top']}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
-          <Feather name="arrow-left" size={20} color={colors.primary} />
-        </Pressable>
-        <Text style={styles.title}>How would you like to wash?</Text>
-        <Text style={styles.subtitle}>{vendor.businessName}</Text>
-      </SafeAreaView>
-
-      <View style={styles.body}>
-        {/* Self-service */}
-        <Pressable style={styles.card} onPress={() => select('self_service')}>
-          <View style={[styles.iconBadge, { backgroundColor: '#e0f2fe' }]}>
-            <Feather name="rotate-cw" size={24} color="#0369a1" />
-          </View>
-          <View style={styles.cardText}>
-            <Text style={styles.cardTitle}>Self-service</Text>
-            <Text style={styles.cardDesc}>Use our machines at the laundromat. Pick your own time slot.</Text>
-            <Text style={styles.cardPrice}>
-              {formatNaira(SELF_SERVICE_PRICE_KOBO)} wash{'  ·  '}{formatNaira(DUVET_PRICE_KOBO)} / duvet
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={20} color={colors.textMuted} />
-        </Pressable>
-
-        {/* Drop-off */}
-        <Pressable style={styles.card} onPress={() => select('drop_off')}>
-          <View style={[styles.iconBadge, { backgroundColor: '#f0fdf4' }]}>
-            <Feather name="package" size={24} color="#16a34a" />
-          </View>
-          <View style={styles.cardText}>
-            <Text style={styles.cardTitle}>Drop-off & collect</Text>
-            <Text style={styles.cardDesc}>Leave it with us, we'll wash and have it ready for you.</Text>
-            <Text style={styles.cardPrice}>
-              {formatNaira(DROPOFF_PRICE_KOBO)} wash{'  ·  '}{formatNaira(DUVET_PRICE_KOBO)} / duvet
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={20} color={colors.textMuted} />
-        </Pressable>
+    <Page>
+      <PageHeader onBack={() => navigation.goBack()} title="How would you like to wash?" description={vendor.businessName} />
+      <View style={{ gap: 14 }}>
+        {options.map((o) => (
+          <Pressable
+            key={o.key}
+            style={({ pressed }) => [styles.card, pressed && { backgroundColor: colors.surface }]}
+            onPress={() => select(o.key)}
+            accessibilityRole="button"
+            accessibilityLabel={`${o.title}. ${o.body}`}
+          >
+            <AppTile icon={o.icon} size={52} tone={o.tone} />
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={styles.title}>{o.title}</Text>
+              <Text style={styles.body}>{o.body}</Text>
+              <Text style={styles.price}>
+                {formatNaira(o.price)} wash · {formatNaira(DUVET_PRICE_KOBO)} per duvet
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.text} />
+          </Pressable>
+        ))}
       </View>
-    </View>
+    </Page>
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backBtn: {
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: typography.size.title,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  subtitle: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  body: {
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-  },
-  iconBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  cardText: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  cardDesc: {
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
-    marginTop: 3,
-    lineHeight: 18,
-  },
-  cardPrice: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textMuted,
-    marginTop: 6,
-  },
-});
+const useStyles = makeStyles((colors) => ({
+  card: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
+  title: { fontSize: 15, fontWeight: '600', color: colors.text },
+  body: { fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  price: { fontSize: 13, fontWeight: '600', color: colors.text, marginTop: 4, fontVariant: ['tabular-nums'] },
+}));

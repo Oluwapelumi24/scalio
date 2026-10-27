@@ -173,10 +173,10 @@ const useStyles = makeStyles((colors) => ({
   stage: { flex: 1, flexDirection: 'row' },
   half: { flex: 1 },
   slide: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', gap: 44, paddingHorizontal: GUTTER },
-  title: { fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: -0.4, color: colors.text, textAlign: 'center' },
-  body: { fontSize: 17, lineHeight: 25, color: colors.textSecondary, textAlign: 'center' },
+  title: { fontSize: 21, lineHeight: 26, fontWeight: '700', letterSpacing: -0.4, color: colors.text, textAlign: 'center' },
+  body: { fontSize: 15, lineHeight: 21, color: colors.textSecondary, textAlign: 'center' },
   footer: { paddingHorizontal: GUTTER, paddingBottom: 12, gap: 20 },
-  signIn: { fontSize: 16, fontWeight: '600', color: colors.link, textAlign: 'center' },
+  signIn: { fontSize: 14, fontWeight: '600', color: colors.link, textAlign: 'center' },
 
   art: { width: 300, height: 260, alignItems: 'center', justifyContent: 'center' },
   card: {
@@ -199,7 +199,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8,
     shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4,
   },
-  ratingText: { fontSize: 20, fontWeight: '700', color: '#0a0a0a' },
+  ratingText: { fontSize: 16, fontWeight: '700', color: '#0a0a0a' },
   slab: { height: 36, borderRadius: 10, backgroundColor: '#eceef2', marginTop: 12 },
   payRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
   radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: '#c4c7cc' },

@@ -123,6 +123,6 @@ const useStyles = makeStyles((colors) => ({
   option: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: 6 },
   radio: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: colors.borderStrong, marginTop: 1 },
   radioOn: { borderColor: colors.accent, borderWidth: 7 },
-  optionLabel: { fontSize: 17, fontWeight: '500', color: colors.text },
-  optionHelp: { fontSize: 15, lineHeight: 21, color: colors.textSecondary },
+  optionLabel: { fontSize: 15, fontWeight: '500', color: colors.text },
+  optionHelp: { fontSize: 14, lineHeight: 19, color: colors.textSecondary },
 }));

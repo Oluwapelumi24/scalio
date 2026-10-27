@@ -4,12 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Two palettes with the same names, so every screen works in both. Scalio navy
- * is the one accent: filled controls, the + button, links and the set-up bar.
- * In dark mode it lifts to a brighter navy so it still reads on near-black.
+ * is the one accent and the only call-to-action colour: every filled button,
+ * selected chip, link and the active tab. Black/white is for text, icons and
+ * outlined buttons only. In dark mode navy lifts to a brighter shade so it
+ * still reads on near-black, and button text stays white in both themes.
  */
 const light = {
-  // Strong buttons: black pill with white text in light mode, white pill with black text in dark.
-  primary: '#0a0a0a',
+  // Filled buttons and selected chips: navy with white text (same as accent).
+  primary: '#1e3a8a',
   onPrimary: '#ffffff',
   accent: '#1e3a8a',
   onAccent: '#ffffff',
@@ -61,8 +63,8 @@ const light = {
 export type Colors = typeof light;
 
 const dark: Colors = {
-  primary: '#ffffff',
-  onPrimary: '#0a0a0a',
+  primary: '#3f5fd9',
+  onPrimary: '#ffffff',
   accent: '#3f5fd9',
   onAccent: '#ffffff',
   link: '#8fa6ff',
@@ -204,10 +206,10 @@ export const typography = {
   size: {
     xs: 11,
     sm: 13,
-    base: 15,
-    md: 16,
-    lg: 17,
-    title: 22,
-    xl: 30,
+    base: 14,
+    md: 14,
+    lg: 15,
+    title: 17,
+    xl: 22,
   },
 } as const;

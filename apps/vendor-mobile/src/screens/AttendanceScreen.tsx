@@ -135,8 +135,8 @@ const useStyles = makeStyles((colors) => ({
     paddingBottom: spacing.md,
   },
   backBtn: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
-  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: 2 },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },
   content: { padding: spacing.xl, paddingBottom: spacing.xxxl },
   meCard: {
     backgroundColor: colors.background,

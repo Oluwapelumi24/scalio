@@ -1,176 +1,106 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Animated,
-  Easing,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { useState } from 'react';
+import { Image, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { CATEGORY_META } from '../lib/categories';
 import { INTERESTS, type Interest } from '../lib/interests';
 import { setInterests } from '../lib/preferences';
-import { colors, radius, spacing, typography } from '../theme';
+import { Button, IconButton } from '../components/ui';
+import { makeStyles, spacing, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InterestSelection'>;
 
-const CIRCLE_SIZE = 84;
+// Massage stays a category elsewhere; leaving it out here gives an even 4 × 3 grid.
+const PICKS = INTERESTS.filter((i) => i !== 'Massage');
 
-// ── Animated cell ────────────────────────────────────────────────────────────
+// Every pick fits on one screen. The grid measures the space between the
+// subtitle and the button and its rows fill it from top to bottom.
+const SIDE = 20;
+const GAP = 10;
+const LABEL_H = 34; // two lines of label under each tile
+const MIN_ROW_GAP = 10;
+const PAD_Y = 12; // breathing room above the first row and below the last
 
-function InterestCell({
+/** Largest tile for `cols` columns in a w × h area, and the rows it needs. */
+function layoutFor(cols: number, w: number, h: number) {
+  const rows = Math.ceil(PICKS.length / cols);
+  const byWidth = (w - SIDE * 2 - GAP * (cols - 1)) / cols;
+  const byHeight = (h - PAD_Y * 2 - rows * LABEL_H - (rows - 1) * MIN_ROW_GAP) / rows;
+  return { cols, rows, size: Math.floor(Math.max(48, Math.min(byWidth, byHeight))) };
+}
+
+/** Onboarding steps after the intro: interests, location, account. */
+const STEPS = 3;
+
+function InterestTile({
   item,
-  isSelected,
+  size,
+  selected,
   onToggle,
-  entryIndex,
 }: {
   item: Interest;
-  isSelected: boolean;
+  size: number;
+  selected: boolean;
   onToggle: () => void;
-  entryIndex: number;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const meta = CATEGORY_META[item];
   const [imgError, setImgError] = useState(false);
 
-  // Entrance: fade + rise
-  const entryAnim = useRef(new Animated.Value(0)).current;
-  // Press bounce: compress → spring back
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  // Ring scale when selection changes
-  const ringAnim = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(entryAnim, {
-      toValue: 1,
-      duration: 480,
-      delay: Math.min(entryIndex * 45, 400),
-      easing: Easing.out(Easing.exp),
-      useNativeDriver: true,
-    }).start();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    Animated.spring(ringAnim, {
-      toValue: isSelected ? 1 : 0,
-      useNativeDriver: true,
-      damping: 14,
-      stiffness: 220,
-      mass: 0.6,
-    }).start();
-  }, [isSelected, ringAnim]);
-
-  function handlePress() {
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.84,
-        duration: 70,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        damping: 8,
-        stiffness: 160,
-        mass: 0.5,
-      }),
-    ]).start();
-    onToggle();
-  }
-
-  const opacity = entryAnim;
-  const translateY = entryAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [22, 0],
-  });
-  const ringScale = ringAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.7, 1],
-  });
-  const ringOpacity = ringAnim;
-  const overlayOpacity = ringAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.32],
-  });
-  const checkScale = ringAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 1.2, 1],
-  });
-
   return (
-    <Animated.View style={[styles.cell, { opacity, transform: [{ translateY }] }]}>
-      <Pressable onPress={handlePress}>
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          {/* Outer ring (animated in on select) */}
-          <Animated.View
-            style={[
-              styles.ring,
-              {
-                opacity: ringOpacity,
-                transform: [{ scale: ringScale }],
-              },
-            ]}
-          />
-
-          {/* Circle with image */}
-          <View style={styles.circle}>
-            {imgError ? (
-              <View style={[styles.circleImage, styles.circleFallback, { backgroundColor: meta.color }]}>
-                <Feather name={meta.icon} size={28} color="#fff" />
-              </View>
-            ) : (
-              <Image
-                source={typeof meta.image === 'number' ? meta.image : { uri: meta.image }}
-                style={styles.circleImage}
-                resizeMode="cover"
-                onError={() => setImgError(true)}
-              />
-            )}
-
-            {/* Dark overlay */}
-            <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
-
-            {/* Check badge */}
-            <Animated.View
-              style={[
-                styles.checkBadge,
-                {
-                  opacity: ringOpacity,
-                  transform: [{ scale: checkScale }],
-                },
-              ]}
-            >
-              <Feather name="check" size={15} color="#fff" />
-            </Animated.View>
+    <Pressable
+      onPress={onToggle}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: selected }}
+      accessibilityLabel={item}
+      style={({ pressed }) => [{ width: size }, pressed && { opacity: 0.85 }]}
+    >
+      <View style={[styles.tile, { width: size, height: size }, selected && styles.tileOn]}>
+        {imgError ? (
+          <View style={[styles.fallback, { backgroundColor: meta.color }]}>
+            <Feather name={meta.icon} size={size * 0.34} color={colors.white} />
           </View>
-        </Animated.View>
-      </Pressable>
-
-      <Text style={[styles.label, isSelected && styles.labelSelected]} numberOfLines={2}>
-        {item}
-      </Text>
-    </Animated.View>
+        ) : (
+          <Image
+            // Bundled photos aren't plain numbers on web, so only wrap real URL strings
+            source={typeof meta.image === 'string' ? { uri: meta.image } : meta.image}
+            style={styles.image}
+            resizeMode="cover"
+            onError={() => setImgError(true)}
+          />
+        )}
+        {selected ? (
+          <View style={styles.check}>
+            <Feather name="check" size={14} color={colors.onAccent} />
+          </View>
+        ) : null}
+      </View>
+      <Text style={[styles.label, selected && styles.labelOn]} numberOfLines={2}>{item}</Text>
+    </Pressable>
   );
 }
 
-// ── Screen ───────────────────────────────────────────────────────────────────
-
 export function InterestSelectionScreen({ navigation }: Props) {
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<string[]>([]);
-  const [query, setQuery] = useState('');
+  const [area, setArea] = useState<{ w: number; h: number } | null>(null);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return q ? INTERESTS.filter((i) => i.toLowerCase().includes(q)) : INTERESTS;
-  }, [query]);
+  function onGridLayout(e: LayoutChangeEvent) {
+    const { width: w, height: h } = e.nativeEvent.layout;
+    if (!area || Math.abs(area.w - w) > 1 || Math.abs(area.h - h) > 1) setArea({ w, h });
+  }
+
+  // 3 × 4 or 4 × 3, whichever gives bigger tiles in the measured space.
+  const layout = area
+    ? [layoutFor(3, area.w, area.h), layoutFor(4, area.w, area.h)].reduce((a, b) => (b.size > a.size ? b : a))
+    : null;
+  const rows = layout
+    ? Array.from({ length: layout.rows }, (_, r) => PICKS.slice(r * layout.cols, (r + 1) * layout.cols))
+    : [];
 
   function toggle(interest: string) {
     setSelected((current) =>
@@ -189,225 +119,77 @@ export function InterestSelectionScreen({ navigation }: Props) {
   const canContinue = selected.length > 0;
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
-        <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} hitSlop={8}>
-            <Feather name="arrow-left" size={22} color={colors.primary} />
-          </Pressable>
-          <Text style={styles.title}>What are you into?</Text>
-          <Text style={styles.subtitle}>
-            Pick your interests and we'll personalise your feed.
-          </Text>
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <View style={styles.topBar}>
+        <View style={styles.back}>
+          <IconButton icon="arrow-left" label="Back" onPress={() => navigation.goBack()} />
         </View>
-
-        <View style={styles.searchWrap}>
-          <Feather name="search" size={16} color={colors.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search categories"
-            placeholderTextColor={colors.textMuted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-          />
-          {query.length > 0 && (
-            <Pressable onPress={() => setQuery('')} hitSlop={8}>
-              <Feather name="x" size={14} color={colors.textMuted} />
-            </Pressable>
-          )}
+        <View style={styles.dots} accessibilityLabel={`Step 1 of ${STEPS}`}>
+          {Array.from({ length: STEPS }, (_, i) => (
+            <View key={i} style={[styles.dot, i === 0 && styles.dotOn]} />
+          ))}
         </View>
-      </SafeAreaView>
+      </View>
 
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item}
-        numColumns={3}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.grid}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item, index }) => (
-          <InterestCell
-            item={item as Interest}
-            isSelected={selected.includes(item)}
-            onToggle={() => toggle(item)}
-            entryIndex={index}
-          />
-        )}
-        ListEmptyComponent={
-          <Text style={styles.empty}>No categories match "{query}"</Text>
-        }
-      />
+      <View style={styles.intro}>
+        <Text style={styles.title} accessibilityRole="header">What are you into?</Text>
+        <Text style={styles.subtitle}>Pick a few to personalise your home feed</Text>
+      </View>
 
-      <SafeAreaView edges={['bottom']} style={styles.footer}>
-        {selected.length > 0 && (
-          <Text style={styles.countLabel}>{selected.length} selected</Text>
-        )}
-        <Pressable
-          style={[styles.cta, !canContinue && styles.ctaDisabled]}
+      {/* Rows spread from just under the subtitle to just above the button */}
+      <View style={styles.gridArea} onLayout={onGridLayout}>
+        {layout
+          ? rows.map((row, r) => (
+              <View key={r} style={styles.row}>
+                {row.map((item) => (
+                  <InterestTile
+                    key={item}
+                    item={item}
+                    size={layout.size}
+                    selected={selected.includes(item)}
+                    onToggle={() => toggle(item)}
+                  />
+                ))}
+              </View>
+            ))
+          : null}
+      </View>
+
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <Button
+          label={canContinue ? `Continue (${selected.length})` : 'Pick at least one'}
           onPress={() => void handleContinue()}
           disabled={!canContinue}
-        >
-          <Text style={styles.ctaLabel}>
-            {canContinue ? 'Continue' : 'Select at least one'}
-          </Text>
-        </Pressable>
-      </SafeAreaView>
+        />
+      </View>
     </View>
   );
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
-
-const RING_SIZE = CIRCLE_SIZE + 8;
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  topBar: { height: 56, justifyContent: 'center', alignItems: 'center' },
+  back: { position: 'absolute', left: SIDE - 10, top: 6 },
+  dots: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.borderStrong },
+  dotOn: { width: 10, height: 10, borderRadius: 5, backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.text },
+  intro: { alignItems: 'center', gap: 6, paddingHorizontal: SIDE, paddingTop: 8, paddingBottom: 8 },
+  title: { fontSize: 21, lineHeight: 26, fontWeight: '700', letterSpacing: -0.4, color: colors.text, textAlign: 'center' },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, textAlign: 'center' },
+  gridArea: { flex: 1, justifyContent: 'space-between', paddingHorizontal: SIDE, paddingVertical: PAD_Y },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  tile: {
+    borderRadius: 16, overflow: 'hidden', backgroundColor: colors.surface,
+    borderWidth: 3, borderColor: colors.background,
   },
-  safeTop: {
-    backgroundColor: colors.background,
+  tileOn: { borderColor: colors.accent },
+  image: { width: '100%', height: '100%' },
+  fallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  check: {
+    position: 'absolute', top: 5, right: 5, width: 24, height: 24, borderRadius: 7,
+    backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
   },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  backButton: {
-    marginBottom: spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    backgroundColor: '#f5f5f5',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: typography.size.base,
-    color: colors.primary,
-    padding: 0,
-  },
-  grid: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-  },
-  row: {
-    justifyContent: 'space-around',
-    marginBottom: spacing.xl,
-  },
-  cell: {
-    alignItems: 'center',
-    width: RING_SIZE + 8,
-  },
-  // Outer selection ring (sits behind the circle)
-  ring: {
-    position: 'absolute',
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: RING_SIZE / 2,
-    borderWidth: 2.5,
-    borderColor: colors.primary,
-    top: -(RING_SIZE - CIRCLE_SIZE) / 2,
-    left: -(RING_SIZE - CIRCLE_SIZE) / 2,
-  },
-  circle: {
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
-    borderRadius: CIRCLE_SIZE / 2,
-    overflow: 'hidden',
-    backgroundColor: '#e0e0e0',
-  },
-  circleImage: {
-    width: '100%',
-    height: '100%',
-  },
-  circleFallback: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#000',
-  },
-  checkBadge: {
-    position: 'absolute',
-    bottom: 6,
-    right: 6,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    marginTop: spacing.sm,
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textBody,
-    textAlign: 'center',
-    lineHeight: 17,
-  },
-  labelSelected: {
-    color: colors.primary,
-    fontWeight: typography.weight.bold,
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: typography.size.base,
-    textAlign: 'center',
-    marginTop: spacing.xxl,
-  },
-  footer: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
-    gap: spacing.sm,
-  },
-  countLabel: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  cta: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  ctaDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  ctaLabel: {
-    color: '#ffffff',
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
-  },
-});
+  label: { marginTop: 6, height: LABEL_H - 6, fontSize: 12, lineHeight: 14, fontWeight: '500', color: colors.textSecondary, textAlign: 'center' },
+  labelOn: { color: colors.text, fontWeight: '700' },
+  footer: { paddingHorizontal: SIDE, paddingTop: spacing.md },
+}));

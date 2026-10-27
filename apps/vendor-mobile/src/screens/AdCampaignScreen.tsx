@@ -183,7 +183,7 @@ const useSStyles = makeStyles((colors) => ({
   center: { alignItems: 'center', justifyContent: 'center' },
   header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md, gap: spacing.md },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md },
-  title: { flex: 1, fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  title: { flex: 1, fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   banner: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center', padding: spacing.md, borderRadius: radius.md },
   bannerText: { fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },

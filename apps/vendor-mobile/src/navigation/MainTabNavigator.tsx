@@ -172,9 +172,9 @@ const useStyles = makeStyles((colors) => ({
     paddingHorizontal: GUTTER - 8, paddingTop: 10, gap: 2,
   },
   grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.borderStrong, marginBottom: 14 },
-  sheetTitle: { fontSize: 26, fontWeight: '700', color: colors.text, paddingHorizontal: 8, marginBottom: 10 },
+  sheetTitle: { fontSize: 19, fontWeight: '700', color: colors.text, paddingHorizontal: 8, marginBottom: 10 },
   sheetRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 8, paddingVertical: 12, borderRadius: 16 },
   sheetIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.accentLight, alignItems: 'center', justifyContent: 'center' },
-  sheetLabel: { fontSize: 17, fontWeight: '600', color: colors.text },
-  sheetSub: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
+  sheetLabel: { fontSize: 15, fontWeight: '600', color: colors.text },
+  sheetSub: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
 }));

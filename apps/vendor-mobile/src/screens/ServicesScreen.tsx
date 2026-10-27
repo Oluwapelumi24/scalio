@@ -122,7 +122,7 @@ export function ServicesScreen({ navigation }: Props) {
 const useStyles = makeStyles((colors) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingVertical: 14 },
   bar: { width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: colors.accent },
-  name: { fontSize: 19, fontWeight: '600', color: colors.text },
-  sub: { fontSize: 15, color: colors.textSecondary },
-  price: { fontSize: 17, color: colors.text, marginTop: 4, fontVariant: ['tabular-nums'] },
+  name: { fontSize: 15, fontWeight: '600', color: colors.text },
+  sub: { fontSize: 14, color: colors.textSecondary },
+  price: { fontSize: 15, color: colors.text, marginTop: 4, fontVariant: ['tabular-nums'] },
 }));

@@ -78,15 +78,15 @@ export function FeatureIntroScreen({ navigation, route }: Props) {
 }
 
 const useStyles = makeStyles((colors) => ({
-  eyebrow: { fontSize: 15, fontWeight: '600', letterSpacing: 0.8 },
+  eyebrow: { fontSize: 14, fontWeight: '600', letterSpacing: 0.8 },
   soon: { alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.tip, borderWidth: 1, borderColor: colors.tipBorder },
-  soonText: { fontSize: 15, fontWeight: '600', color: colors.link },
+  soonText: { fontSize: 14, fontWeight: '600', color: colors.link },
   app: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  appName: { fontSize: 18, fontWeight: '600', color: colors.text },
-  body: { fontSize: 17, lineHeight: 25, color: colors.text },
+  appName: { fontSize: 15, fontWeight: '600', color: colors.text },
+  body: { fontSize: 15, lineHeight: 21, color: colors.text },
   preview: { alignSelf: 'center', width: '88%', minHeight: 190, borderRadius: 24, padding: 24, marginTop: 8 },
-  previewTitle: { fontSize: 24, fontWeight: '700', color: colors.white },
-  previewSub: { fontSize: 15, color: 'rgba(255,255,255,0.82)', marginTop: 4 },
-  previewFigure: { fontSize: 28, fontWeight: '700', color: colors.white, textAlign: 'right' },
-  previewNote: { fontSize: 14, color: 'rgba(255,255,255,0.82)', textAlign: 'right', marginTop: 2 },
+  previewTitle: { fontSize: 19, fontWeight: '700', color: colors.white },
+  previewSub: { fontSize: 14, color: 'rgba(255,255,255,0.82)', marginTop: 4 },
+  previewFigure: { fontSize: 21, fontWeight: '700', color: colors.white, textAlign: 'right' },
+  previewNote: { fontSize: 13, color: 'rgba(255,255,255,0.82)', textAlign: 'right', marginTop: 2 },
 }));

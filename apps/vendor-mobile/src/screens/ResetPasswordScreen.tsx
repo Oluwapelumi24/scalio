@@ -148,16 +148,16 @@ const useStyles = makeStyles((colors) => ({
   },
   header: { marginBottom: spacing.xxxl },
   title: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   emailHighlight: {
     color: colors.textSecondary,

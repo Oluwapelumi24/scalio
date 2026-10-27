@@ -124,7 +124,7 @@ const useStyles = makeStyles((colors) => ({
   header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
   back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: 32, letterSpacing: -0.6, lineHeight: 38, fontWeight: '700', color: colors.text },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   newBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.primary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   newText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.sm },
   summary: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.sm },

@@ -19,7 +19,7 @@ import { radius, spacing, typography, useTheme, makeStyles, type Colors } from '
 type Props = NativeStackScreenProps<RootStackParamList, 'StaffManagement'>;
 
 const ROLE_COLOR = (colors: Colors): Record<string, string> => ({
-  owner: colors.primary,
+  owner: colors.text,
   manager: '#172554',
   practitioner: colors.accent,
   front_desk: colors.textMuted,});
@@ -183,7 +183,7 @@ const useStyles = makeStyles((colors) => ({
   },
   addBtnLabel: { color: colors.white, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   screenTitle: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: 16, lineHeight: 23, color: colors.textSecondary, marginTop: 2 },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },
   list: { padding: spacing.xl, gap: spacing.sm },
   card: {
     flexDirection: 'row',

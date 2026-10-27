@@ -93,7 +93,7 @@ export function SettingsScreen({ navigation }: Props) {
 
 const useStyles = makeStyles((colors) => ({
   profile: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
-  name: { fontSize: 20, fontWeight: '700', color: colors.text },
-  email: { fontSize: 15, color: colors.textSecondary },
-  role: { fontSize: 14, fontWeight: '600', color: colors.link, marginTop: 4 },
+  name: { fontSize: 16, fontWeight: '700', color: colors.text },
+  email: { fontSize: 14, color: colors.textSecondary },
+  role: { fontSize: 13, fontWeight: '600', color: colors.link, marginTop: 4 },
 }));

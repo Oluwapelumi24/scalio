@@ -7,7 +7,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { disconnectMeta, getSocialConnections, metaConnectUrl, type SocialConnections } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SocialAccounts'>;
 
@@ -17,6 +17,8 @@ const ROWS = [
 ];
 
 export function SocialAccountsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [data, setData] = useState<SocialConnections | null>(null);
   const [busy, setBusy] = useState(false);
   const canManage = ['owner', 'manager'].includes(getSession()?.role ?? '');
@@ -107,22 +109,22 @@ export function SocialAccountsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.xs },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: spacing.xs },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing.lg },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: spacing.lg },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.lg },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   name: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text },
   meta: { fontSize: typography.size.sm, color: colors.textMuted, lineHeight: 19 },
   primary: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.lg, alignItems: 'center' },
-  primaryText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+  primaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
   disabled: { opacity: 0.5 },
   danger: { color: colors.error, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   note: { backgroundColor: colors.mist, borderRadius: radius.md, padding: spacing.md, gap: 4, marginTop: spacing.md },
   noteTitle: { fontSize: typography.size.sm, fontWeight: typography.weight.bold, color: colors.text },
-});
+}));

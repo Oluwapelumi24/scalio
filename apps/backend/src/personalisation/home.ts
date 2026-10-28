@@ -21,8 +21,6 @@ export interface HomeSnapshot {
   unassignedToday: number;
   /** Active bookings in the next 14 days whose staff member is on leave that day. */
   bookingsOnLeave: number;
-  /** Whether the person viewing is clocked in right now. */
-  viewerClockedIn: boolean;
   /** Finance set-up and the salary window (Phase 3). */
   payoutAccountSet: boolean;
   payrollSetUp: boolean;
@@ -40,6 +38,13 @@ export interface HomeSnapshot {
   leadsDue: number;
   postsPlannedToday: number;
   postCount: number;
+  /** Phase 5 insights. Ratings are the viewer's own for practitioners. */
+  rating: { average: number; count: number } | null;
+  unhappyToCall: number;
+  /** Completed in the last 14 days, not emailed a feedback link and not yet rated. */
+  feedbackToSend: number;
+  quietDay: { weekday: number; day: string; bookings: number; averageBookings: number } | null;
+  noShows: { noShows: number; rate: number } | null;
 }
 
 export interface HomePreferences {
@@ -63,6 +68,16 @@ export interface HomeItem {
 export interface HomeResponse {
   generatedAt: string;
   business: { name: string };
+  /**
+   * The basics every business needs, whatever its interests or home settings:
+   * its booking link, what's coming up and what still stops customers booking.
+   */
+  bookings: {
+    link: string;
+    upcoming: UpcomingBooking[];
+    total: number;
+    setup: { services: boolean; hours: boolean; payments: boolean };
+  };
   layers: Record<HomeLayer, HomeItem[]>;
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
 }
@@ -92,8 +107,6 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.payoutAccountSet ? null : {};
     case 'setup_payroll':
       return !s.payrollSetUp && (s.wantsPayroll || prefs.interests.includes('pay_staff')) ? {} : null;
-    case 'clock_in':
-      return { clockedIn: s.viewerClockedIn };
     case 'upcoming_bookings':
       return { bookings: s.upcoming };
     case 'sales_30d':
@@ -114,6 +127,18 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.hasBusinessHours ? null : {};
     case 'share_link_first':
       return s.totalBookings === 0 ? { url: s.bookingLink } : null;
+    case 'unhappy_customers':
+      return s.unhappyToCall > 0 ? { count: s.unhappyToCall } : null;
+    case 'customer_rating':
+      return s.rating ? { ...s.rating } : null;
+    case 'view_reports':
+      return s.totalBookings > 0 ? {} : null;
+    case 'deposits_for_no_shows':
+      return s.noShows ? { ...s.noShows } : null;
+    case 'quiet_day_offer':
+      return s.quietDay ? { ...s.quietDay } : null;
+    case 'ask_for_feedback':
+      return s.feedbackToSend > 0 ? { count: s.feedbackToSend } : null;
     case 'leads_due':
       return s.leadsDue > 0 ? { count: s.leadsDue } : null;
     case 'posts_planned_today':
@@ -164,6 +189,16 @@ export function buildHome(
   return {
     generatedAt: now.toISOString(),
     business: { name: snapshot.businessName },
+    bookings: {
+      link: snapshot.bookingLink,
+      upcoming: snapshot.upcoming,
+      total: snapshot.totalBookings,
+      setup: {
+        services: snapshot.serviceCount > 0,
+        hours: snapshot.hasBusinessHours,
+        payments: snapshot.payoutAccountSet,
+      },
+    },
     layers: {
       attention: ranked.layers.attention.map(toItem),
       overview: ranked.layers.overview.map(toItem),

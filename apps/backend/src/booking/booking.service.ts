@@ -1,18 +1,13 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, inArray, sql, sum } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt, sql, sum } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
 import { bookings, customers, users, vendors, services, staff, vendorPayoutAccounts } from '../db/schema';
 import {
   PaystackService,
   type InitializeTransactionResult,
 } from '../payments/paystack.service';
+import { FeedbackService } from '../feedback/feedback.service';
 import { PushService } from '../notifications/push.service';
 import { SlotLockService } from './slot-lock.service';
 import { loadStaffDay } from '../staff-schedule/staff-day';
@@ -34,6 +29,21 @@ export interface CreatePendingBookingInput {
   durationMinutes: number;
 }
 
+/** A booking a staff member makes for a client: a walk-in, a phone call, a DM. */
+export interface CreateVendorBookingInput {
+  vendorId: string;
+  /** An existing client of this business… */
+  customerId?: string;
+  /** …or the details of a new one. */
+  newCustomer?: { name: string; phone?: string; email?: string };
+  staffId: string | null;
+  serviceIds: string[];
+  scheduledAt: Date;
+}
+
+/** What the booking rules need to know, whoever is making the booking. */
+type BookingTermsInput = Pick<CreatePendingBookingInput, 'vendorId' | 'staffId' | 'serviceIds' | 'scheduledAt' | 'durationMinutes'>;
+
 @Injectable()
 export class BookingService {
   constructor(
@@ -41,6 +51,7 @@ export class BookingService {
     private readonly slotLock: SlotLockService,
     private readonly paystack: PaystackService,
     private readonly push: PushService,
+    @Optional() private readonly feedback?: FeedbackService,
   ) {}
 
   /**
@@ -60,6 +71,70 @@ export class BookingService {
       input.userId,
     );
 
+    const booking = await this.insertConfirmed({ ...input, customerId, totalPriceKobo });
+    return { booking };
+  }
+
+  /**
+   * Books a client in from the business side. The client is either one the
+   * business already has, or a new walk-in record (matched on phone so the
+   * same person isn't added twice). Duration comes from the chosen services,
+   * and the same staff and slot rules apply as for online bookings.
+   */
+  async createByVendor(input: CreateVendorBookingInput): Promise<typeof bookings.$inferSelect> {
+    const serviceIds = [...new Set(input.serviceIds)];
+    if (serviceIds.length === 0) throw new BadRequestException('Pick at least one service.');
+    const chosen = await this.db
+      .select({ id: services.id, durationMinutes: services.durationMinutes })
+      .from(services)
+      .where(and(eq(services.vendorId, input.vendorId), inArray(services.id, serviceIds)));
+    if (chosen.length !== serviceIds.length) {
+      throw new BadRequestException('One of those services is not offered by this business.');
+    }
+    const durationMinutes = chosen.reduce((total, s) => total + s.durationMinutes, 0);
+
+    const terms = { ...input, serviceIds, durationMinutes };
+    const { totalPriceKobo } = await this.resolveBookingTerms(terms);
+    const customerId = await this.resolveClient(input);
+    return this.insertConfirmed({ ...terms, customerId, totalPriceKobo });
+  }
+
+  /** The client a staff-made booking is for: an existing record of this business, or a new walk-in. */
+  private async resolveClient(input: CreateVendorBookingInput): Promise<string> {
+    if (input.customerId) {
+      const [existing] = await this.db
+        .select({ id: customers.id })
+        .from(customers)
+        .where(and(eq(customers.id, input.customerId), eq(customers.vendorId, input.vendorId)));
+      if (!existing) throw new NotFoundException('That client was not found.');
+      return existing.id;
+    }
+
+    const name = input.newCustomer?.name.trim();
+    if (!name) throw new BadRequestException('Add the client’s name, or pick an existing client.');
+    const phone = input.newCustomer?.phone?.trim() || null;
+    if (phone) {
+      const [samePhone] = await this.db
+        .select({ id: customers.id })
+        .from(customers)
+        .where(and(eq(customers.vendorId, input.vendorId), eq(customers.phone, phone)));
+      if (samePhone) return samePhone.id;
+    }
+    const [created] = await this.db
+      .insert(customers)
+      .values({ vendorId: input.vendorId, name, phone, email: input.newCustomer?.email?.trim() || null })
+      .returning({ id: customers.id });
+    return created.id;
+  }
+
+  /**
+   * Holds the slot in Redis, then writes the booking straight into `confirmed`
+   * with `pay_on_arrival`. The Postgres partial unique index is the backstop if
+   * Redis is unavailable or the lock already expired.
+   */
+  private async insertConfirmed(
+    input: BookingTermsInput & { customerId: string; totalPriceKobo: number },
+  ): Promise<typeof bookings.$inferSelect> {
     const lockKey = this.slotLock.buildKey(
       input.vendorId,
       input.staffId ?? 'any',
@@ -77,7 +152,7 @@ export class BookingService {
         .insert(bookings)
         .values({
           vendorId: input.vendorId,
-          customerId,
+          customerId: input.customerId,
           staffId: input.staffId,
           serviceIds: input.serviceIds,
           status: 'confirmed',
@@ -85,18 +160,18 @@ export class BookingService {
           durationMinutes: input.durationMinutes,
           paymentMode: 'pay_on_arrival',
           amountDueKobo: 0,
-          totalPriceKobo,
+          totalPriceKobo: input.totalPriceKobo,
           paystackReference: null,
           lockToken: lock.token,
         })
         .returning();
 
-      await this.push.notifyCustomer(customerId, {
+      await this.push.notifyCustomer(input.customerId, {
         title: 'Booking confirmed',
         body: `You're all set for ${formatScheduledAt(row.scheduledAt)}.`,
       });
 
-      return { booking: row };
+      return row;
     } catch {
       // Postgres rejected it (unique index hit) — release the lock we just took.
       await this.slotLock.release(lock);
@@ -112,7 +187,7 @@ export class BookingService {
    * is working at that time, and the price of the chosen services is captured
    * so sales figures don't depend on later price changes.
    */
-  private async resolveBookingTerms(input: CreatePendingBookingInput): Promise<{ totalPriceKobo: number }> {
+  private async resolveBookingTerms(input: BookingTermsInput): Promise<{ totalPriceKobo: number }> {
     if (input.staffId) {
       const [member] = await this.db
         .select({ id: staff.id })
@@ -364,11 +439,16 @@ export class BookingService {
     return this.transition(bookingId, 'MARKED_NO_SHOW', { vendorId });
   }
 
-  /** Vendor-admin booking list, newest first — optionally narrowed by status. */
-  async listForVendor(vendorId: string, status?: BookingStatus, staffId?: string) {
+  /**
+   * Vendor-admin booking list, newest first — optionally narrowed by status,
+   * staff member, or a time window (`from` inclusive, `to` exclusive) for the calendar.
+   */
+  async listForVendor(vendorId: string, status?: BookingStatus, staffId?: string, range?: { from?: Date; to?: Date }) {
     const conditions = [eq(bookings.vendorId, vendorId)];
     if (status) conditions.push(eq(bookings.status, status));
     if (staffId) conditions.push(eq(bookings.staffId, staffId));
+    if (range?.from) conditions.push(gte(bookings.scheduledAt, range.from));
+    if (range?.to) conditions.push(lt(bookings.scheduledAt, range.to));
 
     const rows = await this.db
       .select()
@@ -387,6 +467,13 @@ export class BookingService {
         : [];
     const serviceMap = new Map(serviceRows.map((s) => [s.id, s]));
 
+    const staffIds = [...new Set(rows.map((r) => r.bookings.staffId).filter((id): id is string => id != null))];
+    const staffRows =
+      staffIds.length > 0
+        ? await this.db.select({ id: staff.id, name: staff.name }).from(staff).where(inArray(staff.id, staffIds))
+        : [];
+    const staffMap = new Map(staffRows.map((m) => [m.id, m]));
+
     return rows.map(({ bookings: b, customers: c }) => ({
       id: b.id,
       status: b.status,
@@ -395,6 +482,7 @@ export class BookingService {
       paymentMode: b.paymentMode,
       totalAmountKobo: b.totalPriceKobo,
       customer: c ? { id: c.id, name: c.name, email: c.email } : null,
+      staff: b.staffId ? (staffMap.get(b.staffId) ?? null) : null,
       services: b.serviceIds
         .map((id) => serviceMap.get(id))
         .filter((s): s is NonNullable<typeof s> => s != null)
@@ -486,6 +574,10 @@ export class BookingService {
     }
 
     await this.updateCustomerStats(updated);
+
+    if (nextStatus === 'completed') {
+      await this.feedback?.requestForBooking(updated.id);
+    }
 
     if (nextStatus === 'confirmed') {
       await this.push.notifyCustomer(updated.customerId, {

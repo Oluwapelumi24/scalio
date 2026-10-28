@@ -13,7 +13,7 @@ export const METRIC_DEFINITIONS = {
   repeatCustomers: 'Customers with two or more completed bookings with this person in the period.',
   attendance:
     'Hours clocked in ÷ hours scheduled, from each person’s weekly pattern minus breaks and time off — counted from the day the business started clocking in, up to today. Only shown when the business records clock-ins and the person has a weekly pattern.',
-  feedback: 'Not collected yet — customer ratings will appear here once Scalio asks for them.',
+  feedback: 'Average of the 1–5 star ratings customers gave after completed bookings in the period, and how many rated. Scalio asks every customer with an email; the business can also send the link on WhatsApp.',
 } as const;
 
 export interface PerfStaff {

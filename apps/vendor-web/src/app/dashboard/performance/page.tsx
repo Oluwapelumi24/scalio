@@ -66,6 +66,7 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
               <th className="px-4 py-3 text-right font-semibold">No-shows</th>
               <th className="px-4 py-3 text-right font-semibold">Completion rate</th>
               <th className="px-4 py-3 text-right font-semibold">Repeat customers</th>
+              <th className="px-4 py-3 text-right font-semibold">Rating</th>
               {report.tracksAttendance && <th className="px-4 py-3 text-right font-semibold">Attendance</th>}
               <th className="px-4 py-3 text-right font-semibold">Still to come</th>
             </tr>
@@ -85,6 +86,9 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
                 <td className="px-4 py-3 text-right">{p.noShows}</td>
                 <td className="px-4 py-3 text-right">{pct(p.completionRate)}</td>
                 <td className="px-4 py-3 text-right">{p.repeatCustomers} of {p.uniqueCustomers}</td>
+                <td className="px-4 py-3 text-right">
+                  {p.rating ? <>{p.rating.average}★<span className="block text-xs text-gray-400">{p.rating.count} rating{p.rating.count === 1 ? '' : 's'}</span></> : '—'}
+                </td>
                 {report.tracksAttendance && (
                   <td className="px-4 py-3 text-right">
                     {p.attendance ? (

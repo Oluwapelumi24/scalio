@@ -14,11 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { getBlackoutDates, addBlackoutDate, removeBlackoutDate, type BlackoutDate } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BlackoutDates'>;
 
 export function BlackoutDatesScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [dates, setDates] = useState<BlackoutDate[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateInput, setDateInput] = useState('');
@@ -154,8 +156,8 @@ export function BlackoutDatesScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
   headerSafe: {
     backgroundColor: colors.background,
     paddingHorizontal: spacing.xl,
@@ -163,9 +165,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { marginTop: spacing.md, marginBottom: spacing.sm, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   screenTitle: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },
   addCard: {
     margin: spacing.xl,
     backgroundColor: colors.background,
@@ -212,4 +214,4 @@ const styles = StyleSheet.create({
   reasonText: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: spacing.xl },
   emptyText: { color: colors.textMuted, fontSize: typography.size.base },
-});
+}));

@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { cancelBooking, completeBooking, noShowBooking } from '@/app/actions/bookings'
+import { feedbackShare } from '@/app/actions/insights'
+import { waNumber } from '@/lib/growth'
 
 interface Props {
   bookingId: string
@@ -18,6 +20,34 @@ export function BookingActions({ bookingId, status }: Props) {
       const result = await fn()
       if (result?.error) setError(result.error)
     })
+  }
+
+  if (status === 'completed') {
+    return (
+      <div className="flex items-center gap-2">
+        {error && <span className="text-xs text-red-600">{error}</span>}
+        <button
+          disabled={isPending}
+          title="Send the customer their rating link"
+          onClick={() => {
+            setError(null)
+            startTransition(async () => {
+              const r = await feedbackShare(bookingId)
+              if (r.error || !r.data) return setError(r.error ?? 'Could not get the link.')
+              if (r.data.submitted) return setError('Already rated.')
+              if (r.data.phone) window.open(`https://wa.me/${waNumber(r.data.phone)}?text=${encodeURIComponent(r.data.message)}`, '_blank', 'noopener')
+              else {
+                await navigator.clipboard.writeText(r.data.message)
+                setError('No phone on file: message copied, paste it to the customer.')
+              }
+            })
+          }}
+          className="text-xs px-2 py-1 rounded bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:opacity-50 transition-colors"
+        >
+          Ask for feedback
+        </button>
+      </div>
+    )
   }
 
   if (status !== 'confirmed' && status !== 'pending_payment') return null

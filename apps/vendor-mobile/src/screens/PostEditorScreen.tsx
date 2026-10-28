@@ -11,7 +11,7 @@ import {
   unplanPost, updatePost, uploadMedia, writeCaption,
   type ContentPlatform, type ContentPost, type PostFields, type Publication, type StudioInfo,
 } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostEditor'>;
 
@@ -32,6 +32,8 @@ function nextDays(n: number) {
 }
 
 export function PostEditorScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [studio, setStudio] = useState<StudioInfo | null>(null);
   const [post, setPost] = useState<ContentPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export function PostEditorScreen({ navigation, route }: Props) {
 
   const [mediaId, setMediaId] = useState<string | null>(null);
   const [localUri, setLocalUri] = useState<string | null>(null);
-  const [brief, setBrief] = useState('');
+  const [brief, setBrief] = useState(route.params.brief ?? '');
   const [tone, setTone] = useState('friendly');
   const [platforms, setPlatforms] = useState<ContentPlatform[]>(['instagram']);
   const [caption, setCaption] = useState('');
@@ -128,13 +130,13 @@ export function PostEditorScreen({ navigation, route }: Props) {
   const aiBlocked = !studio ? 'Loading…'
     : !studio.ai.available ? "AI captions aren't switched on yet."
     : studio.ai.usedToday >= studio.ai.dailyLimit ? `You've used today's ${studio.ai.dailyLimit} AI captions.`
-    : brief.trim().length < 3 ? 'Say what the post is about first.'
+    : !mediaId && brief.trim().length < 3 ? 'Add a photo, or say what the post is about.'
     : platforms.length === 0 ? 'Choose at least one platform.'
     : null;
 
   const generate = () => {
     const go = () => run('ai', 'Could not write a caption', async () => {
-      const draft = await writeCaption({ brief: brief.trim(), tone, platforms, mediaId: mediaId ?? undefined });
+      const draft = await writeCaption({ brief: brief.trim() || undefined, tone, platforms, mediaId: mediaId ?? undefined });
       setCaption(draft.caption); setCta(draft.callToAction); setTags(tagsText(draft.hashtags));
       setAiGenerated(true); setDirty(true);
       setStudio((s) => (s ? { ...s, ai: { ...s.ai, usedToday: s.ai.usedToday + 1 } } : s));
@@ -235,9 +237,9 @@ export function PostEditorScreen({ navigation, route }: Props) {
         )}
 
         {/* 2. What it's about → AI */}
-        <Text style={styles.label}>What's this post about?</Text>
+        <Text style={styles.label}>Anything to add? (optional)</Text>
         <TextInput style={[styles.input, styles.multiline]} value={brief} onChangeText={edit(setBrief)} multiline maxLength={1000}
-          placeholder="e.g. New knotless braids style, 20% off this week only" placeholderTextColor={colors.textMuted} />
+          placeholder="AI writes from your photo. Add a price, offer or style name if you like, e.g. 20% off this week" placeholderTextColor={colors.textMuted} />
 
         <Text style={styles.label}>Tone</Text>
         <View style={styles.wrap}>
@@ -262,7 +264,7 @@ export function PostEditorScreen({ navigation, route }: Props) {
           <Text style={styles.aiText}>{busy === 'ai' ? 'Writing…' : caption.trim() ? 'Write again with AI' : 'Write with AI'}</Text>
         </Pressable>
         <Text style={styles.meta}>
-          {aiBlocked ?? `AI writes a draft from your description and photo. Check it before posting — it only uses facts you give it. ${studio.ai.dailyLimit - studio.ai.usedToday} left today.`}
+          {aiBlocked ?? `AI writes a draft from your photo and notes. Check it before posting — it won’t make up prices or offers. ${studio.ai.dailyLimit - studio.ai.usedToday} left today.`}
         </Text>
 
         {/* 3. The post itself */}
@@ -409,12 +411,12 @@ export function PostEditorScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md },
-  back: { width: 36, height: 36, justifyContent: 'center' },
-  title: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text },
+  back: { width: 44, height: 44, justifyContent: 'center' },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
   photoBox: { height: 220, borderRadius: radius.lg, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
@@ -433,15 +435,15 @@ const styles = StyleSheet.create({
   meta: { fontSize: typography.size.sm, color: colors.textMuted },
   link: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   section: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text, marginTop: spacing.lg },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg, gap: spacing.sm },
   cardTitle: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text },
   preview: { fontSize: typography.size.base, color: colors.text, backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md },
   problem: { fontSize: typography.size.sm, color: colors.error },
   lineLabel: { fontSize: typography.size.base, color: colors.text, fontWeight: typography.weight.medium },
   copy: { flexDirection: 'row', gap: 6, alignItems: 'center', alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6 },
   copyText: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
-  secondary: { borderWidth: 1, borderColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.md, alignItems: 'center' },
-  secondaryText: { color: colors.primary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+  secondary: { borderWidth: 1, borderColor: colors.borderStrong, borderRadius: radius.pill, paddingVertical: spacing.md, alignItems: 'center' },
+  secondaryText: { color: colors.text, fontWeight: typography.weight.bold, fontSize: typography.size.md },
   primary: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.lg, alignItems: 'center' },
-  primaryText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
-});
+  primaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+}));

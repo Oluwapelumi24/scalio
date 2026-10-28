@@ -5,13 +5,13 @@ import type Redis from 'ioredis';
 import { randomBytes } from 'node:crypto';
 import { decryptPii, encryptPii } from '../common/crypto';
 import { DB, type Database } from '../db/db.module';
-import { socialConnections } from '../db/schema';
+import { adAccounts, metaUserAccess, socialConnections } from '../db/schema';
 import { REDIS } from '../redis/redis.module';
-import { META_SCOPES, MetaConfig } from './meta-config';
+import { MetaConfig } from './meta-config';
 import type { MetaPage } from './meta-graph';
 
 type Platform = 'facebook' | 'instagram';
-export type ReturnTo = 'web' | 'mobile';
+export type ReturnTo = 'web' | 'web-ads' | 'mobile';
 
 interface OAuthState { vendorId: string; staffId: string; returnTo: ReturnTo }
 interface PendingChoice extends OAuthState { metaUserId: string; pages: (Omit<MetaPage, 'accessToken'> & { tokenEnc: string })[] }
@@ -42,7 +42,7 @@ export class SocialConnectionsService {
   private returnUrl(to: ReturnTo): string | null {
     if (to === 'mobile') return null; // the person switches back to the app; it refreshes on focus
     const web = this.config.get<string>('VENDOR_WEB_URL') ?? 'http://localhost:3001';
-    return `${web.replace(/\/$/, '')}/dashboard/content/connections`;
+    return `${web.replace(/\/$/, '')}${to === 'web-ads' ? '/dashboard/ads' : '/dashboard/content/connections'}`;
   }
 
   /** Connected accounts, without tokens. */
@@ -74,8 +74,13 @@ export class SocialConnectionsService {
       .where(and(eq(socialConnections.vendorId, vendorId), eq(socialConnections.platform, platform)));
   }
 
+  /** Disconnect removes everything Meta gave Scalio for this business, including ad access. */
   async disconnect(vendorId: string) {
-    await this.db.delete(socialConnections).where(eq(socialConnections.vendorId, vendorId));
+    await this.db.transaction(async (tx) => {
+      await tx.delete(socialConnections).where(eq(socialConnections.vendorId, vendorId));
+      await tx.delete(metaUserAccess).where(eq(metaUserAccess.vendorId, vendorId));
+      await tx.delete(adAccounts).where(and(eq(adAccounts.vendorId, vendorId), eq(adAccounts.ownedBy, 'vendor')));
+    });
   }
 
   /** Step 1: the Facebook Login link. State is single-use and expires in 10 minutes. */
@@ -84,7 +89,7 @@ export class SocialConnectionsService {
     if (reason) throw new ServiceUnavailableException(reason);
     const state = randomBytes(24).toString('base64url');
     await this.redis.set(`meta:oauth:${state}`, JSON.stringify({ vendorId, staffId, returnTo } satisfies OAuthState), 'EX', STATE_TTL);
-    return this.meta.graph!.loginUrl(this.meta.redirectUri, state, { configId: this.meta.loginConfigId, scopes: META_SCOPES });
+    return this.meta.graph!.loginUrl(this.meta.redirectUri, state, { configId: this.meta.loginConfigId, scopes: this.meta.scopes });
   }
 
   /** Step 2: Meta sends the person back here after login. */
@@ -101,8 +106,13 @@ export class SocialConnectionsService {
 
     const graph = this.meta.graph!;
     try {
-      const userToken = await graph.userTokenFromCode(q.code, this.meta.redirectUri);
+      const { token: userToken, expiresAt } = await graph.userTokenFromCode(q.code, this.meta.redirectUri);
       const [me, pages] = await Promise.all([graph.me(userToken), graph.pages(userToken)]);
+      if (this.meta.adsEnabled) {
+        // Ad access is extra: if saving it fails, posting still gets connected.
+        await this.saveUserAccess(st, me.id, userToken, expiresAt).catch((err: unknown) =>
+          this.logger.warn(`Couldn't save Meta ad access: ${err instanceof Error ? err.message : String(err)}`));
+      }
       if (pages.length === 0) {
         return {
           kind: 'error', title: 'No Facebook Page found', returnUrl: back,
@@ -124,6 +134,36 @@ export class SocialConnectionsService {
     } catch (err) {
       this.logger.warn(`Meta connect failed: ${err instanceof Error ? err.message : String(err)}`);
       return { kind: 'error', title: 'Not connected', message: "We couldn't finish connecting to Facebook. Please try again.", returnUrl: back };
+    }
+  }
+
+  /**
+   * Ads Manager: keep the user token (encrypted) for the Marketing API, with the
+   * permissions actually granted. If the person has exactly one ad account and
+   * none is chosen yet, choose it so the checklist has one less step.
+   */
+  private async saveUserAccess(st: OAuthState, metaUserId: string, userToken: string, expiresAt: Date | null) {
+    const graph = this.meta.graph!;
+    const grantedScopes = await graph.grantedPermissions(userToken);
+    const values = { metaUserId, tokenEnc: encryptPii(userToken), expiresAt, grantedScopes, connectedById: st.staffId, updatedAt: new Date() };
+    await this.db.insert(metaUserAccess).values({ vendorId: st.vendorId, ...values }).onConflictDoUpdate({ target: metaUserAccess.vendorId, set: values });
+    // A fresh login fixes an ad account that needed reconnecting.
+    await this.db.update(adAccounts).set({ status: 'active', lastError: null, updatedAt: new Date() }).where(eq(adAccounts.vendorId, st.vendorId));
+
+    if (!grantedScopes.includes('ads_management')) return;
+    try {
+      const [existing] = await this.db.select({ id: adAccounts.metaAdAccountId }).from(adAccounts).where(eq(adAccounts.vendorId, st.vendorId));
+      const accounts = existing ? [] : await graph.adAccounts(userToken);
+      if (accounts.length === 1) {
+        const a = accounts[0];
+        await this.db.insert(adAccounts).values({
+          vendorId: st.vendorId, metaAdAccountId: a.id, name: a.name, currency: a.currency, timezone: a.timezone, metaStatus: a.status,
+          hasPaymentMethod: a.hasPaymentMethod, paymentMethodLabel: a.paymentMethodLabel, chosenById: st.staffId,
+        }).onConflictDoNothing();
+      }
+    } catch (err) {
+      // Not fatal: the vendor can pick an ad account from the checklist.
+      this.logger.warn(`Couldn't list ad accounts after login: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
@@ -153,6 +193,11 @@ export class SocialConnectionsService {
       await tx.delete(socialConnections).where(eq(socialConnections.vendorId, st.vendorId));
       await tx.insert(socialConnections).values(rows);
     });
+    if (this.meta.adsEnabled) {
+      // The inbox only hears about a Page's chats once the app is subscribed to it.
+      await this.meta.graph!.subscribePageToMessages(page.id, page.accessToken).catch((err: unknown) =>
+        this.logger.warn(`Couldn't subscribe Page ${page.id} to message webhooks: ${err instanceof Error ? err.message : String(err)}`));
+    }
     return {
       kind: 'connected', title: 'Connected', returnUrl: this.returnUrl(st.returnTo),
       message: page.instagram
@@ -164,7 +209,12 @@ export class SocialConnectionsService {
   /** Meta's deauthorise and data-deletion callbacks: forget everything that person connected. */
   async forgetMetaUser(metaUserId: string): Promise<number> {
     const removed = await this.db.delete(socialConnections).where(eq(socialConnections.metaUserId, metaUserId)).returning({ id: socialConnections.id });
-    return removed.length;
+    const access = await this.db.delete(metaUserAccess).where(eq(metaUserAccess.metaUserId, metaUserId)).returning({ vendorId: metaUserAccess.vendorId });
+    // Their ad accounts were reachable only through that login (Scalio-owned ones stay).
+    for (const { vendorId } of access) {
+      await this.db.delete(adAccounts).where(and(eq(adAccounts.vendorId, vendorId), eq(adAccounts.ownedBy, 'vendor')));
+    }
+    return removed.length + access.length;
   }
 }
 

@@ -7,7 +7,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { clockIn, clockOut, getMyShift, getTeamShifts, formatTime, type ShiftStatus, type TeamShiftStatus } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Attendance'>;
 
@@ -16,6 +16,8 @@ function since(iso: string | null) {
 }
 
 export function AttendanceScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const session = getSession();
   const isManager = session?.role === 'owner' || session?.role === 'manager';
   const [me, setMe] = useState<ShiftStatus | null>(null);
@@ -125,18 +127,16 @@ export function AttendanceScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
   header: {
     backgroundColor: colors.background,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 24,
     paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  backBtn: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
+  backBtn: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },
   content: { padding: spacing.xl, paddingBottom: spacing.xxxl },
   meCard: {
     backgroundColor: colors.background,
@@ -163,11 +163,11 @@ const styles = StyleSheet.create({
   bigBtnLabel: { color: colors.white, fontSize: typography.size.lg, fontWeight: typography.weight.bold },
   sectionTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text, marginTop: spacing.xxl },
   hint: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 4, marginBottom: spacing.md },
-  card: { backgroundColor: colors.background, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border },
+  card: { backgroundColor: colors.background, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   name: { fontSize: typography.size.base, fontWeight: typography.weight.semibold, color: colors.text },
   meta: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
   smallBtn: { borderWidth: 1, borderColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6, minWidth: 84, alignItems: 'center' },
   smallBtnLabel: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
-});
+}));

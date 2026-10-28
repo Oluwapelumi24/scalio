@@ -24,7 +24,7 @@ import {
   type TimeOff,
 } from '../lib/api';
 import { getSession } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StaffSchedule'>;
 
@@ -61,6 +61,8 @@ function toState(days: StaffDay[]): Record<number, DayState> {
 }
 
 function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.stepper}>
       <Text style={styles.stepperLabel}>{label}</Text>
@@ -90,6 +92,8 @@ function Stepper({ value, onChange, label }: { value: number; onChange: (v: numb
 }
 
 export function StaffScheduleScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { staffId, name } = route.params;
   const session = getSession();
   const canEdit = session?.role === 'owner' || session?.role === 'manager';
@@ -295,23 +299,21 @@ export function StaffScheduleScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
   header: {
     backgroundColor: colors.background,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 24,
     paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  backBtn: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
+  backBtn: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },
   error: { margin: spacing.xl, color: colors.error, textAlign: 'center' },
   content: { padding: spacing.xl, paddingBottom: spacing.xxxl },
   sectionTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text },
   hint: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 4, marginBottom: spacing.md, lineHeight: 18 },
-  card: { backgroundColor: colors.background, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border },
+  card: { backgroundColor: colors.background, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   dayRow: { padding: spacing.lg, gap: spacing.md },
   dayHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     alignItems: 'center',
   },
-  primaryLabel: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+  primaryLabel: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
   empty: { fontSize: typography.size.sm, color: colors.textMuted },
   leaveRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg },
   leaveDates: { fontSize: typography.size.base, fontWeight: typography.weight.semibold, color: colors.text },
@@ -367,4 +369,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   secondaryLabel: { color: colors.accent, fontWeight: typography.weight.semibold },
-});
+}));

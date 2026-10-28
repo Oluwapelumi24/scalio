@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, asc, eq, gte, lt, lte, sql } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { attendanceRecords, bookings, staff, staffTimeOff, staffWorkingHours, vendors } from '../db/schema';
+import { attendanceRecords, bookings, feedbackRequests, staff, staffTimeOff, staffWorkingHours, vendors } from '../db/schema';
+import { summariseRatings } from '../feedback/feedback.service';
 import { computePerformance, METRIC_DEFINITIONS } from './performance';
 import { businessToday, resolvePeriod } from './period';
 
@@ -63,22 +64,35 @@ export class PerformanceService {
     const timezone = vendor?.timezone ?? 'Africa/Lagos';
     const attendanceSince = firstShift?.first ? businessToday(new Date(firstShift.first), timezone) : null;
 
+    // Ratings for the same bookings (by visit date, with the same staff/service filters).
+    const ratingRows = await this.db
+      .select({ staffId: feedbackRequests.staffId, rating: feedbackRequests.rating })
+      .from(feedbackRequests)
+      .innerJoin(bookings, eq(bookings.id, feedbackRequests.bookingId))
+      .where(and(...bookingConditions, sql`${feedbackRequests.rating} is not null`));
+    const ratingFor = (staffId: string | null) => {
+      const s = summariseRatings(ratingRows.filter((r) => r.staffId === staffId).map((r) => r.rating!));
+      return s.count ? { average: s.average, count: s.count } : null;
+    };
+
+    const rows = computePerformance({
+      staff: members,
+      bookings: bookingRows,
+      shifts,
+      patterns,
+      timeOff,
+      range,
+      attendanceSince,
+      now,
+    });
+
     return {
       from: range.fromDate,
       to: range.toDate,
       definitions: METRIC_DEFINITIONS,
       tracksAttendance: attendanceSince !== null,
       attendanceSince,
-      staff: computePerformance({
-        staff: members,
-        bookings: bookingRows,
-        shifts,
-        patterns,
-        timeOff,
-        range,
-        attendanceSince,
-        now,
-      }),
+      staff: rows.map((r) => ({ ...r, rating: ratingFor(r.staffId) })),
     };
   }
 }

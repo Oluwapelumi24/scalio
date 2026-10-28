@@ -12,7 +12,7 @@ import {
   type HomeLayer,
   type Preferences,
 } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CustomiseHome'>;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
@@ -30,6 +30,8 @@ const LAYER_TITLES: Partial<Record<HomeLayer, string>> = {
  * hidden modules stay listed here so nothing is ever lost.
  */
 export function CustomiseHomeScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [rows, setRows] = useState<Row[]>([]);
   const [prefs, setPrefs] = useState<Preferences | null>(null);
   const [loading, setLoading] = useState(true);
@@ -165,8 +167,8 @@ export function CustomiseHomeScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -190,7 +192,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     marginBottom: spacing.sm,
   },
-  card: { backgroundColor: colors.background, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border },
+  card: { backgroundColor: colors.background, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg },
   rowDivider: { borderTopWidth: 1, borderTopColor: colors.border },
   rowLabel: { flex: 1, fontSize: typography.size.base, color: colors.text },
@@ -201,4 +203,4 @@ const styles = StyleSheet.create({
   chipTextOn: { color: colors.white },
   link: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl },
   linkText: { fontSize: typography.size.base, fontWeight: typography.weight.semibold, color: colors.accent },
-});
+}));

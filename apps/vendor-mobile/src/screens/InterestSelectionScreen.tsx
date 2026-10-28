@@ -5,7 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { getInterestGroups, getPreferences, updatePreferences, type InterestGroup } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InterestSelection'>;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
@@ -21,6 +21,8 @@ function InterestCard({
   selected: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <Pressable
       style={[styles.card, selected && styles.cardSelected]}
@@ -43,6 +45,8 @@ function InterestCard({
 }
 
 export function InterestSelectionScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const fromSettings = route.params?.fromSettings ?? false;
   const [groups, setGroups] = useState<InterestGroup[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -164,7 +168,7 @@ export function InterestSelectionScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   topNav: {
     flexDirection: 'row',
@@ -177,13 +181,13 @@ const styles = StyleSheet.create({
   skip: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.textMuted },
   content: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
   title: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontSize: 22, letterSpacing: -0.6,
+    fontWeight: '700',
     color: colors.text,
-    lineHeight: 36,
+    lineHeight: 27,
     marginTop: spacing.sm,
   },
-  subtitle: { fontSize: typography.size.base, color: colors.textMuted, lineHeight: 21, marginTop: spacing.sm },
+  subtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 19, marginTop: spacing.sm },
   group: { marginTop: spacing.xl },
   groupTitle: {
     fontSize: typography.size.sm,
@@ -198,7 +202,7 @@ const styles = StyleSheet.create({
     width: '47.5%',
     minHeight: 112,
     padding: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: 20,
     borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -255,6 +259,6 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xl,
   },
   ctaDisabled: { backgroundColor: colors.disabled },
-  ctaLabel: { color: colors.white, fontSize: typography.size.lg, fontWeight: typography.weight.bold },
+  ctaLabel: { color: colors.onPrimary, fontSize: typography.size.lg, fontWeight: typography.weight.bold },
   footnote: { fontSize: typography.size.xs, color: colors.textMuted, textAlign: 'center' },
-});
+}));

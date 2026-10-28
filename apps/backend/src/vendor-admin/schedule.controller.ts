@@ -26,7 +26,9 @@ import { VendorScheduleService } from './schedule.service';
 export class VendorScheduleController {
   constructor(private readonly scheduleService: VendorScheduleService) {}
 
+  /** Everyone can read opening hours: the calendar shades the closed hours. */
   @Get('hours')
+  @Roles('owner', 'manager', 'practitioner', 'front_desk')
   getHours(@CurrentStaff() staff: VendorPrincipal) {
     return this.scheduleService.getBusinessHours(staff.vendorId);
   }

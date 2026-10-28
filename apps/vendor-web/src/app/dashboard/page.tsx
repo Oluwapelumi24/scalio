@@ -22,7 +22,6 @@ const HREF: Record<string, string> = {
   starting_soon: '/dashboard/bookings?status=confirmed',
   unassigned_today: '/dashboard/bookings',
   bookings_on_leave: '/dashboard/bookings',
-  clock_in: '/dashboard/attendance',
   staff_performance: '/dashboard/performance',
   upcoming_bookings: '/dashboard/bookings',
   view_bookings: '/dashboard/bookings',
@@ -45,6 +44,12 @@ const HREF: Record<string, string> = {
   first_post: '/dashboard/content/new',
   posts_planned_today: '/dashboard/content',
   leads_due: '/dashboard/leads',
+  unhappy_customers: '/dashboard/feedback',
+  customer_rating: '/dashboard/feedback',
+  view_reports: '/dashboard/reports',
+  deposits_for_no_shows: '/dashboard/services',
+  quiet_day_offer: '/dashboard/content/new',
+  ask_for_feedback: '/dashboard/bookings?status=completed',
   view_leads: '/dashboard/leads?filter=open',
 }
 
@@ -54,17 +59,21 @@ const ATTENTION_TEXT: Record<string, (n: number, d: Record<string, number>) => s
   unassigned_today: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff assigned`,
   bookings_on_leave: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`,
   payroll_open: (_n, d) => `Payroll is open: ${d.toPay} ${d.toPay === 1 ? 'person' : 'people'} still to pay`,
+  unhappy_customers: (n) => `${n} unhappy ${n === 1 ? 'customer' : 'customers'} to call back`,
   leads_due: (n) => `${n} ${n === 1 ? 'lead is' : 'leads are'} waiting for a follow-up`,
   posts_planned_today: (n) => `${n} ${n === 1 ? 'post is' : 'posts are'} planned for today`,
 }
 
-const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number>) => string> = {
+const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number> & { day?: string }) => string> = {
   choose_interests: () => 'Pick what you want help with and we will set up your home screen.',
   setup_services: () => 'Customers can only book once you have at least one service.',
   setup_hours: () => 'Let customers know when you are open.',
   setup_payments: () => 'Add your bank account so customers can pay deposits online.',
   setup_payroll: () => 'Set a pay day and salaries so payroll reminds you each month.',
   share_link_first: () => 'Share your booking link on WhatsApp or Instagram.',
+  quiet_day_offer: (d) => `${d.day}s get about ${d.bookings} bookings when other days average ${d.averageBookings} (last 8 weeks). Post an offer for that day.`,
+  deposits_for_no_shows: (d) => `${d.noShows} no-shows in the last 60 days (${Math.round(d.rate * 100)}% of visits). Ask for a deposit on your busiest services.`,
+  ask_for_feedback: (d) => `${d.count} recent ${d.count === 1 ? 'customer has' : 'customers have'} no email. Send them the rating link on WhatsApp from Bookings.`,
   first_post: () => 'Add a photo, say what it is about, and AI writes the caption and hashtags.',
   follow_up_lapsed: (d) => `${d.count} ${d.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
 }
@@ -73,6 +82,7 @@ function tileValue(item: HomeItem): string {
   const d = item.data
   if (typeof d.amountKobo === 'number') return formatNaira(d.amountKobo)
   if (item.id === 'repeat_customers') return `${d.count} of ${d.totalCustomers}`
+  if (item.id === 'customer_rating') return `${d.average}★ (${d.count})`
   if (typeof d.count === 'number') return d.count.toLocaleString()
   return '—'
 }
@@ -235,7 +245,7 @@ export default async function DashboardHome() {
                         href={HREF[item.id] ?? '/dashboard'}
                         className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 hover:border-indigo-300"
                       >
-                        {item.id === 'clock_in' && item.data.clockedIn ? 'Clock out' : item.title}
+                        {item.title}
                         <span className="text-gray-400">→</span>
                       </ModuleLink>
                     ),

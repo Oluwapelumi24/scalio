@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Vendor } from '@scalio/shared-types';
 import type { MainTabScreenProps } from '../navigation/types';
 import { listVendors } from '../lib/api';
-import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';
 import { INTERESTS } from '../lib/interests';
-import { colors, radius, spacing, typography } from '../theme';
+import { EmptyState, PageHeader, SectionTitle } from '../components/ui';
+import { GUTTER, makeStyles, spacing, useTheme } from '../theme';
 
 type Props = MainTabScreenProps<'Explore'>;
 
@@ -16,6 +18,9 @@ interface CategorySection {
 }
 
 export function ExploreScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [vendors, setVendors] = useState<Vendor[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,41 +51,46 @@ export function ExploreScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
       <FlatList
         data={sections}
         keyExtractor={(item) => item.category}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingTop: insets.top + spacing.sm }]}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <>
-            <Text style={styles.title}>Explore by category</Text>
-            {error && <Text style={styles.error}>{error}</Text>}
-            {!error && !vendors && <ActivityIndicator style={styles.loader} />}
-            {!error && vendors && sections.length === 0 && (
-              <Text style={styles.empty}>No businesses to explore yet — check back soon.</Text>
-            )}
-          </>
+          <View style={{ gap: 20 }}>
+            <PageHeader title="Explore" description="Browse businesses near you by category." />
+            {error ? <EmptyState icon="wifi-off" title="Couldn’t load businesses" body={error} /> : null}
+            {!error && !vendors ? <ActivityIndicator color={colors.link} style={{ marginTop: spacing.xl }} /> : null}
+            {!error && vendors && sections.length === 0 ? (
+              <EmptyState icon="compass" title="Nothing to explore yet" body="Check back soon for new businesses." />
+            ) : null}
+          </View>
         }
         renderItem={({ item }) => (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>{item.category}</Text>
+            <SectionTitle title={item.category} />
             <FlatList
               horizontal
               data={item.vendors}
               keyExtractor={(vendor) => vendor.id}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.row}
+              style={{ marginHorizontal: -GUTTER }}
               renderItem={({ item: vendor }) => (
-                <Pressable style={styles.card} onPress={() => openVendor(vendor)}>
-                  <View style={styles.cardImageWrap}>
-                    <Image source={{ uri: getVendorImageUrl(vendor) }} style={styles.cardImage} />
+                <Pressable
+                  style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+                  onPress={() => openVendor(vendor)}
+                  accessibilityRole="button"
+                  accessibilityLabel={vendor.businessName}
+                >
+                  <View>
+                    <Image source={getVendorImageSource(vendor)} style={styles.cardImage} />
                     <View style={[styles.categoryBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
                       <Feather name={getCategoryMeta(vendor.category).icon} size={12} color={colors.white} />
                     </View>
                   </View>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    {vendor.businessName}
-                  </Text>
+                  <Text style={styles.cardTitle} numberOfLines={1}>{vendor.businessName}</Text>
                 </Pressable>
               )}
             />
@@ -91,74 +101,16 @@ export function ExploreScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  list: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: 96,
-    paddingBottom: spacing.xl,
-  },
-  title: {
-    fontSize: typography.size.title,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: spacing.lg,
-  },
-  loader: {
-    marginTop: spacing.xl,
-  },
-  error: {
-    color: colors.error,
-    fontSize: typography.size.base,
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: typography.size.base,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionLabel: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: spacing.md,
-  },
-  row: {
-    paddingBottom: 4,
-  },
-  card: {
-    width: 140,
-    marginRight: 14,
-  },
-  cardImageWrap: {
-    position: 'relative',
-    marginBottom: spacing.sm,
-  },
-  cardImage: {
-    width: 140,
-    height: 100,
-    borderRadius: radius.xl,
-    backgroundColor: colors.border,
-  },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  list: { paddingHorizontal: GUTTER, paddingBottom: 48, gap: 28 },
+  section: { gap: spacing.md },
+  row: { paddingHorizontal: GUTTER, gap: 14 },
+  card: { width: 150, gap: spacing.sm },
+  cardImage: { width: 150, height: 110, borderRadius: 18, backgroundColor: colors.surface },
   categoryBadge: {
-    position: 'absolute',
-    right: spacing.sm,
-    bottom: spacing.sm,
-    width: 22,
-    height: 22,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.background,
+    position: 'absolute', right: spacing.sm, bottom: spacing.sm, width: 24, height: 24, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background,
   },
-  cardTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-});
+  cardTitle: { fontSize: 14, fontWeight: '600', color: colors.text },
+}));

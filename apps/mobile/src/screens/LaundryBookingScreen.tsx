@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Service } from '@scalio/shared-types';
 import type { RootStackParamList } from '../navigation/types';
@@ -22,7 +13,8 @@ import {
   washPriceKobo,
   washServiceName,
 } from '../lib/laundry';
-import { colors, radius, spacing, typography } from '../theme';
+import { Button, Page, PageHeader, SectionTitle, StickyFooter } from '../components/ui';
+import { GUTTER, makeStyles, spacing, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LaundryBooking'>;
 
@@ -105,6 +97,8 @@ function Stepper({
   min?: number;
   max?: number;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [draft, setDraft] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
 
@@ -120,8 +114,10 @@ function Stepper({
         onPress={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
         style={[styles.stepBtn, value <= min && styles.stepBtnDisabled]}
+        accessibilityRole="button"
+        accessibilityLabel="Fewer"
       >
-        <Text style={[styles.stepIcon, value <= min && styles.stepIconDisabled]}>−</Text>
+        <Feather name="minus" size={18} color={value <= min ? colors.disabled : colors.text} />
       </Pressable>
 
       <Pressable onPress={() => inputRef.current?.focus()} style={styles.stepValueWrap}>
@@ -136,6 +132,7 @@ function Stepper({
           keyboardType="number-pad"
           selectTextOnFocus
           returnKeyType="done"
+          accessibilityLabel="Number of duvets"
         />
       </Pressable>
 
@@ -143,8 +140,10 @@ function Stepper({
         onPress={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
         style={[styles.stepBtn, value >= max && styles.stepBtnDisabled]}
+        accessibilityRole="button"
+        accessibilityLabel="More"
       >
-        <Text style={[styles.stepIcon, value >= max && styles.stepIconDisabled]}>+</Text>
+        <Feather name="plus" size={18} color={value >= max ? colors.disabled : colors.text} />
       </Pressable>
     </View>
   );
@@ -154,6 +153,8 @@ function Stepper({
 
 export function LaundryBookingScreen({ route, navigation }: Props) {
   const { vendor, serviceType } = route.params;
+  const { colors } = useTheme();
+  const styles = useStyles();
   const isDropOff = serviceType === 'drop_off';
 
   const [services, setServices] = useState<Service[] | null>(null);
@@ -210,68 +211,75 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
   const washPrice = washPriceKobo(serviceType);
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeHeader} edges={['top']}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
-          <Feather name="arrow-left" size={20} color={colors.primary} />
-        </Pressable>
-        <Text style={styles.screenTitle}>Laundry order</Text>
-        <Text style={styles.vendorName}>{vendor.businessName}</Text>
-      </SafeAreaView>
+    <Page
+      footer={
+        <StickyFooter>
+          {services === null ? (
+            <ActivityIndicator color={colors.link} style={{ flex: 1, height: 56 }} />
+          ) : (
+            <Button
+              label={isReady ? `Review order · ${formatNaira(order.totalKobo)}` : 'Pick a date and time'}
+              icon={isReady ? 'arrow-right' : undefined}
+              onPress={handleReview}
+              disabled={!isReady}
+              style={{ flex: 1 }}
+            />
+          )}
+        </StickyFooter>
+      }
+    >
+      <PageHeader onBack={() => navigation.goBack()} title="Laundry order" description={vendor.businessName} />
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Wash summary — flat fee for the chosen service type, always included */}
-        <Text style={styles.sectionLabel}>Your wash</Text>
-
-        <View style={styles.optionCard}>
-          <View style={styles.optionHeader}>
-            <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>{washServiceName(serviceType)}</Text>
-              <Text style={styles.optionMeta}>Flat rate, included in every order</Text>
+      {/* Wash: flat fee for the chosen service type, always included */}
+      <View style={{ gap: spacing.md }}>
+        <SectionTitle title="Your wash" />
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.cardTitle}>{washServiceName(serviceType)}</Text>
+              <Text style={styles.cardSub}>Flat rate, included in every order</Text>
             </View>
-            <Text style={styles.washPrice}>{formatNaira(washPrice)}</Text>
+            <Text style={styles.price}>{formatNaira(washPrice)}</Text>
           </View>
         </View>
+      </View>
 
-        {/* Duvets & bedding — optional add-on */}
-        <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>Add duvets & bedding?</Text>
-
+      {/* Duvets and bedding: optional add-on */}
+      <View style={{ gap: spacing.md }}>
+        <SectionTitle title="Add duvets and bedding?" />
         <Pressable
-          style={[styles.optionCard, duvetEnabled && styles.optionCardSelected]}
+          style={[styles.card, duvetEnabled && styles.cardOn]}
           onPress={() => setDuvetEnabled((v) => !v)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: duvetEnabled }}
         >
-          <View style={styles.optionHeader}>
-            <View style={[styles.checkbox, duvetEnabled && styles.checkboxSelected]}>
-              {duvetEnabled && <Text style={styles.checkmark}>✓</Text>}
+          <View style={styles.cardHead}>
+            <View style={[styles.check, duvetEnabled && styles.checkOn]}>
+              {duvetEnabled ? <Feather name="check" size={14} color={colors.onAccent} /> : null}
             </View>
-            <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>Duvets & bedding</Text>
-              <Text style={styles.optionMeta}>{formatNaira(DUVET_PRICE_KOBO)} per duvet</Text>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.cardTitle}>Duvets and bedding</Text>
+              <Text style={styles.cardSub}>{formatNaira(DUVET_PRICE_KOBO)} per duvet</Text>
             </View>
           </View>
 
-          {duvetEnabled && (
-            <View style={styles.optionBody}>
+          {duvetEnabled ? (
+            <View style={styles.cardBody}>
               <View style={styles.stepperRow}>
-                <Text style={styles.stepperLabel}>Number of duvets</Text>
+                <Text style={[styles.cardSub, { flex: 1 }]}>Number of duvets</Text>
                 <Stepper value={duvets} onChange={setDuvets} min={1} max={20} />
               </View>
-              <View style={styles.basketPreview}>
-                <Feather name="package" size={13} color={colors.textMuted} />
-                <Text style={styles.basketPreviewText}>
-                  {duvets} duvet{duvets !== 1 ? 's' : ''} → {formatNaira(order.duvetSubtotalKobo)}
-                </Text>
-              </View>
+              <Text style={styles.cardSub}>
+                {duvets} duvet{duvets !== 1 ? 's' : ''}: {formatNaira(order.duvetSubtotalKobo)}
+              </Text>
             </View>
-          )}
+          ) : null}
         </Pressable>
+      </View>
 
-        {/* Schedule */}
-        <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>
-          {isDropOff ? 'Drop-off date' : 'Select date'}
-        </Text>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayPills}>
+      <View style={{ gap: spacing.md }}>
+        <SectionTitle title={isDropOff ? 'Drop-off date' : 'Date'} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.chips}>
           {days.map((day, i) => {
             const selected = i === selectedDayIndex;
             const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : day.toLocaleDateString('en-US', { weekday: 'short' });
@@ -279,340 +287,92 @@ export function LaundryBookingScreen({ route, navigation }: Props) {
             return (
               <Pressable
                 key={i}
-                style={[styles.dayPill, selected && styles.dayPillSelected]}
+                style={[styles.dayChip, selected && styles.chipOn]}
                 onPress={() => setSelectedDayIndex(i)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
               >
-                <Text style={[styles.dayPillWeekday, selected && styles.dayPillTextSelected]}>{label}</Text>
-                <Text style={[styles.dayPillNum, selected && styles.dayPillTextSelected]}>{num}</Text>
+                <Text style={[styles.chipSub, selected && styles.textOn]}>{label}</Text>
+                <Text style={[styles.dayNum, selected && styles.textOn]}>{num}</Text>
               </Pressable>
             );
           })}
         </ScrollView>
+      </View>
 
-        {isDropOff ? (
-          /* Drop-off: time window picker */
-          <>
-            <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Drop-off window</Text>
-            <View style={styles.windowRow}>
-              {TIME_WINDOWS.map((win) => {
-                const selected = selectedWindow === win.key;
-                return (
-                  <Pressable
-                    key={win.key}
-                    style={[styles.windowPill, selected && styles.windowPillSelected]}
-                    onPress={() => setSelectedWindow(win.key)}
-                  >
-                    <Text style={[styles.windowLabel, selected && styles.windowLabelSelected]}>{win.label}</Text>
-                    <Text style={[styles.windowDisplay, selected && styles.windowDisplaySelected]}>{win.display}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </>
-        ) : (
-          /* Self-service: specific time slot picker */
-          <>
-            <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Select time</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timePills}>
-              {SELF_SERVICE_HOURS.map((h) => {
-                const selected = selectedHour === h;
-                return (
-                  <Pressable
-                    key={h}
-                    style={[styles.timePill, selected && styles.timePillSelected]}
-                    onPress={() => setSelectedHour(h)}
-                  >
-                    <Text style={[styles.timePillLabel, selected && styles.timePillLabelSelected]}>
-                      {formatHour(h)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </>
-        )}
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Bottom CTA bar */}
-      <SafeAreaView edges={['bottom']} style={styles.ctaBar}>
-        {services === null ? (
-          <ActivityIndicator color={colors.primary} />
-        ) : (
-          <Pressable
-            style={[styles.cta, !isReady && styles.ctaDisabled]}
-            disabled={!isReady}
-            onPress={handleReview}
-          >
-            {isReady ? (
-              <View style={styles.ctaInner}>
-                <Text style={styles.ctaTotal}>{formatNaira(order.totalKobo)}</Text>
-                <Text style={styles.ctaLabel}>Review order</Text>
-                <Feather name="arrow-right" size={18} color="#ffffff" />
-              </View>
-            ) : (
-              <Text style={styles.ctaLabel}>Select a date and time to continue</Text>
-            )}
-          </Pressable>
-        )}
-      </SafeAreaView>
-    </View>
+      {isDropOff ? (
+        <View style={{ gap: spacing.md }}>
+          <SectionTitle title="Drop-off window" />
+          <View style={styles.windowRow}>
+            {TIME_WINDOWS.map((win) => {
+              const selected = selectedWindow === win.key;
+              return (
+                <Pressable
+                  key={win.key}
+                  style={[styles.window, selected && styles.chipOn]}
+                  onPress={() => setSelectedWindow(win.key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                >
+                  <Text style={[styles.chipLabel, selected && styles.textOn]}>{win.label}</Text>
+                  <Text style={[styles.chipSub, selected && styles.textOn]}>{win.display}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : (
+        <View style={{ gap: spacing.md }}>
+          <SectionTitle title="Time" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.chips}>
+            {SELF_SERVICE_HOURS.map((h) => {
+              const selected = selectedHour === h;
+              return (
+                <Pressable
+                  key={h}
+                  style={[styles.timeChip, selected && styles.chipOn]}
+                  onPress={() => setSelectedHour(h)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                >
+                  <Text style={[styles.chipLabel, selected && styles.textOn]}>{formatHour(h)}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </Page>
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  safeHeader: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  backBtn: {
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  screenTitle: {
-    fontSize: typography.size.title,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  vendorName: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  scroll: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-  },
-  sectionLabel: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: spacing.md,
-  },
-  optionCard: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  optionCardSelected: { borderColor: colors.primary },
-  optionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
-    borderColor: colors.disabled,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  checkboxSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  checkmark: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: typography.weight.bold,
-  },
-  optionInfo: { flex: 1 },
-  optionTitle: {
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  optionMeta: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  washPrice: {
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  optionBody: {
-    marginTop: spacing.lg,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  stepperLabel: {
-    fontSize: typography.size.base,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  stepBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepBtnDisabled: { borderColor: colors.disabled },
-  stepIcon: {
-    fontSize: 20,
-    color: colors.primary,
-    lineHeight: 24,
-  },
-  stepIconDisabled: { color: colors.disabled },
-  stepValueWrap: {
-    minWidth: 40,
-    alignItems: 'center',
-  },
-  stepValue: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    minWidth: 40,
-    textAlign: 'center',
-  },
-  basketPreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.md,
-  },
-  basketPreviewText: {
-    fontSize: typography.size.sm,
-    color: colors.textMuted,
-  },
-  dayPills: {
-    gap: spacing.sm,
-    paddingBottom: spacing.xs,
-  },
-  dayPill: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    minWidth: 64,
-  },
-  dayPillSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  dayPillWeekday: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    color: colors.textMuted,
-  },
-  dayPillNum: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginTop: 2,
-  },
-  dayPillTextSelected: { color: '#ffffff' },
-  windowRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  windowPill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  windowPillSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  windowLabel: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  windowLabelSelected: { color: '#ffffff' },
-  windowDisplay: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  windowDisplaySelected: { color: 'rgba(255,255,255,0.75)' },
-  timePills: {
-    gap: spacing.sm,
-    paddingBottom: spacing.xs,
-  },
-  timePill: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  timePillSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  timePillLabel: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  timePillLabelSelected: { color: '#ffffff' },
-  ctaBar: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  cta: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.pill,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  ctaDisabled: { backgroundColor: colors.disabled },
-  ctaInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  ctaTotal: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: '#ffffff',
-  },
-  ctaLabel: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: '#ffffff',
-  },
-});
+const useStyles = makeStyles((colors) => ({
+  card: { borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 18 },
+  cardOn: { borderColor: colors.link, backgroundColor: colors.accentLight },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  cardTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
+  cardSub: { fontSize: 13, lineHeight: 18, color: colors.textSecondary },
+  cardBody: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border, gap: 10 },
+  price: { fontSize: 14, fontWeight: '600', color: colors.text, fontVariant: ['tabular-nums'] },
+  check: { width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  checkOn: { backgroundColor: colors.accent, borderColor: colors.accent },
+
+  stepperRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  stepBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  stepBtnDisabled: { borderColor: colors.border },
+  stepValueWrap: { minWidth: 40, alignItems: 'center' },
+  stepValue: { fontSize: 16, fontWeight: '700', color: colors.text, width: 44, padding: 0, textAlign: 'center', fontVariant: ['tabular-nums'] },
+
+  bleed: { marginHorizontal: -GUTTER, flexGrow: 0 },
+  chips: { paddingHorizontal: GUTTER, gap: 10 },
+  dayChip: { minWidth: 72, height: 72, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', gap: 2 },
+  dayNum: { fontSize: 16, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
+  windowRow: { flexDirection: 'row', gap: 10 },
+  window: { flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 16, borderWidth: 1, borderColor: colors.border, gap: 2 },
+  timeChip: { height: 44, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
+  chipSub: { fontSize: 13, color: colors.textSecondary },
+  textOn: { color: colors.onPrimary },
+}));

@@ -32,7 +32,8 @@ export class MailService {
   }
 
   async sendPasswordResetEmail(to: string, code: string): Promise<void> {
-    await this.resend.emails.send({
+    // Resend reports failures in the result rather than throwing.
+    const { error } = await this.resend.emails.send({
       from:
         this.config.get<string>('MAIL_FROM') ??
         'Scalio <onboarding@resend.dev>',
@@ -40,5 +41,28 @@ export class MailService {
       subject: 'Reset your Scalio Vendor password',
       text: `Your password reset code is: ${code}\n\nEnter this code in the app to set a new password. It expires in 15 minutes.\n\nIf you didn't request this, you can ignore this email.`,
     });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+  }
+
+  /** Asks a customer to rate a visit. Throws if Resend rejects it, so the caller can log why. */
+  async sendFeedbackRequestEmail(to: string, customerName: string, businessName: string, link: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.config.get<string>('MAIL_FROM') ?? 'Scalio <onboarding@resend.dev>',
+      to,
+      subject: `How was your visit to ${businessName}?`,
+      text: `Hi ${customerName},\n\nThanks for visiting ${businessName}. How did it go? It takes 10 seconds:\n\n${link}\n\nYour feedback goes to ${businessName} so they can keep doing what you liked and fix what you didn't.`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+  }
+
+  /** Tells the owner the inbox AI stopped on a chat and it needs a person. */
+  async sendInboxHandoffEmail(to: string, businessName: string, customerName: string, channel: string, reason: string, link: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.config.get<string>('MAIL_FROM') ?? 'Scalio <onboarding@resend.dev>',
+      to,
+      subject: `${customerName} on ${channel} needs a reply from you`,
+      text: `${reason}, so Scalio's AI has stopped replying to ${customerName} on ${channel} and left the chat for you.\n\nOpen the chat: ${link}\n\nWhen it's sorted, you can turn the AI back on for this chat from the same screen.\n\n— Scalio for ${businessName}`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
   }
 }

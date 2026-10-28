@@ -102,15 +102,8 @@ UPDATE vendors SET
   review_count = 156
 WHERE slug = 'true-wash';
 
--- Refresh vendor cover images to category-appropriate LoremFlickr photos (re-runnable)
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/hair,salon,interior?lock=55' WHERE slug = 'glow-salon';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/spa,wellness?lock=2' WHERE slug = 'serenity-spa';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/nail,salon?lock=3' WHERE slug = 'polished-nails';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/lash,studio,beauty?lock=58' WHERE slug = 'lash-loft';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/barber,hair?lock=5' WHERE slug = 'sharp-cuts';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/spa,candle,luxury?lock=17' WHERE slug = 'zen-massage';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/makeup,cosmetics?lock=7' WHERE slug = 'glam-studio';
-UPDATE vendors SET logo_url = 'https://loremflickr.com/600/400/beauty,makeup,studio?lock=43' WHERE slug = 'brow-bar';
+-- Clear stale LoremFlickr cover images (the service is down); the app falls back to bundled category photos (re-runnable)
+UPDATE vendors SET logo_url = NULL WHERE logo_url LIKE 'https://loremflickr.com/%';
 
 -- Backfill addresses, ratings, and review counts (re-runnable)
 UPDATE vendors SET

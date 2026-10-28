@@ -3,10 +3,12 @@ import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, TextIn
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getBanks, type Bank } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 /** A searchable list of Nigerian banks, opened from a field that shows the choice. */
 export function BankPicker({ value, onChange }: { value: Bank | null; onChange: (b: Bank) => void }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [query, setQuery] = useState('');
@@ -57,7 +59,7 @@ export function BankPicker({ value, onChange }: { value: Bank | null; onChange: 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   field: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md,
@@ -74,4 +76,4 @@ const styles = StyleSheet.create({
   bank: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border },
   bankName: { fontSize: typography.size.md, color: colors.text },
   error: { margin: spacing.xl, color: colors.error },
-});
+}));

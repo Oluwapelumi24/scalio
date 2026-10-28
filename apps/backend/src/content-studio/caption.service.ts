@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type Redis from 'ioredis';
+import { ANTHROPIC_CLIENT } from '../common/anthropic';
 import { REDIS } from '../redis/redis.module';
 import { CAPTION_SYSTEM_PROMPT, CaptionDraftSchema, buildCaptionPrompt, type CaptionContext, type CaptionDraft } from './caption-writer';
 import { cleanHashtags } from './platforms';
 
-/** Null when ANTHROPIC_API_KEY isn't set — AI captions are then switched off, not broken. */
-export const ANTHROPIC_CLIENT = Symbol('ANTHROPIC_CLIENT');
+export { ANTHROPIC_CLIENT };
 
 export const CAPTION_MODEL = 'claude-opus-5-5';
 const DEFAULT_DAILY_LIMIT = 40;

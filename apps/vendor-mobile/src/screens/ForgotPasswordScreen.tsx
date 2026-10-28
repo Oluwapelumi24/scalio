@@ -14,11 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { requestPasswordReset } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ForgotPassword'>;
 
 export function ForgotPasswordScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -90,7 +92,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   inner: { flex: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
   back: { marginBottom: spacing.xxxl },
@@ -101,16 +103,16 @@ const styles = StyleSheet.create({
   },
   header: { marginBottom: spacing.xxxl },
   title: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontSize: 22,
+    fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-    lineHeight: 22,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
   form: { gap: spacing.lg },
   fieldGroup: { gap: spacing.sm },
@@ -143,4 +145,4 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     color: colors.white,
   },
-});
+}));

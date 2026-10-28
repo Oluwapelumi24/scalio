@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { getStudio, listPosts, mediaSource, type ContentPost, type PostStatus, type StudioInfo } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ContentStudio'>;
 
@@ -27,6 +27,8 @@ const dayLabel = (iso: string) => {
 const timeLabel = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
 export function ContentStudioScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [tab, setTab] = useState<PostStatus>(route.params?.tab ?? 'planned');
   const [posts, setPosts] = useState<ContentPost[]>([]);
   const [studio, setStudio] = useState<StudioInfo | null>(null);
@@ -139,12 +141,12 @@ export function ContentStudioScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   newBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.primary, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   newText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.sm },
   chips: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
@@ -155,7 +157,7 @@ const styles = StyleSheet.create({
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
   notice: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start', backgroundColor: colors.mist, borderRadius: radius.md, padding: spacing.md },
   noticeText: { flex: 1, fontSize: typography.size.sm, color: colors.textSecondary },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg, gap: spacing.md },
   day: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text, marginTop: spacing.sm },
   post: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.md },
   thumb: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.surface },
@@ -165,4 +167,4 @@ const styles = StyleSheet.create({
   warn: { fontSize: typography.size.sm, color: colors.warning, fontWeight: typography.weight.medium },
   retry: { alignSelf: 'flex-start' },
   retryText: { color: colors.accent, fontWeight: typography.weight.bold },
-});
+}));

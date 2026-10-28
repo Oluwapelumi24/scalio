@@ -26,7 +26,9 @@ import { VendorStaffService } from './staff.service';
 export class VendorStaffController {
   constructor(private readonly staffService: VendorStaffService) {}
 
+  /** Everyone sees the team: the calendar has a column per person. */
   @Get()
+  @Roles('owner', 'manager', 'practitioner', 'front_desk')
   list(@CurrentStaff() staff: VendorPrincipal) {
     return this.staffService.list(staff.vendorId);
   }

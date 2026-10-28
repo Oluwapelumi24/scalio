@@ -23,6 +23,10 @@ import { StaffScheduleModule } from './staff-schedule/staff-schedule.module';
 import { FinanceModule } from './finance/finance.module';
 import { ContentStudioModule } from './content-studio/content-studio.module';
 import { LeadsModule } from './leads/leads.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { ReportingModule } from './reporting/reporting.module';
+import { AdsModule } from './ads/ads.module';
+import { InboxModule } from './inbox/inbox.module';
 
 @Module({
   imports: [
@@ -48,6 +52,10 @@ import { LeadsModule } from './leads/leads.module';
     FinanceModule,
     ContentStudioModule,
     LeadsModule,
+    FeedbackModule,
+    ReportingModule,
+    AdsModule,
+    InboxModule,
   ],
   controllers: [AppController],
   providers: [AppService],

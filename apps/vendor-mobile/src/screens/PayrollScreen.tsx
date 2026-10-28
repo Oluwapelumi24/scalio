@@ -9,17 +9,16 @@ import {
   getPayroll, getTransferList, markPayoutPaid, naira, periodLabel, setPayrollSchedule, skipPayout, startPayroll,
   type PayrollOverview, type SalaryRun,
 } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles, type Colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Payroll'>;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
 
-const STATE: Record<string, { icon: FeatherName; bg: string; fg: string; title: string }> = {
+const STATE = (colors: Colors): Record<string, { icon: FeatherName; bg: string; fg: string; title: string }> => ({
   open: { icon: 'unlock', bg: colors.successLight, fg: colors.success, title: 'Payroll is open' },
   closed: { icon: 'lock', bg: colors.surface, fg: colors.textSecondary, title: 'Payroll is closed' },
   paused: { icon: 'pause-circle', bg: colors.warningLight, fg: colors.warning, title: 'Payroll is paused' },
-  not_set_up: { icon: 'calendar', bg: colors.accentLight, fg: colors.accent, title: 'Set your pay day' },
-};
+  not_set_up: { icon: 'calendar', bg: colors.accentLight, fg: colors.accent, title: 'Set your pay day' },});
 
 /**
  * Scalio works out who to pay and when; the owner pays from their own bank and
@@ -27,6 +26,8 @@ const STATE: Record<string, { icon: FeatherName; bg: string; fg: string; title: 
  * window, and the reason is always shown when it isn't.
  */
 export function PayrollScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [data, setData] = useState<PayrollOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,7 +68,7 @@ export function PayrollScreen({ navigation }: Props) {
   const allPaid = r?.status === 'completed';
   const look = allPaid
     ? { icon: 'check-circle' as FeatherName, bg: colors.successLight, fg: colors.success, title: 'Everyone is paid' }
-    : STATE[w?.state ?? 'not_set_up'];
+    : STATE(colors)[w?.state ?? 'not_set_up'];
 
   return (
     <View style={styles.root}>
@@ -230,17 +231,17 @@ function ordinal(n: number) {
   return ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th';
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: { backgroundColor: colors.background, paddingHorizontal: spacing.xl, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  back: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  subtitle: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },
   content: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
   banner: { flexDirection: 'row', gap: spacing.md, borderRadius: radius.lg, padding: spacing.lg },
   bannerTitle: { fontSize: typography.size.md, fontWeight: typography.weight.bold },
   bannerText: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 2, lineHeight: 18 },
-  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: spacing.lg },
+  card: { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: spacing.lg },
   cardTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   progress: { height: 6, borderRadius: 3, backgroundColor: colors.surface, marginVertical: spacing.md, overflow: 'hidden' },
@@ -251,11 +252,11 @@ const styles = StyleSheet.create({
   amount: { fontSize: typography.size.base, fontWeight: typography.weight.bold, color: colors.text, fontVariant: ['tabular-nums'] },
   status: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
   smallBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 6 },
-  smallBtnText: { color: colors.white, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
+  smallBtnText: { color: colors.onPrimary, fontWeight: typography.weight.semibold, fontSize: typography.size.sm },
   link: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.sm, paddingVertical: 6 },
   primary: { backgroundColor: colors.primary, borderRadius: radius.pill, paddingVertical: spacing.lg, alignItems: 'center' },
   primaryOff: { backgroundColor: colors.border },
-  primaryText: { color: colors.white, fontWeight: typography.weight.bold, fontSize: typography.size.md },
+  primaryText: { color: colors.onPrimary, fontWeight: typography.weight.bold, fontSize: typography.size.md },
   blocked: { fontSize: typography.size.sm, color: colors.warning, textAlign: 'center' },
   secondary: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm, alignSelf: 'flex-start', marginTop: spacing.md,
@@ -268,4 +269,4 @@ const styles = StyleSheet.create({
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   stepValue: { fontSize: typography.size.md, fontWeight: typography.weight.bold, color: colors.text, minWidth: 40, textAlign: 'center' },
-});
+}));

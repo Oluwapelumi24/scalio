@@ -1,62 +1,55 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, SectionList, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { MainTabParamList, RootStackParamList } from '../navigation/types';
-import {
-  getTodaySummary,
-  listBookings,
-  formatDateTime,
-  formatNaira,
-  statusLabel,
-  type VendorBooking,
-  type BookingStatus,
-  type TodaySummary,
-} from '../lib/api';
-import { colors, fonts, radius, spacing, typography } from '../theme';
+import type { RootStackParamList } from '../navigation/types';
+import { formatNaira, formatTime, listBookings, statusLabel, type BookingStatus, type VendorBooking } from '../lib/api';
+import { AddButton, EmptyState, PageHeader, PillTabs } from '../components/ui';
+import { GUTTER, makeStyles, useTheme, type Colors } from '../theme';
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'Bookings'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type Props = NativeStackScreenProps<RootStackParamList, 'Bookings'>;
 
-const FILTERS: { key: BookingStatus | 'all'; label: string }[] = [
+type Filter = BookingStatus | 'all';
+
+const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
-  { key: 'pending_payment', label: 'Pending' },
   { key: 'confirmed', label: 'Confirmed' },
+  { key: 'pending_payment', label: 'Waiting for payment' },
   { key: 'completed', label: 'Completed' },
   { key: 'cancelled_by_vendor', label: 'Cancelled' },
 ];
 
-const STATUS_COLOR: Record<BookingStatus, string> = {
+const STATUS_COLOR = (colors: Colors): Record<BookingStatus, string> => ({
   pending_payment: colors.warning,
-  confirmed: colors.accent,
+  confirmed: colors.link,
   completed: colors.success,
-  cancelled_by_customer: colors.cancelled,
-  cancelled_by_vendor: colors.cancelled,
+  cancelled_by_customer: colors.error,
+  cancelled_by_vendor: colors.error,
   no_show: colors.textMuted,
-};
+});
 
+function dayHeading(iso: string) {
+  const d = new Date(iso);
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  if (d.toDateString() === today.toDateString()) return 'Today';
+  if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+/** Every booking as a list, grouped by day — the calendar's other view. */
 export function BookingsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [bookings, setBookings] = useState<VendorBooking[]>([]);
-  const [filter, setFilter] = useState<BookingStatus | 'all'>('all');
+  const [filter, setFilter] = useState<Filter>('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [today, setToday] = useState<TodaySummary | null>(null);
 
   const load = useCallback(async () => {
-    // Today's figures don't depend on the filter; a failure just hides them.
-    getTodaySummary().then(setToday).catch(() => setToday(null));
     try {
       const data = await listBookings(filter === 'all' ? undefined : filter);
       setBookings(data.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()));
@@ -70,171 +63,83 @@ export function BookingsScreen({ navigation }: Props) {
 
   useEffect(() => { setLoading(true); void load(); }, [load]);
 
-  function renderItem({ item }: { item: VendorBooking }) {
-    return (
-      <Pressable
-        style={styles.card}
-        onPress={() => navigation.navigate('BookingDetail', { booking: item })}
-      >
-        <View style={styles.cardTop}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.customerName} numberOfLines={1}>
-              {item.customer?.name ?? 'Unknown customer'}
-            </Text>
-            <Text style={styles.services} numberOfLines={1}>
-              {(item.services ?? []).map((s) => s.name).join(', ')}
-            </Text>
-          </View>
-          <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[item.status] }]} />
-        </View>
-
-        <View style={styles.cardMeta}>
-          <View style={styles.metaItem}>
-            <Feather name="calendar" size={13} color={colors.textMuted} />
-            <Text style={styles.metaText}>{formatDateTime(item.scheduledAt)}</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Feather name="clock" size={13} color={colors.textMuted} />
-            <Text style={styles.metaText}>{item.durationMinutes} min</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Feather name="credit-card" size={13} color={colors.textMuted} />
-            <Text style={styles.metaText}>{formatNaira(item.totalAmountKobo)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.cardFooter}>
-          <Text style={[styles.statusLabel, { color: STATUS_COLOR[item.status] }]}>
-            {statusLabel(item.status)}
-          </Text>
-          <Feather name="chevron-right" size={16} color={colors.textMuted} />
-        </View>
-      </Pressable>
-    );
+  const sections: { title: string; data: VendorBooking[] }[] = [];
+  for (const b of bookings) {
+    const title = dayHeading(b.scheduledAt);
+    const last = sections[sections.length - 1];
+    if (last?.title === title) last.data.push(b);
+    else sections.push({ title, data: [b] });
   }
 
   return (
-    <View style={styles.root}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bookings</Text>
-      </View>
-
-      {today && (
-        <View style={styles.today} accessibilityLabel="Today">
-          <View style={styles.todayStat}>
-            <Text style={styles.todayValue}>{today.bookings}</Text>
-            <Text style={styles.todayLabel}>Today's bookings</Text>
+    <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
+      <SectionList
+        sections={loading ? [] : sections}
+        keyExtractor={(b) => b.id}
+        stickySectionHeadersEnabled={false}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={colors.link} />}
+        ListHeaderComponent={
+          <View style={{ gap: 22, marginBottom: 8 }}>
+            <PageHeader
+              title="Bookings"
+              description="Every booking, newest first."
+              onBack={() => navigation.goBack()}
+              actions={<AddButton label="New" onPress={() => navigation.navigate('NewBooking')} />}
+            />
+            <PillTabs options={FILTERS} value={filter} onChange={setFilter} />
+            {loading ? <ActivityIndicator color={colors.link} style={{ marginTop: 24 }} /> : null}
           </View>
-          {today.salesKobo != null && (
-            <View style={[styles.todayStat, styles.todayDivider]}>
-              <Text style={styles.todayValue}>₦{(today.salesKobo / 100).toLocaleString('en-NG')}</Text>
-              <Text style={styles.todayLabel}>Today's sales</Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* Filter pills */}
-      <View style={styles.filterRow}>
-        {FILTERS.map((f) => (
+        }
+        renderSectionHeader={({ section }) => <Text style={styles.day}>{section.title}</Text>}
+        renderItem={({ item }) => (
           <Pressable
-            key={f.key}
-            style={[styles.filterPill, filter === f.key && styles.filterPillActive]}
-            onPress={() => setFilter(f.key)}
+            style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
+            onPress={() => navigation.navigate('BookingDetail', { booking: item })}
+            accessibilityRole="button"
           >
-            <Text style={[styles.filterLabel, filter === f.key && styles.filterLabelActive]}>
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {loading ? (
-        <ActivityIndicator style={{ flex: 1 }} color={colors.accent} />
-      ) : (
-        <FlatList
-          data={bookings}
-          keyExtractor={(b) => b.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Feather name="calendar" size={40} color={colors.textMuted} />
-              <Text style={styles.emptyText}>No {filter === 'all' ? '' : filter} bookings</Text>
+            <View style={[styles.bar, { backgroundColor: STATUS_COLOR(colors)[item.status] }]} />
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={styles.time}>{formatTime(item.scheduledAt)} · {item.durationMinutes} min</Text>
+              <Text style={styles.name} numberOfLines={1}>{item.customer?.name ?? 'Client'}</Text>
+              <Text style={styles.sub} numberOfLines={1}>
+                {(item.services ?? []).map((s) => s.name).join(', ')}
+                {item.staff ? ` · with ${item.staff.name.split(' ')[0]}` : ''}
+              </Text>
+              <Text style={[styles.status, { color: STATUS_COLOR(colors)[item.status] }]}>{statusLabel(item.status)}</Text>
             </View>
-          }
-        />
-      )}
+            <View style={{ alignItems: 'flex-end', gap: 8 }}>
+              <Text style={styles.price}>{formatNaira(item.totalAmountKobo)}</Text>
+              <Feather name="chevron-right" size={20} color={colors.text} />
+            </View>
+          </Pressable>
+        )}
+        ListEmptyComponent={
+          loading ? null : (
+            <EmptyState
+              icon="calendar"
+              title={filter === 'all' ? 'No bookings yet' : 'Nothing here'}
+              body={filter === 'all' ? 'Share your booking link, or add a booking yourself.' : 'No bookings match this filter.'}
+              action={filter === 'all' ? 'New booking' : undefined}
+              onAction={() => navigation.navigate('NewBooking')}
+            />
+          )
+        }
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  // Today's figures, moved here from Home — set in the Home screen's type.
-  today: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.xl,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-  },
-  todayStat: { flex: 1, paddingVertical: spacing.lg, paddingHorizontal: 18, gap: 2 },
-  todayDivider: { borderLeftWidth: 1, borderLeftColor: colors.border },
-  todayValue: { fontFamily: fonts.displayExtraBold, fontSize: 28, letterSpacing: -0.6, color: colors.text, fontVariant: ['tabular-nums'] },
-  todayLabel: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted },
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: 96,
-    paddingBottom: spacing.lg,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  filterRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    flexWrap: 'wrap',
-  },
-  filterPill: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  filterPillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterLabel: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: colors.textSecondary },
-  filterLabelActive: { color: colors.white },
-  list: { padding: spacing.xl, gap: spacing.md, paddingBottom: spacing.xxxl },
-  card: {
-    backgroundColor: colors.background,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.sm },
-  customerName: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
-  services: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
-  statusDot: { width: 10, height: 10, borderRadius: 5, marginTop: 4, flexShrink: 0 },
-  cardMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.sm },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  metaText: { fontSize: typography.size.sm, color: colors.textMuted },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
-  statusLabel: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
-  empty: { alignItems: 'center', paddingTop: spacing.xxxl * 2, gap: spacing.lg },
-  emptyText: { fontSize: typography.size.base, color: colors.textMuted },
-});
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  content: { paddingHorizontal: GUTTER, paddingBottom: 48 },
+  day: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 26, marginBottom: 6 },
+  row: { flexDirection: 'row', gap: 16, paddingVertical: 14 },
+  bar: { width: 4, borderRadius: 2 },
+  time: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, fontVariant: ['tabular-nums'] },
+  name: { fontSize: 15, fontWeight: '600', color: colors.text },
+  sub: { fontSize: 14, color: colors.textSecondary },
+  status: { fontSize: 13, fontWeight: '600', marginTop: 2 },
+  price: { fontSize: 14, fontWeight: '600', color: colors.text, fontVariant: ['tabular-nums'] },
+}));

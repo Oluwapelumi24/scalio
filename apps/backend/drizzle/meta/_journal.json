@@ -113,6 +113,34 @@
       "when": 1792137585623,
       "tag": "0015_social_publishing",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792144175011,
+      "tag": "0016_feedback",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792147775011,
+      "tag": "0017_ads_manager",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792151375011,
+      "tag": "0018_inbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792154975011,
+      "tag": "0019_ad_campaigns",
+      "breakpoints": true
     }
   ]
 }

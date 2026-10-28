@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { MainTabNavigator } from './MainTabNavigator';
@@ -30,12 +30,32 @@ import { PostEditorScreen } from '../screens/PostEditorScreen';
 import { LeadsScreen } from '../screens/LeadsScreen';
 import { LeadDetailScreen } from '../screens/LeadDetailScreen';
 import { SocialAccountsScreen } from '../screens/SocialAccountsScreen';
+import { AdsSetupScreen } from '../screens/AdsSetupScreen';
+import { AdCampaignsScreen } from '../screens/AdCampaignsScreen';
+import { AdCampaignScreen } from '../screens/AdCampaignScreen';
+import { AdCampaignWizardScreen } from '../screens/AdCampaignWizardScreen';
+import { InboxScreen } from '../screens/InboxScreen';
+import { InboxChatScreen } from '../screens/InboxChatScreen';
+import { InboxSettingsScreen } from '../screens/InboxSettingsScreen';
+import { ReportsScreen } from '../screens/ReportsScreen';
+import { ReportRecordsScreen } from '../screens/ReportRecordsScreen';
+import { FeedbackScreen } from '../screens/FeedbackScreen';
+import { BookingsScreen } from '../screens/BookingsScreen';
+import { CalendarScreen } from '../screens/CalendarScreen';
+import { HomeScreen } from '../screens/HomeScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { HubScreen } from '../screens/HubScreen';
+import { FeatureIntroScreen } from '../screens/FeatureIntroScreen';
+import { SetupScreen } from '../screens/SetupScreen';
+import { NewBookingScreen } from '../screens/NewBookingScreen';
 import { loadSession, onSessionExpired } from '../lib/session';
+import { useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 export function RootNavigator() {
+  const { colors, scheme } = useTheme();
   const [initialRoute, setInitialRoute] = useState<'Onboarding' | 'Login' | 'Main' | null>(null);
 
   useEffect(() => {
@@ -51,8 +71,21 @@ export function RootNavigator() {
   if (!initialRoute) return null;
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
+    <NavigationContainer
+      ref={navigationRef}
+      theme={{
+        ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
+        colors: {
+          ...(scheme === 'dark' ? DarkTheme : DefaultTheme).colors,
+          primary: colors.link,
+          background: colors.background,
+          card: colors.background,
+          text: colors.text,
+          border: colors.border,
+        },
+      }}
+    >
+      <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -81,6 +114,24 @@ export function RootNavigator() {
         <Stack.Screen name="Leads" component={LeadsScreen} />
         <Stack.Screen name="LeadDetail" component={LeadDetailScreen} />
         <Stack.Screen name="SocialAccounts" component={SocialAccountsScreen} />
+        <Stack.Screen name="AdsSetup" component={AdsSetupScreen} />
+        <Stack.Screen name="AdCampaigns" component={AdCampaignsScreen} />
+        <Stack.Screen name="AdCampaign" component={AdCampaignScreen} />
+        <Stack.Screen name="AdCampaignWizard" component={AdCampaignWizardScreen} />
+        <Stack.Screen name="Inbox" component={InboxScreen} />
+        <Stack.Screen name="InboxChat" component={InboxChatScreen} />
+        <Stack.Screen name="InboxSettings" component={InboxSettingsScreen} />
+        <Stack.Screen name="Reports" component={ReportsScreen} />
+        <Stack.Screen name="ReportRecords" component={ReportRecordsScreen} />
+        <Stack.Screen name="Feedback" component={FeedbackScreen} />
+        <Stack.Screen name="Calendar" component={CalendarScreen} />
+        <Stack.Screen name="Bookings" component={BookingsScreen} />
+        <Stack.Screen name="Dashboard" component={HomeScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="Hub" component={HubScreen} />
+        <Stack.Screen name="FeatureIntro" component={FeatureIntroScreen} />
+        <Stack.Screen name="Setup" component={SetupScreen} />
+        <Stack.Screen name="NewBooking" component={NewBookingScreen} options={{ presentation: 'fullScreenModal' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

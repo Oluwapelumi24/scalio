@@ -1,35 +1,23 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { signIn } from '../lib/api';
 import { setSession } from '../lib/session';
 import { registerForPushNotifications } from '../lib/push';
-import { BackButton } from '../components/BackButton';
-import { colors, radius, spacing, typography } from '../theme';
+import { Button, Field, Page, PageHeader, StickyFooter } from '../components/ui';
+import { makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function SignInScreen({ navigation, route }: Props) {
+  const styles = useStyles();
   const isOnboarding = route.params?.mode === 'onboarding';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const isValid = EMAIL_PATTERN.test(email.trim()) && password.length > 0;
@@ -59,167 +47,56 @@ export function SignInScreen({ navigation, route }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <BackButton onPress={() => navigation.goBack()} />
-
-      <View style={styles.copy}>
-        <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Sign in with your email and password.</Text>
-      </View>
-
-      <View style={styles.form}>
-        <View style={styles.field}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Page
+        footer={
+          <StickyFooter>
+            <View style={{ flex: 1, gap: 18 }}>
+              <Button label="Sign in" onPress={() => void handleContinue()} loading={submitting} disabled={!isValid} />
+              <Pressable onPress={() => navigation.replace('SignUp', route.params)} accessibilityRole="button" hitSlop={8}>
+                <Text style={styles.foot}>
+                  New to Scalio? <Text style={styles.link}>Create an account</Text>
+                </Text>
+              </Pressable>
+            </View>
+          </StickyFooter>
+        }
+      >
+        <PageHeader
+          onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+          title="Sign in"
+          description="Welcome back. Sign in to book and see your appointments."
+        />
+        <View style={{ gap: 20 }}>
+          <Field
+            label="Email address"
             value={email}
             onChangeText={setEmail}
-            placeholder="ada@example.com"
-            placeholderTextColor={colors.textFaint}
+            placeholder="you@example.com"
+            keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-            keyboardType="email-address"
+            textContentType="emailAddress"
+          />
+          <Field
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Your password"
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="current-password"
+            textContentType="password"
+            onSubmitEditing={() => void handleContinue()}
+            returnKeyType="go"
           />
         </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.passwordRow}>
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Your password"
-              placeholderTextColor={colors.textFaint}
-              autoCapitalize="none"
-              autoComplete="password"
-              secureTextEntry={!showPassword}
-              onSubmitEditing={() => void handleContinue()}
-              returnKeyType="go"
-            />
-            <Pressable
-              style={styles.eyeButton}
-              onPress={() => setShowPassword((v) => !v)}
-              hitSlop={8}
-            >
-              <Feather name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.textMuted} />
-            </Pressable>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.bottomGroup}>
-        <Pressable
-          style={[styles.cta, (!isValid || submitting) && styles.ctaDisabled]}
-          onPress={() => void handleContinue()}
-          disabled={!isValid || submitting}
-        >
-          {submitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.ctaLabel}>Sign in</Text>}
-        </Pressable>
-
-        <Pressable
-          style={styles.switchLink}
-          onPress={() => navigation.replace('SignUp', route.params)}
-        >
-          <Text style={styles.switchLinkText}>
-            Don&apos;t have an account? <Text style={styles.switchLinkBold}>Sign up</Text>
-          </Text>
-        </Pressable>
-      </View>
+      </Page>
     </KeyboardAvoidingView>
-    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  copy: {
-    marginTop: 40,
-  },
-  title: {
-    fontSize: typography.size.display,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: typography.size.md,
-    color: colors.textSecondary,
-    lineHeight: 21,
-  },
-  form: {
-    marginTop: spacing.xxl,
-  },
-  field: {
-    marginBottom: spacing.xl,
-  },
-  label: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textBody,
-    marginBottom: spacing.xs + 2,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md + 2,
-    paddingVertical: spacing.md,
-    fontSize: typography.size.lg,
-    color: colors.primary,
-  },
-  passwordRow: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  passwordInput: {
-    paddingRight: 44,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: spacing.md,
-  },
-  bottomGroup: {
-    marginTop: 'auto',
-  },
-  cta: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.xl,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-  },
-  ctaDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  ctaLabel: {
-    color: '#ffffff',
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
-  },
-  switchLink: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
-  },
-  switchLinkText: {
-    fontSize: typography.size.base,
-    color: colors.textSecondary,
-  },
-  switchLinkBold: {
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-});
+const useStyles = makeStyles((colors) => ({
+  foot: { fontSize: 14, color: colors.textSecondary, textAlign: 'center' },
+  link: { fontSize: 14, fontWeight: '600', color: colors.link },
+}));

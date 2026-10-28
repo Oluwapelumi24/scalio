@@ -1,21 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { ActivityIndicator, FlatList, Image, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainTabScreenProps } from '../navigation/types';
 import type { BookingWithVendor } from '../lib/api';
 import { listBookings } from '../lib/api';
-import { getCategoryMeta, getVendorAccentColor, getVendorImageUrl } from '../lib/categories';
+import { getVendorImageSource } from '../lib/categories';
 import { getCurrentUser } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
+import { Button, EmptyState, Page, PageHeader, UnderlineTabs, type FeatherName } from '../components/ui';
+import { GUTTER, makeStyles, spacing, useTheme, type Colors } from '../theme';
 
 type Props = MainTabScreenProps<'Appointments'>;
 type Tab = 'upcoming' | 'completed' | 'cancelled';
@@ -33,13 +26,20 @@ const STATUS_LABELS: Record<string, string> = {
   no_show: 'No-show',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  pending_payment: colors.pending,
-  confirmed: '#22c55e',
-  completed: colors.textMuted,
+// Same status colours as the vendor app's bookings list.
+const STATUS_COLOR = (colors: Colors): Record<string, string> => ({
+  pending_payment: colors.warning,
+  confirmed: colors.link,
+  completed: colors.success,
   cancelled_by_customer: colors.error,
   cancelled_by_vendor: colors.error,
-  no_show: colors.error,
+  no_show: colors.textMuted,
+});
+
+const EMPTY: Record<Tab, { icon: FeatherName; title: string; body?: string }> = {
+  upcoming: { icon: 'calendar', title: 'No upcoming bookings', body: 'Book one from the home screen.' },
+  completed: { icon: 'check-circle', title: 'No completed bookings yet' },
+  cancelled: { icon: 'x-circle', title: 'No cancelled bookings' },
 };
 
 function formatDateTime(iso: string): string {
@@ -61,45 +61,28 @@ function BookingCard({
   showRebook?: boolean;
   onRebook?: () => void;
 }) {
-  const statusColor = STATUS_COLORS[item.booking.status] ?? colors.textMuted;
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const statusColor = STATUS_COLOR(colors)[item.booking.status] ?? colors.textMuted;
   return (
     <View style={styles.card}>
-      <Image source={{ uri: getVendorImageUrl(item.vendor) }} style={styles.cardImage} />
+      <Image source={getVendorImageSource(item.vendor)} style={styles.cardImage} />
       <View style={styles.cardBody}>
         <Text style={styles.cardName} numberOfLines={1}>{item.vendor.businessName}</Text>
         <Text style={styles.cardDate}>{formatDateTime(item.booking.scheduledAt)}</Text>
-        <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.statusLabel, { color: statusColor }]}>
-            {STATUS_LABELS[item.booking.status] ?? item.booking.status}
-          </Text>
-        </View>
+        <Text style={[styles.status, { color: statusColor }]}>
+          {STATUS_LABELS[item.booking.status] ?? item.booking.status}
+        </Text>
       </View>
-      {showRebook && (
-        <Pressable style={styles.rebookBtn} onPress={onRebook}>
-          <Text style={styles.rebookLabel}>Rebook</Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
-function EmptyState({ tab, onSignIn }: { tab: Tab; onSignIn: () => void }) {
-  const config: Record<Tab, { icon: keyof typeof Feather.glyphMap; message: string }> = {
-    upcoming: { icon: 'calendar', message: 'No upcoming appointments.\nBook one from the home screen.' },
-    completed: { icon: 'check-circle', message: 'No completed appointments yet.' },
-    cancelled: { icon: 'x-circle', message: 'No cancelled appointments.' },
-  };
-  const { icon, message } = config[tab];
-  return (
-    <View style={styles.empty}>
-      <Feather name={icon} size={48} color={colors.disabled} />
-      <Text style={styles.emptyText}>{message}</Text>
+      {showRebook ? <Button label="Rebook" onPress={onRebook ?? (() => {})} variant="secondary" size="sm" /> : null}
     </View>
   );
 }
 
 export function AppointmentsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
   const [bookings, setBookings] = useState<BookingWithVendor[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState(false);
@@ -130,50 +113,48 @@ export function AppointmentsScreen({ navigation }: Props) {
 
   if (!signedIn) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>My bookings</Text>
-        <View style={styles.guestState}>
-          <Feather name="calendar" size={48} color={colors.disabled} />
-          <Text style={styles.emptyText}>Sign in to see your bookings and appointment history.</Text>
-          <Pressable style={styles.signInBtn} onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.signInBtnLabel}>Sign in</Text>
-          </Pressable>
-        </View>
-      </View>
+      <Page>
+        <PageHeader title="Bookings" description="Your upcoming visits and booking history." />
+        <EmptyState
+          icon="calendar"
+          title="Sign in to see your bookings"
+          body="Your appointments and history will show here."
+          action="Sign in"
+          onAction={() => navigation.navigate('SignIn')}
+        />
+      </Page>
     );
   }
 
+  const empty = EMPTY[activeTab];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>My bookings</Text>
-
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        {(['upcoming', 'completed', 'cancelled'] as Tab[]).map((tab) => (
-          <Pressable
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.tabActive]}
-            onPress={() => setActiveTab(tab)}
-          >
-            <Text style={[styles.tabLabel, activeTab === tab && styles.tabLabelActive]}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
-
+    <View style={styles.root}>
       <FlatList
         data={tabData}
         keyExtractor={(item) => item.booking.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingTop: insets.top + spacing.sm }]}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <PageHeader title="Bookings" count={bookings ? tabData.length : undefined} description="Your upcoming visits and booking history." />
+            <UnderlineTabs<Tab>
+              options={[
+                { key: 'upcoming', label: 'Upcoming' },
+                { key: 'completed', label: 'Completed' },
+                { key: 'cancelled', label: 'Cancelled' },
+              ]}
+              value={activeTab}
+              onChange={setActiveTab}
+            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+          </View>
+        }
         ListEmptyComponent={
           bookings === null && !error ? (
-            <ActivityIndicator style={{ marginTop: spacing.xl }} />
+            <ActivityIndicator color={colors.link} style={{ marginTop: spacing.xl }} />
           ) : (
-            <EmptyState tab={activeTab} onSignIn={() => navigation.navigate('SignUp')} />
+            <EmptyState icon={empty.icon} title={empty.title} body={empty.body} />
           )
         }
         renderItem={({ item }) => (
@@ -188,140 +169,18 @@ export function AppointmentsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingTop: 96,
-  },
-  title: {
-    fontSize: typography.size.title,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.xl,
-  },
-  tabs: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.lg,
-    backgroundColor: '#f5f5f5',
-    borderRadius: radius.lg,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  tabActive: {
-    backgroundColor: colors.background,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tabLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textMuted,
-  },
-  tabLabelActive: {
-    color: colors.primary,
-  },
-  list: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xl,
-  },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
+  list: { paddingHorizontal: GUTTER, paddingBottom: 48, gap: spacing.md },
+  header: { gap: 20, marginBottom: spacing.sm },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    overflow: 'hidden',
-    marginBottom: spacing.md,
+    flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, paddingRight: 16,
+    borderWidth: 1, borderColor: colors.border, borderRadius: 20, backgroundColor: colors.card,
   },
-  cardImage: {
-    width: 88,
-    height: 88,
-    backgroundColor: colors.border,
-  },
-  cardBody: {
-    flex: 1,
-    padding: spacing.md,
-    gap: 3,
-  },
-  cardName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  cardDate: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusLabel: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-  },
-  rebookBtn: {
-    marginRight: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  rebookLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingTop: spacing.xxxl,
-    gap: spacing.lg,
-  },
-  emptyText: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  guestState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
-    gap: spacing.lg,
-  },
-  signInBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingVertical: 14,
-    paddingHorizontal: spacing.xxl,
-  },
-  signInBtnLabel: {
-    color: '#ffffff',
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: typography.size.base,
-    paddingHorizontal: spacing.xl,
-  },
-});
+  cardImage: { width: 72, height: 72, borderRadius: 14, backgroundColor: colors.surface },
+  cardBody: { flex: 1, gap: 3 },
+  cardName: { fontSize: 15, fontWeight: '600', color: colors.text },
+  cardDate: { fontSize: 13, color: colors.textSecondary },
+  status: { fontSize: 13, fontWeight: '600' },
+  error: { fontSize: 14, color: colors.error },
+}));

@@ -16,11 +16,13 @@ import type { RootStackParamList } from '../navigation/types';
 import { resetPassword } from '../lib/api';
 import { saveSession } from '../lib/session';
 import { routeAfterSignIn } from '../lib/postAuth';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ResetPassword'>;
 
 export function ResetPasswordScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const { email } = route.params;
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
@@ -135,7 +137,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
   inner: { flex: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
   back: { marginBottom: spacing.xxxl },
@@ -146,16 +148,16 @@ const styles = StyleSheet.create({
   },
   header: { marginBottom: spacing.xxxl },
   title: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontSize: 22,
+    fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: typography.size.base,
-    color: colors.textMuted,
-    lineHeight: 22,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
   emailHighlight: {
     color: colors.textSecondary,
@@ -178,10 +180,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.surface,
   },
+  // No letterSpacing on inputs: iOS reuses text-field views across screens and the
+  // spacing leaks into other fields' placeholders (it stretched them across the box).
   codeInput: {
     fontSize: typography.size.xl,
-    letterSpacing: 8,
     textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
   btn: {
     height: 52,
@@ -197,4 +201,4 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     color: colors.white,
   },
-});
+}));

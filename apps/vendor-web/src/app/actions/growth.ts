@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { ApiError, apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
-import type { CaptionDraft, ContentPlatform, ContentPost, Lead, LeadFields, LeadSource, PostFields, Publication } from '@/lib/growth'
+import type { AdsSetup, MetaAdAccountOption, CaptionDraft, ContentPlatform, ContentPost, Lead, LeadFields, LeadSource, PostFields, Publication } from '@/lib/growth'
 
 async function call<T = unknown>(path: string, init: RequestInit, paths: string[]): Promise<{ data?: T; error?: string }> {
   const token = await requireToken()
@@ -27,7 +27,7 @@ export async function uploadMedia(mimeType: string, dataBase64: string) {
   return call<{ id: string }>('/vendor-admin/content/media', json('POST', { mimeType, dataBase64 }), [])
 }
 
-export async function writeCaption(data: { brief: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }) {
+export async function writeCaption(data: { brief?: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }) {
   return call<CaptionDraft>('/vendor-admin/content/captions', json('POST', data), [])
 }
 
@@ -77,6 +77,28 @@ export async function metaConnectUrl() {
 
 export async function disconnectMeta() {
   return call('/vendor-admin/social/meta', { method: 'DELETE' }, ['/dashboard/content/connections', '/dashboard/content'])
+}
+
+// ── Ads Manager ─────────────────────────────────────────────────────────────
+
+const ADS = ['/dashboard/ads']
+
+/** Facebook login that comes back to the Ads page. */
+export async function metaConnectUrlForAds() {
+  return call<{ url: string }>('/vendor-admin/social/meta/connect', json('POST', { from: 'web-ads' }), [])
+}
+
+export async function listMetaAdAccounts() {
+  return call<MetaAdAccountOption[]>('/vendor-admin/ads/ad-accounts', { method: 'GET' }, [])
+}
+
+export async function chooseAdAccount(adAccountId: string) {
+  return call<AdsSetup>('/vendor-admin/ads/ad-account', json('PUT', { adAccountId }), ADS)
+}
+
+/** Re-checks the ad account with Meta, e.g. after adding a card there. */
+export async function refreshAdAccount() {
+  return call<AdsSetup>('/vendor-admin/ads/ad-account/refresh', json('POST'), ADS)
 }
 
 // ── Leads ───────────────────────────────────────────────────────────────────

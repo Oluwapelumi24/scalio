@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { formatNaira, getPerformance, type PerformanceReport, type StaffPerformance } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Performance'>;
 
@@ -24,6 +24,8 @@ const pct = (v: number | null) => (v == null ? '—' : `${Math.round(v * 100)}%`
 const hours = (m: number) => `${Math.round((m / 60) * 10) / 10}h`;
 
 function Metric({ label, value, note }: { label: string; value: string; note?: string }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.metric}>
       <Text style={styles.metricValue}>{value}</Text>
@@ -34,6 +36,8 @@ function Metric({ label, value, note }: { label: string; value: string; note?: s
 }
 
 function StaffCard({ p }: { p: StaffPerformance }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <View style={styles.cardHead}>
@@ -53,6 +57,7 @@ function StaffCard({ p }: { p: StaffPerformance }) {
         <Metric label="Completed" value={String(p.completed)} note={p.noShows ? `${p.noShows} no-show${p.noShows === 1 ? '' : 's'}` : undefined} />
         <Metric label="Completion rate" value={pct(p.completionRate)} />
         <Metric label="Repeat customers" value={`${p.repeatCustomers} of ${p.uniqueCustomers}`} />
+        <Metric label="Customer rating" value={p.rating ? `${p.rating.average}★` : '—'} note={p.rating ? `${p.rating.count} rating${p.rating.count === 1 ? '' : 's'}` : 'no ratings yet'} />
         {p.attendance && (
           <Metric
             label="Attendance"
@@ -72,6 +77,8 @@ function StaffCard({ p }: { p: StaffPerformance }) {
 }
 
 export function PerformanceScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const [period, setPeriod] = useState(30);
   const [report, setReport] = useState<PerformanceReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -159,17 +166,15 @@ export function PerformanceScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.background },
   header: {
     backgroundColor: colors.background,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 24,
     paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  backBtn: { width: 36, height: 36, justifyContent: 'center', marginTop: spacing.md },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
+  backBtn: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
+  title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   chips: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   chip: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 6 },
   chipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
@@ -180,7 +185,7 @@ const styles = StyleSheet.create({
   caution: { fontSize: typography.size.sm, color: colors.textMuted, lineHeight: 18 },
   empty: { fontSize: typography.size.base, color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl },
   note: { fontSize: typography.size.sm, color: colors.textMuted, textAlign: 'center' },
-  card: { backgroundColor: colors.background, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.lg },
+  card: { backgroundColor: colors.background, borderRadius: 20, borderWidth: 1, borderColor: colors.border, padding: spacing.lg },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md },
   avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   avatarLetter: { color: colors.white, fontWeight: typography.weight.bold },
@@ -197,4 +202,4 @@ const styles = StyleSheet.create({
   defsToggleText: { color: colors.accent, fontWeight: typography.weight.semibold, fontSize: typography.size.base },
   defKey: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: colors.text },
   defText: { fontSize: typography.size.sm, color: colors.textSecondary, lineHeight: 18, marginTop: 2 },
-});
+}));

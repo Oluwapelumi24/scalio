@@ -1,198 +1,147 @@
-import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import type { CompositeScreenProps } from '@react-navigation/native';
+import { useFocusEffect, type CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
-import { listCustomers, formatNaira, type Customer } from '../lib/api';
-import { colors, radius, spacing, typography } from '../theme';
+import { formatNaira, listCustomers, type Customer } from '../lib/api';
+import { TabFrame } from '../components/TabFrame';
+import { AddButton, Avatar, EmptyState, PageHeader, SearchField } from '../components/ui';
+import { GUTTER, makeStyles, useTheme } from '../theme';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Customers'>,
   NativeStackScreenProps<RootStackParamList>
 >;
 
-function CustomerCard({ customer, onPress }: { customer: Customer; onPress: () => void }) {
-  return (
-    <Pressable style={styles.card} onPress={onPress}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarLetter}>{customer.name.charAt(0).toUpperCase()}</Text>
-      </View>
-      <View style={styles.info}>
-        <Text style={styles.name}>{customer.name}</Text>
-        <Text style={styles.email} numberOfLines={1}>{customer.email}</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={styles.statNum}>{customer.bookingCount}</Text>
-            <Text style={styles.statLabel}>visits</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.stat}>
-            <Text style={styles.statNum}>{formatNaira(customer.totalSpentKobo)}</Text>
-            <Text style={styles.statLabel}>spent</Text>
-          </View>
-          {customer.lastVisitAt && (
-            <>
-              <View style={styles.statDivider} />
-              <View style={styles.stat}>
-                <Text style={styles.statNum} numberOfLines={1}>
-                  {new Date(customer.lastVisitAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
-                </Text>
-                <Text style={styles.statLabel}>last visit</Text>
-              </View>
-            </>
-          )}
-        </View>
-      </View>
-      <Feather name="chevron-right" size={16} color={colors.textMuted} />
-    </Pressable>
-  );
+type Sort = 'visits' | 'spent' | 'recent' | 'name';
+
+const SORTS: { key: Sort; label: string }[] = [
+  { key: 'visits', label: 'Most visits' },
+  { key: 'spent', label: 'Most spent' },
+  { key: 'recent', label: 'Most recent visit' },
+  { key: 'name', label: 'Name (A–Z)' },
+];
+
+function sortClients(list: Customer[], sort: Sort) {
+  const out = [...list];
+  switch (sort) {
+    case 'visits': return out.sort((a, b) => b.bookingCount - a.bookingCount);
+    case 'spent': return out.sort((a, b) => b.totalSpentKobo - a.totalSpentKobo);
+    case 'recent': return out.sort((a, b) => (b.lastVisitAt ?? '').localeCompare(a.lastVisitAt ?? ''));
+    default: return out.sort((a, b) => a.name.localeCompare(b.name));
+  }
 }
 
+/** Every client of the business, searchable and sortable. */
 export function CustomersScreen({ navigation }: Props) {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
+  const [clients, setClients] = useState<Customer[] | null>(null);
   const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<Sort>('visits');
+  const [sorting, setSorting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const data = await listCustomers();
-      setCustomers(data.sort((a, b) => b.bookingCount - a.bookingCount));
-    } catch {
-      setCustomers([]);
+      setClients(await listCustomers());
+      setError('');
+    } catch (err) {
+      setClients([]);
+      setError(err instanceof Error ? err.message : 'Could not load your clients.');
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useFocusEffect(useCallback(() => { void load(); }, [load]));
 
-  const filtered = query.trim()
-    ? customers.filter(
-        (c) =>
-          c.name.toLowerCase().includes(query.toLowerCase()) ||
-          c.email.toLowerCase().includes(query.toLowerCase()),
-      )
-    : customers;
+  const q = query.trim().toLowerCase();
+  const shown = sortClients(
+    (clients ?? []).filter((c) => !q || c.name.toLowerCase().includes(q) || (c.email ?? '').toLowerCase().includes(q)),
+    sort,
+  );
 
   return (
-    <View style={styles.root}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Customers</Text>
-        <Text style={styles.count}>{customers.length} total</Text>
-      </View>
-
-      <View style={styles.searchBar}>
-        <Feather name="search" size={16} color={colors.textMuted} style={{ marginRight: spacing.sm }} />
-        <TextInput
-          style={styles.searchInput}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search by name or email…"
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-        />
-        {query.length > 0 && (
-          <Pressable onPress={() => setQuery('')} hitSlop={8}>
-            <Feather name="x" size={16} color={colors.textMuted} />
+    <TabFrame>
+      <FlatList
+        data={clients ? shown : []}
+        keyExtractor={(c) => c.id}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={colors.link} />}
+        ListHeaderComponent={
+          <View style={{ gap: 22, marginBottom: 12 }}>
+            <PageHeader
+              title="Clients"
+              count={clients?.length}
+              description="Everyone who has booked with you, and how often they come back."
+              actions={<AddButton label="Book" onPress={() => navigation.navigate('NewBooking')} />}
+            />
+            <SearchField value={query} onChangeText={setQuery} placeholder="Name or email" onFilter={() => setSorting(true)} />
+            {clients == null ? <ActivityIndicator color={colors.link} style={{ marginTop: 24 }} /> : null}
+          </View>
+        }
+        renderItem={({ item }) => (
+          <Pressable
+            style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
+            onPress={() => navigation.navigate('CustomerDetail', { customerId: item.id })}
+            accessibilityRole="button"
+          >
+            <Avatar name={item.name} size={56} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+              {item.email ? <Text style={styles.sub} numberOfLines={1}>{item.email}</Text> : null}
+              <Text style={styles.meta}>
+                {item.bookingCount} {item.bookingCount === 1 ? 'visit' : 'visits'} · {formatNaira(item.totalSpentKobo)}
+              </Text>
+            </View>
           </Pressable>
         )}
-      </View>
-
-      {loading ? (
-        <ActivityIndicator style={{ flex: 1 }} color={colors.accent} />
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(c) => c.id}
-          renderItem={({ item }) => (
-            <CustomerCard
-              customer={item}
-              onPress={() => navigation.navigate('CustomerDetail', { customerId: item.id })}
+        ListEmptyComponent={
+          clients == null ? null : (
+            <EmptyState
+              icon="users"
+              title={error ? 'Could not load your clients' : q ? 'No clients found' : 'No clients yet'}
+              body={error || (q ? 'Try another name or email.' : 'Clients appear here after their first booking.')}
             />
-          )}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Feather name="users" size={40} color={colors.textMuted} />
-              <Text style={styles.emptyText}>{query ? 'No customers found' : 'No customers yet'}</Text>
-            </View>
-          }
-        />
-      )}
-    </View>
+          )
+        }
+      />
+
+      <Modal visible={sorting} transparent animationType="slide" onRequestClose={() => setSorting(false)}>
+        <Pressable style={styles.overlay} onPress={() => setSorting(false)} accessibilityLabel="Close" />
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={styles.grabber} />
+          <Text style={styles.sheetTitle}>Sort clients</Text>
+          {SORTS.map((s) => (
+            <Pressable key={s.key} style={styles.sheetRow} onPress={() => { setSort(s.key); setSorting(false); }} accessibilityRole="radio" accessibilityState={{ checked: s.key === sort }}>
+              <Text style={styles.sheetLabel}>{s.label}</Text>
+              {s.key === sort ? <Feather name="check" size={22} color={colors.link} /> : null}
+            </Pressable>
+          ))}
+        </View>
+      </Modal>
+    </TabFrame>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.surface },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: 96,
-    paddingBottom: spacing.md,
-    backgroundColor: colors.background,
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-  },
-  title: { fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text },
-  count: { fontSize: typography.size.sm, color: colors.textMuted },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.xl,
-    marginVertical: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  searchInput: { flex: 1, fontSize: typography.size.base, color: colors.text },
-  list: { paddingHorizontal: spacing.xl, gap: spacing.sm, paddingBottom: spacing.xxxl },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.md,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  avatarLetter: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.white },
-  info: { flex: 1 },
-  name: { fontSize: typography.size.base, fontWeight: typography.weight.semibold, color: colors.text },
-  email: { fontSize: typography.size.sm, color: colors.textMuted, marginTop: 2 },
-  statsRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.sm },
-  stat: { alignItems: 'center' },
-  statNum: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: colors.text },
-  statLabel: { fontSize: typography.size.xs, color: colors.textMuted },
-  statDivider: { width: 1, height: 16, backgroundColor: colors.border },
-  empty: { alignItems: 'center', paddingTop: spacing.xxxl * 2, gap: spacing.lg },
-  emptyText: { fontSize: typography.size.base, color: colors.textMuted },
-});
+const useStyles = makeStyles((colors) => ({
+  content: { paddingHorizontal: GUTTER, paddingTop: 12, paddingBottom: 40 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingVertical: 12 },
+  name: { fontSize: 15, fontWeight: '600', color: colors.text },
+  sub: { fontSize: 14, color: colors.textSecondary },
+  meta: { fontSize: 13, color: colors.textMuted },
+  overlay: { flex: 1, backgroundColor: colors.overlay },
+  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: GUTTER, paddingTop: 10 },
+  grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.borderStrong, marginBottom: 14 },
+  sheetTitle: { fontSize: 19, fontWeight: '700', color: colors.text, marginBottom: 8 },
+  sheetRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16 },
+  sheetLabel: { fontSize: 15, color: colors.text },
+}));

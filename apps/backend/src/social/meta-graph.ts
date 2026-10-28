@@ -48,6 +48,46 @@ export interface MetaPage {
   instagram: { id: string; username: string } | null;
 }
 
+export interface MetaAdAccount {
+  /** With the `act_` prefix. */
+  id: string;
+  name: string;
+  /** Meta's account_status: 1 active, 2 disabled, 3 unsettled, 7 pending risk review, 9 in grace period, 101 closed. */
+  status: number;
+  currency: string;
+  timezone: string | null;
+  hasPaymentMethod: boolean;
+  /** e.g. "Visa *1234" — Meta's own masked label. */
+  paymentMethodLabel: string | null;
+  businessName: string | null;
+}
+
+interface RawAdAccount {
+  id: string;
+  name?: string;
+  account_status: number;
+  currency: string;
+  timezone_name?: string;
+  funding_source_details?: { id?: string; display_string?: string };
+  business?: { name?: string };
+}
+
+const AD_ACCOUNT_FIELDS = 'id,name,account_status,currency,timezone_name,funding_source_details,business{name}';
+
+export function toAdAccount(a: RawAdAccount): MetaAdAccount {
+  const funding = a.funding_source_details;
+  return {
+    id: a.id,
+    name: a.name || a.id,
+    status: a.account_status,
+    currency: a.currency,
+    timezone: a.timezone_name ?? null,
+    hasPaymentMethod: !!funding?.id,
+    paymentMethodLabel: funding?.display_string || null,
+    businessName: a.business?.name ?? null,
+  };
+}
+
 export class MetaGraph {
   constructor(
     private readonly appId: string,
@@ -76,6 +116,19 @@ export class MetaGraph {
     return body;
   }
 
+  /**
+   * Any Graph call, for the Marketing API code in `ads/`. Objects and arrays
+   * are sent as JSON strings, which is how Graph takes them.
+   */
+  async request<T>(method: 'GET' | 'POST' | 'DELETE', path: string, params: Record<string, unknown>, token: string): Promise<T> {
+    const flat: Record<string, string> = { access_token: token };
+    for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === null) continue;
+      flat[k] = typeof v === 'string' ? v : typeof v === 'number' || typeof v === 'boolean' ? String(v) : JSON.stringify(v);
+    }
+    return this.call<T>(method === 'DELETE' ? 'POST' : method, path, method === 'DELETE' ? { ...flat, method: 'delete' } : flat);
+  }
+
   /** The Facebook Login dialog. `configId` is used for Facebook Login for Business; otherwise `scopes`. */
   loginUrl(redirectUri: string, state: string, opts: { configId?: string; scopes: readonly string[] }): string {
     const qs = new URLSearchParams({ client_id: this.appId, redirect_uri: redirectUri, state, response_type: 'code' });
@@ -85,14 +138,32 @@ export class MetaGraph {
   }
 
   /** Code → short-lived user token → long-lived user token (~60 days). */
-  async userTokenFromCode(code: string, redirectUri: string): Promise<string> {
+  async userTokenFromCode(code: string, redirectUri: string): Promise<{ token: string; expiresAt: Date | null }> {
     const short = await this.call<{ access_token: string }>('GET', '/oauth/access_token', {
       client_id: this.appId, client_secret: this.appSecret, redirect_uri: redirectUri, code,
     });
-    const long = await this.call<{ access_token: string }>('GET', '/oauth/access_token', {
+    const long = await this.call<{ access_token: string; expires_in?: number }>('GET', '/oauth/access_token', {
       grant_type: 'fb_exchange_token', client_id: this.appId, client_secret: this.appSecret, fb_exchange_token: short.access_token,
     });
-    return long.access_token;
+    return { token: long.access_token, expiresAt: long.expires_in ? new Date(Date.now() + long.expires_in * 1000) : null };
+  }
+
+  /** Permissions the person granted (they can untick some in the login dialog). */
+  async grantedPermissions(userToken: string): Promise<string[]> {
+    const r = await this.call<{ data?: { permission: string; status: string }[] }>('GET', '/me/permissions', { access_token: userToken });
+    return (r.data ?? []).filter((p) => p.status === 'granted').map((p) => p.permission);
+  }
+
+  // ── Ad accounts (Marketing API, user token) ────────────────────────────────
+
+  /** Ad accounts the person can advertise from. */
+  async adAccounts(userToken: string): Promise<MetaAdAccount[]> {
+    const r = await this.call<{ data?: RawAdAccount[] }>('GET', '/me/adaccounts', { fields: AD_ACCOUNT_FIELDS, limit: '100', access_token: userToken });
+    return (r.data ?? []).map(toAdAccount);
+  }
+
+  async adAccount(adAccountId: string, userToken: string): Promise<MetaAdAccount> {
+    return toAdAccount(await this.call<RawAdAccount>('GET', `/${adAccountId}`, { fields: AD_ACCOUNT_FIELDS, access_token: userToken }));
   }
 
   async me(userToken: string): Promise<{ id: string; name: string }> {
@@ -150,6 +221,52 @@ export class MetaGraph {
     const r = await this.call<{ permalink?: string }>('GET', `/${mediaId}`, { fields: 'permalink', access_token: pageToken });
     return r.permalink ?? null;
   }
+
+  // ── Messaging (Messenger Send API + Instagram Messaging, via the Page token) ─
+
+  /**
+   * Sends a text reply. `/me/messages` with a Page token is the Page itself, and
+   * the same endpoint delivers to Instagram users (IGSIDs) of the linked account.
+   * `humanAgent` adds Meta's HUMAN_AGENT tag: a person replying 24h–7d after the
+   * customer's last message. Never used for automated messages.
+   */
+  async sendMessage(pageToken: string, recipientId: string, text: string, humanAgent = false): Promise<{ messageId: string }> {
+    const params: Record<string, string> = {
+      recipient: JSON.stringify({ id: recipientId }),
+      message: JSON.stringify({ text }),
+      messaging_type: humanAgent ? 'MESSAGE_TAG' : 'RESPONSE',
+      access_token: pageToken,
+    };
+    if (humanAgent) params.tag = 'HUMAN_AGENT';
+    const r = await this.call<{ message_id: string }>('POST', '/me/messages', params);
+    return { messageId: r.message_id };
+  }
+
+  /** The customer's display name, when Meta shares it. */
+  async chatUserName(channel: 'messenger' | 'instagram', userId: string, pageToken: string): Promise<string | null> {
+    if (channel === 'instagram') {
+      const r = await this.call<{ name?: string; username?: string }>('GET', `/${userId}`, { fields: 'name,username', access_token: pageToken });
+      return r.name || (r.username ? `@${r.username}` : null);
+    }
+    const r = await this.call<{ first_name?: string; last_name?: string }>('GET', `/${userId}`, { fields: 'first_name,last_name', access_token: pageToken });
+    return [r.first_name, r.last_name].filter(Boolean).join(' ') || null;
+  }
+
+  /** Subscribes Scalio's app to the Page's message webhooks (Messenger, and Instagram DMs of the linked account). */
+  async subscribePageToMessages(pageId: string, pageToken: string): Promise<void> {
+    await this.call('POST', `/${pageId}/subscribed_apps`, {
+      subscribed_fields: 'messages,messaging_postbacks,messaging_referrals,message_echoes',
+      access_token: pageToken,
+    });
+  }
+}
+
+/** Checks Meta's `X-Hub-Signature-256: sha256=<hex>` header against the exact request bytes. */
+export function verifyWebhookSignature(rawBody: Buffer, header: string | undefined, appSecret: string): boolean {
+  const m = /^sha256=([0-9a-f]{64})$/i.exec(header ?? '');
+  if (!m) return false;
+  const expected = createHmac('sha256', appSecret).update(rawBody).digest();
+  return timingSafeEqual(Buffer.from(m[1], 'hex'), expected);
 }
 
 /** Verifies and decodes a Meta `signed_request` (deauthorise and data-deletion callbacks). */

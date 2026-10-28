@@ -15,6 +15,8 @@ export interface VendorBooking {
   paymentMode: PaymentMode;
   totalAmountKobo: number;
   customer: { id: string; name: string; email: string } | null;
+  /** Who it's with. Null when anyone can take it. */
+  staff?: { id: string; name: string } | null;
   services: { id: string; name: string; priceKobo: number }[];
   notes: string | null;
   createdAt: string;
@@ -118,6 +120,25 @@ export async function listBookings(status?: BookingStatus): Promise<VendorBookin
   const qs = status ? `?status=${status}` : '';
   const data = await req<VendorBooking[]>('GET', `/vendor-admin/bookings${qs}`);
   return (Array.isArray(data) ? data : []).map((b) => ({ ...b, services: b.services ?? [] }));
+}
+
+/** Bookings that start inside a window, for the calendar. */
+export async function listBookingsBetween(from: Date, to: Date): Promise<VendorBooking[]> {
+  const qs = `?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
+  const data = await req<VendorBooking[]>('GET', `/vendor-admin/bookings${qs}`);
+  return (Array.isArray(data) ? data : []).map((b) => ({ ...b, services: b.services ?? [] }));
+}
+
+/** Book a client in from the app: an existing client, or a new walk-in by name (and phone). */
+export function createBooking(data: {
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  staffId?: string;
+  serviceIds: string[];
+  scheduledAt: string;
+}): Promise<{ id: string }> {
+  return req('POST', '/vendor-admin/bookings', data);
 }
 
 export interface TodaySummary {
@@ -276,6 +297,8 @@ export interface StaffPerformance {
   uniqueCustomers: number;
   repeatCustomers: number;
   attendance: { workedMinutes: number; scheduledMinutes: number | null; rate: number | null; clockedInNow: boolean } | null;
+  /** Customer ratings for this person's bookings in the period; null when nobody rated. */
+  rating: { average: number; count: number } | null;
 }
 
 export interface PerformanceReport {
@@ -473,12 +496,33 @@ export function updateCustomerNotes(id: string, notes: string): Promise<Customer
 
 // ─── Schedule ────────────────────────────────────────────────────────────────
 
-export function getBusinessHours(): Promise<BusinessHours[]> {
-  return req('GET', '/vendor-admin/schedule/hours');
+/** The API stores open days as minutes since midnight and leaves closed days out. */
+interface HoursRow { dayOfWeek: number; opensAtMinutes: number; closesAtMinutes: number }
+
+const toClock = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const toMins = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + (m || 0);
+};
+
+/** The whole week, Sunday first. Empty when the business hasn't set any hours yet. */
+export async function getBusinessHours(): Promise<BusinessHours[]> {
+  const rows = await req<HoursRow[]>('GET', '/vendor-admin/schedule/hours');
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+  return Array.from({ length: 7 }, (_, day) => {
+    const r = rows.find((x) => x.dayOfWeek === day);
+    return r
+      ? { dayOfWeek: day, openTime: toClock(r.opensAtMinutes), closeTime: toClock(r.closesAtMinutes), isClosed: false }
+      : { dayOfWeek: day, openTime: '09:00', closeTime: '18:00', isClosed: true };
+  });
 }
 
-export function setBusinessHours(hours: BusinessHours[]): Promise<BusinessHours[]> {
-  return req('PUT', '/vendor-admin/schedule/hours', { hours });
+export async function setBusinessHours(hours: BusinessHours[]): Promise<BusinessHours[]> {
+  const days = hours
+    .filter((h) => !h.isClosed)
+    .map((h) => ({ dayOfWeek: h.dayOfWeek, opensAtMinutes: toMins(h.openTime), closesAtMinutes: toMins(h.closeTime) }));
+  await req('PUT', '/vendor-admin/schedule/hours', { days });
+  return getBusinessHours();
 }
 
 export function getBlackoutDates(): Promise<BlackoutDate[]> {
@@ -520,6 +564,13 @@ export interface HomeItem {
 export interface HomeResponse {
   generatedAt: string;
   business: { name: string };
+  /** The basics, always present whatever the business's interests or home settings. */
+  bookings: {
+    link: string;
+    upcoming: { id: string; customerName: string | null; scheduledAt: string; status: string }[];
+    total: number;
+    setup: { services: boolean; hours: boolean; payments: boolean };
+  };
   layers: Record<HomeLayer, HomeItem[]>;
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[];
 }
@@ -680,7 +731,7 @@ export function mediaSource(id: string) {
   return { uri: `${BASE}/vendor-admin/content/media/${id}`, headers: session ? { Authorization: `Bearer ${session.token}` } : undefined };
 }
 
-export function writeCaption(data: { brief: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }): Promise<CaptionDraft> {
+export function writeCaption(data: { brief?: string; tone: string; platforms: ContentPlatform[]; mediaId?: string }): Promise<CaptionDraft> {
   return req('POST', '/vendor-admin/content/captions', data);
 }
 
@@ -735,6 +786,281 @@ export function metaConnectUrl(): Promise<{ url: string }> {
 export function disconnectMeta(): Promise<void> {
   return req('DELETE', '/vendor-admin/social/meta');
 }
+
+// ── Ads Manager ──────────────────────────────────────────────────────────────
+
+export type AdsStepAction =
+  | { kind: 'connect' }
+  | { kind: 'choose_ad_account' }
+  | { kind: 'open_url'; url: string; label: string };
+
+export interface AdsSetupStep {
+  key: 'facebook' | 'instagram' | 'ad_access' | 'ad_account' | 'payment_method' | 'whatsapp';
+  title: string;
+  state: 'done' | 'todo' | 'attention' | 'waiting' | 'coming_soon';
+  detail: string;
+  optional: boolean;
+  action: AdsStepAction | null;
+}
+
+export interface AdsSetup {
+  available: boolean;
+  unavailableReason: string | null;
+  ready: boolean;
+  steps: AdsSetupStep[];
+}
+
+export interface MetaAdAccountOption {
+  id: string;
+  name: string;
+  currency: string;
+  businessName: string | null;
+  hasPaymentMethod: boolean;
+  paymentMethodLabel: string | null;
+  /** Why it can't run ads right now, or null. */
+  problem: string | null;
+  chosen: boolean;
+}
+
+export function getAdsSetup(): Promise<AdsSetup> {
+  return req('GET', '/vendor-admin/ads/setup');
+}
+
+export function getMetaAdAccounts(): Promise<MetaAdAccountOption[]> {
+  return req('GET', '/vendor-admin/ads/ad-accounts');
+}
+
+export function chooseAdAccount(adAccountId: string): Promise<AdsSetup> {
+  return req('PUT', '/vendor-admin/ads/ad-account', { adAccountId });
+}
+
+/** Re-checks the ad account with Meta, e.g. after adding a card there. */
+export function refreshAdAccount(): Promise<AdsSetup> {
+  return req('POST', '/vendor-admin/ads/ad-account/refresh', {});
+}
+
+// ── Inbox (Ads Manager Phase 2) ──────────────────────────────────────────────
+
+export type InboxChannel = 'instagram' | 'messenger' | 'whatsapp';
+export type AiReplyMode = 'off' | 'suggest' | 'reply';
+export type HandoffReason = 'complaint' | 'refund' | 'unknown' | 'human_requested';
+
+/** open: free replies; human_agent: a person may reply until closesAt; template: WhatsApp needs a paid template; closed/none: can't reply. */
+export interface ReplyWindow {
+  state: 'open' | 'human_agent' | 'template' | 'closed' | 'none';
+  closesAt: string | null;
+}
+
+export interface InboxConversation {
+  id: string;
+  channel: InboxChannel;
+  customerName: string;
+  preview: string | null;
+  lastMessageAt: string;
+  unreadCount: number;
+  window: ReplyWindow;
+  aiMode: AiReplyMode;
+  aiPaused: boolean;
+  leadId: string | null;
+  /** Set when the chat started from an ad. */
+  adTitle: string | null;
+  handoff: { reason: HandoffReason; label: string; at: string } | null;
+}
+
+export interface InboxMessage {
+  id: string;
+  direction: 'in' | 'out';
+  sentBy: 'customer' | 'vendor' | 'ai';
+  text: string;
+  attachments: { type: string; url: string | null }[];
+  status: 'received' | 'sent' | 'failed';
+  humanAgentTag: boolean;
+  sentAt: string;
+}
+
+export interface InboxConversationDetail extends InboxConversation {
+  aiSuggestion: string | null;
+  messages: InboxMessage[];
+}
+
+export interface FaqEntry { question: string; answer: string }
+
+export interface InboxSettings {
+  aiAvailable: boolean;
+  channels: { channel: InboxChannel; connected: boolean; accountName: string | null; comingSoon: boolean; mode: AiReplyMode }[];
+  faq: FaqEntry[];
+}
+
+export const CHANNEL_LABELS: Record<InboxChannel, string> = { instagram: 'Instagram', messenger: 'Messenger', whatsapp: 'WhatsApp' };
+export const AI_MODE_LABELS: Record<AiReplyMode, string> = { off: 'Off', suggest: 'Suggest, I send', reply: 'Reply for me' };
+
+export function listConversations(filter: 'all' | 'needs_you' = 'all'): Promise<InboxConversation[]> {
+  return req('GET', `/vendor-admin/inbox/conversations?filter=${filter}`);
+}
+
+export function getConversation(id: string): Promise<InboxConversationDetail> {
+  return req('GET', `/vendor-admin/inbox/conversations/${id}`);
+}
+
+export function sendInboxReply(id: string, text: string): Promise<InboxConversationDetail> {
+  return req('POST', `/vendor-admin/inbox/conversations/${id}/messages`, { text });
+}
+
+export function suggestInboxReply(id: string): Promise<{ suggestion: string | null; handoff: { reason: HandoffReason; label: string } | null }> {
+  return req('POST', `/vendor-admin/inbox/conversations/${id}/suggest`, {});
+}
+
+/** paused: false hands the chat back to the AI and clears "Needs you". */
+export function setConversationAiPaused(id: string, paused: boolean): Promise<InboxConversationDetail> {
+  return req('PUT', `/vendor-admin/inbox/conversations/${id}/ai`, { paused });
+}
+
+export function getInboxSettings(): Promise<InboxSettings> {
+  return req('GET', '/vendor-admin/inbox/settings');
+}
+
+export function updateInboxSettings(patch: { aiModes?: Partial<Record<InboxChannel, AiReplyMode>>; faq?: FaqEntry[] }): Promise<InboxSettings> {
+  return req('PUT', '/vendor-admin/inbox/settings', patch);
+}
+
+export function draftInboxFaq(): Promise<{ faq: FaqEntry[] }> {
+  return req('POST', '/vendor-admin/inbox/faq/draft', {});
+}
+
+// ── Ads Manager: campaigns ───────────────────────────────────────────────────
+
+export type AdObjective = 'awareness' | 'traffic' | 'engagement' | 'leads' | 'app_promotion' | 'sales';
+export type AdDestination = 'whatsapp' | 'messenger' | 'instagram_direct' | 'website' | 'app';
+export type AdPaymentRoute = 'scalio' | 'own_meta';
+export type AdCampaignStatus = 'awaiting_payment' | 'launching' | 'in_review' | 'active' | 'paused' | 'completed' | 'rejected' | 'failed' | 'cancelled';
+
+export interface AdLocation { key: string; type: 'city' | 'region' | 'country'; name: string; radiusKm?: number }
+export interface AdTargeting {
+  locations: AdLocation[];
+  ageMin: number;
+  ageMax: number;
+  genders: 'all' | 'male' | 'female';
+  interests: { id: string; name: string }[];
+  placements: 'automatic' | { facebook: string[]; instagram: string[]; messenger: string[] };
+}
+export interface AdCreativeFields {
+  mediaId: string;
+  primaryText: string;
+  headline: string;
+  description: string | null;
+  link: string | null;
+  welcomeMessage: string | null;
+  iceBreakers: string[];
+}
+export interface AdExtras { pixelId?: string; appId?: string; appStoreUrl?: string }
+
+export interface AdObjectiveOption { id: AdObjective; label: string; blurb: string; bestFor: string; destinations: AdDestination[]; simple: boolean }
+export interface AdRoutes {
+  scalio: { available: boolean; reason: string | null };
+  own_meta: { available: boolean; reason: string | null; adAccountName: string | null; paymentMethodLabel: string | null };
+}
+
+export interface AdBuilder {
+  name: string;
+  objective: AdObjective;
+  destination: AdDestination;
+  targeting: AdTargeting;
+  dailyBudgetKobo: number;
+  startAt: string;
+  endAt: string;
+  days: number;
+  bookingLink: string;
+  pageName: string | null;
+  instagramName: string | null;
+  objectives: AdObjectiveOption[];
+  fee: { percent: number; minKobo: number };
+  creditKobo: number;
+  routes: AdRoutes;
+  aiAvailable: boolean;
+}
+
+export interface AdQuote {
+  route: AdPaymentRoute;
+  days: number;
+  dailyBudgetKobo: number;
+  spendKobo: number;
+  vatKobo: number;
+  feeKobo: number;
+  creditUsedKobo: number;
+  dueNowKobo: number;
+  metaChargesKobo: number;
+}
+
+export interface AdCopyDraft {
+  variants: { angle: string; primaryText: string; headline: string; description: string }[];
+  welcomeMessage: string;
+  iceBreakers: string[];
+}
+
+export interface InterestOption { id: string; name: string; audienceSize: number | null; topic: string | null }
+export interface LocationOption { key: string; type: 'city' | 'region' | 'country'; name: string; label: string }
+
+export interface AdCampaign {
+  id: string;
+  name: string;
+  mode: 'simple' | 'advanced';
+  objective: AdObjective;
+  objectiveLabel: string;
+  destination: AdDestination;
+  route: AdPaymentRoute;
+  status: AdCampaignStatus;
+  dailyBudgetKobo: number;
+  startAt: string;
+  endAt: string;
+  days: number;
+  paidSpendKobo: number;
+  spentKobo: number;
+  targeting: AdTargeting;
+  creative: AdCreativeFields;
+  mediaId: string | null;
+  reviewNote: string | null;
+  lastError: string | null;
+  launchedAt: string | null;
+  createdAt: string;
+}
+
+export interface AdCampaignDetail extends AdCampaign {
+  payments: { id: string; purpose: 'launch' | 'extend'; extraDays: number | null; status: 'pending' | 'paid' | 'failed'; amountDueKobo: number; paidAt: string | null }[];
+  quoteForExtension: Record<string, AdQuote>;
+}
+
+export interface NewAdCampaign {
+  name: string;
+  mode: 'simple' | 'advanced';
+  objective: AdObjective;
+  destination: AdDestination;
+  route: AdPaymentRoute;
+  dailyBudgetKobo: number;
+  startAt: string;
+  endAt: string;
+  targeting: AdTargeting;
+  creative: AdCreativeFields;
+  extras: AdExtras;
+}
+
+export interface AdCheckout { paid: boolean; authorizationUrl: string | null; quote: AdQuote; campaign: AdCampaign }
+
+export const getAdBuilder = (): Promise<AdBuilder> => req('GET', '/vendor-admin/ads/builder');
+export const searchAdInterests = (q: string): Promise<InterestOption[]> => req('GET', `/vendor-admin/ads/targeting/interests?q=${encodeURIComponent(q)}`);
+export const suggestAdInterests = (names: string[]): Promise<InterestOption[]> =>
+  req('GET', `/vendor-admin/ads/targeting/interest-suggestions?names=${encodeURIComponent(names.join('|'))}`);
+export const searchAdLocations = (q: string): Promise<LocationOption[]> => req('GET', `/vendor-admin/ads/targeting/locations?q=${encodeURIComponent(q)}`);
+export const estimateAdReach = (body: { objective: AdObjective; destination: AdDestination; targeting: AdTargeting }): Promise<{ estimate: { lower: number; upper: number } | null }> =>
+  req('POST', '/vendor-admin/ads/targeting/reach', body);
+export const quoteAd = (body: { dailyBudgetKobo: number; days: number; route: AdPaymentRoute }): Promise<AdQuote> => req('POST', '/vendor-admin/ads/quote', body);
+export const draftAdCopy = (body: { objective: AdObjective; destination: AdDestination; brief: string | null }): Promise<AdCopyDraft> => req('POST', '/vendor-admin/ads/copy', body);
+export const listAdCampaigns = (): Promise<{ campaigns: AdCampaign[]; creditKobo: number }> => req('GET', '/vendor-admin/ads/campaigns');
+export const getAdCampaign = (id: string): Promise<AdCampaignDetail> => req('GET', `/vendor-admin/ads/campaigns/${id}`);
+export const createAdCampaign = (body: NewAdCampaign): Promise<AdCampaign> => req('POST', '/vendor-admin/ads/campaigns', body);
+export const checkoutAdCampaign = (id: string): Promise<AdCheckout> => req('POST', `/vendor-admin/ads/campaigns/${id}/checkout`, { from: 'mobile' });
+export const extendAdCampaign = (id: string, days: number): Promise<AdCheckout> => req('POST', `/vendor-admin/ads/campaigns/${id}/extend`, { days, from: 'mobile' });
+export const retryAdCampaign = (id: string): Promise<AdCampaign> => req('POST', `/vendor-admin/ads/campaigns/${id}/retry`, {});
+export const cancelAdCampaign = (id: string): Promise<AdCampaign> => req('POST', `/vendor-admin/ads/campaigns/${id}/cancel`, {});
 
 /** Publish now, or at `at` (ISO). */
 export function publishPost(id: string, platforms: ('facebook' | 'instagram')[], at?: string): Promise<Publication[]> {
@@ -817,4 +1143,92 @@ export function convertLead(id: string): Promise<Lead> {
 
 export function deleteLead(id: string): Promise<void> {
   return req('DELETE', `/vendor-admin/leads/${id}`);
+}
+
+// ─── Insights: reports and feedback ──────────────────────────────────────────
+
+export type ReportKind = 'sales' | 'bookings' | 'expenses' | 'cashflow' | 'customers' | 'retention';
+export interface ReportGroup { key: string; label: string; count: number; amountKobo?: number }
+
+export interface ReportsOverview {
+  from: string;
+  to: string;
+  definitions: Record<string, string>;
+  sales: { salesKobo: number; completed: number; averageSaleKobo: number | null; byService: ReportGroup[]; byStaff: ReportGroup[]; byDay: ReportGroup[] };
+  bookings: { total: number; cancellationRate: number | null; noShowRate: number | null; byStatus: ReportGroup[]; byWeekday: ReportGroup[] };
+  expenses: { totalKobo: number; byCategory: ReportGroup[] };
+  cashflow: { inKobo: number; outKobo: number; netKobo: number; groups: ReportGroup[] };
+  customers: { newCustomers: number; visited: number; bySource: ReportGroup[] };
+  retention: { served: number; returning: number; firstVisits: number; returningRate: number | null; repeatRate: number | null; lapsed: number; groups: ReportGroup[] };
+}
+
+/** One record behind a report group. Fields depend on the record type. */
+export interface ReportRecord {
+  type: 'booking' | 'expense' | 'ledger' | 'customer';
+  id: string;
+  at: string | null;
+  amountKobo?: number;
+  customerName?: string | null;
+  name?: string;
+  phone?: string | null;
+  staffName?: string | null;
+  services?: string[];
+  status?: string;
+  label?: string;
+  note?: string | null;
+  direction?: 'in' | 'out';
+  visits?: number;
+}
+
+export function getReports(from: string, to: string): Promise<ReportsOverview> {
+  return req('GET', `/vendor-admin/reports?from=${from}&to=${to}`);
+}
+
+export function getReportRecords(kind: ReportKind, from: string, to: string, key?: string): Promise<ReportRecord[]> {
+  const qs = new URLSearchParams({ from, to, ...(key ? { key } : {}) });
+  return req('GET', `/vendor-admin/reports/${kind}/records?${qs}`);
+}
+
+export interface FeedbackItem {
+  id: string;
+  rating: number;
+  comment: string | null;
+  submittedAt: string;
+  followedUpAt: string | null;
+  needsFollowUp: boolean;
+  bookingId: string;
+  scheduledAt: string;
+  customer: { id: string; name: string; phone: string | null };
+  staffName: string | null;
+}
+
+export interface FeedbackOverview {
+  from: string;
+  to: string;
+  average: number | null;
+  count: number;
+  asked: number;
+  needsFollowUp: number;
+  distribution: { stars: number; count: number }[];
+  items: FeedbackItem[];
+}
+
+export function getFeedback(from: string, to: string): Promise<FeedbackOverview> {
+  return req('GET', `/vendor-admin/feedback?from=${from}&to=${to}`);
+}
+
+export function markFeedbackFollowedUp(id: string): Promise<void> {
+  return req('POST', `/vendor-admin/feedback/${id}/followed-up`, {});
+}
+
+/** The rating link for a completed booking, with a ready-made WhatsApp message. */
+export function getFeedbackShare(bookingId: string): Promise<{ url: string; submitted: boolean; emailed: boolean; phone: string | null; message: string }> {
+  return req('GET', `/vendor-admin/feedback/booking/${bookingId}`);
+}
+
+/** wa.me wants the number in international form without '+' — assume Nigeria for local 0-numbers. */
+export function whatsappUrl(phone: string | null, text: string): string {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  const intl = digits.startsWith('0') ? `234${digits.slice(1)}` : digits;
+  return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
 }

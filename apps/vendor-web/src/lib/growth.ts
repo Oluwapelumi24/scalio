@@ -25,6 +25,35 @@ export interface SocialConnections {
   unavailableReason: string | null
   connections: { platform: 'facebook' | 'instagram'; displayName: string; status: 'active' | 'needs_reconnect'; lastError: string | null; connectedAt: string }[]
 }
+// ── Ads Manager ─────────────────────────────────────────────────────────────
+
+export type AdsStepAction =
+  | { kind: 'connect' }
+  | { kind: 'choose_ad_account' }
+  | { kind: 'open_url'; url: string; label: string }
+
+export interface AdsSetupStep {
+  key: 'facebook' | 'instagram' | 'ad_access' | 'ad_account' | 'payment_method' | 'whatsapp'
+  title: string
+  state: 'done' | 'todo' | 'attention' | 'waiting' | 'coming_soon'
+  detail: string
+  optional: boolean
+  action: AdsStepAction | null
+}
+
+export interface AdsSetup { available: boolean; unavailableReason: string | null; ready: boolean; steps: AdsSetupStep[] }
+
+export interface MetaAdAccountOption {
+  id: string
+  name: string
+  currency: string
+  businessName: string | null
+  hasPaymentMethod: boolean
+  paymentMethodLabel: string | null
+  problem: string | null
+  chosen: boolean
+}
+
 export interface StudioInfo { ai: { available: boolean; dailyLimit: number; usedToday: number }; tones: { id: string; label: string }[]; platforms: PlatformSpec[] }
 export interface PlatformCheck { platform: ContentPlatform; text: string; problems: string[]; notes: string[] }
 

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { NavigationContainer } from '@react-navigation/native';
+import { Animated, Text, View } from 'react-native';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
@@ -20,11 +19,12 @@ import { LaundryBookingScreen } from '../screens/LaundryBookingScreen';
 import { LaundryCheckoutScreen } from '../screens/LaundryCheckoutScreen';
 import { hasSeenOnboarding } from '../lib/preferences';
 import { restoreSession } from '../lib/session';
-import { typography } from '../theme';
+import { makeStyles, useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function SplashScreen() {
+  const styles = useStyles();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -32,15 +32,16 @@ function SplashScreen() {
   }, [fadeAnim]);
 
   return (
-    <LinearGradient colors={['#0f0c29', '#302b63', '#24243e']} style={styles.splash}>
+    <View style={styles.splash}>
       <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
         <Text style={styles.splashWordmark}>scalio</Text>
       </Animated.View>
-    </LinearGradient>
+    </View>
   );
 }
 
 export function RootNavigator() {
+  const { colors, scheme } = useTheme();
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
 
   useEffect(() => {
@@ -60,8 +61,23 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
+    <NavigationContainer
+      theme={{
+        ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
+        colors: {
+          ...(scheme === 'dark' ? DarkTheme : DefaultTheme).colors,
+          primary: colors.link,
+          background: colors.background,
+          card: colors.background,
+          text: colors.text,
+          border: colors.border,
+        },
+      }}
+    >
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+      >
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="InterestSelection" component={InterestSelectionScreen} />
         <Stack.Screen name="LocationSetup" component={LocationSetupScreen} />
@@ -93,16 +109,8 @@ export function RootNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-  splash: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  splashWordmark: {
-    fontSize: 40,
-    fontWeight: typography.weight.bold,
-    color: '#ffffff',
-    letterSpacing: 2,
-  },
-});
+// Navy splash with the white wordmark, the same in light and dark.
+const useStyles = makeStyles((colors) => ({
+  splash: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accent },
+  splashWordmark: { fontSize: 30, fontWeight: '700', color: colors.onAccent, letterSpacing: 2 },
+}));

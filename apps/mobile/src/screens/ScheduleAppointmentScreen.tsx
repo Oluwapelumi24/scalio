@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View, Pressable, Alert } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { createBooking, getAvailability } from '../lib/api';
 import { getCategoryMeta, getVendorAccentColor } from '../lib/categories';
 import { getCurrentUser } from '../lib/session';
-import { colors, radius, spacing, typography } from '../theme';
-import { BackButton } from '../components/BackButton';
+import { Button, EmptyState, Page, PageHeader, SectionTitle, StickyFooter } from '../components/ui';
+import { GUTTER, makeStyles, spacing, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ScheduleAppointment'>;
 
@@ -42,6 +42,8 @@ function timeLabel(isoDateTime: string): string {
 
 export function ScheduleAppointmentScreen({ route, navigation }: Props) {
   const { vendor, services } = route.params;
+  const { colors } = useTheme();
+  const styles = useStyles();
   const serviceIds = useMemo(() => services.map((service) => service.id), [services]);
   const days = useMemo(() => nextNDays(30), []);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -119,204 +121,104 @@ export function ScheduleAppointmentScreen({ route, navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
-      <BackButton onPress={() => navigation.goBack()} />
-
-      <View style={styles.vendorHeader}>
-        <View style={[styles.vendorIconBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
-          <Feather name={getCategoryMeta(vendor.category).icon} size={14} color={colors.white} />
-        </View>
-        <Text style={styles.vendorName}>{vendor.businessName}</Text>
-      </View>
-
-      <Text style={styles.title}>Pick a date and time</Text>
+    <Page
+      footer={
+        <StickyFooter>
+          <Button
+            label={selectedSlot ? 'Book appointment' : 'Pick a time'}
+            onPress={() => void handleConfirm()}
+            loading={submitting}
+            disabled={!selectedSlot}
+            style={{ flex: 1 }}
+          />
+        </StickyFooter>
+      }
+    >
+      <PageHeader
+        onBack={() => navigation.goBack()}
+        eyebrow={
+          <View style={styles.vendor}>
+            <View style={[styles.vendorBadge, { backgroundColor: getVendorAccentColor(vendor) }]}>
+              <Feather name={getCategoryMeta(vendor.category).icon} size={13} color={colors.white} />
+            </View>
+            <Text style={styles.vendorName}>{vendor.businessName}</Text>
+          </View>
+        }
+        title="Pick a date and time"
+      />
 
       <FlatList
         horizontal
         data={days}
         keyExtractor={(item) => item.toISOString()}
         showsHorizontalScrollIndicator={false}
-        style={styles.dayListContainer}
+        style={styles.days}
         contentContainerStyle={styles.dayList}
         renderItem={({ item, index }) => {
           const { weekday, dayNumber } = dayLabel(item);
           const selected = index === selectedDayIndex;
           return (
             <Pressable
-              style={[styles.dayChip, selected && styles.dayChipSelected]}
+              style={[styles.dayChip, selected && styles.chipOn]}
               onPress={() => setSelectedDayIndex(index)}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              accessibilityLabel={item.toDateString()}
             >
-              <Text style={[styles.dayWeekday, selected && styles.dayTextSelected]}>{weekday}</Text>
-              <Text style={[styles.dayNumber, selected && styles.dayTextSelected]}>{dayNumber}</Text>
+              <Text style={[styles.dayWeekday, selected && styles.textOn]}>{weekday}</Text>
+              <Text style={[styles.dayNumber, selected && styles.textOn]}>{dayNumber}</Text>
             </Pressable>
           );
         }}
       />
 
-      <Text style={styles.sectionLabel}>Available times</Text>
-      {error && <Text style={styles.error}>{error}</Text>}
-      {!error && !slots && <ActivityIndicator style={styles.loader} />}
-      {!error && slots && slots.length === 0 && (
-        <Text style={styles.empty}>No times available this day — try another date.</Text>
-      )}
-      {/* No max-height/scroll here — a vendor with many slots could overflow.
-          Defer wrapping in a ScrollView unless QA on a small device shows it. */}
-      <View style={styles.timeGrid}>
-        {(slots ?? []).map((slot) => {
-          const selected = slot === selectedSlot;
-          return (
-            <Pressable
-              key={slot}
-              style={[styles.timeChip, selected && styles.timeChipSelected]}
-              onPress={() => setSelectedSlot(slot)}
-            >
-              <Text style={[styles.timeLabel, selected && styles.dayTextSelected]}>{timeLabel(slot)}</Text>
-            </Pressable>
-          );
-        })}
+      <View style={{ gap: spacing.md }}>
+        <SectionTitle title="Available times" />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {!error && !slots ? <ActivityIndicator color={colors.link} style={{ marginTop: spacing.sm }} /> : null}
+        {!error && slots && slots.length === 0 ? (
+          <EmptyState icon="clock" title="No free times this day" body="Try another date." />
+        ) : null}
+        <View style={styles.timeGrid}>
+          {(slots ?? []).map((slot) => {
+            const selected = slot === selectedSlot;
+            return (
+              <Pressable
+                key={slot}
+                style={[styles.timeChip, selected && styles.chipOn]}
+                onPress={() => setSelectedSlot(slot)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.timeLabel, selected && styles.textOn]}>{timeLabel(slot)}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
-
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.cta, (!selectedSlot || submitting) && styles.ctaDisabled]}
-          onPress={() => void handleConfirm()}
-          disabled={!selectedSlot || submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={styles.ctaLabel}>{selectedSlot ? 'Book appointment' : 'Pick a time'}</Text>
-          )}
-        </Pressable>
-      </View>
-    </View>
+    </Page>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: 96,
-    paddingBottom: spacing.xl,
-    backgroundColor: colors.background,
-  },
-  vendorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  vendorIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  vendorName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.textSecondary,
-  },
-  title: {
-    fontSize: typography.size.title,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginBottom: 20,
-  },
-  dayListContainer: {
-    flexGrow: 0,
-    flexShrink: 0,
-    height: 72,
-  },
-  dayList: {
-    paddingBottom: spacing.sm,
-  },
+const useStyles = makeStyles((colors) => ({
+  vendor: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  vendorBadge: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  vendorName: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+  days: { flexGrow: 0, marginHorizontal: -GUTTER },
+  dayList: { paddingHorizontal: GUTTER, gap: 10 },
   dayChip: {
-    width: 56,
-    height: 64,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
+    width: 60, height: 72, borderRadius: 16, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center', gap: 2,
   },
-  dayChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  dayWeekday: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-  },
-  dayNumber: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-    marginTop: 2,
-  },
-  dayTextSelected: {
-    color: colors.white,
-  },
-  sectionLabel: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.textBody,
-    marginTop: 28,
-    marginBottom: spacing.md,
-  },
-  loader: {
-    marginTop: spacing.sm,
-  },
-  error: {
-    color: colors.error,
-    fontSize: typography.size.base,
-  },
-  empty: {
-    color: colors.textMuted,
-    fontSize: typography.size.base,
-  },
-  timeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingTop: spacing.sm,
-  },
+  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  textOn: { color: colors.onPrimary },
+  dayWeekday: { fontSize: 13, color: colors.textSecondary },
+  dayNumber: { fontSize: 16, fontWeight: '700', color: colors.text, fontVariant: ['tabular-nums'] },
+  error: { fontSize: 14, color: colors.error },
+  timeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   timeChip: {
-    paddingVertical: 10,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginRight: 10,
-    marginBottom: 10,
+    height: 44, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: colors.borderStrong,
+    alignItems: 'center', justifyContent: 'center',
   },
-  timeChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  timeLabel: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
-  footer: {
-    marginTop: 'auto',
-  },
-  cta: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  ctaDisabled: {
-    backgroundColor: colors.disabled,
-  },
-  ctaLabel: {
-    color: colors.white,
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
-  },
-});
+  timeLabel: { fontSize: 14, fontWeight: '600', color: colors.text, fontVariant: ['tabular-nums'] },
+}));

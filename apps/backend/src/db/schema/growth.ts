@@ -85,7 +85,9 @@ export const leads = pgTable(
 // One Facebook Login connects a business's Facebook Page and the Instagram
 // business account linked to it. Both are posted to with the Page access token.
 
-export const socialPlatformValues = ['facebook', 'instagram'] as const;
+export const socialPlatformValues = ['facebook', 'instagram', 'whatsapp'] as const;
+/** Where Scalio can publish posts. WhatsApp connects for messaging only (Ads Manager inbox). */
+export const publishPlatformValues = ['facebook', 'instagram'] as const;
 export const socialConnectionStatusValues = ['active', 'needs_reconnect'] as const;
 
 export const socialConnections = pgTable(
@@ -120,7 +122,7 @@ export const contentPublications = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     postId: uuid('post_id').notNull().references(() => contentPosts.id, { onDelete: 'cascade' }),
     vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
-    platform: text('platform', { enum: socialPlatformValues }).notNull(),
+    platform: text('platform', { enum: publishPlatformValues }).notNull(),
     status: text('status', { enum: publicationStatusValues }).notNull().default('queued'),
     /** When to (next) try. */
     runAt: timestamp('run_at', { withTimezone: true }).notNull(),

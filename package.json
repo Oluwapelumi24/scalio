@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "expo-linear-gradient": "~56.0.4"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

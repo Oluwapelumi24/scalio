@@ -11,7 +11,8 @@ export const REDIS = Symbol('REDIS');
       provide: REDIS,
       inject: [ConfigService],
       useFactory: (config: ConfigService): Redis => {
-        return new Redis(config.get<string>('REDIS_URL') ?? 'redis://localhost:6379');
+        // family 0 resolves both IPv4 and IPv6; Railway's private network is IPv6-only.
+        return new Redis(config.get<string>('REDIS_URL') ?? 'redis://localhost:6379', { family: 0 });
       },
     },
   ],

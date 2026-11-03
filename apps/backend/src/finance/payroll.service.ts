@@ -11,7 +11,7 @@ import { PayoutAccountService } from './payout-account.service';
 import { salaryWindow } from './payroll-window';
 
 /**
- * Payroll without Scalio touching the money: Scalio works out who to pay and how
+ * Payroll without Veno touching the money: Veno works out who to pay and how
  * much while the window is open, the owner pays from their own bank, then marks
  * each payout paid. Every step is recorded in the ledger and the audit log.
  */

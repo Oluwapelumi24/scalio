@@ -3,7 +3,7 @@ import { StyleSheet, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
- * Two palettes with the same names, so every screen works in both. Scalio navy
+ * Two palettes with the same names, so every screen works in both. Veno navy
  * is the one accent and the only call-to-action colour: every filled button,
  * selected chip, link and the active tab. Black/white is for text, icons and
  * outlined buttons only. In dark mode navy lifts to a brighter shade so it

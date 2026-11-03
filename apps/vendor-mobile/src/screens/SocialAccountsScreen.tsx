@@ -58,7 +58,7 @@ export function SocialAccountsScreen({ navigation }: Props) {
           <Feather name="arrow-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>Social accounts</Text>
-        <Text style={styles.subtitle}>Connect your business accounts to publish and schedule posts straight from Scalio.</Text>
+        <Text style={styles.subtitle}>Connect your business accounts to publish and schedule posts straight from Veno.</Text>
       </SafeAreaView>
 
       {!data ? <ActivityIndicator style={{ flex: 1 }} color={colors.accent} /> : (
@@ -91,7 +91,7 @@ export function SocialAccountsScreen({ navigation }: Props) {
                 <Text style={styles.primaryText}>{connected.length === 0 ? 'Connect Facebook & Instagram' : needsReconnect ? 'Reconnect' : 'Change Page'}</Text>
               </Pressable>
               <Text style={styles.meta}>
-                You’ll log in with Facebook in your browser and choose your business Page. Instagram connects too if it’s a business or creator account linked to that Page. Scalio never sees your password. Come back to the app when you’re done.
+                You’ll log in with Facebook in your browser and choose your business Page. Instagram connects too if it’s a business or creator account linked to that Page. Veno never sees your password. Come back to the app when you’re done.
               </Text>
               {connected.length > 0 && (
                 <Pressable onPress={disconnect} style={{ alignSelf: 'flex-start' }}><Text style={styles.danger}>Disconnect</Text></Pressable>

@@ -10,7 +10,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.mobile",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Scalio uses your location to show nearby businesses."
+        "NSLocationWhenInUseUsageDescription": "Veno uses your location to show nearby businesses."
       }
     },
     "android": {

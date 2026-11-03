@@ -1,11 +1,13 @@
+import { ArrowRight } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
-import { Hero } from '@/components/Hero'
-import { TrustBar } from '@/components/TrustBar'
-import { CustomerSection } from '@/components/CustomerSection'
-import { VendorSection } from '@/components/VendorSection'
+import { SkyHero, SkyButton } from '@/components/site/SkyHero'
+import { HomeHeroStage } from '@/components/home/HeroStage'
+import { CategoryMarquee } from '@/components/home/CategoryMarquee'
+import { BookingShowcase } from '@/components/home/BookingShowcase'
+import { ClosingCta, FeatureOrbs, ForBusiness, HowItWorks, PayYourWay } from '@/components/home/Sections'
+import { Testimonials } from '@/components/Testimonials'
 import { Waitlist } from '@/components/Waitlist'
 import { Faq } from '@/components/Faq'
-import { FinalCta } from '@/components/FinalCta'
 import { Footer } from '@/components/Footer'
 
 export default function Home() {
@@ -13,13 +15,28 @@ export default function Home() {
     <>
       <Navbar />
       <main>
-        <Hero />
-        <TrustBar />
-        <CustomerSection />
-        <VendorSection />
+        <SkyHero
+          audience="individuals"
+          title={<>Book the services your week runs on</>}
+          subtitle="Spas, laundromats, tailors, cleaners, photographers, trainers, salons and more across Lagos. See real free times, book in a minute, and pay the way you like."
+          actions={
+            <>
+              <SkyButton href="#waitlist">Get early access <ArrowRight className="h-4 w-4" /></SkyButton>
+              <SkyButton href="#customers" variant="ghost">See how it works</SkyButton>
+            </>
+          }
+          stage={<HomeHeroStage />}
+        />
+        <CategoryMarquee />
+        <BookingShowcase />
+        <HowItWorks />
+        <PayYourWay />
+        <FeatureOrbs />
+        <ForBusiness />
+        <Testimonials start="user" />
         <Waitlist />
         <Faq />
-        <FinalCta />
+        <ClosingCta title="Your city's best, one tap away." cta="Join the waitlist" href="#waitlist" />
       </main>
       <Footer />
     </>

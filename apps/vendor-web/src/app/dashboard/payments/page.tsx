@@ -20,7 +20,7 @@ export default async function PaymentsPage() {
         <p className="text-sm text-gray-500 mt-1">Where customers&apos; deposits and online payments go.</p>
       </div>
       <p className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-gray-800">
-        Paystack pays customers&apos; money straight into your bank account. Scalio never holds it.
+        Paystack pays customers&apos; money straight into your bank account. Veno never holds it.
       </p>
       {account && (
         <section className="bg-white rounded-xl border border-gray-200 px-5 py-4">

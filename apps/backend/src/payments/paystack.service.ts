@@ -13,7 +13,7 @@ export interface InitializeTransactionInput {
   /**
    * The vendor's Paystack subaccount. Paystack settles the payment straight to
    * the vendor's bank account (less any platform commission on the subaccount),
-   * so Scalio never holds customer money.
+   * so Veno never holds customer money.
    */
   subaccountCode?: string;
 }
@@ -27,7 +27,7 @@ export interface SubaccountInput {
   businessName: string;
   bankCode: string;
   accountNumber: string;
-  /** Scalio's commission on each payment, in percent. 0 = the vendor gets it all. */
+  /** Veno's commission on each payment, in percent. 0 = the vendor gets it all. */
   percentageCharge: number;
 }
 

@@ -103,7 +103,7 @@ export function OnboardingScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.wordmarkRow}>
-        <Text style={styles.wordmark}>scalio</Text>
+        <Text style={styles.wordmark}>veno</Text>
       </View>
 
       <View style={styles.mosaicWrap} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

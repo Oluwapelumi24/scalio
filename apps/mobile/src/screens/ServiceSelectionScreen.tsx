@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { Service } from '@scalio/shared-types';
+import type { Service } from '@veno/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { listServices } from '../lib/api';
 import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';

@@ -62,7 +62,7 @@ CREATE TABLE "ad_credit_entries" (
 	CONSTRAINT "ad_credit_entries_dedupe_unique" UNIQUE("dedupe_key")
 );
 --> statement-breakpoint
-CREATE TABLE "scalio_page_access" (
+CREATE TABLE "veno_page_access" (
 	"vendor_id" uuid PRIMARY KEY NOT NULL,
 	"page_id" text NOT NULL,
 	"status" text NOT NULL,
@@ -78,7 +78,7 @@ ALTER TABLE "ad_payments" ADD CONSTRAINT "ad_payments_campaign_id_ad_campaigns_i
 ALTER TABLE "ad_payments" ADD CONSTRAINT "ad_payments_created_by_id_staff_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."staff"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "ad_credit_entries" ADD CONSTRAINT "ad_credit_entries_vendor_id_vendors_id_fk" FOREIGN KEY ("vendor_id") REFERENCES "public"."vendors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "ad_credit_entries" ADD CONSTRAINT "ad_credit_entries_campaign_id_ad_campaigns_id_fk" FOREIGN KEY ("campaign_id") REFERENCES "public"."ad_campaigns"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "scalio_page_access" ADD CONSTRAINT "scalio_page_access_vendor_id_vendors_id_fk" FOREIGN KEY ("vendor_id") REFERENCES "public"."vendors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "veno_page_access" ADD CONSTRAINT "veno_page_access_vendor_id_vendors_id_fk" FOREIGN KEY ("vendor_id") REFERENCES "public"."vendors"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "ad_campaigns_vendor_idx" ON "ad_campaigns" USING btree ("vendor_id","created_at");--> statement-breakpoint
 CREATE INDEX "ad_campaigns_status_idx" ON "ad_campaigns" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "ad_payments_campaign_idx" ON "ad_payments" USING btree ("campaign_id");--> statement-breakpoint

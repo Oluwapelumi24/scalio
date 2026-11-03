@@ -52,12 +52,12 @@ export default async function CampaignPage({ params, searchParams }: { params: P
             ['Goal', c.objectiveLabel],
             ['Budget', `${naira(c.dailyBudgetKobo)} a day`],
             ['Runs', `${day(c.startAt)} → ${day(c.endAt)} (${c.days} days)`],
-            ['Paid via', c.route === 'scalio' ? 'Scalio' : 'Your Meta ad account'],
-            ...(c.launchedAt ? [['Spent so far', c.route === 'scalio' ? `${naira(c.spentKobo)} of ${naira(c.paidSpendKobo)}` : naira(c.spentKobo)]] : []),
+            ['Paid via', c.route === 'veno' ? 'Veno' : 'Your Meta ad account'],
+            ...(c.launchedAt ? [['Spent so far', c.route === 'veno' ? `${naira(c.spentKobo)} of ${naira(c.paidSpendKobo)}` : naira(c.spentKobo)]] : []),
           ].map(([k, v]) => (
             <div key={k} className="flex justify-between gap-4 px-4 py-3 text-sm"><dt className="text-gray-500">{k}</dt><dd className="text-right font-medium text-gray-900">{v}</dd></div>
           ))}
-          {c.launchedAt && c.route === 'scalio' && (
+          {c.launchedAt && c.route === 'veno' && (
             <div className="px-4 py-3"><div className="h-1.5 overflow-hidden rounded-full bg-indigo-50"><div className="h-full rounded-full bg-teal-500" style={{ width: `${spentPct}%` }} /></div></div>
           )}
         </dl>

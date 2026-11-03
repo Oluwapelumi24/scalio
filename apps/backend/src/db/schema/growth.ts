@@ -86,7 +86,7 @@ export const leads = pgTable(
 // business account linked to it. Both are posted to with the Page access token.
 
 export const socialPlatformValues = ['facebook', 'instagram', 'whatsapp'] as const;
-/** Where Scalio can publish posts. WhatsApp connects for messaging only (Ads Manager inbox). */
+/** Where Veno can publish posts. WhatsApp connects for messaging only (Ads Manager inbox). */
 export const publishPlatformValues = ['facebook', 'instagram'] as const;
 export const socialConnectionStatusValues = ['active', 'needs_reconnect'] as const;
 

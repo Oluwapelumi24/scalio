@@ -19,9 +19,9 @@ async function loadVendor(slug: string): Promise<PublicVendor | null> {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const vendor = await loadVendor((await params).slug)
-  if (!vendor) return { title: 'Business not found — Scalio' }
+  if (!vendor) return { title: 'Business not found — Veno' }
   return {
-    title: `Book ${vendor.businessName} — Scalio`,
+    title: `Book ${vendor.businessName} — Veno`,
     description: vendor.description ?? `See services, prices and open times for ${vendor.businessName}.`,
   }
 }
@@ -40,7 +40,7 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
     <div className="min-h-screen bg-slate-50">
       <header style={{ backgroundColor: brand }} className="text-white">
         <div className="mx-auto max-w-3xl px-6 pb-10 pt-8">
-          <Link href="/" className="text-sm font-semibold text-white/80 hover:text-white">Scalio</Link>
+          <Link href="/" className="text-sm font-semibold text-white/80 hover:text-white">Veno</Link>
           <div className="mt-6 flex items-center gap-4">
             {vendor.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -116,7 +116,7 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
         </aside>
       </main>
 
-      <footer className="pb-10 text-center text-xs text-slate-400">Powered by Scalio</footer>
+      <footer className="pb-10 text-center text-xs text-slate-400">Powered by Veno</footer>
     </div>
   )
 }

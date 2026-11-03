@@ -76,7 +76,7 @@ export class SocialController {
   }
 }
 
-/** Public endpoints Meta calls. No Scalio sign-in: each one is verified another way. */
+/** Public endpoints Meta calls. No Veno sign-in: each one is verified another way. */
 @Controller('social/meta')
 export class MetaCallbackController {
   constructor(
@@ -125,7 +125,7 @@ export class MetaCallbackController {
     return renderConnectPage(await this.connections.choosePage(String(body.pendingId ?? ''), String(body.pageId ?? '')));
   }
 
-  /** Someone removed Scalio from their Facebook settings. */
+  /** Someone removed Veno from their Facebook settings. */
   @Post('deauthorize')
   @HttpCode(HttpStatus.OK)
   async deauthorize(@Body() body: { signed_request?: string }) {
@@ -149,7 +149,7 @@ export class MetaCallbackController {
   deletionStatus() {
     return renderConnectPage({
       kind: 'connected', title: 'Your data was deleted', returnUrl: null,
-      message: 'Scalio has removed the Facebook and Instagram access you gave it. Posts already published stay on Facebook and Instagram.',
+      message: 'Veno has removed the Facebook and Instagram access you gave it. Posts already published stay on Facebook and Instagram.',
     });
   }
 

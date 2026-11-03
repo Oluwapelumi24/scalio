@@ -16,7 +16,7 @@ interface FeedbackView {
 }
 
 // A private link from the business's "How was your visit?" message. Not for search engines.
-export const metadata: Metadata = { title: 'How was your visit? — Scalio', robots: { index: false, follow: false } }
+export const metadata: Metadata = { title: 'How was your visit? — Veno', robots: { index: false, follow: false } }
 
 export default async function FeedbackPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -65,7 +65,7 @@ export default async function FeedbackPage({ params }: { params: Promise<{ token
           )}
         </div>
       </main>
-      <p className="mt-6 text-center text-xs text-slate-400">Your feedback goes to {view.businessName}. Powered by Scalio.</p>
+      <p className="mt-6 text-center text-xs text-slate-400">Your feedback goes to {view.businessName}. Powered by Veno.</p>
     </div>
   )
 }

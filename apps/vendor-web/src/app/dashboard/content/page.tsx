@@ -65,7 +65,7 @@ export default async function ContentStudioPage({ searchParams }: { searchParams
         <Link href="/dashboard/content/connections" className="block rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
           {studio.platforms.some((p) => p.connection?.status === 'needs_reconnect')
             ? 'Your Facebook/Instagram connection needs renewing. Reconnect →'
-            : 'Connect Facebook and Instagram to publish and schedule straight from Scalio →'}
+            : 'Connect Facebook and Instagram to publish and schedule straight from Veno →'}
         </Link>
       )}
       {studio.platforms.some((p) => p.publishing === 'automatic') && (

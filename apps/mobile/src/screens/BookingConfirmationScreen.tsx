@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Alert, Image, Linking, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { Service } from '@scalio/shared-types';
+import type { Service } from '@veno/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { initiateBookingPayment, type PaymentCheckout } from '../lib/api';
 import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';

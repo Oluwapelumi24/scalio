@@ -15,7 +15,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import type { Vendor } from '@scalio/shared-types';
+import type { Vendor } from '@veno/shared-types';
 import type { MainTabScreenProps } from '../navigation/types';
 import { listVendors } from '../lib/api';
 import { CATEGORY_META, getVendorImageSource } from '../lib/categories';
@@ -35,7 +35,7 @@ import { GUTTER, makeStyles, spacing, useTheme } from '../theme';
 type Props = MainTabScreenProps<'Home'>;
 
 const { height: SCREEN_H } = Dimensions.get('window');
-const RECENT_KEY = 'scalio_location_history';
+const RECENT_KEY = 'veno_location_history';
 const MAX_RECENT = 5;
 
 const POPULAR_AREAS = [
@@ -670,7 +670,7 @@ export function HomeScreen({ navigation }: Props) {
 
             {vendors === null || rest.length > 0 ? (
               <SectionRow
-                title="New to Scalio"
+                title="New to Veno"
                 vendors={rest}
                 onPress={openVendor}
                 loading={vendors === null && !error}

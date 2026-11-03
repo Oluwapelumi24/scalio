@@ -58,8 +58,8 @@ export class ContentStudioService {
         canConnect: available && (spec.id === 'facebook' || spec.id === 'instagram'),
         connection: conn ? { displayName: conn.displayName, status: conn.status, lastError: conn.lastError } : null,
         /** Why it's manual here, and what would change that. */
-        manualReason: automatic ? '' : conn?.status === 'needs_reconnect' ? 'Reconnect your account to publish from Scalio again.'
-          : (spec.id === 'facebook' || spec.id === 'instagram') && available ? `Connect your ${spec.id === 'facebook' ? 'Facebook Page' : 'Instagram business account'} to publish from Scalio. Until then, copy the caption and post from the ${spec.name} app.`
+        manualReason: automatic ? '' : conn?.status === 'needs_reconnect' ? 'Reconnect your account to publish from Veno again.'
+          : (spec.id === 'facebook' || spec.id === 'instagram') && available ? `Connect your ${spec.id === 'facebook' ? 'Facebook Page' : 'Instagram business account'} to publish from Veno. Until then, copy the caption and post from the ${spec.name} app.`
           : (spec.id === 'facebook' || spec.id === 'instagram') && unavailableReason ? `${unavailableReason} Copy the caption and post from the ${spec.name} app for now.`
           : spec.manualReason,
       };

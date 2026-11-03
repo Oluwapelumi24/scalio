@@ -6,16 +6,16 @@ import { Reveal } from './Reveal'
 
 const FAQS = [
   {
-    q: 'Is Scalio free to use as a customer?',
+    q: 'Is Veno free to use as a customer?',
     a: 'Yes. Browsing and booking is free — you only pay the vendor for the service you book, either online or on arrival, depending on what they allow.',
   },
   {
     q: 'How do vendor payments work?',
-    a: 'Payments run through Paystack. Depending on the service, customers can pay a deposit, pay in full up front, or pay on arrival — vendors choose which options to offer.',
+    a: 'Depending on the service, customers can pay a deposit, pay in full up front, or pay on arrival. Each business chooses which options to offer, and online payments settle straight into its bank account.',
   },
   {
     q: 'Is every vendor verified?',
-    a: 'Every business goes through manual review before it appears on Scalio. There\'s no public self-listing without approval.',
+    a: 'Every business goes through manual review before it appears on Veno. There\'s no public self-listing without approval.',
   },
   {
     q: 'Do I need an account to browse?',
@@ -33,7 +33,7 @@ export function Faq() {
   return (
     <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-6 py-24">
       <Reveal>
-        <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        <h2 className="text-center font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
           Frequently asked questions
         </h2>
       </Reveal>

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Alert, Linking, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { Booking } from '@scalio/shared-types';
+import type { Booking } from '@veno/shared-types';
 import type { RootStackParamList } from '../navigation/types';
 import { createBooking, initiateBookingPayment, type PaymentCheckout } from '../lib/api';
 import { calcLaundryOrder, formatNaira, laundryDurationMinutes, washServiceName } from '../lib/laundry';

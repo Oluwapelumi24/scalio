@@ -35,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 bg-slate-900 flex flex-col">
         <div className="px-4 py-5 border-b border-slate-700">
-          <p className="text-white font-bold text-lg">Scalio</p>
+          <p className="text-white font-bold text-lg">Veno</p>
           <p className="text-slate-400 text-xs mt-0.5">Vendor Portal</p>
         </div>
 

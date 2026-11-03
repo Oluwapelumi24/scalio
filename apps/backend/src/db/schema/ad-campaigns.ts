@@ -12,8 +12,8 @@ export type AdObjective = (typeof adObjectiveValues)[number];
 export const adDestinationValues = ['whatsapp', 'messenger', 'instagram_direct', 'website', 'app'] as const;
 export type AdDestination = (typeof adDestinationValues)[number];
 
-/** 'scalio' = vendor pays Scalio, ad runs on Scalio's ad account (route 1); 'own_meta' = vendor's ad account and card (route 2). */
-export const adPaymentRouteValues = ['scalio', 'own_meta'] as const;
+/** 'veno' = vendor pays Veno, ad runs on Veno's ad account (route 1); 'own_meta' = vendor's ad account and card (route 2). */
+export const adPaymentRouteValues = ['veno', 'own_meta'] as const;
 export type AdPaymentRoute = (typeof adPaymentRouteValues)[number];
 
 export const adCampaignStatusValues = [
@@ -159,8 +159,8 @@ export const adCreditEntries = pgTable(
   (t) => [unique('ad_credit_entries_dedupe_unique').on(t.dedupeKey), index('ad_credit_entries_vendor_idx').on(t.vendorId)],
 );
 
-/** Route 1: whether the vendor's Facebook Page has let Scalio's business advertise for it. */
-export const scalioPageAccess = pgTable('scalio_page_access', {
+/** Route 1: whether the vendor's Facebook Page has let Veno's business advertise for it. */
+export const venoPageAccess = pgTable('veno_page_access', {
   vendorId: uuid('vendor_id').primaryKey().references(() => vendors.id, { onDelete: 'cascade' }),
   pageId: text('page_id').notNull(),
   status: text('status', { enum: ['requested', 'approved'] }).notNull(),

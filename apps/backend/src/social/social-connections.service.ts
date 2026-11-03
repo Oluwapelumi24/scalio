@@ -74,7 +74,7 @@ export class SocialConnectionsService {
       .where(and(eq(socialConnections.vendorId, vendorId), eq(socialConnections.platform, platform)));
   }
 
-  /** Disconnect removes everything Meta gave Scalio for this business, including ad access. */
+  /** Disconnect removes everything Meta gave Veno for this business, including ad access. */
   async disconnect(vendorId: string) {
     await this.db.transaction(async (tx) => {
       await tx.delete(socialConnections).where(eq(socialConnections.vendorId, vendorId));
@@ -96,7 +96,7 @@ export class SocialConnectionsService {
   async handleCallback(q: { code?: string; state?: string; error?: string; error_reason?: string }): Promise<ConnectOutcome> {
     const raw = q.state ? await this.redis.getdel(`meta:oauth:${q.state}`) : null;
     if (!raw) {
-      return { kind: 'error', title: 'This link has expired', message: 'Go back to Scalio and tap Connect again.', returnUrl: this.returnUrl('web') };
+      return { kind: 'error', title: 'This link has expired', message: 'Go back to Veno and tap Connect again.', returnUrl: this.returnUrl('web') };
     }
     const st = JSON.parse(raw) as OAuthState;
     const back = this.returnUrl(st.returnTo);
@@ -116,7 +116,7 @@ export class SocialConnectionsService {
       if (pages.length === 0) {
         return {
           kind: 'error', title: 'No Facebook Page found', returnUrl: back,
-          message: "Scalio posts to a business's Facebook Page and the Instagram account linked to it. Create a Page (or ask for a role on your business's Page), then connect again.",
+          message: "Veno posts to a business's Facebook Page and the Instagram account linked to it. Create a Page (or ask for a role on your business's Page), then connect again.",
         };
       }
       if (pages.length === 1) return this.save(st, me.id, pages[0]);
@@ -128,7 +128,7 @@ export class SocialConnectionsService {
       };
       await this.redis.set(`meta:pending:${pendingId}`, JSON.stringify(pending), 'EX', STATE_TTL);
       return {
-        kind: 'choose', title: 'Which Page is your business?', message: 'Scalio will post to this Page and the Instagram account linked to it.',
+        kind: 'choose', title: 'Which Page is your business?', message: 'Veno will post to this Page and the Instagram account linked to it.',
         returnUrl: back, pendingId, pages: pages.map((p) => ({ id: p.id, name: p.name, instagram: p.instagram?.username ?? null })),
       };
     } catch (err) {
@@ -170,7 +170,7 @@ export class SocialConnectionsService {
   /** Step 3 (several Pages): the person picked one. */
   async choosePage(pendingId: string, pageId: string): Promise<ConnectOutcome> {
     const raw = await this.redis.getdel(`meta:pending:${pendingId}`);
-    if (!raw) return { kind: 'error', title: 'This link has expired', message: 'Go back to Scalio and tap Connect again.', returnUrl: this.returnUrl('web') };
+    if (!raw) return { kind: 'error', title: 'This link has expired', message: 'Go back to Veno and tap Connect again.', returnUrl: this.returnUrl('web') };
     const p = JSON.parse(raw) as PendingChoice;
     const page = p.pages.find((x) => x.id === pageId);
     if (!page) throw new BadRequestException('Choose one of the Pages listed.');
@@ -201,8 +201,8 @@ export class SocialConnectionsService {
     return {
       kind: 'connected', title: 'Connected', returnUrl: this.returnUrl(st.returnTo),
       message: page.instagram
-        ? `Scalio can now post to ${page.name} on Facebook and @${page.instagram.username} on Instagram.`
-        : `Scalio can now post to ${page.name} on Facebook. No Instagram business account is linked to this Page — link one in Instagram's settings, then connect again to post there too.`,
+        ? `Veno can now post to ${page.name} on Facebook and @${page.instagram.username} on Instagram.`
+        : `Veno can now post to ${page.name} on Facebook. No Instagram business account is linked to this Page — link one in Instagram's settings, then connect again to post there too.`,
     };
   }
 
@@ -210,7 +210,7 @@ export class SocialConnectionsService {
   async forgetMetaUser(metaUserId: string): Promise<number> {
     const removed = await this.db.delete(socialConnections).where(eq(socialConnections.metaUserId, metaUserId)).returning({ id: socialConnections.id });
     const access = await this.db.delete(metaUserAccess).where(eq(metaUserAccess.metaUserId, metaUserId)).returning({ vendorId: metaUserAccess.vendorId });
-    // Their ad accounts were reachable only through that login (Scalio-owned ones stay).
+    // Their ad accounts were reachable only through that login (Veno-owned ones stay).
     for (const { vendorId } of access) {
       await this.db.delete(adAccounts).where(and(eq(adAccounts.vendorId, vendorId), eq(adAccounts.ownedBy, 'vendor')));
     }

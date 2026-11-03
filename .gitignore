@@ -11,6 +11,6 @@ build/
 coverage/
 
 # iOS native prebuild output
-Scalio/
+Veno/
 *.xcodeproj
 *.xcworkspace

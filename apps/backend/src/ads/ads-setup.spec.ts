@@ -26,7 +26,7 @@ describe('ads setup checklist', () => {
     expect(step({ ...base, facebook: page }, 'ad_access')).toMatchObject({ state: 'todo', action: { kind: 'connect' } });
   });
 
-  it('is ready with a Page and ad permissions — an ad account is optional (pay with Scalio)', () => {
+  it('is ready with a Page and ad permissions — an ad account is optional (pay with Veno)', () => {
     const i = { ...base, facebook: page, access: { grantedScopes: ALL, expiresAt: null } };
     expect(buildSetup(i).ready).toBe(true);
     expect(step(i, 'ad_account')).toMatchObject({ state: 'todo', optional: true, action: { kind: 'choose_ad_account' } });
@@ -62,8 +62,8 @@ describe('ads setup checklist', () => {
     expect(step(i, 'payment_method')).toBeUndefined();
   });
 
-  it('never asks Scalio-owned ad accounts for a card', () => {
-    const i = { ...base, facebook: page, access: { grantedScopes: ALL, expiresAt: null }, adAccount: { ...account, ownedBy: 'scalio' as const } };
+  it('never asks Veno-owned ad accounts for a card', () => {
+    const i = { ...base, facebook: page, access: { grantedScopes: ALL, expiresAt: null }, adAccount: { ...account, ownedBy: 'veno' as const } };
     expect(step(i, 'payment_method')).toBeUndefined();
   });
 

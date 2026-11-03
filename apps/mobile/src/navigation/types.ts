@@ -1,7 +1,7 @@
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { Booking, Service, Vendor } from '@scalio/shared-types';
+import type { Booking, Service, Vendor } from '@veno/shared-types';
 
 export type RootStackParamList = {
   Onboarding: undefined;

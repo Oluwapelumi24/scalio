@@ -21,7 +21,7 @@ export class AdsService {
 
   /** Why the Ads Manager can't be used on this server, or null when it can. */
   private get unavailableReason(): string | null {
-    if (!this.meta.adsEnabled) return 'Ads aren’t switched on in Scalio yet.';
+    if (!this.meta.adsEnabled) return 'Ads aren’t switched on in Veno yet.';
     return this.meta.unavailableReason;
   }
 
@@ -110,7 +110,7 @@ export class AdsService {
     if (reason) throw new ServiceUnavailableException(reason);
     const [access] = await this.db.select().from(metaUserAccess).where(eq(metaUserAccess.vendorId, vendorId));
     if (!access || !access.grantedScopes.includes('ads_management')) {
-      throw new BadRequestException('Reconnect Facebook and allow Scalio to manage ads first.');
+      throw new BadRequestException('Reconnect Facebook and allow Veno to manage ads first.');
     }
     if (access.expiresAt && access.expiresAt.getTime() <= Date.now()) {
       throw new BadRequestException('Your Facebook login for ads has expired. Reconnect Facebook to continue.');
@@ -120,7 +120,7 @@ export class AdsService {
     } catch (err) {
       if (err instanceof MetaApiError && err.needsReconnect) {
         await this.db.update(metaUserAccess).set({ expiresAt: new Date(), updatedAt: new Date() }).where(eq(metaUserAccess.vendorId, vendorId));
-        throw new BadRequestException('Facebook stopped Scalio’s access to your ads. Reconnect Facebook to continue.');
+        throw new BadRequestException('Facebook stopped Veno’s access to your ads. Reconnect Facebook to continue.');
       }
       if (err instanceof MetaApiError && passThrough(err)) throw err;
       if (err instanceof MetaApiError) {

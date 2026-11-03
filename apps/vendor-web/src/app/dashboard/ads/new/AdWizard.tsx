@@ -91,7 +91,7 @@ export function AdWizard({ builder }: { builder: AdBuilder }) {
   const [picked, setPicked] = useState<number | null>(null)
   const [dailyBudgetKobo, setDailyBudgetKobo] = useState(builder.dailyBudgetKobo)
   const [days, setDays] = useState(builder.days)
-  const [route, setRoute] = useState<AdPaymentRoute>(builder.routes.scalio.available || !builder.routes.own_meta.available ? 'scalio' : 'own_meta')
+  const [route, setRoute] = useState<AdPaymentRoute>(builder.routes.veno.available || !builder.routes.own_meta.available ? 'veno' : 'own_meta')
 
   const steps: StepKey[] = mode === 'simple' ? ['goal', 'audience', 'ad', 'budget', 'review'] : ['goal', 'audience', 'placements', 'ad', 'budget', 'review']
   const key = steps[Math.min(step, steps.length - 1)]
@@ -345,9 +345,9 @@ export function AdWizard({ builder }: { builder: AdBuilder }) {
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-900">How do you want to pay?</p>
-                <RouteCard on={route === 'scalio'} onClick={() => setRoute('scalio')} reason={builder.routes.scalio.reason} title="Pay with Scalio" badge="Easiest" subtitle="Card, bank transfer or USSD in naira. No dollar card needed." />
+                <RouteCard on={route === 'veno'} onClick={() => setRoute('veno')} reason={builder.routes.veno.reason} title="Pay with Veno" badge="Easiest" subtitle="Card, bank transfer or USSD in naira. No dollar card needed." />
                 <RouteCard on={route === 'own_meta'} onClick={() => setRoute('own_meta')} reason={builder.routes.own_meta.reason} title="My own Meta ad account"
-                  subtitle={`Meta charges ${builder.routes.own_meta.paymentMethodLabel ?? 'your card'}; you pay Scalio’s fee only.`} />
+                  subtitle={`Meta charges ${builder.routes.own_meta.paymentMethodLabel ?? 'your card'}; you pay Veno’s fee only.`} />
               </div>
             </>
           )}
@@ -363,9 +363,9 @@ export function AdWizard({ builder }: { builder: AdBuilder }) {
                 {mode === 'advanced' && <Review label="Placements" value={targeting.placements === 'automatic' ? 'Automatic' : 'Chosen by you'} onEdit={() => go(steps.indexOf('placements'))} />}
                 <Review label="Ad" value={headline || '—'} onEdit={() => go(steps.indexOf('ad'))} />
                 <Review label="Runs" value={`${naira(dailyBudgetKobo)}/day · ${days} days · ends ${endLabel(startAt, days)}`} onEdit={() => go(steps.indexOf('budget'))} />
-                <Review label="Payment" value={route === 'scalio' ? 'Pay with Scalio' : 'My own Meta ad account'} onEdit={() => go(steps.indexOf('budget'))} />
+                <Review label="Payment" value={route === 'veno' ? 'Pay with Veno' : 'My own Meta ad account'} onEdit={() => go(steps.indexOf('budget'))} />
               </dl>
-              <p className="text-xs text-gray-500">Meta reviews every ad before it runs — usually within 24 hours. If Meta doesn’t approve it, unspent money paid to Scalio comes back as ad credit.</p>
+              <p className="text-xs text-gray-500">Meta reviews every ad before it runs — usually within 24 hours. If Meta doesn’t approve it, unspent money paid to Veno comes back as ad credit.</p>
             </>
           )}
         </div>
@@ -515,10 +515,10 @@ function CostCard({ quote, loading }: { quote: AdQuote | null; loading: boolean 
       <p className="text-sm font-medium text-gray-900">Cost</p>
       {row(`Ad spend (${quote.days} × ${naira(quote.dailyBudgetKobo)})`, naira(quote.spendKobo))}
       {row('VAT 7.5%', naira(quote.vatKobo))}
-      {row('Scalio fee', naira(quote.feeKobo))}
+      {row('Veno fee', naira(quote.feeKobo))}
       {quote.creditUsedKobo > 0 && row('Ad credit used', `−${naira(quote.creditUsedKobo)}`)}
       <div className="flex items-baseline justify-between border-t border-gray-100 pt-2">
-        <span className="text-sm font-medium text-gray-900">{own ? 'You pay Scalio now' : 'Total now'}</span>
+        <span className="text-sm font-medium text-gray-900">{own ? 'You pay Veno now' : 'Total now'}</span>
         <span className="text-xl font-semibold tabular-nums text-gray-900">{naira(quote.dueNowKobo)}</span>
       </div>
       {own && <p className="text-xs text-gray-500">Meta charges your card {naira(quote.metaChargesKobo)} (spend + VAT) as the ad runs.</p>}

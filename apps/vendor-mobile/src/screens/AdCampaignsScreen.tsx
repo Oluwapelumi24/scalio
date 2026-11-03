@@ -80,7 +80,7 @@ export function AdCampaignsScreen({ navigation }: Props) {
                     <Text style={s.muted}>{c.objectiveLabel}</Text>
                   </View>
                   <Text style={s.muted}>{naira(c.dailyBudgetKobo)}/day · ends {new Date(c.endAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</Text>
-                  {c.route === 'scalio' && c.paidSpendKobo > 0 && (
+                  {c.route === 'veno' && c.paidSpendKobo > 0 && (
                     <View style={s.track}><View style={[s.fill, { width: `${Math.round(spentPct * 100)}%` }]} /></View>
                   )}
                 </View>

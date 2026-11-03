@@ -7,6 +7,8 @@ export const vendors = pgTable('vendors', {
   category: text('category').notNull(),
   logoUrl: text('logo_url'),
   themeColor: text('theme_color'),
+  /** Gap between bookable start times (10–60 min), set by the platform admin. */
+  slotIntervalMinutes: integer('slot_interval_minutes').notNull().default(30),
   averageDaysBetweenVisits: integer('average_days_between_visits'),
   featured: boolean('featured').default(false).notNull(),
   address: text('address'),
@@ -39,6 +41,8 @@ export const staff = pgTable('staff', {
   // a password — null means the account exists but can't log in yet.
   passwordHash: text('password_hash'),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+  /** When this person last opened their notifications; anything newer is unread. */
+  notificationsReadAt: timestamp('notifications_read_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

@@ -96,7 +96,7 @@ export function InboxSettingsScreen({ navigation }: Props) {
 
       {!settings ? <ActivityIndicator style={{ flex: 1 }} color={colors.accent} /> : (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {!settings.aiAvailable && <View style={styles.note}><Text style={styles.meta}>AI replies aren’t switched on in Scalio yet. You can still set up your FAQ.</Text></View>}
+          {!settings.aiAvailable && <View style={styles.note}><Text style={styles.meta}>AI replies aren’t switched on in Veno yet. You can still set up your FAQ.</Text></View>}
 
           <Text style={styles.section}>Per channel</Text>
           <View style={styles.card}>

@@ -12,7 +12,7 @@ function key(): Buffer {
     return k;
   }
   if (process.env.NODE_ENV === 'production') throw new Error('PII_ENCRYPTION_KEY is required in production');
-  return createHash('sha256').update('scalio-dev-only-pii-key').digest();
+  return createHash('sha256').update('veno-dev-only-pii-key').digest();
 }
 
 export function encryptPii(plain: string): string {

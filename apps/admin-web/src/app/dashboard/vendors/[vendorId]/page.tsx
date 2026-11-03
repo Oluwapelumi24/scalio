@@ -8,6 +8,7 @@ interface Vendor {
   id: string; slug: string; businessName: string; category: string
   logoUrl: string | null; themeColor: string | null; address: string | null
   featured: boolean; rating: number | null; reviewCount: number | null; createdAt: string
+  slotIntervalMinutes: number
 }
 
 export default async function VendorDetailPage({ params }: { params: Promise<{ vendorId: string }> }) {

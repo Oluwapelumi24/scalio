@@ -15,7 +15,7 @@ export function InviteAdminForm() {
       </div>
       <div>
         <label className="block text-xs font-medium text-gray-600 mb-1">Email address</label>
-        <input name="email" type="email" required placeholder="ada@scalio.app"
+        <input name="email" type="email" required placeholder="ada@veno.app"
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm w-64 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
       </div>
       <button type="submit" disabled={pending}

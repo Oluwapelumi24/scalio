@@ -57,7 +57,7 @@ export class PaystackWebhookController {
       req.rawBody.toString('utf8'),
     ) as PaystackWebhookEvent;
 
-    // Ads Manager payments (reference `ads_…`) pay Scalio for ad spend, not a booking.
+    // Ads Manager payments (reference `ads_…`) pay Veno for ad spend, not a booking.
     if (event.data.reference?.startsWith('ads_')) {
       if (event.event === 'charge.success') await this.adCampaigns.markPaid(event.data.reference, event.data.amount);
       else if (event.event === 'charge.failed') await this.adCampaigns.markFailed(event.data.reference);

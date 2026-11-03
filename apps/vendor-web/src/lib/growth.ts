@@ -1,5 +1,5 @@
 // Types for the Phase 4 growth API: content studio and leads. Posting to
-// Instagram/Facebook/TikTok is manual until those platforms approve Scalio.
+// Instagram/Facebook/TikTok is manual until those platforms approve Veno.
 
 export type ContentPlatform = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp'
 export type PostStatus = 'draft' | 'planned' | 'posted'

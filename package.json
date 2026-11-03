@@ -1,5 +1,5 @@
 {
-  "name": "scalio",
+  "name": "veno",
   "private": true,
   "workspaces": [
     "apps/*",

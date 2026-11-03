@@ -36,7 +36,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Money</h1>
-          <p className="text-sm text-gray-500 mt-1">What came in and went out. Scalio records it; the money stays in your bank.</p>
+          <p className="text-sm text-gray-500 mt-1">What came in and went out. Veno records it; the money stays in your bank.</p>
         </div>
         <div className="flex gap-2">
           {[0, -1].map((o) => (

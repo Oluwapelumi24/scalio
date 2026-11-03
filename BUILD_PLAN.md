@@ -1,4 +1,4 @@
-# Scalio Build Plan
+# Veno Build Plan
 
 Whitelabel booking app (NestJS backend, Expo mobile, vendor-web admin, shared-types).
 Amounts are stored in kobo — assume Nigerian market; payments via **Paystack**.
@@ -76,7 +76,7 @@ Update this file as phases complete (check items off, add notes on decisions/dev
 
 ## Phase 4 — Vendor-web
 - [x] Scaffold the app — Next.js (App Router, TypeScript, Tailwind, ESLint),
-      chosen for admin-dashboard ergonomics and to share `@scalio/shared-types`.
+      chosen for admin-dashboard ergonomics and to share `@veno/shared-types`.
       Dev server runs on port 3001 (3000 is the backend API).
 - [x] Vendor auth (backend) — per-staff login via the existing `staff` table
       (reuses its `owner`/`manager`/`practitioner`/`front_desk` role enum),

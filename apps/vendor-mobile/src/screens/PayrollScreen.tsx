@@ -21,7 +21,7 @@ const STATE = (colors: Colors): Record<string, { icon: FeatherName; bg: string; 
   not_set_up: { icon: 'calendar', bg: colors.accentLight, fg: colors.accent, title: 'Set your pay day' },});
 
 /**
- * Scalio works out who to pay and when; the owner pays from their own bank and
+ * Veno works out who to pay and when; the owner pays from their own bank and
  * marks each person paid. Starting payroll is only possible inside the salary
  * window, and the reason is always shown when it isn't.
  */

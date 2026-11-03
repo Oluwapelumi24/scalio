@@ -1,4 +1,4 @@
-import type { Service } from '@scalio/shared-types';
+import type { Service } from '@veno/shared-types';
 
 export const PAYMENT_MODE_PRIORITY = {
   pay_on_arrival: 0,

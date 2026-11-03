@@ -130,7 +130,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
     fill(r.data); setFlash('Marked as posted.')
   })
 
-  /** Platforms this post goes to that Scalio can publish to itself. */
+  /** Platforms this post goes to that Veno can publish to itself. */
   const autoTargets = studio.platforms
     .filter((p) => p.publishing === 'automatic' && platforms.includes(p.id))
     .map((p) => p.id as 'facebook' | 'instagram')
@@ -169,7 +169,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
   })
 
   const remove = () => {
-    if (!confirm('Delete this post? The caption and photo will be removed from Scalio.')) return
+    if (!confirm('Delete this post? The caption and photo will be removed from Veno.')) return
     void run('save', async () => {
       const r = await deletePost(post!.id)
       if (r.error) throw new Error(r.error)
@@ -285,7 +285,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
             <h2 className="text-base font-semibold text-gray-900">Publish</h2>
             {autoTargets.length > 0 ? (
               <>
-                <p className="text-sm text-gray-700">Scalio can post this to {targetNames} for you.</p>
+                <p className="text-sm text-gray-700">Veno can post this to {targetNames} for you.</p>
                 <button type="button" onClick={() => publish('now')} disabled={!caption.trim() || busy !== null}
                   className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
                   {busy === 'posted' ? 'Sending…' : 'Publish now'}
@@ -294,17 +294,17 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
               </>
             ) : studio.platforms.some((p) => p.canConnect) ? (
               <p className="text-sm text-gray-700">
-                <Link href="/dashboard/content/connections" className="font-medium text-indigo-600">Connect Facebook and Instagram</Link> to publish and schedule straight from Scalio.
+                <Link href="/dashboard/content/connections" className="font-medium text-indigo-600">Connect Facebook and Instagram</Link> to publish and schedule straight from Veno.
               </p>
             ) : (
-              <p className="text-sm text-gray-500">Publishing from Scalio isn’t available yet. Copy the caption from the preview and post from each app.</p>
+              <p className="text-sm text-gray-500">Publishing from Veno isn’t available yet. Copy the caption from the preview and post from each app.</p>
             )}
           </section>
         )}
 
         {post && post.publications.length > 0 && (
           <section className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-            <h2 className="text-base font-semibold text-gray-900">Sent from Scalio</h2>
+            <h2 className="text-base font-semibold text-gray-900">Sent from Veno</h2>
             {post.publications.map((pub) => (
               <div key={pub.id} className="text-sm">
                 <p className="font-medium text-gray-900">

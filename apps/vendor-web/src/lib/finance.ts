@@ -1,4 +1,4 @@
-// Types for the Phase 3 money API. Scalio never holds funds — online payments
+// Types for the Phase 3 money API. Veno never holds funds — online payments
 // settle to the vendor's bank, salaries are paid from the owner's bank.
 
 export interface Bank { name: string; code: string }

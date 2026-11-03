@@ -55,7 +55,7 @@ export function SignInScreen({ navigation, route }: Props) {
               <Button label="Sign in" onPress={() => void handleContinue()} loading={submitting} disabled={!isValid} />
               <Pressable onPress={() => navigation.replace('SignUp', route.params)} accessibilityRole="button" hitSlop={8}>
                 <Text style={styles.foot}>
-                  New to Scalio? <Text style={styles.link}>Create an account</Text>
+                  New to Veno? <Text style={styles.link}>Create an account</Text>
                 </Text>
               </Pressable>
             </View>

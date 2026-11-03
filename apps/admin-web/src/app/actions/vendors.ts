@@ -46,6 +46,7 @@ export async function updateVendorAction(vendorId: string, _prev: ActionState, f
         logoUrl: formData.get('logoUrl') || undefined,
         themeColor: formData.get('themeColor') || undefined,
         featured: formData.has('featured') ? formData.get('featured') === 'true' : undefined,
+        slotIntervalMinutes: formData.get('slotIntervalMinutes') ? Number(formData.get('slotIntervalMinutes')) : undefined,
       }),
     })
   } catch (err) {

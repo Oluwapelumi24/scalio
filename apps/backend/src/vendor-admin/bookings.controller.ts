@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Post,
@@ -61,6 +62,15 @@ export class VendorBookingsController {
       from: parseDate(from),
       to: parseDate(to),
     });
+  }
+
+  /** One booking, e.g. opened from a notification. Another business's booking (or, for a practitioner, a colleague's) 404s. */
+  @Get(':id')
+  async one(@CurrentStaff() staff: VendorPrincipal, @Param('id', ParseUUIDPipe) id: string) {
+    const staffIdFilter = staff.role === 'practitioner' ? staff.staffId : undefined;
+    const [booking] = await this.bookingService.listForVendor(staff.vendorId, undefined, staffIdFilter, { id });
+    if (!booking) throw new NotFoundException('Booking not found');
+    return booking;
   }
 
   /** Books a client in from the app: a walk-in, a phone call, a DM. Practitioners can only book themselves. */

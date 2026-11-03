@@ -37,7 +37,7 @@ const pretty = (isoDate: string) =>
 
 export function salaryWindow(schedule: PayrollScheduleInput | null, today: string): SalaryWindow {
   if (!schedule) {
-    return { state: 'not_set_up', period: null, payDate: null, opensOn: null, closesOn: null, reason: 'Set a pay day to start paying salaries from Scalio.' };
+    return { state: 'not_set_up', period: null, payDate: null, opensOn: null, closesOn: null, reason: 'Set a pay day to start paying salaries from Veno.' };
   }
   const [y, m] = today.split('-').map(Number);
   // Windows can spill across month ends, so check last month's, this month's and next month's.

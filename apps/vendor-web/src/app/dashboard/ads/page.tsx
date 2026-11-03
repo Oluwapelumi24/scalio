@@ -80,7 +80,7 @@ export default async function AdsPage() {
       <div className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-gray-600">
         <p className="font-semibold text-gray-900">Two ways to pay for ads</p>
         <p>
-          Pay with Scalio by card, bank transfer or USSD in naira — no dollar card needed. Or, if you already have a Meta ad
+          Pay with Veno by card, bank transfer or USSD in naira — no dollar card needed. Or, if you already have a Meta ad
           account with a card Meta accepts, Meta can charge that card directly. You’ll choose when you launch an ad.
         </p>
       </div>

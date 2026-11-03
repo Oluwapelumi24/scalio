@@ -97,7 +97,7 @@ export function AdsChecklist({ steps, canManage }: { steps: AdsSetupStep[]; canM
         <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
           <p className="text-sm font-semibold text-gray-900">Choose your ad account</p>
           {accounts.length === 0 ? (
-            <p className="text-sm text-gray-500">Your Facebook login has no ad accounts. That’s fine — skip this and pay for ads with Scalio when you launch one.</p>
+            <p className="text-sm text-gray-500">Your Facebook login has no ad accounts. That’s fine — skip this and pay for ads with Veno when you launch one.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {accounts.map((a) => (

@@ -71,7 +71,7 @@ export interface ModuleDef {
   basePriority: number;
   /** Roles allowed to see the module at all (a permission, not a preference). Omitted = everyone. */
   roles?: readonly StaffRole[];
-  /** `coming_soon` modules describe a feature Scalio hasn't shipped — never actionable. */
+  /** `coming_soon` modules describe a feature Veno hasn't shipped — never actionable. */
   status?: 'available' | 'coming_soon';
 }
 

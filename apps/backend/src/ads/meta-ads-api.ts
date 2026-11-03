@@ -115,9 +115,9 @@ export class MetaAdsApi {
     return r.currency;
   }
 
-  // ── Route 1: Scalio's business advertising for the vendor's Page ──────────
+  // ── Route 1: Veno's business advertising for the vendor's Page ──────────
 
-  /** Asks the Page to let Scalio's business advertise for it; a Page admin approves it in Facebook. */
+  /** Asks the Page to let Veno's business advertise for it; a Page admin approves it in Facebook. */
   async requestPageAccess(businessId: string, token: string, pageId: string): Promise<void> {
     await this.graph.request('POST', `/${businessId}/client_pages`, { page_id: pageId, permitted_tasks: ['ADVERTISE', 'ANALYZE'] }, token);
   }

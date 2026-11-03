@@ -74,14 +74,14 @@ export default function AcceptInvitePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Scalio</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Veno</h1>
           <p className="text-sm text-gray-500 mt-1">Vendor Portal</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Set your password</h2>
           <p className="text-sm text-gray-500 mb-6">
-            You&apos;ve been invited to the Scalio vendor portal. Choose a password to activate your account.
+            You&apos;ve been invited to the Veno vendor portal. Choose a password to activate your account.
           </p>
 
           <Suspense fallback={<div className="h-40 animate-pulse bg-gray-100 rounded-lg" />}>

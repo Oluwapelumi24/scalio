@@ -2,7 +2,7 @@ import type { AdCreative, AdDestination, AdObjective, AdObjectiveExtras, AdPayme
 
 // The rules behind the campaign builder (ADS_MANAGER_PLAN.md §2b–2c, §3, §5):
 // objectives and where they can send people, pricing, the schedule, and how a
-// Scalio campaign maps onto Meta's fields. Pure, so it's all unit-tested.
+// Veno campaign maps onto Meta's fields. Pure, so it's all unit-tested.
 
 // ── Objectives ──────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ export const OBJECTIVES: Record<AdObjective, ObjectiveInfo> = {
   },
   traffic: {
     id: 'traffic', meta: 'OUTCOME_TRAFFIC', label: 'Visits to your booking page', simple: false,
-    blurb: 'Send people to your Scalio booking page or website.',
+    blurb: 'Send people to your Veno booking page or website.',
     bestFor: 'When people can book or buy online.',
     destinations: ['website'],
   },
@@ -72,7 +72,7 @@ export const MAX_DAILY_BUDGET_KOBO = 50_000_000;
 export const DEFAULT_DAILY_BUDGET_KOBO = 500_000;
 
 export interface FeeSettings {
-  /** Scalio's fee as a percent of ad spend. */
+  /** Veno's fee as a percent of ad spend. */
   percent: number;
   minKobo: number;
 }
@@ -86,7 +86,7 @@ export interface Quote {
   feeKobo: number;
   /** Ad credit applied (route 1 only). */
   creditUsedKobo: number;
-  /** Paid to Scalio now, through Paystack. */
+  /** Paid to Veno now, through Paystack. */
   dueNowKobo: number;
   /** Charged by Meta to the vendor's own card (route 2 only). */
   metaChargesKobo: number;
@@ -151,7 +151,7 @@ export function validateDraft(d: CampaignDraft, now: Date): string[] {
   if (d.mode === 'simple' && !o.simple) p.push('Switch to advanced mode to use this goal.');
   if (!o.destinations.includes(d.destination)) p.push(`“${o.label}” ads can’t send people to ${DESTINATION_LABELS[d.destination]}.`);
   if (d.dailyBudgetKobo < MIN_DAILY_BUDGET_KOBO) p.push('The daily budget must be at least ₦2,000 — below that, Meta barely shows the ad.');
-  if (d.dailyBudgetKobo > MAX_DAILY_BUDGET_KOBO) p.push('That daily budget is above Scalio’s limit of ₦500,000.');
+  if (d.dailyBudgetKobo > MAX_DAILY_BUDGET_KOBO) p.push('That daily budget is above Veno’s limit of ₦500,000.');
   if (d.endAt.getTime() <= d.startAt.getTime()) p.push('The end date must be after the start date.');
   if (d.startAt.getTime() < now.getTime() - 60 * 60 * 1000) p.push('The start date is in the past.');
   if (runDays(d.startAt, d.endAt) > MAX_RUN_DAYS) p.push('Ads can run for up to 90 days at a time — extend it later if it’s working.');
@@ -252,7 +252,7 @@ export function adSetParams(
   const params: Record<string, unknown> = {
     name: `${c.name} – audience`,
     campaign_id: campaignId,
-    // Meta takes NGN budgets in kobo (minor units, offset 100) — the same unit Scalio stores.
+    // Meta takes NGN budgets in kobo (minor units, offset 100) — the same unit Veno stores.
     lifetime_budget: lifetimeBudgetKobo,
     start_time: c.startAt.toISOString(),
     end_time: c.endAt.toISOString(),
@@ -310,7 +310,7 @@ export function creativeParams(
   };
 }
 
-// ── Meta status → Scalio status ─────────────────────────────────────────────
+// ── Meta status → Veno status ─────────────────────────────────────────────
 
 export function statusFromMeta(effectiveStatus: string, endAt: Date, now: Date): 'in_review' | 'active' | 'paused' | 'completed' | 'rejected' {
   if (effectiveStatus === 'DISAPPROVED') return 'rejected';
@@ -322,7 +322,7 @@ export function statusFromMeta(effectiveStatus: string, endAt: Date, now: Date):
 
 /**
  * Route 1: budget paid for but not spent comes back as ad credit, with the VAT
- * collected on it (Meta only charges VAT on what it spends). Scalio's fee stays.
+ * collected on it (Meta only charges VAT on what it spends). Veno's fee stays.
  */
 export function unspentCreditKobo(paidSpendKobo: number, spentKobo: number): number {
   const unspent = Math.max(0, paidSpendKobo - spentKobo);

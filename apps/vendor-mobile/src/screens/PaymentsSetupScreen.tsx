@@ -13,7 +13,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PaymentsSetup'>;
 
 /**
  * Where customers' online payments go. Paystack settles them straight to this
- * account — Scalio never holds the money. Only the owner can change it.
+ * account — Veno never holds the money. Only the owner can change it.
  */
 export function PaymentsSetupScreen({ navigation }: Props) {
   const { colors } = useTheme();
@@ -91,7 +91,7 @@ export function PaymentsSetupScreen({ navigation }: Props) {
           <View style={styles.note}>
             <Feather name="shield" size={16} color={colors.accent} />
             <Text style={styles.noteText}>
-              Paystack pays customers' money straight into your bank account. Scalio never holds it.
+              Paystack pays customers' money straight into your bank account. Veno never holds it.
             </Text>
           </View>
 

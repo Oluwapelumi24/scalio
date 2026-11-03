@@ -165,16 +165,21 @@ export function PageHeader({
   eyebrow?: ReactNode;
 }) {
   const styles = useStyles();
-  const hasBar = onBack || onClose || actions;
+  // Without a back button, the actions sit on the title's line instead of a bar above it.
+  const inline = !onBack && !eyebrow && !!title;
+  const hasBar = !inline && (onBack || onClose || actions);
+  const trailing = actions || onClose ? (
+    <View style={styles.headerActions}>
+      {actions}
+      {onClose ? <IconButton icon="x" label="Close" onPress={onClose} /> : null}
+    </View>
+  ) : null;
   return (
-    <View style={styles.pageHeader}>
+    <View style={[styles.pageHeader, inline && trailing ? styles.inlineHeader : null]}>
       {hasBar ? (
         <View style={styles.headerBar}>
           {onBack ? <IconButton icon="arrow-left" label="Back" onPress={onBack} /> : <View />}
-          <View style={styles.headerActions}>
-            {actions}
-            {onClose ? <IconButton icon="x" label="Close" onPress={onClose} /> : null}
-          </View>
+          {trailing}
         </View>
       ) : null}
       {eyebrow}
@@ -182,6 +187,7 @@ export function PageHeader({
         <View style={styles.titleRow}>
           <Text style={styles.pageTitle} accessibilityRole="header">{title}</Text>
           {count != null ? <CountBadge count={count} /> : null}
+          {inline && trailing ? <View style={styles.titleActions}>{trailing}</View> : null}
         </View>
       ) : null}
       {description ? (
@@ -672,6 +678,8 @@ const useStyles = makeStyles((colors) => ({
   headerBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginLeft: -10, minHeight: 48 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  titleActions: { marginLeft: 'auto', marginVertical: -4 },
+  inlineHeader: { paddingTop: 16 },
   pageTitle: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.6, color: colors.text, flexShrink: 1 },
   pageDescription: { fontSize: 14, lineHeight: 19, color: colors.textSecondary },
   link: { color: colors.link, fontWeight: '500' },

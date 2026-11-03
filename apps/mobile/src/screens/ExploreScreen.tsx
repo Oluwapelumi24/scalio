@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Vendor } from '@scalio/shared-types';
+import type { Vendor } from '@veno/shared-types';
 import type { MainTabScreenProps } from '../navigation/types';
 import { listVendors } from '../lib/api';
 import { getCategoryMeta, getVendorAccentColor, getVendorImageSource } from '../lib/categories';

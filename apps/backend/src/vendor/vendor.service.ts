@@ -70,7 +70,7 @@ export class VendorService {
       .from(vendors)
       .where(and(eq(vendors.slug, slug), eq(vendors.approvalStatus, 'approved')));
     if (!vendor) {
-      throw new NotFoundException('This business is not on Scalio, or is not taking bookings yet');
+      throw new NotFoundException('This business is not on Veno, or is not taking bookings yet');
     }
 
     const [serviceRows, hourRows] = await Promise.all([
@@ -116,7 +116,7 @@ export class VendorService {
    * break and time off.
    */
   async getAvailability(vendorId: string, query: AvailabilityQuery) {
-    await this.getById(vendorId);
+    const vendor = await this.getById(vendorId);
 
     const durationMinutes = await this.resolveDurationMinutes(
       vendorId,
@@ -169,7 +169,7 @@ export class VendorService {
         return { startMinutes, endMinutes: startMinutes + row.durationMinutes };
       });
 
-    const offsets = computeAvailableSlotOffsets(durationMinutes, [...bookedIntervals, ...staffBreaks], hours);
+    const offsets = computeAvailableSlotOffsets(durationMinutes, [...bookedIntervals, ...staffBreaks], hours, vendor.slotIntervalMinutes);
 
     return {
       date: query.date,

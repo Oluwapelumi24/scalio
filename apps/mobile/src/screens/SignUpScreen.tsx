@@ -104,8 +104,8 @@ export function SignUpScreen({ navigation, route }: Props) {
             helper="Use 8 or more characters."
             secureTextEntry
             autoCapitalize="none"
-            autoComplete="password-new"
-            textContentType="newPassword"
+            autoComplete="password"
+            textContentType="password"
           />
         </View>
       </Page>

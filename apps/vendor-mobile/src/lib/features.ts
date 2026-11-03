@@ -45,7 +45,7 @@ export const FEATURES: Record<FeatureKey, Feature> = {
     name: 'Content studio',
     icon: 'edit-3',
     headline: 'Post every week without the blank page',
-    body: 'Add a photo and a few words. Scalio writes the caption and hashtags, and you plan when it goes out.',
+    body: 'Add a photo and a few words. Veno writes the caption and hashtags, and you plan when it goes out.',
     bullets: [
       'Captions and hashtags written for your business',
       'Plan posts for the days you want them out',
@@ -60,11 +60,11 @@ export const FEATURES: Record<FeatureKey, Feature> = {
     eyebrow: 'included',
     name: 'Social accounts',
     icon: 'share-2',
-    headline: 'Publish to Instagram and Facebook from Scalio',
+    headline: 'Publish to Instagram and Facebook from Veno',
     body: 'Connect your pages once, then post, run ads and answer messages without switching apps.',
     bullets: [
       'Post straight to your Instagram and Facebook pages',
-      'Messages from both arrive in your Scalio inbox',
+      'Messages from both arrive in your Veno inbox',
       'Needed for ads that bring in bookings',
     ],
     cta: 'Connect accounts',
@@ -125,7 +125,7 @@ export const FEATURES: Record<FeatureKey, Feature> = {
     name: 'Payroll',
     icon: 'credit-card',
     headline: 'Pay your team on time, every month',
-    body: 'Set a pay day and salaries once. Scalio reminds you when payroll opens and keeps a record of every payout.',
+    body: 'Set a pay day and salaries once. Veno reminds you when payroll opens and keeps a record of every payout.',
     bullets: [
       'Salaries and bank details for each team member',
       'A reminder when it is time to pay',

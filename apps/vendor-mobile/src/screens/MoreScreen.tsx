@@ -79,7 +79,7 @@ export function MoreScreen({ navigation }: Props) {
               trailing={<Feather name="share" size={20} color={colors.text} />}
               onPress={() => {
                 recordModuleUsage('share_booking_link');
-                void Share.share({ message: `Book an appointment with us on Scalio: ${setup.link}` });
+                void Share.share({ message: `Book an appointment with us on Veno: ${setup.link}` });
               }}
             />
           ) : null}

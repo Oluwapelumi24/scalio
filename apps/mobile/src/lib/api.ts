@@ -1,4 +1,4 @@
-import type { Booking, Service, Vendor } from '@scalio/shared-types';
+import type { Booking, Service, Vendor } from '@veno/shared-types';
 
 // Points at the local NestJS backend during development. Move to app config /
 // environment-based URLs once we have staging and production API hosts.

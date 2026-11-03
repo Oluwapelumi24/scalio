@@ -11,21 +11,21 @@ const targeting: AdTargeting = {
   interests: [{ id: '6003', name: 'Hairstyling' }], placements: 'automatic',
 };
 const draft = (over: Partial<CampaignDraft> = {}): CampaignDraft => ({
-  name: 'Amaka – chats', mode: 'simple', objective: 'engagement', destination: 'whatsapp', route: 'scalio',
+  name: 'Amaka – chats', mode: 'simple', objective: 'engagement', destination: 'whatsapp', route: 'veno',
   dailyBudgetKobo: 500_000, ...defaultSchedule(now), targeting,
   creative: { mediaId: 'm1', primaryText: 'Fresh braids this weekend!', headline: 'Book Amaka', description: null, link: null, welcomeMessage: 'Hi 👋', iceBreakers: ['Prices?'] },
   extras: {}, ...over,
 });
 
 describe('quote', () => {
-  it('matches the plan’s example: ₦5,000 × 7 days, paid through Scalio', () => {
-    expect(quote({ dailyBudgetKobo: 500_000, days: 7, route: 'scalio', fee })).toEqual({
-      route: 'scalio', days: 7, dailyBudgetKobo: 500_000, spendKobo: 3_500_000, vatKobo: 262_500, feeKobo: 350_000,
+  it('matches the plan’s example: ₦5,000 × 7 days, paid through Veno', () => {
+    expect(quote({ dailyBudgetKobo: 500_000, days: 7, route: 'veno', fee })).toEqual({
+      route: 'veno', days: 7, dailyBudgetKobo: 500_000, spendKobo: 3_500_000, vatKobo: 262_500, feeKobo: 350_000,
       creditUsedKobo: 0, dueNowKobo: 4_112_500, metaChargesKobo: 0,
     });
   });
 
-  it('charges only Scalio’s fee when Meta bills the vendor’s own card', () => {
+  it('charges only Veno’s fee when Meta bills the vendor’s own card', () => {
     const q = quote({ dailyBudgetKobo: 500_000, days: 7, route: 'own_meta', fee, creditKobo: 999_999 });
     expect(q.dueNowKobo).toBe(350_000);
     expect(q.metaChargesKobo).toBe(3_762_500);
@@ -33,8 +33,8 @@ describe('quote', () => {
   });
 
   it('applies the minimum fee and uses ad credit up to the total', () => {
-    expect(quote({ dailyBudgetKobo: 200_000, days: 3, route: 'scalio', fee }).feeKobo).toBe(100_000);
-    const covered = quote({ dailyBudgetKobo: 200_000, days: 1, route: 'scalio', fee, creditKobo: 10_000_000 });
+    expect(quote({ dailyBudgetKobo: 200_000, days: 3, route: 'veno', fee }).feeKobo).toBe(100_000);
+    const covered = quote({ dailyBudgetKobo: 200_000, days: 1, route: 'veno', fee, creditKobo: 10_000_000 });
     expect(covered.dueNowKobo).toBe(0);
     expect(covered.creditUsedKobo).toBe(200_000 + 15_000 + 100_000);
   });
@@ -100,7 +100,7 @@ describe('Meta mapping', () => {
   });
 
   it('puts the welcome message and quick questions in chat ads', () => {
-    const c = creativeParams(draft(), { pageId: 'p1', instagramUserId: null }, 'hash1', 'https://scalio.ng/book/amaka');
+    const c = creativeParams(draft(), { pageId: 'p1', instagramUserId: null }, 'hash1', 'https://veno.ng/book/amaka');
     const link = (c.object_story_spec as { link_data: Record<string, unknown> }).link_data;
     expect(link).toMatchObject({ image_hash: 'hash1', call_to_action: { type: 'WHATSAPP_MESSAGE' } });
     expect(JSON.parse(link.page_welcome_message as string).text_format.message.ice_breakers).toEqual([{ title: 'Prices?', response: '' }]);

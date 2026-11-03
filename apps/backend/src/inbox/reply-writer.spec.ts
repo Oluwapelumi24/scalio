@@ -7,7 +7,7 @@ const ctx: BusinessContext = {
     { name: 'Knotless braids', priceKobo: 1_500_000, durationMinutes: 240 },
   ],
   hours: [{ dayOfWeek: 6, opensAtMinutes: 9 * 60, closesAtMinutes: 18 * 60 + 30 }],
-  bookingLink: 'https://scalio.ng/book/glow',
+  bookingLink: 'https://veno.ng/book/glow',
   faq: [
     { question: 'Do you do home service?', answer: 'Yes, for ₦5,000 extra within Ikeja.' },
     { question: 'Cancellation policy?', answer: '[Your cancellation policy]' },
@@ -20,7 +20,7 @@ describe('buildBusinessContext', () => {
     expect(text.indexOf('Knotless braids: ₦15,000')).toBeLessThan(text.indexOf('Wash and set: ₦5,000'));
     expect(text).toContain('Saturday: 9am–6:30pm');
     expect(text).toContain('Monday: closed');
-    expect(text).toContain('Booking link: https://scalio.ng/book/glow');
+    expect(text).toContain('Booking link: https://veno.ng/book/glow');
   });
 
   it('leaves out FAQ answers that are still placeholders', () => {

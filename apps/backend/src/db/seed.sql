@@ -4,7 +4,7 @@
 -- Idempotent: vendors use ON CONFLICT (slug) DO NOTHING, services use a
 -- NOT EXISTS guard keyed on (vendor_id, name).
 --
--- Usage: psql -d scalio -f apps/backend/src/db/seed.sql
+-- Usage: psql -d veno -f apps/backend/src/db/seed.sql
 
 -- Backfill images/visit cadence on the existing demo vendors
 UPDATE vendors SET logo_url = 'https://picsum.photos/seed/glow-salon/600/400', average_days_between_visits = 21

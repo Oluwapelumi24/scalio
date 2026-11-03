@@ -2,7 +2,7 @@ import { boolean, date, index, integer, jsonb, pgTable, text, timestamp, unique,
 import { bookings } from './bookings';
 import { staff, vendors } from './vendors';
 
-// Phase 3 money model. Scalio never holds funds: customer payments settle to the
+// Phase 3 money model. Veno never holds funds: customer payments settle to the
 // vendor's own bank through their Paystack subaccount, and salaries are paid by
 // the owner from their own bank. These tables record and reconcile that money.
 

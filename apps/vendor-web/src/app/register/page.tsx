@@ -11,7 +11,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Scalio</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Veno</h1>
           <p className="text-sm text-gray-500 mt-1">Register your business</p>
         </div>
 

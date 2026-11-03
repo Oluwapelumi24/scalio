@@ -75,7 +75,10 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
             accessibilityState={{ selected: focused }}
             accessibilityLabel={LABELS[name]}
           >
-            <Feather name={ICONS[name]!} size={28} color={color} />
+            <Feather name={ICONS[name]!} size={24} color={color} />
+            <Text style={[styles.label, { color }, focused && styles.labelFocused]} numberOfLines={1}>
+              {LABELS[name]}
+            </Text>
           </Pressable>
         );
       })}
@@ -108,7 +111,7 @@ function CreateSheet({ visible, onClose }: { visible: boolean; onClose: () => vo
       onPress: () => {
         if (!setup?.link) return;
         recordModuleUsage('share_booking_link');
-        void Share.share({ message: `Book an appointment with us on Scalio: ${setup.link}` });
+        void Share.share({ message: `Book an appointment with us on Veno: ${setup.link}` });
       },
       show: !!setup?.link,
     },
@@ -163,7 +166,9 @@ const useStyles = makeStyles((colors) => ({
     flexDirection: 'row', alignItems: 'center', paddingTop: 10,
     backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border,
   },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', height: 52 },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', height: 52, gap: 4 },
+  label: { fontSize: 10, lineHeight: 12, fontWeight: '500' },
+  labelFocused: { fontWeight: '700' },
   plus: { width: 72, height: 50, borderRadius: 25, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
 
   overlay: { flex: 1, backgroundColor: colors.overlay },

@@ -5,8 +5,8 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 /** The small page Meta's login returns to. Works the same whether it was opened from the app or the website. */
 export function renderConnectPage(o: ConnectOutcome): string {
   const back = o.returnUrl
-    ? `<a class="btn" href="${esc(o.returnUrl)}">Back to Scalio</a>`
-    : '<p class="hint">You can close this page and go back to the Scalio app.</p>';
+    ? `<a class="btn" href="${esc(o.returnUrl)}">Back to Veno</a>`
+    : '<p class="hint">You can close this page and go back to the Veno app.</p>';
   const choices = o.kind === 'choose' && o.pages && o.pendingId
     ? `<form method="post" action="/social/meta/choose">
         <input type="hidden" name="pendingId" value="${esc(o.pendingId)}">
@@ -16,7 +16,7 @@ export function renderConnectPage(o: ConnectOutcome): string {
       </form>`
     : back;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(o.title)} · Scalio</title>
+<title>${esc(o.title)} · Veno</title>
 <style>
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6fb;color:#0a0a0a;margin:0;padding:48px 16px}
   main{max-width:420px;margin:0 auto;background:#fff;border:1px solid #dce3f0;border-radius:14px;padding:28px}

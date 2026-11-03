@@ -47,6 +47,7 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { HubScreen } from '../screens/HubScreen';
 import { FeatureIntroScreen } from '../screens/FeatureIntroScreen';
 import { SetupScreen } from '../screens/SetupScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { NewBookingScreen } from '../screens/NewBookingScreen';
 import { loadSession, onSessionExpired } from '../lib/session';
 import { useTheme } from '../theme';
@@ -128,6 +129,7 @@ export function RootNavigator() {
         <Stack.Screen name="Bookings" component={BookingsScreen} />
         <Stack.Screen name="Dashboard" component={HomeScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Hub" component={HubScreen} />
         <Stack.Screen name="FeatureIntro" component={FeatureIntroScreen} />
         <Stack.Screen name="Setup" component={SetupScreen} />

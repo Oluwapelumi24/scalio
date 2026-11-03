@@ -55,7 +55,7 @@ export function InboxSettingsForm({ settings: initial }: { settings: InboxSettin
   return (
     <div className="space-y-6">
       {!settings.aiAvailable && (
-        <p className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-gray-600">AI replies aren’t switched on in Scalio yet. You can still set up your FAQ.</p>
+        <p className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-gray-600">AI replies aren’t switched on in Veno yet. You can still set up your FAQ.</p>
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
 

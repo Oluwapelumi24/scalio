@@ -9,6 +9,25 @@ export type SetupState = HomeResponse['bookings'] & {
 
 let last: SetupState | null = null;
 
+/** The steps on the Setup screen, in the same order, as short names. */
+const STEPS: { name: string; done: (s: SetupState) => boolean }[] = [
+  { name: 'Add your services', done: (s) => s.setup.services },
+  { name: 'Set opening hours', done: (s) => s.setup.hours },
+  { name: 'Take payments online', done: (s) => s.setup.payments },
+  { name: 'Share your booking link', done: (s) => s.total > 0 },
+];
+
+/** How far through setup the business is, for the "Continue setup" bar. */
+export function setupProgress(s: SetupState): { done: number; total: number; left: number; next: string | null } {
+  const done = STEPS.filter((step) => step.done(s)).length;
+  return {
+    done,
+    total: STEPS.length,
+    left: STEPS.length - done,
+    next: STEPS.find((step) => !step.done(s))?.name ?? null,
+  };
+}
+
 function toState(b: HomeResponse['bookings']): SetupState {
   return { ...b, ready: b.setup.services && b.setup.hours };
 }

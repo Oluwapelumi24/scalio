@@ -145,7 +145,7 @@ export function AvailabilityPicker({
           {/* Online booking from this page needs guest checkout, which isn't built yet.
               Say so plainly rather than offering a button that can't complete. */}
           <p className="mt-3 text-sm text-white/70">
-            Booking straight from this page is coming soon. For now, book in the Scalio app or contact {businessName}.
+            Booking straight from this page is coming soon. For now, book in the Veno app or contact {businessName}.
           </p>
         </div>
       )}

@@ -9,6 +9,7 @@ import {
 } from '../payments/paystack.service';
 import { FeedbackService } from '../feedback/feedback.service';
 import { PushService } from '../notifications/push.service';
+import { VendorNotificationsService } from '../vendor-notifications/vendor-notifications.service';
 import { SlotLockService } from './slot-lock.service';
 import { loadStaffDay } from '../staff-schedule/staff-day';
 import { fitsWorkingWindow, localIsoDate, minutesSinceMidnight, staffWorkingWindow } from '../vendor/availability';
@@ -52,6 +53,7 @@ export class BookingService {
     private readonly paystack: PaystackService,
     private readonly push: PushService,
     @Optional() private readonly feedback?: FeedbackService,
+    @Optional() private readonly vendorNotifications?: VendorNotificationsService,
   ) {}
 
   /**
@@ -72,6 +74,8 @@ export class BookingService {
     );
 
     const booking = await this.insertConfirmed({ ...input, customerId, totalPriceKobo });
+    // Only client-made bookings: staff already know about the ones they make.
+    await this.vendorNotifications?.notifyBooking(booking, 'booking_new');
     return { booking };
   }
 
@@ -113,16 +117,20 @@ export class BookingService {
     const name = input.newCustomer?.name.trim();
     if (!name) throw new BadRequestException('Add the client’s name, or pick an existing client.');
     const phone = input.newCustomer?.phone?.trim() || null;
-    if (phone) {
-      const [samePhone] = await this.db
-        .select({ id: customers.id })
-        .from(customers)
-        .where(and(eq(customers.vendorId, input.vendorId), eq(customers.phone, phone)));
-      if (samePhone) return samePhone.id;
+    if (!phone) throw new BadRequestException('Add the client’s phone number.');
+    const email = input.newCustomer?.email?.trim() || null;
+    const [samePhone] = await this.db
+      .select({ id: customers.id, email: customers.email })
+      .from(customers)
+      .where(and(eq(customers.vendorId, input.vendorId), eq(customers.phone, phone)));
+    if (samePhone) {
+      // A returning walk-in: keep their record, and fill in an email if we didn't have one.
+      if (email && !samePhone.email) await this.db.update(customers).set({ email, updatedAt: new Date() }).where(eq(customers.id, samePhone.id));
+      return samePhone.id;
     }
     const [created] = await this.db
       .insert(customers)
-      .values({ vendorId: input.vendorId, name, phone, email: input.newCustomer?.email?.trim() || null })
+      .values({ vendorId: input.vendorId, name, phone, email })
       .returning({ id: customers.id });
     return created.id;
   }
@@ -284,7 +292,7 @@ export class BookingService {
       }
     }
     // Online payments settle straight to the vendor's own bank via their Paystack
-    // subaccount. Without one, Scalio would be holding the money, so don't take it.
+    // subaccount. Without one, Veno would be holding the money, so don't take it.
     const subaccountCode = await this.paymentAccountFor(row.booking.vendorId);
     if (!subaccountCode) {
       throw new ConflictException(
@@ -401,6 +409,7 @@ export class BookingService {
       .set({ amountPaidKobo, updatedAt: new Date() })
       .where(eq(bookings.id, bookingId))
       .returning();
+    if (updated) await this.vendorNotifications?.notifyBooking(updated, 'payment_received', amountPaidKobo);
     return updated;
   }
 
@@ -443,8 +452,9 @@ export class BookingService {
    * Vendor-admin booking list, newest first — optionally narrowed by status,
    * staff member, or a time window (`from` inclusive, `to` exclusive) for the calendar.
    */
-  async listForVendor(vendorId: string, status?: BookingStatus, staffId?: string, range?: { from?: Date; to?: Date }) {
+  async listForVendor(vendorId: string, status?: BookingStatus, staffId?: string, range?: { from?: Date; to?: Date; id?: string }) {
     const conditions = [eq(bookings.vendorId, vendorId)];
+    if (range?.id) conditions.push(eq(bookings.id, range.id));
     if (status) conditions.push(eq(bookings.status, status));
     if (staffId) conditions.push(eq(bookings.staffId, staffId));
     if (range?.from) conditions.push(gte(bookings.scheduledAt, range.from));
@@ -577,6 +587,12 @@ export class BookingService {
 
     if (nextStatus === 'completed') {
       await this.feedback?.requestForBooking(updated.id);
+    }
+
+    if (nextStatus === 'cancelled_by_customer') {
+      await this.vendorNotifications?.notifyBooking(updated, 'booking_cancelled');
+    } else if (event === 'PAYMENT_SUCCEEDED' && extra.amountPaidKobo) {
+      await this.vendorNotifications?.notifyBooking(updated, 'payment_received', extra.amountPaidKobo);
     }
 
     if (nextStatus === 'confirmed') {

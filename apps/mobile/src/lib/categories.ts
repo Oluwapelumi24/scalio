@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import type { ImageSourcePropType } from 'react-native';
-import type { Vendor } from '@scalio/shared-types';
+import type { Vendor } from '@veno/shared-types';
 import { INTERESTS, type Interest } from './interests';
 
 type FeatherIconName = keyof typeof Feather.glyphMap;

@@ -134,6 +134,7 @@ export function createBooking(data: {
   customerId?: string;
   customerName?: string;
   customerPhone?: string;
+  customerEmail?: string;
   staffId?: string;
   serviceIds: string[];
   scheduledAt: string;
@@ -320,7 +321,7 @@ export function minutesToClock(m: number): string {
 }
 
 // ─── Money: payments, payroll, expenses ──────────────────────────────────────
-// Scalio never holds money: online payments settle to the vendor's own bank, and
+// Veno never holds money: online payments settle to the vendor's own bank, and
 // salaries are paid from the owner's bank, then recorded here.
 
 export interface Bank { name: string; code: string }
@@ -647,7 +648,7 @@ export function statusLabel(s: BookingStatus): string {
 
 // ─── Growth: content studio and leads ────────────────────────────────────────
 // Posting to Instagram/Facebook/TikTok is manual until those platforms approve
-// Scalio; the backend says so per platform in `manualReason`.
+// Veno; the backend says so per platform in `manualReason`.
 
 export type ContentPlatform = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp';
 export type PostStatus = 'draft' | 'planned' | 'posted';
@@ -931,7 +932,7 @@ export function draftInboxFaq(): Promise<{ faq: FaqEntry[] }> {
 
 export type AdObjective = 'awareness' | 'traffic' | 'engagement' | 'leads' | 'app_promotion' | 'sales';
 export type AdDestination = 'whatsapp' | 'messenger' | 'instagram_direct' | 'website' | 'app';
-export type AdPaymentRoute = 'scalio' | 'own_meta';
+export type AdPaymentRoute = 'veno' | 'own_meta';
 export type AdCampaignStatus = 'awaiting_payment' | 'launching' | 'in_review' | 'active' | 'paused' | 'completed' | 'rejected' | 'failed' | 'cancelled';
 
 export interface AdLocation { key: string; type: 'city' | 'region' | 'country'; name: string; radiusKm?: number }
@@ -956,7 +957,7 @@ export interface AdExtras { pixelId?: string; appId?: string; appStoreUrl?: stri
 
 export interface AdObjectiveOption { id: AdObjective; label: string; blurb: string; bestFor: string; destinations: AdDestination[]; simple: boolean }
 export interface AdRoutes {
-  scalio: { available: boolean; reason: string | null };
+  veno: { available: boolean; reason: string | null };
   own_meta: { available: boolean; reason: string | null; adAccountName: string | null; paymentMethodLabel: string | null };
 }
 
@@ -1231,4 +1232,43 @@ export function whatsappUrl(phone: string | null, text: string): string {
   const digits = (phone ?? '').replace(/\D/g, '');
   const intl = digits.startsWith('0') ? `234${digits.slice(1)}` : digits;
   return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
+}
+
+// ── Notifications ────────────────────────────────────────────────────────────
+
+export type VendorNotificationType = 'booking_new' | 'booking_cancelled' | 'payment_received' | 'review' | 'inbox_handoff';
+
+export interface VendorNotification {
+  id: string;
+  type: VendorNotificationType;
+  title: string;
+  body: string;
+  bookingId: string | null;
+  conversationId: string | null;
+  createdAt: string;
+  unread: boolean;
+}
+
+export function getNotifications(): Promise<{ unread: number; items: VendorNotification[] }> {
+  return req('GET', '/vendor-admin/notifications');
+}
+
+export function getUnreadNotificationCount(): Promise<{ unread: number }> {
+  return req('GET', '/vendor-admin/notifications/unread-count');
+}
+
+/** Everything up to now counts as seen, for this staff member only. */
+export function markNotificationsRead(): Promise<{ ok: true }> {
+  return req('POST', '/vendor-admin/notifications/read');
+}
+
+export function getBooking(id: string): Promise<VendorBooking> {
+  return req('GET', `/vendor-admin/bookings/${id}`);
+}
+
+// ── Booking settings ─────────────────────────────────────────────────────────
+
+/** The gap between bookable start times (set by Veno's admin, 30 min by default). */
+export function getBookingSettings(): Promise<{ slotIntervalMinutes: number }> {
+  return req('GET', '/vendor-admin/schedule/booking-settings');
 }

@@ -1,6 +1,6 @@
-# Scalio Platform Plan — from booking app to business operating system
+# Veno Platform Plan — from booking app to business operating system
 
-Scalio is moving from a vendor booking app to the place a small business runs
+Veno is moving from a vendor booking app to the place a small business runs
 everything: bookings, customers, staff, money, marketing and financing. This plan
 maps that direction onto **the code that exists today** and sequences the work so
 nothing that works now gets replaced.
@@ -28,7 +28,7 @@ two copies of its data.
 | Website | Marketing site + waitlist | Will host public booking pages (§4, Phase 1). |
 | Shared types | `packages/shared-types` (~80 lines: booking, customer, vendor) | Grows into the shared API contract. |
 
-(The `Scalio/` SwiftUI folder seen on the local machine is not part of the repo: it is git-ignored as iOS prebuild output and is an empty Xcode template.)
+(The `Veno/` SwiftUI folder seen on the local machine is not part of the repo: it is git-ignored as iOS prebuild output and is an empty Xcode template.)
 
 **Gaps the new direction needs filled:**
 
@@ -51,7 +51,7 @@ two copies of its data.
 | # | Decision | Blocks |
 |---|---|---|
 | D1 | ✅ **Decided:** 2.3% is the interest rate **per month** — 27.6% a year simple (12 × 2.3%), about 31.4% a year if it compounds monthly. Still to settle with the lender: flat on the original amount vs. on the reducing balance (changes the total repaid), and whether it is the same for every business. Never shown as guaranteed. | Phase 6 |
-| D2 | ✅ **Decided (2026-10-16):** Scalio never holds money. **Exception (2026-10-17, D13 in `ADS_MANAGER_PLAN.md`):** Scalio may receive vendors' prepaid ad spend and pay Meta for it, kept in a separate account (lawyer to confirm). Customer payments use **Paystack split payments** — each business gets a Paystack subaccount and Paystack settles to its own bank (`PLATFORM_COMMISSION_PERCENT` is Scalio's cut). Salaries use **option 1**: Scalio works out who to pay and when, the owner pays from their own bank and records it. A licensed banking partner (option 3, true wallet + transfers) can come later. Still to confirm: Paystack approves the split-payment setup; a fintech lawyer confirms no CBN licence is needed while non-custodial (NDPC registration is likely needed for the bank details we store). | Phase 3 |
+| D2 | ✅ **Decided (2026-10-16):** Veno never holds money. **Exception (2026-10-17, D13 in `ADS_MANAGER_PLAN.md`):** Veno may receive vendors' prepaid ad spend and pay Meta for it, kept in a separate account (lawyer to confirm). Customer payments use **Paystack split payments** — each business gets a Paystack subaccount and Paystack settles to its own bank (`PLATFORM_COMMISSION_PERCENT` is Veno's cut). Salaries use **option 1**: Veno works out who to pay and when, the owner pays from their own bank and records it. A licensed banking partner (option 3, true wallet + transfers) can come later. Still to confirm: Paystack approves the split-payment setup; a fintech lawyer confirms no CBN licence is needed while non-custodial (NDPC registration is likely needed for the bank details we store). | Phase 3 |
 | D3 | ✅ **Decided:** financing comes through a lending partner, who makes the credit decision and holds the licence. Partner still to be chosen. | Phase 6 |
 | D4 | ✅ **AI provider decided (2026-10-16): Claude** (`claude-opus-5-5`, backend only, `ANTHROPIC_API_KEY`). Still open: WhatsApp Business Solution Provider. | Phase 4 |
 | D5 | Business size: worked out from staff/branch counts (recommended) rather than a self-picked label. | Home, settings |
@@ -59,9 +59,9 @@ two copies of its data.
 | D8 | Vendor sign-in: add phone OTP + Google + Apple alongside email. SMS provider: **Mono** chosen, but Mono's site lists no SMS/OTP product (its products are Connect, DirectPay, DirectDebit, Disburse, Lookup, Prove) — **confirm** which Mono product sends the codes, or pick an SMS provider. Hide the provider behind an `SmsProvider` adapter so it can change. | Phase 1 |
 | D9 | Worth evaluating Mono for other parts of the plan: **Disburse** (staff payouts, D2), **Connect / Creditworthiness** (financing eligibility, Phase 6), **Lookup / Prove** (verifying staff payout accounts and vendor identity). | Phases 3, 6 |
 | D10 | **Meta setup (owner: you).** Create a Meta developer app (free), add Facebook Login for Business, set `META_APP_ID`/`META_APP_SECRET`/`PUBLIC_API_URL`, add `$PUBLIC_API_URL/social/meta/callback` as a redirect URI and the deauthorise/data-deletion URLs; complete business verification and app review for `pages_manage_posts`, `instagram_content_publish` etc. Needs a public HTTPS backend and a privacy policy URL. | Phase 4 publishing for all vendors |
-| D11 | ✅ **Decided (2026-10-16): post without sound for now.** Revisit later. **Trending sounds.** Instagram/Facebook/TikTok don't expose their licensed music through posting APIs. Options: (a) publish without sound; (b) send to the app as a draft to finish there (TikTok supports this; Instagram doesn't); (c) Scalio adds royalty-free music to a short video (needs video support + a licensed track library). | Phase 4 sound |
-| D12 | **Public rating.** Should customer ratings collected through Scalio update the star rating shown in the customer app (`vendors.rating`)? Existing values (e.g. 4.7 from 156) would be replaced, or need to be blended. Until decided, ratings stay private to the business. | Phase 5 public rating |
-| D13 | ✅ **Decided (2026-10-17):** Ads Manager offers two payment routes: "Pay with Scalio" (Scalio receives the money and funds Scalio-owned ad accounts) and the vendor's own Meta ad account and card. Full detail in `ADS_MANAGER_PLAN.md` §4. | Phase 4 Ads |
+| D11 | ✅ **Decided (2026-10-16): post without sound for now.** Revisit later. **Trending sounds.** Instagram/Facebook/TikTok don't expose their licensed music through posting APIs. Options: (a) publish without sound; (b) send to the app as a draft to finish there (TikTok supports this; Instagram doesn't); (c) Veno adds royalty-free music to a short video (needs video support + a licensed track library). | Phase 4 sound |
+| D12 | **Public rating.** Should customer ratings collected through Veno update the star rating shown in the customer app (`vendors.rating`)? Existing values (e.g. 4.7 from 156) would be replaced, or need to be blended. Until decided, ratings stay private to the business. | Phase 5 public rating |
+| D13 | ✅ **Decided (2026-10-17):** Ads Manager offers two payment routes: "Pay with Veno" (Veno receives the money and funds Veno-owned ad accounts) and the vendor's own Meta ad account and card. Full detail in `ADS_MANAGER_PLAN.md` §4. | Phase 4 Ads |
 
 **Start long-lead approvals now** (they run in parallel with Phases 1–3): Meta app
 review (Instagram/Facebook publishing, messaging, ads), TikTok Content Posting API,
@@ -156,14 +156,14 @@ Website
 ### Phase 3 — Finance: payments, salary windows, payroll (non-custodial — D2)
 
 - [x] Online payments settle straight to the business: payout account checked with the bank, Paystack subaccount created, bookings charged with the split. Server checks the amount against the booking price; businesses without an account can't take online payments.
-- [x] `ledger_entries` as the authoritative record of money in and out (booking payments, salaries, expenses), append-only with a dedupe key so repeats are safe. No balances — Scalio holds none.
+- [x] `ledger_entries` as the authoritative record of money in and out (booking payments, salaries, expenses), append-only with a dedupe key so repeats are safe. No balances — Veno holds none.
 - [x] Staff pay: monthly salary and bank account per person, name checked with the bank, account number encrypted (AES-256-GCM) and masked except on the transfer list.
 - [x] Salary schedule per business (pay day 1–28, opens 3 days before, closes 5 after, in the business timezone); unset/paused/closed → payroll can't start, with the reason and dates shown.
 - [x] `salary_runs` + `salary_payouts`: start once per month → transfer list → owner pays from their bank → mark each paid (optional bank reference) or skip. Home alert while people are still unpaid.
 - [x] Audit log of account changes, schedule changes, runs and every paid/skipped payout.
 - [x] Expenses and a monthly money summary (sales, received online, salaries, expenses, left over) on mobile and web.
 - [ ] Admin web: payout account and Paystack subaccount oversight.
-- [ ] Later, with a banking partner (option 3): wallet balances, transfers from Scalio, provider webhooks for transfer status, daily reconciliation.
+- [ ] Later, with a banking partner (option 3): wallet balances, transfers from Veno, provider webhooks for transfer status, daily reconciliation.
 
 ### Phase 4 — Growth: content, ads, leads (depends on D4 + platform approvals)
 
@@ -186,7 +186,7 @@ Built 2026-10-16 without the platform approvals: everything up to the moment of 
 
 - [x] Reports (owners/managers, mobile + web): sales by service/staff/day, bookings by status and weekday with cancellation and no-show rates, cash flow from the ledger, expenses by category, new customers by source, and returning / first-visit / overdue customers. Every group drills down to the records behind it; every figure carries a plain-language definition. *(Per-location waits on `business_locations`.)*
 - [x] Feedback after completed bookings: a private single-use rating link per visit (30 days), emailed when the customer has an email, or sent by the business on WhatsApp from the booking. Public page at website `/feedback/[token]`. Ratings feed staff performance; low ratings (≤2) raise "Unhappy customers to call back" until followed up.
-- [ ] Decide whether Scalio ratings update the public star rating customers see (D12). Until then they're private to the business.
+- [ ] Decide whether Veno ratings update the public star rating customers see (D12). Until then they're private to the business.
 - [x] Better home recommendations from real data: fill your quiet day (open days only, ≥20 bookings in 8 weeks), deposits when no-shows reach 10% (≥10 visits in 60 days), send feedback links to customers without email; rating tile and Reports shortcut.
 - [ ] Push "rate your visit" to customer-app users — needs the customer app to open the rating page from a notification.
 

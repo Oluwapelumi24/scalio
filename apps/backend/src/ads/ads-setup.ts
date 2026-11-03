@@ -31,7 +31,7 @@ export interface SetupInput {
     currency: string;
     metaStatus: number;
     status: 'active' | 'needs_reconnect';
-    ownedBy: 'vendor' | 'scalio';
+    ownedBy: 'vendor' | 'veno';
     hasPaymentMethod: boolean;
     paymentMethodLabel: string | null;
   } | null;
@@ -80,7 +80,7 @@ export function buildSetup(i: SetupInput): Setup {
     !fb
       ? { key: 'facebook', title: 'Facebook Page', state: 'todo', optional: false, action: connect, detail: 'Your ads run from your business’s Facebook Page. Log in with Facebook and choose it.' }
       : fb.status === 'needs_reconnect'
-        ? { key: 'facebook', title: 'Facebook Page', state: 'attention', optional: false, action: connect, detail: `Facebook stopped Scalio’s access to ${fb.displayName}. Reconnect to keep going.` }
+        ? { key: 'facebook', title: 'Facebook Page', state: 'attention', optional: false, action: connect, detail: `Facebook stopped Veno’s access to ${fb.displayName}. Reconnect to keep going.` }
         : { key: 'facebook', title: 'Facebook Page', state: 'done', optional: false, action: null, detail: `Connected: ${fb.displayName}` },
   );
 
@@ -105,28 +105,28 @@ export function buildSetup(i: SetupInput): Setup {
     !fb || fb.status !== 'active'
       ? { key: 'ad_access', title: 'Permission to run ads', state: 'waiting', optional: false, action: null, detail: 'Connect your Facebook Page first.' }
       : !access
-        ? { key: 'ad_access', title: 'Permission to run ads', state: 'todo', optional: false, action: connect, detail: 'Reconnect Facebook once more and allow Scalio to manage ads. Your Page stays connected.' }
+        ? { key: 'ad_access', title: 'Permission to run ads', state: 'todo', optional: false, action: connect, detail: 'Reconnect Facebook once more and allow Veno to manage ads. Your Page stays connected.' }
         : expired
           ? { key: 'ad_access', title: 'Permission to run ads', state: 'attention', optional: false, action: connect, detail: 'Your Facebook login for ads has expired or was removed (Meta asks again every 60 days). Reconnect to keep your ads running.' }
           : missing.length > 0
             ? { key: 'ad_access', title: 'Permission to run ads', state: 'attention', optional: false, action: connect, detail: 'Some ad permissions were switched off during Facebook login. Reconnect and leave them all on.' }
-            : { key: 'ad_access', title: 'Permission to run ads', state: 'done', optional: false, action: null, detail: 'Scalio can create and manage ads for your Page.' },
+            : { key: 'ad_access', title: 'Permission to run ads', state: 'done', optional: false, action: null, detail: 'Veno can create and manage ads for your Page.' },
   );
   const accessOk = steps[2].state === 'done';
 
-  // 4. Ad account — optional: without one, the vendor pays with Scalio (route 1).
+  // 4. Ad account — optional: without one, the vendor pays with Veno (route 1).
   const acct = i.adAccount;
   const problem = acct ? adAccountProblem(acct.metaStatus) : null;
   steps.push(
     !accessOk
-      ? { key: 'ad_account', title: 'Ad account', state: 'waiting', optional: true, action: null, detail: 'Allow Scalio to manage ads first.' }
+      ? { key: 'ad_account', title: 'Ad account', state: 'waiting', optional: true, action: null, detail: 'Allow Veno to manage ads first.' }
       : !acct
         ? {
             key: 'ad_account', title: 'Ad account', state: 'todo', optional: true, action: { kind: 'choose_ad_account' },
-            detail: 'Optional. Already advertise on Facebook? Choose your ad account. If not, skip this — you can pay for ads with Scalio.',
+            detail: 'Optional. Already advertise on Facebook? Choose your ad account. If not, skip this — you can pay for ads with Veno.',
           }
         : acct.status === 'needs_reconnect'
-          ? { key: 'ad_account', title: 'Ad account', state: 'attention', optional: true, action: connect, detail: `Scalio lost access to ${acct.name}. Reconnect Facebook.` }
+          ? { key: 'ad_account', title: 'Ad account', state: 'attention', optional: true, action: connect, detail: `Veno lost access to ${acct.name}. Reconnect Facebook.` }
           : problem
             ? { key: 'ad_account', title: 'Ad account', state: 'attention', optional: true, action: { kind: 'choose_ad_account' }, detail: problem }
             : { key: 'ad_account', title: 'Ad account', state: 'done', optional: true, action: { kind: 'choose_ad_account' }, detail: `${acct.name} · ${acct.currency}` },
@@ -140,7 +140,7 @@ export function buildSetup(i: SetupInput): Setup {
         : {
             key: 'payment_method', title: 'Card on Meta', state: 'todo', optional: true,
             action: { kind: 'open_url', url: metaBillingUrl(acct.id), label: 'Add a card to Meta' },
-            detail: 'Optional. To pay Meta yourself, add a card to this ad account — the button opens the right Meta page. No card Meta accepts? Pay with Scalio instead when you launch an ad.',
+            detail: 'Optional. To pay Meta yourself, add a card to this ad account — the button opens the right Meta page. No card Meta accepts? Pay with Veno instead when you launch an ad.',
           },
     );
   }
@@ -148,7 +148,7 @@ export function buildSetup(i: SetupInput): Setup {
   // 6. WhatsApp — waits on the WhatsApp provider decision (D4).
   steps.push({
     key: 'whatsapp', title: 'WhatsApp', state: 'coming_soon', optional: true, action: null,
-    detail: 'Coming soon: WhatsApp chats in your Scalio inbox. Ads can already open WhatsApp if your number is linked to your Facebook Page.',
+    detail: 'Coming soon: WhatsApp chats in your Veno inbox. Ads can already open WhatsApp if your number is linked to your Facebook Page.',
   });
 
   return { steps, ready: steps[0].state === 'done' && accessOk };

@@ -16,7 +16,7 @@ export const feedbackRequests = pgTable(
     /** Who did the work — ratings feed this person's performance. */
     staffId: uuid('staff_id').references(() => staff.id, { onDelete: 'set null' }),
     token: text('token').notNull().unique(),
-    /** When Scalio emailed the link (null: no email on file, or sending failed). */
+    /** When Veno emailed the link (null: no email on file, or sending failed). */
     emailedAt: timestamp('emailed_at', { withTimezone: true }),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     rating: integer('rating'),

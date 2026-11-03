@@ -1,4 +1,5 @@
-import { BadRequestException, Inject, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException, Optional, ServiceUnavailableException } from '@nestjs/common';
+import { VendorNotificationsService } from '../vendor-notifications/vendor-notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { PgUpdateSetSource } from 'drizzle-orm/pg-core';
@@ -48,10 +49,11 @@ export class InboxService {
     private readonly ai: AiRepliesService,
     private readonly mail: MailService,
     private readonly config: ConfigService,
+    @Optional() private readonly vendorNotifications?: VendorNotificationsService,
   ) {}
 
   private assertEnabled() {
-    if (!this.meta.adsEnabled) throw new ServiceUnavailableException('The inbox isn’t switched on in Scalio yet.');
+    if (!this.meta.adsEnabled) throw new ServiceUnavailableException('The inbox isn’t switched on in Veno yet.');
   }
 
   // ── From webhooks ─────────────────────────────────────────────────────────
@@ -213,6 +215,13 @@ export class InboxService {
     await this.db.update(conversations)
       .set({ aiPaused: true, handoffReason: reason, handoffAt: now, aiSuggestion: null, aiDueAt: null, updatedAt: now })
       .where(eq(conversations.id, conv.id));
+    await this.vendorNotifications?.notify({
+      vendorId: conv.vendorId,
+      conversationId: conv.id,
+      type: 'inbox_handoff',
+      title: 'A chat needs you',
+      body: `${conv.customerName ?? placeholderName(conv.channel)} on ${CHANNEL_LABEL[conv.channel]}: ${HANDOFF_LABELS[reason]}.`,
+    });
     const [vendor] = await this.db.select({ email: vendors.ownerEmail, name: vendors.businessName }).from(vendors).where(eq(vendors.id, conv.vendorId));
     if (!vendor?.email) return;
     const web = (this.config.get<string>('VENDOR_WEB_URL') ?? 'http://localhost:3001').replace(/\/$/, '');
@@ -229,14 +238,14 @@ export class InboxService {
     if (!decision.ok) throw new BadRequestException(decision.reason);
     if (conv.channel === 'whatsapp') {
       // Waits on D4 (Tech Provider vs BSP): there's no WhatsApp sender yet.
-      throw new ServiceUnavailableException('Replying on WhatsApp from Scalio is coming soon. Reply from the WhatsApp Business app for now.');
+      throw new ServiceUnavailableException('Replying on WhatsApp from Veno is coming soon. Reply from the WhatsApp Business app for now.');
     }
     const graph = this.meta.graph;
     const platform = connectionFor(conv.channel)!;
     const creds = await this.connections.credentials(conv.vendorId, platform);
-    if (!graph || !creds) throw new BadRequestException(`Reconnect your ${platform === 'facebook' ? 'Facebook Page' : 'Instagram account'} to reply from Scalio.`);
+    if (!graph || !creds) throw new BadRequestException(`Reconnect your ${platform === 'facebook' ? 'Facebook Page' : 'Instagram account'} to reply from Veno.`);
     if (creds.externalId !== conv.businessExternalId) {
-      throw new BadRequestException('This chat belongs to an account that’s no longer connected to Scalio.');
+      throw new BadRequestException('This chat belongs to an account that’s no longer connected to Veno.');
     }
 
     let messageId: string;
@@ -246,7 +255,7 @@ export class InboxService {
       if (err instanceof MetaApiError) {
         this.logger.warn(`Send failed for ${conv.id}: ${err.code ?? '-'}/${err.subcode ?? '-'} ${err.message}`);
         if (err.needsReconnect) await this.connections.markNeedsReconnect(conv.vendorId, platform, err.message);
-        throw new BadRequestException(err.needsReconnect ? 'Facebook stopped Scalio’s access. Reconnect your account, then try again.' : `Meta didn’t deliver it: ${err.message}`);
+        throw new BadRequestException(err.needsReconnect ? 'Facebook stopped Veno’s access. Reconnect your account, then try again.' : `Meta didn’t deliver it: ${err.message}`);
       }
       throw err;
     }

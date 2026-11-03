@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { decryptPii } from '../common/crypto';
 import { DB, type Database } from '../db/db.module';
 import {
-  adAccounts, adCampaigns, adCreditEntries, adPayments, contentMedia, metaUserAccess, scalioPageAccess, socialConnections, staff, vendors,
+  adAccounts, adCampaigns, adCreditEntries, adPayments, contentMedia, metaUserAccess, venoPageAccess, socialConnections, staff, vendors,
   type AdCampaignStatus, type AdLocation, type AdPaymentRoute,
 } from '../db/schema';
 import { PaystackService } from '../payments/paystack.service';
@@ -40,7 +40,7 @@ export class AdCampaignsService {
   ) {}
 
   private get api(): MetaAdsApi {
-    if (!this.meta.adsEnabled || !this.meta.graph) throw new ServiceUnavailableException('Ads aren’t switched on in Scalio yet.');
+    if (!this.meta.adsEnabled || !this.meta.graph) throw new ServiceUnavailableException('Ads aren’t switched on in Veno yet.');
     return new MetaAdsApi(this.meta.graph);
   }
 
@@ -59,26 +59,26 @@ export class AdCampaignsService {
     return { page, instagram, userToken, own: own ?? null };
   }
 
-  /** A token that can call the targeting search: the vendor's, else Scalio's. */
+  /** A token that can call the targeting search: the vendor's, else Veno's. */
   private async searchToken(vendorId: string): Promise<string> {
     const { userToken } = await this.connections(vendorId);
-    const token = userToken ?? this.ads.scalioToken;
-    if (!token) throw new BadRequestException('Connect Facebook and allow Scalio to manage ads first.');
+    const token = userToken ?? this.ads.venoToken;
+    if (!token) throw new BadRequestException('Connect Facebook and allow Veno to manage ads first.');
     return token;
   }
 
   /** Which ways to pay are open to this business right now, and why not when they aren't. */
   async routes(vendorId: string) {
     const { page, userToken, own } = await this.connections(vendorId);
-    const scalioReason = this.ads.scalioRouteUnavailable ?? (page ? null : 'Connect your Facebook Page first.');
+    const venoReason = this.ads.venoRouteUnavailable ?? (page ? null : 'Connect your Facebook Page first.');
     let ownReason: string | null = null;
-    if (!userToken) ownReason = 'Reconnect Facebook and allow Scalio to manage ads.';
+    if (!userToken) ownReason = 'Reconnect Facebook and allow Veno to manage ads.';
     else if (!own || own.ownedBy !== 'vendor') ownReason = 'Choose your Meta ad account in Ads setup.';
     else if (own.metaStatus !== 1 || own.status !== 'active') ownReason = 'Your Meta ad account can’t run ads right now — see Ads setup.';
-    else if (own.currency !== 'NGN') ownReason = `Your Meta ad account is in ${own.currency}; Scalio supports naira ad accounts for now.`;
+    else if (own.currency !== 'NGN') ownReason = `Your Meta ad account is in ${own.currency}; Veno supports naira ad accounts for now.`;
     else if (!own.hasPaymentMethod) ownReason = 'Add a card to your Meta ad account first (Ads setup → Card on Meta).';
     return {
-      scalio: { available: scalioReason === null, reason: scalioReason },
+      veno: { available: venoReason === null, reason: venoReason },
       own_meta: { available: ownReason === null, reason: ownReason, adAccountName: own?.name ?? null, paymentMethodLabel: own?.paymentMethodLabel ?? null },
     };
   }
@@ -94,7 +94,7 @@ export class AdCampaignsService {
       .from(vendors).where(eq(vendors.id, vendorId));
     if (!vendor) throw new NotFoundException('Business not found');
     const { page, instagram, userToken } = await this.connections(vendorId);
-    const token = userToken ?? this.ads.scalioToken ?? null;
+    const token = userToken ?? this.ads.venoToken ?? null;
     const now = new Date();
 
     // Best-effort guesses from Meta; the vendor can change both.
@@ -149,7 +149,7 @@ export class AdCampaignsService {
     const { userToken, own } = await this.connections(vendorId);
     const target = own?.ownedBy === 'vendor' && userToken
       ? { account: own.metaAdAccountId, token: userToken }
-      : this.ads.scalioRouteUnavailable === null ? { account: this.ads.scalioAccountFor(vendorId), token: this.ads.scalioToken! } : null;
+      : this.ads.venoRouteUnavailable === null ? { account: this.ads.venoAccountFor(vendorId), token: this.ads.venoToken! } : null;
     if (!target || d.targeting.locations.length === 0) return null;
     try {
       return await this.api.reachEstimate(target.account, target.token, toMetaTargeting(d.targeting), optimizationGoal(d.objective, d.destination));
@@ -160,7 +160,7 @@ export class AdCampaignsService {
   }
 
   async quote(vendorId: string, dailyBudgetKobo: number, days: number, route: AdPaymentRoute): Promise<Quote> {
-    return quote({ dailyBudgetKobo, days, route, fee: this.ads.fee, creditKobo: route === 'scalio' ? await this.creditBalance(vendorId) : 0 });
+    return quote({ dailyBudgetKobo, days, route, fee: this.ads.fee, creditKobo: route === 'veno' ? await this.creditBalance(vendorId) : 0 });
   }
 
   // ── Create, pay, launch ───────────────────────────────────────────────────
@@ -189,7 +189,7 @@ export class AdCampaignsService {
     const extend = extendDays !== undefined;
     if (!extend && c.status !== 'awaiting_payment') throw new ConflictException('This ad is already paid for.');
     if (extend && ![...LIVE_STATUSES, 'completed'].includes(c.status)) throw new ConflictException('Only ads that have launched can be extended.');
-    if (c.route === 'scalio' && !extend) await this.ensurePageAccess(vendorId);
+    if (c.route === 'veno' && !extend) await this.ensurePageAccess(vendorId);
 
     const days = extend ? extendDays : runDays(c.startAt, c.endAt);
     const q = await this.quote(vendorId, c.dailyBudgetKobo, days, c.route);
@@ -197,7 +197,7 @@ export class AdCampaignsService {
     const reference = `ads_${paymentId}`;
     await this.db.insert(adPayments).values({
       id: paymentId, vendorId, campaignId, purpose: extend ? 'extend' : 'launch', extraDays: extend ? days : null, route: c.route,
-      spendKobo: c.route === 'scalio' ? q.spendKobo : 0, vatKobo: c.route === 'scalio' ? q.vatKobo : 0, feeKobo: q.feeKobo,
+      spendKobo: c.route === 'veno' ? q.spendKobo : 0, vatKobo: c.route === 'veno' ? q.vatKobo : 0, feeKobo: q.feeKobo,
       creditUsedKobo: q.creditUsedKobo, amountDueKobo: q.dueNowKobo, reference, createdById: staffId,
     });
 
@@ -235,11 +235,11 @@ export class AdCampaignsService {
     }
 
     if (p.purpose === 'launch') {
-      await this.db.update(adCampaigns).set({ status: 'launching', paidSpendKobo: p.route === 'scalio' ? p.spendKobo : 0, updatedAt: new Date() })
+      await this.db.update(adCampaigns).set({ status: 'launching', paidSpendKobo: p.route === 'veno' ? p.spendKobo : 0, updatedAt: new Date() })
         .where(eq(adCampaigns.id, p.campaignId));
       await this.launch(p.campaignId).catch(() => undefined); // failures are recorded on the campaign
     } else {
-      await this.applyExtension(p.campaignId, p.extraDays ?? 0, p.route === 'scalio' ? p.spendKobo : 0);
+      await this.applyExtension(p.campaignId, p.extraDays ?? 0, p.route === 'veno' ? p.spendKobo : 0);
     }
   }
 
@@ -262,13 +262,13 @@ export class AdCampaignsService {
       };
       if (!c.metaAdAccountId) await save({ metaAdAccountId: run.account });
       const currency = await this.api.adAccountCurrency(run.account, run.token);
-      if (currency !== 'NGN') throw new Error(`The ad account is in ${currency}; Scalio runs naira ad accounts only.`);
+      if (currency !== 'NGN') throw new Error(`The ad account is in ${currency}; Veno runs naira ad accounts only.`);
 
-      const budget = c.route === 'scalio' ? c.paidSpendKobo : c.dailyBudgetKobo * runDays(c.startAt, c.endAt);
+      const budget = c.route === 'veno' ? c.paidSpendKobo : c.dailyBudgetKobo * runDays(c.startAt, c.endAt);
       // An ad scheduled to start "now" may be a few minutes in the past by launch time.
       const startAt = c.startAt.getTime() < Date.now() ? new Date(Date.now() + 60_000) : c.startAt;
       if (!c.metaCampaignId) {
-        await save({ metaCampaignId: await this.api.create(run.account, run.token, 'campaigns', campaignParams(c, c.route === 'scalio' ? c.paidSpendKobo : null)) });
+        await save({ metaCampaignId: await this.api.create(run.account, run.token, 'campaigns', campaignParams(c, c.route === 'veno' ? c.paidSpendKobo : null)) });
       }
       if (!c.metaAdSetId) {
         await save({ metaAdSetId: await this.api.create(run.account, run.token, 'adsets', adSetParams({ ...c, startAt }, run.ids, c.metaCampaignId!, budget)) });
@@ -307,7 +307,7 @@ export class AdCampaignsService {
     const c = await this.find(vendorId, campaignId);
     if (!['awaiting_payment', 'failed'].includes(c.status)) throw new ConflictException('Live ads can’t be cancelled here yet — they stop on their end date.');
     if (c.metaCampaignId) await this.api.update(c.metaCampaignId, (await this.runner(c)).token, { status: 'PAUSED' }).catch(() => undefined);
-    if (c.status === 'failed' && c.route === 'scalio' && c.paidSpendKobo > 0) {
+    if (c.status === 'failed' && c.route === 'veno' && c.paidSpendKobo > 0) {
       await this.db.insert(adCreditEntries).values({
         vendorId, campaignId, amountKobo: unspentCreditKobo(c.paidSpendKobo, 0), reason: 'cancelled_before_launch', dedupeKey: `cancel:${campaignId}`,
       }).onConflictDoNothing();
@@ -322,9 +322,9 @@ export class AdCampaignsService {
     const endAt = extendEnd(c.endAt, days, new Date());
     const paidSpendKobo = c.paidSpendKobo + extraSpendKobo;
     const run = await this.runner(c);
-    const lifetime = c.route === 'scalio' ? paidSpendKobo : c.dailyBudgetKobo * runDays(c.startAt, endAt);
+    const lifetime = c.route === 'veno' ? paidSpendKobo : c.dailyBudgetKobo * runDays(c.startAt, endAt);
     try {
-      if (c.route === 'scalio') await this.api.update(c.metaCampaignId, run.token, { spend_cap: paidSpendKobo });
+      if (c.route === 'veno') await this.api.update(c.metaCampaignId, run.token, { spend_cap: paidSpendKobo });
       await this.api.update(c.metaAdSetId, run.token, { end_time: endAt.toISOString(), lifetime_budget: lifetime });
       if (c.status === 'completed') await this.api.update(c.metaCampaignId, run.token, { status: 'ACTIVE' });
       await this.db.update(adCampaigns).set({
@@ -363,7 +363,7 @@ export class AdCampaignsService {
     if (status === 'rejected') await this.api.update(c.metaCampaignId, run.token, { status: 'PAUSED' }).catch(() => undefined);
     await this.db.update(adCampaigns).set({ status, metaStatus: effectiveStatus, reviewNote, spentKobo, syncedAt: now, updatedAt: now })
       .where(eq(adCampaigns.id, c.id));
-    if ((status === 'completed' || status === 'rejected') && c.route === 'scalio') {
+    if ((status === 'completed' || status === 'rejected') && c.route === 'veno') {
       const credit = unspentCreditKobo(c.paidSpendKobo, spentKobo);
       if (credit > 0) {
         // Keyed on what was paid, so an extension later gets its own refund.
@@ -413,10 +413,10 @@ export class AdCampaignsService {
     if (!page) throw new Error('Your Facebook Page isn’t connected any more. Reconnect it in Ads setup.');
     const [vendor] = await this.db.select({ slug: vendors.slug }).from(vendors).where(eq(vendors.id, c.vendorId));
     const bookingLink = this.homeData.bookingLinkFor(vendor?.slug ?? '');
-    if (c.route === 'scalio') {
-      if (!this.ads.scalioToken) throw new Error('Paying with Scalio isn’t switched on on this server.');
-      // Scalio's account advertises as the Page; Instagram uses the Page's linked account.
-      return { account: c.metaAdAccountId ?? this.ads.scalioAccountFor(c.vendorId), token: this.ads.scalioToken, ids: { pageId: page.externalId, instagramUserId: null }, bookingLink };
+    if (c.route === 'veno') {
+      if (!this.ads.venoToken) throw new Error('Paying with Veno isn’t switched on on this server.');
+      // Veno's account advertises as the Page; Instagram uses the Page's linked account.
+      return { account: c.metaAdAccountId ?? this.ads.venoAccountFor(c.vendorId), token: this.ads.venoToken, ids: { pageId: page.externalId, instagramUserId: null }, bookingLink };
     }
     if (!userToken) throw new Error('Your Facebook login for ads has expired. Reconnect Facebook in Ads setup.');
     const account = c.metaAdAccountId ?? own?.metaAdAccountId;
@@ -424,27 +424,27 @@ export class AdCampaignsService {
     return { account, token: userToken, ids: { pageId: page.externalId, instagramUserId: instagram?.externalId ?? null }, bookingLink };
   }
 
-  /** Route 1 needs the vendor's Page to let Scalio's business advertise for it. Asks once, then checks. */
+  /** Route 1 needs the vendor's Page to let Veno's business advertise for it. Asks once, then checks. */
   private async ensurePageAccess(vendorId: string) {
     const { page } = await this.connections(vendorId);
     if (!page) throw new BadRequestException('Connect your Facebook Page first.');
-    const [row] = await this.db.select().from(scalioPageAccess).where(eq(scalioPageAccess.vendorId, vendorId));
+    const [row] = await this.db.select().from(venoPageAccess).where(eq(venoPageAccess.vendorId, vendorId));
     if (row?.status === 'approved' && row.pageId === page.externalId) return;
-    const businessId = this.ads.scalioBusinessId!;
-    const token = this.ads.scalioToken!;
+    const businessId = this.ads.venoBusinessId!;
+    const token = this.ads.venoToken!;
     if (await this.api.hasPageAccess(businessId, token, page.externalId).catch(() => false)) {
-      await this.db.insert(scalioPageAccess).values({ vendorId, pageId: page.externalId, status: 'approved', approvedAt: new Date() })
-        .onConflictDoUpdate({ target: scalioPageAccess.vendorId, set: { pageId: page.externalId, status: 'approved', approvedAt: new Date() } });
+      await this.db.insert(venoPageAccess).values({ vendorId, pageId: page.externalId, status: 'approved', approvedAt: new Date() })
+        .onConflictDoUpdate({ target: venoPageAccess.vendorId, set: { pageId: page.externalId, status: 'approved', approvedAt: new Date() } });
       return;
     }
     if (!row || row.pageId !== page.externalId) {
       await this.api.requestPageAccess(businessId, token, page.externalId).catch((err: unknown) =>
         this.logger.warn(`Page access request failed: ${err instanceof Error ? err.message : String(err)}`));
-      await this.db.insert(scalioPageAccess).values({ vendorId, pageId: page.externalId, status: 'requested' })
-        .onConflictDoUpdate({ target: scalioPageAccess.vendorId, set: { pageId: page.externalId, status: 'requested', requestedAt: new Date() } });
+      await this.db.insert(venoPageAccess).values({ vendorId, pageId: page.externalId, status: 'requested' })
+        .onConflictDoUpdate({ target: venoPageAccess.vendorId, set: { pageId: page.externalId, status: 'requested', requestedAt: new Date() } });
     }
     throw new BadRequestException(
-      `One-time step: Scalio has asked to run ads for ${page.displayName}. Approve it in Facebook (Meta Business Suite → Settings → Requests), then tap Pay again.`,
+      `One-time step: Veno has asked to run ads for ${page.displayName}. Approve it in Facebook (Meta Business Suite → Settings → Requests), then tap Pay again.`,
     );
   }
 
@@ -461,7 +461,7 @@ export class AdCampaignsService {
       return await fn();
     } catch (err) {
       if (err instanceof MetaApiError) {
-        if (err.needsReconnect) throw new BadRequestException('Facebook stopped Scalio’s access to your ads. Reconnect Facebook in Ads setup.');
+        if (err.needsReconnect) throw new BadRequestException('Facebook stopped Veno’s access to your ads. Reconnect Facebook in Ads setup.');
         throw new BadRequestException(`Meta said: ${err.message}`);
       }
       throw err;

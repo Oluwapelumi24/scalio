@@ -51,6 +51,8 @@ export type RootStackParamList = {
   /** Sales, what's next and top services: the old home, now one tap away in More. */
   Dashboard: undefined;
   Settings: undefined;
+  /** The bell on Home: bookings, cancellations, payments, ratings, chats that need a person. */
+  Notifications: undefined;
   Hub: { hub: HubKey };
   /** What a feature does, shown until the business starts using it. */
   FeatureIntro: { feature: FeatureKey };
@@ -61,7 +63,7 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  /** The booking-first home in Scalio's own look. */
+  /** The booking-first home in Veno's own look. */
   Home: undefined;
   Customers: undefined;
   /** The centre + button. It opens the create sheet and never shows a screen of its own. */

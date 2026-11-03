@@ -33,6 +33,13 @@ export class VendorScheduleController {
     return this.scheduleService.getBusinessHours(staff.vendorId);
   }
 
+  /** How far apart bookable start times are (set by the platform admin). */
+  @Get('booking-settings')
+  @Roles('owner', 'manager', 'practitioner', 'front_desk')
+  getBookingSettings(@CurrentStaff() staff: VendorPrincipal) {
+    return this.scheduleService.getBookingSettings(staff.vendorId);
+  }
+
   @Put('hours')
   setHours(
     @CurrentStaff() staff: VendorPrincipal,

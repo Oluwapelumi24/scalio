@@ -47,7 +47,7 @@ export function CampaignActions({ campaign: c, canManage, justPaid, initialError
         : notice('info', 'This ad isn’t paid for yet. Pay to send it to Meta for review.', { label: 'Pay now', onClick: () => act(() => checkoutAdCampaign(c.id)) }))}
       {c.status === 'launching' && notice('info', 'Payment received. We’re sending your ad to Meta…')}
       {c.status === 'in_review' && notice('info', 'Meta is reviewing your ad. This usually takes a few hours, at most a day.')}
-      {c.status === 'rejected' && notice('error', `Meta didn’t approve this ad.${c.reviewNote ? ` Meta said: ${c.reviewNote}` : ''}${c.route === 'scalio' ? ' Unspent money has come back as ad credit.' : ''}`)}
+      {c.status === 'rejected' && notice('error', `Meta didn’t approve this ad.${c.reviewNote ? ` Meta said: ${c.reviewNote}` : ''}${c.route === 'veno' ? ' Unspent money has come back as ad credit.' : ''}`)}
       {c.status === 'failed' && notice('error', `Your ad is paid for, but Meta didn’t accept it yet. ${c.lastError ? c.lastError.replace(/[.\s]*$/, '.') : ''} Fix it and try again — you won’t pay twice.`, { label: 'Try again', onClick: () => act(() => retryAdCampaign(c.id)) })}
 
       {canExtend && (
@@ -59,7 +59,7 @@ export function CampaignActions({ campaign: c, canManage, justPaid, initialError
               const q = c.quoteForExtension[String(d)]
               return (
                 <button key={d} type="button" disabled={isPending} onClick={() => {
-                  const msg = q.route === 'scalio' ? `Run ${d} more days for ${naira(q.dueNowKobo)} (spend + VAT + Scalio fee)?` : `Run ${d} more days? You pay Scalio’s fee of ${naira(q.dueNowKobo)}; Meta charges your card for the extra spend.`
+                  const msg = q.route === 'veno' ? `Run ${d} more days for ${naira(q.dueNowKobo)} (spend + VAT + Veno fee)?` : `Run ${d} more days? You pay Veno’s fee of ${naira(q.dueNowKobo)}; Meta charges your card for the extra spend.`
                   if (confirm(msg)) act(() => extendAdCampaign(c.id, d))
                 }} className="rounded-lg border-2 border-indigo-700 py-2 text-center hover:bg-indigo-50 disabled:opacity-50">
                   <span className="block text-sm font-semibold text-indigo-700">+{d} days</span>
@@ -73,7 +73,7 @@ export function CampaignActions({ campaign: c, canManage, justPaid, initialError
 
       {canManage && ['awaiting_payment', 'failed'].includes(c.status) && (
         <button type="button" disabled={isPending} className="text-sm font-medium text-red-600 hover:text-red-800" onClick={() => {
-          if (confirm(c.status === 'failed' && c.route === 'scalio' ? 'Cancel this ad? What you paid for ad spend comes back as ad credit.' : 'Cancel this ad?')) act(() => cancelAdCampaign(c.id))
+          if (confirm(c.status === 'failed' && c.route === 'veno' ? 'Cancel this ad? What you paid for ad spend comes back as ad credit.' : 'Cancel this ad?')) act(() => cancelAdCampaign(c.id))
         }}>Cancel this ad</button>
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}

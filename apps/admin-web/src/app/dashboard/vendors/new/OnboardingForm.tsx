@@ -100,7 +100,7 @@ export function OnboardingForm() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">URL slug <span className="text-red-500">*</span></label>
               <div className="flex rounded-lg border border-gray-300 overflow-hidden focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500">
-                <span className="px-3 py-2 bg-gray-50 text-gray-400 text-sm border-r border-gray-300">scalio.app/</span>
+                <span className="px-3 py-2 bg-gray-50 text-gray-400 text-sm border-r border-gray-300">veno.app/</span>
                 <input
                   value={fields.slug}
                   onChange={(e) => set('slug', e.target.value)}
@@ -234,7 +234,7 @@ export function OnboardingForm() {
             </div>
             <div className="px-5 py-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">URL slug</p>
-              <p className="font-mono text-sm text-gray-700 mt-0.5">scalio.app/{fields.slug}</p>
+              <p className="font-mono text-sm text-gray-700 mt-0.5">veno.app/{fields.slug}</p>
             </div>
           </div>
 

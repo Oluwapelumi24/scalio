@@ -1,16 +1,16 @@
 import { checkPost, cleanHashtags, composePostText } from './platforms';
 
-const post = { caption: 'Fresh fades all week ✂️', hashtags: ['LagosBarber', 'fade'], callToAction: 'Book at scalio.app/book/fade-house', hasMedia: true };
+const post = { caption: 'Fresh fades all week ✂️', hashtags: ['LagosBarber', 'fade'], callToAction: 'Book at veno.app/book/fade-house', hasMedia: true };
 
 describe('composePostText', () => {
   it('joins caption, call to action and hashtags the way they will be pasted', () => {
     expect(composePostText(post, 'instagram')).toBe(
-      'Fresh fades all week ✂️\n\nBook at scalio.app/book/fade-house\n\n#LagosBarber #fade',
+      'Fresh fades all week ✂️\n\nBook at veno.app/book/fade-house\n\n#LagosBarber #fade',
     );
   });
 
   it('leaves hashtags out where the platform has none', () => {
-    expect(composePostText(post, 'whatsapp')).toBe('Fresh fades all week ✂️\n\nBook at scalio.app/book/fade-house');
+    expect(composePostText(post, 'whatsapp')).toBe('Fresh fades all week ✂️\n\nBook at veno.app/book/fade-house');
   });
 });
 

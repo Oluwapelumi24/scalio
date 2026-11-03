@@ -5,11 +5,21 @@
   --foreground: #0f0f14;
 }
 
+/* The vendor app's palette, for the partners pages. */
+@theme {
+  --color-navy: #1e3a8a;
+  --color-navy-deep: #0b1638;
+  --color-navy-soft: #3f5fd9;
+  --color-wash: #e8edfa;
+  --color-sky: #f1f5fe;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
 }
 
 html {
@@ -25,4 +35,27 @@ body {
 ::selection {
   background: #4f46e5;
   color: #ffffff;
+}
+
+/* Endless strip (category marquee). Two copies of the row slide by half. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 40s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float { animation: float-y 6s ease-in-out infinite; }
+.animate-float-slow { animation: float-y 8s ease-in-out infinite; }
+
+/* Arched and ribbon shapes for image tiles. The paths live in <ShapeDefs /> (objectBoundingBox units, so they scale with the tile). */
+.mask-arch { clip-path: url(#veno-arch); }
+.mask-ribbon { clip-path: url(#veno-ribbon); }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee, .animate-float, .animate-float-slow { animation: none; }
 }

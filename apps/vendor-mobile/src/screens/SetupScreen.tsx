@@ -80,7 +80,7 @@ export function SetupScreen({ navigation }: Props) {
       open: () => {
         if (!setup?.link) return;
         recordModuleUsage('share_link_first');
-        void Share.share({ message: `Book an appointment with us on Scalio: ${setup.link}` });
+        void Share.share({ message: `Book an appointment with us on Veno: ${setup.link}` });
       },
     },
   ];

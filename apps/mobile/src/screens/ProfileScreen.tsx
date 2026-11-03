@@ -38,7 +38,7 @@ export function ProfileScreen({ navigation }: Props) {
   );
 
   const previewOnboarding = async () => {
-    await AsyncStorage.multiRemove(['scalio:hasSeenOnboarding', 'scalio:location']);
+    await AsyncStorage.multiRemove(['veno:hasSeenOnboarding', 'veno:location']);
     navigation.navigate('Onboarding');
   };
 

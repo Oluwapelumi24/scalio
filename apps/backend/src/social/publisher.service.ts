@@ -59,7 +59,7 @@ export class PublisherService {
       const check = checkPost({ caption: post.caption, hashtags: post.hashtags, callToAction: post.callToAction, hasMedia: !!post.mediaId }, p);
       if (check.problems.length) throw new BadRequestException(check.problems.join(' '));
       if (p === 'instagram' && media && media.mimeType !== 'image/jpeg') {
-        throw new BadRequestException('Instagram only takes JPEG photos from Scalio. Choose the photo again, or take a new one.');
+        throw new BadRequestException('Instagram only takes JPEG photos from Veno. Choose the photo again, or take a new one.');
       }
       const prev = existing.find((e) => e.platform === p);
       if (prev?.status === 'published') throw new BadRequestException(`This post is already on ${p === 'facebook' ? 'Facebook' : 'Instagram'}.`);

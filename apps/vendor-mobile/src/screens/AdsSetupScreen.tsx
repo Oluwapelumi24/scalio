@@ -173,7 +173,7 @@ export function AdsSetupScreen({ navigation }: Props) {
               <Text style={[styles.name, { paddingTop: spacing.lg }]}>Choose your ad account</Text>
               {accounts.length === 0 ? (
                 <Text style={[styles.meta, { paddingVertical: spacing.lg }]}>
-                  Your Facebook login has no ad accounts. That’s fine — skip this and pay for ads with Scalio when you launch one.
+                  Your Facebook login has no ad accounts. That’s fine — skip this and pay for ads with Veno when you launch one.
                 </Text>
               ) : accounts.map((a) => (
                 <Pressable key={a.id} onPress={() => void pick(a)} disabled={busy} style={[styles.row, styles.divider]} accessibilityRole="button">
@@ -202,7 +202,7 @@ export function AdsSetupScreen({ navigation }: Props) {
           <View style={styles.note}>
             <Text style={styles.noteTitle}>Two ways to pay for ads</Text>
             <Text style={styles.meta}>
-              Pay with Scalio by card, bank transfer or USSD in naira — no dollar card needed. Or, if you already have a Meta ad account with a card Meta accepts, Meta can charge that card directly. You’ll choose when you launch an ad.
+              Pay with Veno by card, bank transfer or USSD in naira — no dollar card needed. Or, if you already have a Meta ad account with a card Meta accepts, Meta can charge that card directly. You’ll choose when you launch an ad.
             </Text>
           </View>
         </ScrollView>

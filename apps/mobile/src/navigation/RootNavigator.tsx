@@ -34,7 +34,7 @@ function SplashScreen() {
   return (
     <View style={styles.splash}>
       <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
-        <Text style={styles.splashWordmark}>scalio</Text>
+        <Text style={styles.splashWordmark}>veno</Text>
       </Animated.View>
     </View>
   );

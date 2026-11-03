@@ -54,7 +54,7 @@ export async function publishStep(graph: MetaGraph, input: StepInput, now = new 
 
     // Instagram: create a container, wait for Instagram to process it, then publish.
     if (!input.imageUrl) return fail('Instagram posts need a photo.');
-    if (input.imageMimeType !== 'image/jpeg') return fail('Instagram only takes JPEG photos from Scalio. Choose the photo again, or take a new one.');
+    if (input.imageMimeType !== 'image/jpeg') return fail('Instagram only takes JPEG photos from Veno. Choose the photo again, or take a new one.');
 
     if (!containerId) {
       containerId = await graph.igCreateImageContainer(account.externalId, account.token, input.imageUrl, input.text);

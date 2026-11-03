@@ -6,13 +6,18 @@ import {
 } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
-import { businessHours, blackoutDates } from '../db/schema';
+import { businessHours, blackoutDates, vendors } from '../db/schema';
 import type { SetBusinessHoursDto } from './dto/set-business-hours.dto';
 import type { CreateBlackoutDateDto } from './dto/create-blackout-date.dto';
 
 @Injectable()
 export class VendorScheduleService {
   constructor(@Inject(DB) private readonly db: Database) {}
+
+  async getBookingSettings(vendorId: string): Promise<{ slotIntervalMinutes: number }> {
+    const [row] = await this.db.select({ slotIntervalMinutes: vendors.slotIntervalMinutes }).from(vendors).where(eq(vendors.id, vendorId));
+    return { slotIntervalMinutes: row?.slotIntervalMinutes ?? 30 };
+  }
 
   getBusinessHours(vendorId: string) {
     return this.db

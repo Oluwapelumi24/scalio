@@ -9,6 +9,7 @@ import { MailModule } from './mail/mail.module';
 import { PaystackModule } from './payments/paystack.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PushModule } from './notifications/push.module';
+import { VendorNotificationsModule } from './vendor-notifications/vendor-notifications.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { BookingModule } from './booking/booking.module';
 import { AuthModule } from './auth/auth.module';
@@ -37,6 +38,7 @@ import { InboxModule } from './inbox/inbox.module';
     MailModule,
     PaystackModule,
     PushModule,
+    VendorNotificationsModule,
     AuthModule,
     VendorAuthModule,
     VendorModule,

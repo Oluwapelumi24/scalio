@@ -23,7 +23,7 @@ export default async function ConnectionsPage() {
       <div>
         <Link href="/dashboard/content" className="text-sm text-indigo-600">← Content studio</Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">Social accounts</h1>
-        <p className="text-sm text-gray-500 mt-1">Connect your business accounts to publish and schedule posts straight from Scalio.</p>
+        <p className="text-sm text-gray-500 mt-1">Connect your business accounts to publish and schedule posts straight from Veno.</p>
       </div>
 
       <ul className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">

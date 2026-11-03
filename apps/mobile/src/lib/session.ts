@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AppUser } from './api';
 import { getMe } from './api';
 
-const TOKEN_KEY = 'scalio:accessToken';
-const USER_KEY = 'scalio:user';
+const TOKEN_KEY = 'veno:accessToken';
+const USER_KEY = 'veno:user';
 
 // In-memory mirror of what's on disk so `getCurrentUser()` can stay a cheap
 // synchronous call for the many screens that read it during render.

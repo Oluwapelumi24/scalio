@@ -13,14 +13,14 @@ export function Waitlist() {
   return (
     <section id="waitlist" className="scroll-mt-20 bg-slate-50/60 py-24">
       <Reveal className="mx-auto max-w-xl px-6 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 bg-wash px-3 py-1 text-xs font-medium text-navy">
           Early access
         </span>
-        <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        <h2 className="mt-4 font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
           Not ready yet? Join the waitlist.
         </h2>
         <p className="mt-3 text-slate-600">
-          The Scalio app isn&apos;t on the app stores just yet, and we&apos;re onboarding
+          The Veno app isn&apos;t on the app stores just yet, and we&apos;re onboarding
           businesses in new categories every week. Leave your email and we&apos;ll let you know
           the moment it&apos;s your turn.
         </p>
@@ -64,13 +64,13 @@ export function Waitlist() {
                   name="email"
                   required
                   placeholder="you@example.com"
-                  className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full rounded-lg border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy"
                 />
               </div>
               <button
                 type="submit"
                 disabled={pending}
-                className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-60"
+                className="rounded-lg bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy-deep disabled:opacity-60"
               >
                 {pending ? 'Joining…' : 'Join the waitlist'}
               </button>

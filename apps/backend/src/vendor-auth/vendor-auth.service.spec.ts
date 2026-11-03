@@ -98,7 +98,7 @@ describe('VendorAuthService', () => {
         makePasswordReset() as any,
         mail as any,
         makeJwt() as any,
-        makeConfig({ VENDOR_WEB_URL: 'https://vendors.scalio.app' }) as any,
+        makeConfig({ VENDOR_WEB_URL: 'https://vendors.veno.app' }) as any,
       );
 
       await service.issueInvite('ada@example.com');
@@ -107,7 +107,7 @@ describe('VendorAuthService', () => {
       expect(mail.sendVendorInviteEmail).toHaveBeenCalledWith(
         'ada@example.com',
         'Glow Studio',
-        'https://vendors.scalio.app/accept-invite?token=invite-token',
+        'https://vendors.veno.app/accept-invite?token=invite-token',
       );
     });
 

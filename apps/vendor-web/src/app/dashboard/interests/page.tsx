@@ -24,7 +24,7 @@ export default async function InterestsPage({
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">What do you want help with?</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Choose what matters most to your business. We&apos;ll set up Scalio to help you get things done.
+          Choose what matters most to your business. We&apos;ll set up Veno to help you get things done.
         </p>
       </div>
       <InterestPicker groups={groups} initial={prefs.interests} welcome={welcome === '1'} />

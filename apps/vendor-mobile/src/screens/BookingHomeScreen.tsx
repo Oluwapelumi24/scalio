@@ -8,7 +8,7 @@ import { useFocusEffect, type CompositeScreenProps } from '@react-navigation/nat
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MainTabParamList, RootStackParamList } from '../navigation/types';
-import { formatDateTime, getHome, recordModuleUsage, type HomeItem, type HomeResponse } from '../lib/api';
+import { formatDateTime, getHome, getUnreadNotificationCount, recordModuleUsage, type HomeItem, type HomeResponse } from '../lib/api';
 import { getSession } from '../lib/session';
 import type { FeatherName } from '../components/ui';
 import { GUTTER, makeStyles, radius, spacing, useTheme } from '../theme';
@@ -45,7 +45,7 @@ function SectionHeading({ title, link, onLink }: { title: string; link?: string;
   );
 }
 
-/** The booking-first home, in Scalio's own look: blue wash header, booking link, what's next. */
+/** The booking-first home, in Veno's own look: blue wash header, booking link, what's next. */
 export function BookingHomeScreen({ navigation }: Props) {
   const { colors, scheme } = useTheme();
   const styles = useStyles();
@@ -71,6 +71,16 @@ export function BookingHomeScreen({ navigation }: Props) {
 
   // Reload whenever Home comes back into view — set-up may have changed.
   useFocusEffect(useCallback(() => { void load(); }, [load]));
+
+  // The bell's badge: checked on focus, then every minute while Home is open.
+  const [unread, setUnread] = useState(0);
+  useFocusEffect(useCallback(() => {
+    let live = true;
+    const check = () => getUnreadNotificationCount().then((r) => { if (live) setUnread(r.unread); }).catch(() => {});
+    void check();
+    const timer = setInterval(check, 60_000);
+    return () => { live = false; clearInterval(timer); };
+  }, []));
 
   const isManager = session?.role === 'owner' || session?.role === 'manager';
   const firstName = (session?.name ?? '').split(' ')[0] || 'there';
@@ -99,7 +109,7 @@ export function BookingHomeScreen({ navigation }: Props) {
   function shareLink() {
     if (!bookings) return;
     recordModuleUsage('share_booking_link');
-    void Share.share({ message: `Book an appointment with us on Scalio: ${bookings.link}` });
+    void Share.share({ message: `Book an appointment with us on Veno: ${bookings.link}` });
   }
 
   async function copyLink() {
@@ -125,23 +135,33 @@ export function BookingHomeScreen({ navigation }: Props) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={colors.link} />}
       showsVerticalScrollIndicator={false}
     >
-      {/* Header: soft Scalio-blue wash fading into the page */}
+      {/* Header: soft Veno-blue wash fading into the page */}
       <LinearGradient
         colors={scheme === 'dark' ? ['#16204a', '#101530', colors.background] : [colors.accentLight, colors.sky, colors.background]}
         locations={[0, 0.55, 1]}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}
       >
         <View style={styles.topRow}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>{(home?.business.name ?? 'S').charAt(0).toUpperCase()}</Text>
-          </View>
-          <Text style={styles.bizName} numberOfLines={1}>{home?.business.name ?? 'Your business'}</Text>
           <Pressable style={styles.avatar} onPress={() => navigation.navigate('Settings')} accessibilityRole="button" accessibilityLabel="Settings">
             <Text style={styles.avatarText}>{(session?.name ?? 'V').slice(0, 2).toUpperCase()}</Text>
           </Pressable>
+          <Text style={styles.greeting} numberOfLines={1} accessibilityRole="header">Hey, {firstName}</Text>
+          <Pressable
+            style={({ pressed }) => [styles.bell, pressed && { opacity: 0.8 }]}
+            onPress={() => navigation.navigate('Notifications')}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={unread > 0 ? `Notifications, ${unread} new` : 'Notifications'}
+          >
+            <Feather name="bell" size={20} color={colors.text} />
+            {unread > 0 ? (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{unread > 9 ? '9+' : unread}</Text>
+              </View>
+            ) : null}
+          </Pressable>
         </View>
 
-        <Text style={styles.greeting}>Hey, {firstName}</Text>
         {summary ? <Text style={styles.greetingSub}>{summary}</Text> : null}
       </LinearGradient>
 
@@ -273,16 +293,20 @@ const useStyles = makeStyles((colors) => ({
   // Header
   header: { paddingHorizontal: GUTTER, paddingBottom: spacing.xxl },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logo: {
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontWeight: '700', fontSize: 12, color: colors.onAccent },
+  bell: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: colors.background,
     borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
   },
-  logoText: { fontWeight: '800', fontSize: 14, color: colors.link },
-  bizName: { flex: 1, fontWeight: '700', fontSize: 14, color: colors.text },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontWeight: '700', fontSize: 12, color: colors.onAccent },
-  greeting: { fontWeight: '700', fontSize: 19, lineHeight: 25, letterSpacing: -0.4, color: colors.text, marginTop: 28 },
-  greetingSub: { fontWeight: '500', fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 6 },
+  bellBadge: {
+    position: 'absolute', top: -2, right: -2, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
+    backgroundColor: colors.error, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: colors.background,
+  },
+  bellBadgeText: { fontSize: 10, lineHeight: 12, fontWeight: '700', color: colors.white },
+  greeting: { flex: 1, fontWeight: '700', fontSize: 19, lineHeight: 25, letterSpacing: -0.4, color: colors.text },
+  greetingSub: { fontWeight: '500', fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 16 },
 
   // Body
   body: { gap: 32, paddingTop: spacing.sm },
@@ -304,7 +328,7 @@ const useStyles = makeStyles((colors) => ({
   empty: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 18 },
   emptyText: { flex: 1, fontWeight: '500', fontSize: 13, lineHeight: 19, color: colors.textSecondary },
 
-  // Booking link hero: Scalio navy in both themes
+  // Booking link hero: Veno navy in both themes
   hero: { backgroundColor: '#1e3a8a', borderRadius: 24, padding: 22 },
   heroIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.onDarkFaint, alignItems: 'center', justifyContent: 'center' },
   heroTitle: { fontWeight: '800', fontSize: 17, lineHeight: 22, letterSpacing: -0.4, color: colors.onDark, marginTop: 16 },

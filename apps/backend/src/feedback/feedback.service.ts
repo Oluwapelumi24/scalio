@@ -1,4 +1,5 @@
-import { BadRequestException, GoneException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, GoneException, Inject, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
+import { VendorNotificationsService } from '../vendor-notifications/vendor-notifications.service';
 import { ConfigService } from '@nestjs/config';
 import { and, desc, eq, gte, inArray, isNotNull, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
@@ -26,6 +27,7 @@ export class FeedbackService {
     @Inject(DB) private readonly db: Database,
     private readonly mail: MailService,
     private readonly config: ConfigService,
+    @Optional() private readonly vendorNotifications?: VendorNotificationsService,
   ) {}
 
   linkFor(token: string): string {
@@ -113,6 +115,16 @@ export class FeedbackService {
       .where(and(eq(feedbackRequests.id, r.req.id), isNull(feedbackRequests.submittedAt)))
       .returning({ id: feedbackRequests.id });
     if (!saved) throw new BadRequestException('Thanks — you already rated this visit.');
+    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    const note = comment?.trim();
+    await this.vendorNotifications?.notify({
+      vendorId: r.req.vendorId,
+      staffId: r.req.staffId,
+      bookingId: r.req.bookingId,
+      type: 'review',
+      title: `New ${rating}-star rating`,
+      body: `${r.customerName} rated their visit ${stars}${note ? `: "${note.length > 120 ? `${note.slice(0, 117)}...` : note}"` : '.'}`,
+    });
     // Private to the business for now: the public star rating (vendors.rating) is
     // left alone until it's decided how these combine with existing ratings.
     return { ok: true };

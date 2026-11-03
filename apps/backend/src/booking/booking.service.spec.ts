@@ -834,7 +834,7 @@ describe('BookingService online payment rules', () => {
   const row = (over: Record<string, unknown> = {}) => ({ booking: { id: 'b-1', vendorId: 'v-1', status: 'confirmed', totalPriceKobo: 1_000_000, ...over }, email: 'jane@example.com' });
   afterEach(() => jest.restoreAllMocks());
 
-  it('refuses online payment when the business has no payout account, so Scalio never holds the money', async () => {
+  it('refuses online payment when the business has no payout account, so Veno never holds the money', async () => {
     const db = makeDb();
     db.select.mockReturnValueOnce(selectResult([row()]));
     jest.spyOn(BookingService.prototype as any, 'paymentAccountFor').mockResolvedValue(null);

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Scalio Vendor Portal",
+  title: "Veno Vendor Portal",
   description: "Manage your bookings, services, and staff",
 };
 

@@ -23,7 +23,7 @@ export interface InboundChatMessage {
   attachments: MessageAttachment[];
   sentAt: Date;
   /**
-   * An echo is a message the business itself sent — from Scalio, or from Meta's
+   * An echo is a message the business itself sent — from Veno, or from Meta's
    * own apps (Business Suite, Instagram). Stored as the vendor's, never answered.
    */
   fromBusiness: boolean;

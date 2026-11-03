@@ -114,7 +114,7 @@ export function InterestSelectionScreen({ navigation, route }: Props) {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title} accessibilityRole="header">What do you want help with?</Text>
         <Text style={styles.subtitle}>
-          Choose what matters most to your business. We'll set up Scalio to help you get things done.
+          Choose what matters most to your business. We'll set up Veno to help you get things done.
         </Text>
 
         {loading ? (

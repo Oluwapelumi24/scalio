@@ -16,7 +16,7 @@ interface GraphErrorBody {
   error?: { message?: string; code?: number; error_subcode?: number; is_transient?: boolean; error_user_msg?: string };
 }
 
-/** A Graph API error, sorted into what Scalio should do about it. */
+/** A Graph API error, sorted into what Veno should do about it. */
 export class MetaApiError extends Error {
   constructor(
     message: string,
@@ -252,7 +252,7 @@ export class MetaGraph {
     return [r.first_name, r.last_name].filter(Boolean).join(' ') || null;
   }
 
-  /** Subscribes Scalio's app to the Page's message webhooks (Messenger, and Instagram DMs of the linked account). */
+  /** Subscribes Veno's app to the Page's message webhooks (Messenger, and Instagram DMs of the linked account). */
   async subscribePageToMessages(pageId: string, pageToken: string): Promise<void> {
     await this.call('POST', `/${pageId}/subscribed_apps`, {
       subscribed_fields: 'messages,messaging_postbacks,messaging_referrals,message_echoes',

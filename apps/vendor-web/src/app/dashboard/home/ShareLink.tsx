@@ -5,7 +5,7 @@ import { recordModuleUsage } from '@/app/actions/personalisation'
 
 export function ShareLink({ moduleId, url }: { moduleId: string; url: string }) {
   const [copied, setCopied] = useState(false)
-  const message = `Book an appointment with us on Scalio: ${url}`
+  const message = `Book an appointment with us on Veno: ${url}`
 
   async function copy() {
     void recordModuleUsage(moduleId)

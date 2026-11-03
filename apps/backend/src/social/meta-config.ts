@@ -30,7 +30,7 @@ export const META_ADS_SCOPES = [
 
 /**
  * Meta settings. Publishing needs all three of: the Meta app's id and secret,
- * and a public HTTPS address for Scalio's API (Meta redirects logins there and
+ * and a public HTTPS address for Veno's API (Meta redirects logins there and
  * fetches the photos being posted from there). Without them, posting stays manual.
  */
 @Injectable()
@@ -58,8 +58,8 @@ export class MetaConfig {
 
   /** Why publishing through Meta can't happen on this server, or null when it can. */
   get unavailableReason(): string | null {
-    if (!this.graph) return "Posting from Scalio isn't switched on yet.";
-    if (!this.publicApiUrl?.startsWith('https://')) return "Posting from Scalio needs Scalio's server to be online at a public https:// address.";
+    if (!this.graph) return "Posting from Veno isn't switched on yet.";
+    if (!this.publicApiUrl?.startsWith('https://')) return "Posting from Veno needs Veno's server to be online at a public https:// address.";
     return null;
   }
 

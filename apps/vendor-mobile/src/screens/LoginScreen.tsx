@@ -51,7 +51,7 @@ export function LoginScreen({ navigation }: Props) {
               <Button label="Sign in" onPress={() => void handleLogin()} loading={loading} />
               <Pressable onPress={() => navigation.navigate('Register')} accessibilityRole="button" hitSlop={8}>
                 <Text style={styles.foot}>
-                  New to Scalio? <Text style={styles.link}>Register your business</Text>
+                  New to Veno? <Text style={styles.link}>Register your business</Text>
                 </Text>
               </Pressable>
             </View>

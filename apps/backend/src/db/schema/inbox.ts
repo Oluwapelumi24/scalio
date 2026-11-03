@@ -61,7 +61,7 @@ export const conversations = pgTable(
 );
 
 export const messageDirectionValues = ['in', 'out'] as const;
-/** customer = from the customer; vendor = typed by the business (in Scalio or Meta's own apps); ai = sent by the AI. */
+/** customer = from the customer; vendor = typed by the business (in Veno or Meta's own apps); ai = sent by the AI. */
 export const messageSenderValues = ['customer', 'vendor', 'ai'] as const;
 export const messageStatusValues = ['received', 'sent', 'failed'] as const;
 

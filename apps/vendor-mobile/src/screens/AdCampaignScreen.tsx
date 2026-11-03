@@ -58,7 +58,7 @@ export function AdCampaignScreen({ navigation, route }: Props) {
     const q = c!.quoteForExtension[String(days)];
     Alert.alert(
       `Run ${days} more days?`,
-      q.route === 'scalio' ? `You’ll pay ${naira(q.dueNowKobo)} (spend + VAT + Scalio fee).` : `You’ll pay Scalio’s fee of ${naira(q.dueNowKobo)}; Meta charges your card for the extra spend.`,
+      q.route === 'veno' ? `You’ll pay ${naira(q.dueNowKobo)} (spend + VAT + Veno fee).` : `You’ll pay Veno’s fee of ${naira(q.dueNowKobo)}; Meta charges your card for the extra spend.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Extend', onPress: () => void act('Could not extend', async () => {
@@ -97,7 +97,7 @@ export function AdCampaignScreen({ navigation, route }: Props) {
         {c.status === 'launching' && <Notice icon="loader" text="Payment received. We’re sending your ad to Meta…" />}
         {c.status === 'in_review' && <Notice icon="clock" text="Meta is reviewing your ad. This usually takes a few hours, at most a day." />}
         {c.status === 'rejected' && (
-          <Notice icon="x-circle" tone="error" text={`Meta didn’t approve this ad.${c.reviewNote ? ` Meta said: ${c.reviewNote}` : ''}${c.route === 'scalio' ? ' Unspent money has come back as ad credit — create a new ad to use it.' : ''}`} />
+          <Notice icon="x-circle" tone="error" text={`Meta didn’t approve this ad.${c.reviewNote ? ` Meta said: ${c.reviewNote}` : ''}${c.route === 'veno' ? ' Unspent money has come back as ad credit — create a new ad to use it.' : ''}`} />
         )}
         {c.status === 'failed' && (
           <Notice
@@ -117,11 +117,11 @@ export function AdCampaignScreen({ navigation, route }: Props) {
           <Row label="Goal" value={c.objectiveLabel} />
           <Row label="Budget" value={`${naira(c.dailyBudgetKobo)} a day`} />
           <Row label="Runs" value={`${day(c.startAt)} → ${day(c.endAt)} (${c.days} days)`} />
-          <Row label="Paid via" value={c.route === 'scalio' ? 'Scalio' : 'Your Meta ad account'} />
+          <Row label="Paid via" value={c.route === 'veno' ? 'Veno' : 'Your Meta ad account'} />
           {c.launchedAt && (
             <>
-              <Row label="Spent so far" value={c.route === 'scalio' ? `${naira(c.spentKobo)} of ${naira(c.paidSpendKobo)}` : naira(c.spentKobo)} />
-              {c.route === 'scalio' && <View style={s.track}><View style={[s.fill, { width: `${Math.round(spentPct * 100)}%` }]} /></View>}
+              <Row label="Spent so far" value={c.route === 'veno' ? `${naira(c.spentKobo)} of ${naira(c.paidSpendKobo)}` : naira(c.spentKobo)} />
+              {c.route === 'veno' && <View style={s.track}><View style={[s.fill, { width: `${Math.round(spentPct * 100)}%` }]} /></View>}
             </>
           )}
         </View>
@@ -142,7 +142,7 @@ export function AdCampaignScreen({ navigation, route }: Props) {
         )}
 
         {canManage && ['awaiting_payment', 'failed'].includes(c.status) && (
-          <Pressable onPress={() => Alert.alert('Cancel this ad?', c.status === 'failed' && c.route === 'scalio' ? 'What you paid for ad spend comes back as ad credit.' : undefined, [
+          <Pressable onPress={() => Alert.alert('Cancel this ad?', c.status === 'failed' && c.route === 'veno' ? 'What you paid for ad spend comes back as ad credit.' : undefined, [
             { text: 'Keep it', style: 'cancel' },
             { text: 'Cancel ad', style: 'destructive', onPress: () => void act('Could not cancel', () => cancelAdCampaign(id)) },
           ])}>

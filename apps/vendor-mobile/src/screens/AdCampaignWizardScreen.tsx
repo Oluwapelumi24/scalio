@@ -89,7 +89,7 @@ export function AdCampaignWizardScreen({ navigation }: Props) {
   const [pickedVariant, setPickedVariant] = useState<number | null>(null);
   const [dailyBudgetKobo, setDailyBudgetKobo] = useState(500_000);
   const [days, setDays] = useState(7);
-  const [route, setRoute] = useState<AdPaymentRoute>('scalio');
+  const [route, setRoute] = useState<AdPaymentRoute>('veno');
 
   useEffect(() => {
     getAdBuilder().then((b) => {
@@ -101,7 +101,7 @@ export function AdCampaignWizardScreen({ navigation }: Props) {
       setDailyBudgetKobo(b.dailyBudgetKobo);
       setDays(b.days);
       setLink(b.bookingLink);
-      setRoute(b.routes.scalio.available || !b.routes.own_meta.available ? 'scalio' : 'own_meta');
+      setRoute(b.routes.veno.available || !b.routes.own_meta.available ? 'veno' : 'own_meta');
     }).catch((err: unknown) => {
       Alert.alert('Could not start a new ad', err instanceof Error ? err.message : 'Please try again.');
       navigation.goBack();
@@ -151,7 +151,7 @@ export function AdCampaignWizardScreen({ navigation }: Props) {
       let result: ImagePicker.ImagePickerResult;
       if (source === 'camera') {
         const perm = await ImagePicker.requestCameraPermissionsAsync();
-        if (!perm.granted) throw new Error('Allow camera access for Scalio in your phone’s Settings to take photos.');
+        if (!perm.granted) throw new Error('Allow camera access for Veno in your phone’s Settings to take photos.');
         result = await ImagePicker.launchCameraAsync(options);
       } else {
         result = await ImagePicker.launchImageLibraryAsync(options);
@@ -419,13 +419,13 @@ export function AdCampaignWizardScreen({ navigation }: Props) {
 
               <Text style={s.label}>How do you want to pay?</Text>
               <RouteOption
-                on={route === 'scalio'} onPress={() => setRoute('scalio')} disabledReason={builder.routes.scalio.reason}
-                title="Pay with Scalio" subtitle="Card, bank transfer or USSD in naira. No dollar card needed." badge="Easiest"
+                on={route === 'veno'} onPress={() => setRoute('veno')} disabledReason={builder.routes.veno.reason}
+                title="Pay with Veno" subtitle="Card, bank transfer or USSD in naira. No dollar card needed." badge="Easiest"
               />
               <RouteOption
                 on={route === 'own_meta'} onPress={() => setRoute('own_meta')} disabledReason={builder.routes.own_meta.reason}
                 title="My own Meta ad account"
-                subtitle={builder.routes.own_meta.available ? `Meta charges ${builder.routes.own_meta.paymentMethodLabel ?? 'your card'}; you pay Scalio’s fee only.` : 'Meta charges your card; you pay Scalio’s fee only.'}
+                subtitle={builder.routes.own_meta.available ? `Meta charges ${builder.routes.own_meta.paymentMethodLabel ?? 'your card'}; you pay Veno’s fee only.` : 'Meta charges your card; you pay Veno’s fee only.'}
               />
               <CostCard quote={quote.value} loading={quote.loading} />
             </>
@@ -441,10 +441,10 @@ export function AdCampaignWizardScreen({ navigation }: Props) {
                 {mode === 'advanced' && <ReviewRow label="Placements" value={targeting.placements === 'automatic' ? 'Automatic' : 'Chosen by you'} onEdit={() => go(steps.indexOf('placements'))} />}
                 <ReviewRow label="Ad" value={headline || '—'} onEdit={() => go(steps.indexOf('ad'))} />
                 <ReviewRow label="Runs" value={`${naira(dailyBudgetKobo)}/day · ${days} days · ends ${endDateLabel(startAt, days)}`} onEdit={() => go(steps.indexOf('budget'))} />
-                <ReviewRow label="Payment" value={route === 'scalio' ? 'Pay with Scalio' : 'My own Meta ad account'} onEdit={() => go(steps.indexOf('budget'))} last />
+                <ReviewRow label="Payment" value={route === 'veno' ? 'Pay with Veno' : 'My own Meta ad account'} onEdit={() => go(steps.indexOf('budget'))} last />
               </View>
               <CostCard quote={quote.value} loading={quote.loading} />
-              <Text style={s.hint}>Meta reviews every ad before it runs — usually within 24 hours. If Meta doesn’t approve it, unspent money paid to Scalio comes back as ad credit.</Text>
+              <Text style={s.hint}>Meta reviews every ad before it runs — usually within 24 hours. If Meta doesn’t approve it, unspent money paid to Veno comes back as ad credit.</Text>
             </>
           )}
         </Animated.View>
@@ -654,10 +654,10 @@ function CostCard({ quote, loading }: { quote: AdQuote | null; loading: boolean 
     <View style={[s.card, loading && { opacity: 0.6 }]}>
       <CostRow label={`Ad spend (${quote.days} days × ${naira(quote.dailyBudgetKobo)})`} value={naira(quote.spendKobo)} />
       <CostRow label="VAT 7.5%" value={naira(quote.vatKobo)} />
-      <CostRow label="Scalio fee" value={naira(quote.feeKobo)} />
+      <CostRow label="Veno fee" value={naira(quote.feeKobo)} />
       {quote.creditUsedKobo > 0 && <CostRow label="Ad credit used" value={`−${naira(quote.creditUsedKobo)}`} />}
       <View style={s.costTotal}>
-        <Text style={s.optionTitle}>{own ? 'You pay Scalio now' : 'Total to pay now'}</Text>
+        <Text style={s.optionTitle}>{own ? 'You pay Veno now' : 'Total to pay now'}</Text>
         <Text style={s.total}>{naira(quote.dueNowKobo)}</Text>
       </View>
       {own && <Text style={s.hint}>Meta charges your card {naira(quote.metaChargesKobo)} (spend + VAT) as the ad runs.</Text>}

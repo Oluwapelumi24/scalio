@@ -1,7 +1,7 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { staff, vendors } from './vendors';
 
-// Ads Manager (ADS_MANAGER_PLAN.md). Phase 1 stores who granted Scalio ad access
+// Ads Manager (ADS_MANAGER_PLAN.md). Phase 1 stores who granted Veno ad access
 // and which Meta ad account each business advertises from.
 
 /**
@@ -25,8 +25,8 @@ export const metaUserAccess = pgTable(
   (t) => [index('meta_user_access_meta_user_idx').on(t.metaUserId)],
 );
 
-/** 'vendor' = the business's own ad account and card (route 2); 'scalio' = Scalio-owned and funded (route 1, Phase 3). */
-export const adAccountOwnerValues = ['vendor', 'scalio'] as const;
+/** 'vendor' = the business's own ad account and card (route 2); 'veno' = Veno-owned and funded (route 1, Phase 3). */
+export const adAccountOwnerValues = ['vendor', 'veno'] as const;
 export const adAccountStatusValues = ['active', 'needs_reconnect'] as const;
 
 /** The one ad account a business advertises from. */

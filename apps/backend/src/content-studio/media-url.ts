@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 // Signed, short-lived public links to a studio photo. Instagram and Facebook
-// fetch the image themselves from a URL, so it can't sit behind Scalio sign-in.
+// fetch the image themselves from a URL, so it can't sit behind Veno sign-in.
 
 const TTL_SECONDS = 60 * 60;
 
@@ -9,7 +9,7 @@ function secret(): string {
   const s = process.env.MEDIA_URL_SECRET ?? process.env.VENDOR_JWT_SECRET;
   if (s) return s;
   if (process.env.NODE_ENV === 'production') throw new Error('MEDIA_URL_SECRET is required in production');
-  return 'scalio-dev-only-media-url-secret';
+  return 'veno-dev-only-media-url-secret';
 }
 
 const sign = (mediaId: string, exp: number) => createHmac('sha256', secret()).update(`${mediaId}.${exp}`).digest('base64url');

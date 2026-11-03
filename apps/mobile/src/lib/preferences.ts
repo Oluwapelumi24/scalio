@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const ONBOARDING_KEY = 'scalio:hasSeenOnboarding';
-const INTERESTS_KEY = 'scalio:interests';
-const LOCATION_KEY = 'scalio:location';
+const ONBOARDING_KEY = 'veno:hasSeenOnboarding';
+const INTERESTS_KEY = 'veno:interests';
+const LOCATION_KEY = 'veno:location';
 
 export interface SavedLocation {
   label: string;

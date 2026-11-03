@@ -23,7 +23,7 @@ export function ConnectButtons({ label, connected }: { label: string; connected:
         {isPending ? 'Opening Facebook…' : label}
       </button>
       <p className="text-xs text-gray-500">
-        You&apos;ll log in with Facebook and choose your business Page. Instagram connects too if it&apos;s a business or creator account linked to that Page. Scalio never sees your password.
+        You&apos;ll log in with Facebook and choose your business Page. Instagram connects too if it&apos;s a business or creator account linked to that Page. Veno never sees your password.
       </p>
       {connected && (
         <button

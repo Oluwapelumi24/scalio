@@ -10,7 +10,7 @@ interface RevenueReport {
 export function ExportButton({ report, periodLabel }: { report: RevenueReport; periodLabel: string }) {
   function handleExport() {
     const rows = [
-      ['Scalio Revenue Report', periodLabel],
+      ['Veno Revenue Report', periodLabel],
       [],
       ['Summary'],
       ['Total Revenue', `₦${(report.totalRevenueKobo / 100).toLocaleString('en-NG')}`],
@@ -34,7 +34,7 @@ export function ExportButton({ report, periodLabel }: { report: RevenueReport; p
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `scalio-report-${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `veno-report-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }

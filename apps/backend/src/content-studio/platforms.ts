@@ -1,7 +1,7 @@
 import type { ContentPlatform } from '../db/schema';
 
 /**
- * What each platform accepts, and whether Scalio can post there for the vendor.
+ * What each platform accepts, and whether Veno can post there for the vendor.
  *
  * Every platform is `manual` until its API approval comes through (Meta app review
  * for Instagram/Facebook, TikTok's Content Posting API). WhatsApp Status has no
@@ -23,15 +23,15 @@ export interface PlatformSpec {
 export const PLATFORMS: readonly PlatformSpec[] = [
   {
     id: 'instagram', name: 'Instagram', captionMaxChars: 2200, hashtagMax: 30, needsMedia: true, publishing: 'manual',
-    manualReason: "Posting from Scalio is waiting on Instagram's approval. Copy the caption and post from the Instagram app for now.",
+    manualReason: "Posting from Veno is waiting on Instagram's approval. Copy the caption and post from the Instagram app for now.",
   },
   {
     id: 'facebook', name: 'Facebook', captionMaxChars: 63206, hashtagMax: 30, needsMedia: false, publishing: 'manual',
-    manualReason: "Posting from Scalio is waiting on Facebook's approval. Copy the caption and post from the Facebook app for now.",
+    manualReason: "Posting from Veno is waiting on Facebook's approval. Copy the caption and post from the Facebook app for now.",
   },
   {
     id: 'tiktok', name: 'TikTok', captionMaxChars: 2200, hashtagMax: 30, needsMedia: true, publishing: 'manual',
-    manualReason: "Posting from Scalio is waiting on TikTok's approval. Copy the caption and post from the TikTok app for now.",
+    manualReason: "Posting from Veno is waiting on TikTok's approval. Copy the caption and post from the TikTok app for now.",
   },
   {
     id: 'whatsapp', name: 'WhatsApp Status', captionMaxChars: 700, hashtagMax: 0, needsMedia: false, publishing: 'manual',

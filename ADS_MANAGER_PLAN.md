@@ -1,10 +1,10 @@
 # Ads Manager — plan (draft for review, 2026-10-17)
 
-Scalio Ads Manager lets any vendor, technical or not, do four things:
+Veno Ads Manager lets any vendor, technical or not, do four things:
 
 - Connect Facebook, Instagram and WhatsApp.
 - Run Meta ads.
-- Reply to customers from one Scalio inbox, with AI auto-replies.
+- Reply to customers from one Veno inbox, with AI auto-replies.
 - Pay at the end of the flow.
 
 This plan sits alongside `PLATFORM_PLAN.md`, where it fills in the Phase 4 items "Ads (Meta)" and "Unified inbox". Nothing gets built until the decisions in §6 are made.
@@ -16,21 +16,21 @@ This plan sits alongside `PLATFORM_PLAN.md`, where it fills in the Phase 4 items
 | Feature | Possible? | How / caveat |
 |---|---|---|
 | Connect Facebook Page + Instagram | ✅ Already half-built | `social/` uses Facebook Login for Business. New scopes are needed (see §5). |
-| Connect WhatsApp | ✅ | WhatsApp Embedded Signup. Scalio must become a Meta **Tech Provider**, or use a BSP (D4, still open). |
+| Connect WhatsApp | ✅ | WhatsApp Embedded Signup. Veno must become a Meta **Tech Provider**, or use a BSP (D4, still open). |
 | Create campaigns with all 6 objectives | ✅ | Marketing API (Graph `v25.0`): campaign → ad set → creative → ad. |
 | Engagement as the default | ✅ | `OUTCOME_ENGAGEMENT`, with the destination set to WhatsApp or Instagram DM and optimised for `CONVERSATIONS`. These are "click-to-chat" ads, the best fit for service vendors. |
 | Audience: location, age, gender | ✅ | `targeting.geo_locations` (radius around the shop), `age_min/max` and `genders`. |
 | Keyword targeting with suggestions ("hairstyling", "skincare") | ✅ | Targeting Search API (`type=adinterest`) plus interest suggestions. Shows live autocomplete and audience size. |
 | AI ad copy | ✅ | Claude writes the primary text, headline and CTA. This reuses `content-studio/caption-writer.ts`. |
 | Auto-reply inside the ad | ✅ | Click-to-chat ads carry a **welcome message + quick-reply questions** in the creative. Claude drafts them. |
-| Message customers from Scalio (Instagram, Messenger, WhatsApp) | ✅ | Instagram Messaging API, Messenger Send API and WhatsApp Cloud API, all feeding one inbox. **TikTok is not possible** (no public DM API). |
+| Message customers from Veno (Instagram, Messenger, WhatsApp) | ✅ | Instagram Messaging API, Messenger Send API and WhatsApp Cloud API, all feeding one inbox. **TikTok is not possible** (no public DM API). |
 | Auto-replies to customers and prospects | ✅ **only inside the 24-hour window** | Meta only allows replies within 24h of the customer's last message, and does not allow cold messages. After 24h: Instagram/Messenger allow manual replies only (Human Agent tag, 7 days); WhatsApp needs a paid, pre-approved template. |
-| Pay for the ad on Scalio | ✅ Two routes (§4) | **Pay with Scalio:** the vendor pays Scalio in naira (card, transfer, USSD) and Scalio funds a Scalio-owned ad account that advertises the vendor's Page. **Own Meta account:** the vendor adds a card through a direct link from Scalio, and Scalio charges only its fee. Meta has no API to add a card or top up, which is why Route 1 needs Scalio-owned ad accounts. |
+| Pay for the ad on Veno | ✅ Two routes (§4) | **Pay with Veno:** the vendor pays Veno in naira (card, transfer, USSD) and Veno funds a Veno-owned ad account that advertises the vendor's Page. **Own Meta account:** the vendor adds a card through a direct link from Veno, and Veno charges only its fee. Meta has no API to add a card or top up, which is why Route 1 needs Veno-owned ad accounts. |
 
 **The three gates, all outside the code:**
 
-1. **Meta Business Verification** for Scalio's business. Takes a few business days.
-2. **App Review for Advanced Access** to `ads_management`, `pages_messaging`, `instagram_manage_messages`, `leads_retrieval`, `pages_manage_ads` and the WhatsApp permissions. Standard access only works on assets Scalio's own team owns, so it is enough to build and test but not to launch. Plan for 2–6 weeks with resubmissions. Meta needs a screencast of each permission in use.
+1. **Meta Business Verification** for Veno's business. Takes a few business days.
+2. **App Review for Advanced Access** to `ads_management`, `pages_messaging`, `instagram_manage_messages`, `leads_retrieval`, `pages_manage_ads` and the WhatsApp permissions. Standard access only works on assets Veno's own team owns, so it is enough to build and test but not to launch. Plan for 2–6 weeks with resubmissions. Meta needs a screencast of each permission in use.
 3. **Marketing API "Full" tier** (since May 2026) to avoid low rate limits. It requires 500 API calls in 15 days with an error rate under 15%, which normal beta usage should reach.
 
 ---
@@ -63,7 +63,7 @@ If something is missing, the checklist shows a plain-language fix rather than a 
                           + 3 quick questions ("Prices?", "Book for Saturday", "Location?")
 4. Budget & pay           Slider: ₦2,000–₦20,000/day
                           Runs for: 7 days (default; ends <date>)  [+ Run longer] → 14 / 30 days / pick a date
-                          Shows: est. people reached · est. chats · ad spend · 7.5% VAT · Scalio fee · total
+                          Shows: est. people reached · est. chats · ad spend · 7.5% VAT · Veno fee · total
                           → Payment wall → "Your ad is in review (usually < 24 h)"
 ```
 
@@ -93,13 +93,13 @@ Inbox tab: one list of chats from WhatsApp / Instagram / Messenger (channel icon
 
 ### 2e. Results
 
-The campaign card shows spend, people reached, chats started, leads, bookings, and cost per chat. Bookings are the Scalio-only part: chat → booking attribution. Actions on the card: Pause / Resume / Boost budget / Duplicate.
+The campaign card shows spend, people reached, chats started, leads, bookings, and cost per chat. Bookings are the Veno-only part: chat → booking attribution. Actions on the card: Pause / Resume / Boost budget / Duplicate.
 
 ---
 
 ## 3. Meta required fields → where the vendor provides them
 
-✱ marks fields Scalio fills in automatically in Simple mode.
+✱ marks fields Veno fills in automatically in Simple mode.
 
 | Level | Meta field | Required? | Simple mode | Advanced mode |
 |---|---|---|---|---|
@@ -128,10 +128,10 @@ The campaign card shows spend, people reached, chats started, leads, bookings, a
 | | `call_to_action` | Yes | ✱ `WHATSAPP_MESSAGE` / `MESSAGE_PAGE` | Picker |
 | | `link` | Web / app objectives | — | URL + UTM |
 | | Welcome message + ice breakers | Chat ads | AI draft | Edit |
-| Lead form | `name`, `questions`, `privacy_policy.url`, thank-you screen | Leads only | — | Builder. Privacy URL defaults to the vendor's Scalio page policy. |
+| Lead form | `name`, `questions`, `privacy_policy.url`, thank-you screen | Leads only | — | Builder. Privacy URL defaults to the vendor's Veno page policy. |
 | Ad | `name`, `adset_id`, `creative`, `status` | Yes | ✱ | ✱ |
 
-**Payment details are not an API field.** Route 1: Scalio's funding source plus `spend_cap`. Route 2: the vendor's card, added through Scalio's direct link (§4).
+**Payment details are not an API field.** Route 1: Veno's funding source plus `spend_cap`. Route 2: the vendor's card, added through Veno's direct link (§4).
 
 ---
 
@@ -139,17 +139,17 @@ The campaign card shows spend, people reached, chats started, leads, bookings, a
 
 Meta only charges the payment method saved on an ad account, and its API can't add a card or top up. So a route depends on **whose ad account the campaign runs on**.
 
-### Route 1 — "Pay with Scalio" (default; works for every vendor)
+### Route 1 — "Pay with Veno" (default; works for every vendor)
 
 For vendors without a dollar card or a card Meta accepts.
 
-1. The vendor pays Scalio through Paystack: card, bank transfer or USSD, in naira. The amount is ad spend + 7.5% VAT + Scalio fee.
-2. The campaign runs on an **ad account Scalio owns** (one per vendor, created under Scalio's Business Manager via the API). It advertises the **vendor's own Page / Instagram / WhatsApp**: in the connect step the vendor grants Scalio's Business Manager ad access to their Page.
-3. Scalio's funding source on Meta pays for it. At first that is a Scalio corporate dollar card (or prepaid funds); later, a Meta credit line / monthly invoicing once Scalio has spend history.
-4. Safety caps so Scalio never fronts more than it received:
+1. The vendor pays Veno through Paystack: card, bank transfer or USSD, in naira. The amount is ad spend + 7.5% VAT + Veno fee.
+2. The campaign runs on an **ad account Veno owns** (one per vendor, created under Veno's Business Manager via the API). It advertises the **vendor's own Page / Instagram / WhatsApp**: in the connect step the vendor grants Veno's Business Manager ad access to their Page.
+3. Veno's funding source on Meta pays for it. At first that is a Veno corporate dollar card (or prepaid funds); later, a Meta credit line / monthly invoicing once Veno has spend history.
+4. Safety caps so Veno never fronts more than it received:
    - campaign `lifetime_budget` = amount paid;
    - ad-account `spend_cap` (settable through the API) = total paid so far.
-5. Unspent budget (ad stopped early, rejected, under-delivered) goes back as **ad credit** on the vendor's Scalio balance for the next campaign, or as a refund on request.
+5. Unspent budget (ad stopped early, rejected, under-delivered) goes back as **ad credit** on the vendor's Veno balance for the next campaign, or as a refund on request.
 6. Ledger: new `ledgerKindValues` `ad_topup`, `ad_spend`, `ad_refund`, reconciled daily against Meta's reported spend.
 
 ### Route 2 — "Use my own Meta ad account"
@@ -157,30 +157,30 @@ For vendors without a dollar card or a card Meta accepts.
 For vendors who already advertise, or have a card Meta accepts.
 
 - The campaign runs on the vendor's own ad account, picked in the connect step.
-- **Adding a card doesn't start the journey from Meta.** Scalio shows "Add a card to Meta" and opens that ad account's **Payment settings page directly** in the in-app browser. That is Meta Billing → Payment settings, with the ad account id in the link; the exact URL format must be confirmed during the build. The vendor is already signed in from the connect step, adds the card, taps Done, and Scalio checks the account (`funding_source_details`) and ticks the checklist.
-- Scalio's payment screen then charges **only Scalio's fee** through Paystack. Meta bills the ad spend + VAT to the vendor's card.
+- **Adding a card doesn't start the journey from Meta.** Veno shows "Add a card to Meta" and opens that ad account's **Payment settings page directly** in the in-app browser. That is Meta Billing → Payment settings, with the ad account id in the link; the exact URL format must be confirmed during the build. The vendor is already signed in from the connect step, adds the card, taps Done, and Veno checks the account (`funding_source_details`) and ticks the checklist.
+- Veno's payment screen then charges **only Veno's fee** through Paystack. Meta bills the ad spend + VAT to the vendor's card.
 
 ### What the vendor sees on the payment screen
 
 ```
 Ad spend (7 days × ₦5,000)      ₦35,000
 VAT 7.5%                         ₦2,625
-Scalio fee                       ₦3,500
+Veno fee                       ₦3,500
 ───────────────────────────────────────
 Total                           ₦41,125
 
 How do you want to pay?
- (•) Pay with Scalio — card, bank transfer or USSD     ← default
- ( ) My own Meta ad account — Meta charges my card; I pay Scalio's fee only (₦3,500)
+ (•) Pay with Veno — card, bank transfer or USSD     ← default
+ ( ) My own Meta ad account — Meta charges my card; I pay Veno's fee only (₦3,500)
 ```
 
 ### Trade-offs to accept for Route 1
 
-- **Ad account limits:** Meta caps how many ad accounts one Business Manager can create, and raises the cap as spend grows. Early on Scalio may need to ask Meta for a higher limit, or put several small vendors on shared ad accounts (each campaign tagged to its vendor).
-- **Policy risk sits with Scalio:** a vendor's rejected or banned ads count against Scalio's Business Manager. This needs ad pre-checks (AI + rules) and fast suspension of repeat offenders.
-- **History stays with Scalio:** a vendor who later moves to Route 2 starts a fresh ad account.
-- **FX:** if Scalio's Meta funding is in dollars, Scalio carries the naira→dollar spread. Build about 3% into the fee, or set Scalio's ad accounts to NGN where Meta allows.
-- **Legal:** this is Scalio holding vendor money. A fintech lawyer must confirm it's fine for prepaid ad spend: Scalio buys a service (ads) on the vendor's behalf, which is not deposit-taking. Keep ad funds in a separate account.
+- **Ad account limits:** Meta caps how many ad accounts one Business Manager can create, and raises the cap as spend grows. Early on Veno may need to ask Meta for a higher limit, or put several small vendors on shared ad accounts (each campaign tagged to its vendor).
+- **Policy risk sits with Veno:** a vendor's rejected or banned ads count against Veno's Business Manager. This needs ad pre-checks (AI + rules) and fast suspension of repeat offenders.
+- **History stays with Veno:** a vendor who later moves to Route 2 starts a fresh ad account.
+- **FX:** if Veno's Meta funding is in dollars, Veno carries the naira→dollar spread. Build about 3% into the fee, or set Veno's ad accounts to NGN where Meta allows.
+- **Legal:** this is Veno holding vendor money. A fintech lawyer must confirm it's fine for prepaid ad spend: Veno buys a service (ads) on the vendor's behalf, which is not deposit-taking. Keep ad funds in a separate account.
 
 ## 5. Cost per vendor
 
@@ -190,7 +190,7 @@ Assumptions:
 - Prices are from public sources in Oct 2026; verify before quoting to vendors.
 - Claude runs on `claude-opus-5-5` (the project default), at $4 / $20 per million input/output tokens, with prompt-cache reads at $0.20 per million.
 
-### Costs Scalio pays per vendor
+### Costs Veno pays per vendor
 
 | Item | Unit cost | Typical vendor / month | ₦ / month |
 |---|---|---|---|
@@ -201,7 +201,7 @@ Assumptions:
 | WhatsApp replies inside the 24h window (service messages) | Free from Meta. Chats started from a click-to-WhatsApp ad get 72h free. | — | ₦0 |
 | WhatsApp marketing templates (outside window, only if vendor sends) | ≈ $0.05–0.06 ≈ ₦80 each | 0–100 | ₦0–8,000 (pass through to vendor) |
 | WhatsApp BSP fee (only if D4 picks a BSP instead of Tech Provider) | Varies by provider | — | ₦0–15,000 |
-| **Scalio's cost, typical** | | | **≈ ₦4,000 per active vendor** |
+| **Veno's cost, typical** | | | **≈ ₦4,000 per active vendor** |
 
 On the AI cost:
 
@@ -214,9 +214,9 @@ On the AI cost:
 |---|---|
 | Ad spend: ₦5,000/day × 7 | ₦35,000 |
 | VAT 7.5% (Meta charges this on Nigerian ad spend) | ₦2,625 |
-| Scalio fee (example: 10%, min ₦1,000; see D14) | ₦3,500 |
+| Veno fee (example: 10%, min ₦1,000; see D14) | ₦3,500 |
 | **Total the vendor sees** | **₦41,125** |
-| Paystack fee, paid by Scalio out of its fee. Route 1 is charged on the full ₦41,125 (1.5% + ₦100, capped at ₦2,000). Route 2 is charged only on the ₦3,500 fee. | ≈ ₦717 (Route 1) / ≈ ₦150 (Route 2) |
+| Paystack fee, paid by Veno out of its fee. Route 1 is charged on the full ₦41,125 (1.5% + ₦100, capped at ₦2,000). Route 2 is charged only on the ₦3,500 fee. | ≈ ₦717 (Route 1) / ≈ ₦150 (Route 2) |
 
 Note:
 
@@ -236,8 +236,8 @@ Note:
 
 | # | Decision | Blocks |
 |---|---|---|
-| **D13** | ✅ **Decided (2026-10-17): offer both routes.** Default is "Pay with Scalio": Scalio receives the money and funds Scalio-owned ad accounts. Vendors with their own Meta account and a working card can use Route 2. Still to do: lawyer sign-off on holding ad funds; choose Scalio's Meta funding source (corporate dollar card first, credit line later). | Phase 3 |
-| **D14** | **Scalio pricing:** % of ad spend vs flat per campaign; AI auto-reply as a paid plan? | Phase 3 paywall |
+| **D13** | ✅ **Decided (2026-10-17): offer both routes.** Default is "Pay with Veno": Veno receives the money and funds Veno-owned ad accounts. Vendors with their own Meta account and a working card can use Route 2. Still to do: lawyer sign-off on holding ad funds; choose Veno's Meta funding source (corporate dollar card first, credit line later). | Phase 3 |
+| **D14** | **Veno pricing:** % of ad spend vs flat per campaign; AI auto-reply as a paid plan? | Phase 3 paywall |
 | **D15** | **AI model for auto-replies:** `claude-opus-5-5` (best quality, ≈ ₦12/reply) vs a cheaper Claude model (≈ ₦1/reply) after a quality test. | Phase 2 cost |
 | D4 (open) | **WhatsApp:** become a Meta Tech Provider (free, needs app review) vs a BSP (faster, monthly fee). | Phase 2 WhatsApp |
 | D10 (you) | Meta Business Verification + App Review for the permissions in §1. Start **now**; it is the longest pole. | Launch |
@@ -246,7 +246,7 @@ Note:
 
 ## 7. Phases
 
-Each phase ships behind a feature flag. It is tested with Scalio's own Page and ad account using Standard access, then opened to vendors once App Review passes.
+Each phase ships behind a feature flag. It is tested with Veno's own Page and ad account using Standard access, then opened to vendors once App Review passes.
 
 ### Phase 1 — Connect & foundations (≈1.5 weeks) — built 2026-10-17, behind `ADS_MANAGER_ENABLED`
 
@@ -255,7 +255,7 @@ Each phase ships behind a feature flag. It is tested with Scalio's own Page and 
   - `pages_messaging`, `instagram_manage_messages`, `leads_retrieval` (`business_management` was already there)
 - [x] `socialPlatformValues` += `whatsapp` (publishing keeps its own `publishPlatformValues`). New tables (migration `0017_ads_manager`):
   - `meta_user_access`: encrypted Meta user token, expiry and granted permissions;
-  - `ad_accounts`: `ownedBy` vendor/scalio, Meta status, whether a card is on it;
+  - `ad_accounts`: `ownedBy` vendor/veno, Meta status, whether a card is on it;
   - `meta_webhook_events`.
 - [x] `GET /vendor-admin/ads/setup` checklist, `GET ad-accounts`, `PUT ad-account`, `POST ad-account/refresh`. One ad account is auto-chosen when the login has exactly one.
 - [x] Connect checklist: vendor-mobile (Settings → Ads) and vendor-web (`/dashboard/ads`), with plain-language fixes and the "Add a card to Meta" link (re-checks on return).
@@ -296,11 +296,11 @@ Tested locally only, with fake Meta and Paystack keys. No real ad has run yet.
 - [x] Default run of 7 days, with 14/30 days or day-by-day changes; "Extend" on a live ad charges the extra days first (Route 1). Cancel before launch returns spend + VAT as ad credit.
 - [x] Meta ad-review status synced every 10 minutes and shown on the ad page with an animated tracker (Payment → Sent to Meta → In review → Live → Finished). Rejections show Meta's reason as a plain sentence; rejected ads are paused.
 - [x] Mobile and web: wizard with an animated step progress bar, "Your ads" list with ad credit, ad page with Pay now / Try again / Extend / Cancel. Design pass: bold only on page titles, the amount due and main buttons; line icons instead of emoji.
-- [~] Scalio-owned ad accounts. **Built differently from the plan:** Scalio uses a pool of its own ad accounts (`META_SCALIO_AD_ACCOUNT_IDS`) instead of creating one per vendor, and asks for Page ad access through `client_pages` (`scalio_page_access` table). Creating an account per vendor can come later if Meta's limits or reporting need it.
+- [~] Veno-owned ad accounts. **Built differently from the plan:** Veno uses a pool of its own ad accounts (`META_VENO_AD_ACCOUNT_IDS`) instead of creating one per vendor, and asks for Page ad access through `client_pages` (`veno_page_access` table). Creating an account per vendor can come later if Meta's limits or reporting need it.
 - [~] Ad credit ledger. **Built as `ad_credit_entries`** (`unspent_budget`, `used_for_payment`, `cancelled_before_launch`, `adjustment`) plus `ad_payments`, instead of `ad_topup`/`ad_spend`/`ad_refund`. Spend is read from Meta on each sync and unspent budget comes back as credit when an ad ends. A separate daily reconciliation report is not built.
 - [ ] Before launch:
   - run one ad on a real Meta test ad account to confirm field names, especially the chat welcome message and WhatsApp destination settings;
-  - set `META_SCALIO_BUSINESS_ID`, `META_SCALIO_SYSTEM_TOKEN` and `META_SCALIO_AD_ACCOUNT_IDS`, and fund those ad accounts (D13 follow-ups: lawyer sign-off, funding source);
+  - set `META_VENO_BUSINESS_ID`, `META_VENO_SYSTEM_TOKEN` and `META_VENO_AD_ACCOUNT_IDS`, and fund those ad accounts (D13 follow-ups: lawyer sign-off, funding source);
   - decide pricing (D14). Until then the fee is a placeholder: 10% of spend, minimum ₦1,000 (`ADS_FEE_PERCENT`, `ADS_FEE_MIN_KOBO`);
   - walk through the mobile wizard by eye after the design pass (only checked in code against the web screens so far).
 
@@ -308,7 +308,7 @@ Tested locally only, with fake Meta and Paystack keys. No real ad has run yet.
 
 - [ ] Insights sync (spend, reach, conversations, leads) on a schedule.
 - [ ] Chat → booking attribution, with "cost per booking" on the campaign card.
-- [ ] Pause, resume, boost, extend end date and duplicate actions. Notify the vendor 1 day before an ad ends, with a one-tap "Extend 7 days". Saved audiences. Custom audience from Scalio customer list (hashed) and lookalikes.
+- [ ] Pause, resume, boost, extend end date and duplicate actions. Notify the vendor 1 day before an ad ends, with a one-tap "Extend 7 days". Saved audiences. Custom audience from Veno customer list (hashed) and lookalikes.
 - [ ] Advanced objectives' extras: instant forms (Leads), pixel picker (Sales), app store link (App promotion).
 
 **Total: about 10 weeks of build.** The Meta reviews run in parallel and are usually the real bottleneck.

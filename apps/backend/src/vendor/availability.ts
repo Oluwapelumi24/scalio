@@ -7,6 +7,8 @@
 export const BUSINESS_HOURS_START_MINUTES = 9 * 60; // 09:00
 export const BUSINESS_HOURS_END_MINUTES = 18 * 60; // 18:00
 export const SLOT_GRANULARITY_MINUTES = 30;
+/** The gaps a business can choose between start times. 30 is the default. */
+export const SLOT_INTERVAL_OPTIONS = [10, 15, 20, 30, 45, 60] as const;
 
 export interface BusyInterval {
   startMinutes: number;
@@ -32,13 +34,15 @@ export function computeAvailableSlotOffsets(
   durationMinutes: number,
   busyIntervals: BusyInterval[],
   hours: OpenHours = DEFAULT_OPEN_HOURS,
+  stepMinutes: number = SLOT_GRANULARITY_MINUTES,
 ): number[] {
+  const step = stepMinutes > 0 ? stepMinutes : SLOT_GRANULARITY_MINUTES;
   const offsets: number[] = [];
 
   for (
     let start = hours.startMinutes;
     start + durationMinutes <= hours.endMinutes;
-    start += SLOT_GRANULARITY_MINUTES
+    start += step
   ) {
     const end = start + durationMinutes;
     const overlaps = busyIntervals.some(

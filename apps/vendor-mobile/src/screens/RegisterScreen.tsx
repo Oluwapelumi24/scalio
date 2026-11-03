@@ -80,7 +80,7 @@ export function RegisterScreen({ navigation }: Props) {
 
             {/* Header */}
             <Text style={s.title}>Register your business</Text>
-            <Text style={s.subtitle}>Create your Scalio vendor account. Your listing will be reviewed before going live.</Text>
+            <Text style={s.subtitle}>Create your Veno vendor account. Your listing will be reviewed before going live.</Text>
 
             {/* Fields */}
             <View style={s.form}>

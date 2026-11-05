@@ -83,7 +83,7 @@ export function Navbar() {
               light ? 'border-white/60 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'
             }`}
           >
-            Partner sign in
+            Sign in
           </a>
           <a
             href={primary.href}
@@ -119,7 +119,7 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <a href={VENDOR_LOGIN_URL} className="py-3.5 text-base font-medium text-slate-700">Partner sign in</a>
+            <a href={VENDOR_LOGIN_URL} className="py-3.5 text-base font-medium text-slate-700">Sign in</a>
             <a href={primary.href} onClick={() => setOpen(false)} className="mt-2 rounded-xl bg-navy px-4 py-3.5 text-center text-sm font-semibold text-white">
               {primary.label}
             </a>

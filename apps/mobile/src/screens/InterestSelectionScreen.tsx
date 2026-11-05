@@ -12,8 +12,7 @@ import { makeStyles, spacing, useTheme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InterestSelection'>;
 
-// Massage stays a category elsewhere; leaving it out here gives an even 4 × 3 grid.
-const PICKS = INTERESTS.filter((i) => i !== 'Massage');
+const PICKS = INTERESTS;
 
 // Every pick fits on one screen. The grid measures the space between the
 // subtitle and the button and its rows fill it from top to bottom.
@@ -78,7 +77,7 @@ function InterestTile({
           </View>
         ) : null}
       </View>
-      <Text style={[styles.label, selected && styles.labelOn]} numberOfLines={2}>{item}</Text>
+      <Text style={[styles.label, selected && styles.labelOn, size < 64 && styles.labelSmall]} numberOfLines={2}>{item}</Text>
     </Pressable>
   );
 }
@@ -94,9 +93,9 @@ export function InterestSelectionScreen({ navigation }: Props) {
     if (!area || Math.abs(area.w - w) > 1 || Math.abs(area.h - h) > 1) setArea({ w, h });
   }
 
-  // 3 × 4 or 4 × 3, whichever gives bigger tiles in the measured space.
+  // 3 × 5 or 5 × 3 (both leave no gaps), whichever gives bigger tiles in the measured space.
   const layout = area
-    ? [layoutFor(3, area.w, area.h), layoutFor(4, area.w, area.h)].reduce((a, b) => (b.size > a.size ? b : a))
+    ? [layoutFor(3, area.w, area.h), layoutFor(5, area.w, area.h)].reduce((a, b) => (b.size > a.size ? b : a))
     : null;
   const rows = layout
     ? Array.from({ length: layout.rows }, (_, r) => PICKS.slice(r * layout.cols, (r + 1) * layout.cols))
@@ -190,6 +189,8 @@ const useStyles = makeStyles((colors) => ({
     backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
   },
   label: { marginTop: 6, height: LABEL_H - 6, fontSize: 12, lineHeight: 14, fontWeight: '500', color: colors.textSecondary, textAlign: 'center' },
+  // Narrow tiles on small phones: small enough to keep "Barbershop" on one line, selected or not.
+  labelSmall: { fontSize: 10, lineHeight: 13, fontWeight: '500' },
   labelOn: { color: colors.text, fontWeight: '700' },
   footer: { paddingHorizontal: SIDE, paddingTop: spacing.md },
 }));

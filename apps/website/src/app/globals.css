@@ -52,10 +52,15 @@ body {
 .animate-float { animation: float-y 6s ease-in-out infinite; }
 .animate-float-slow { animation: float-y 8s ease-in-out infinite; }
 
+/* The FeatureTour progress bar. With reduced motion it shows full and never ends, so auto-scroll stays off. */
+@keyframes tour-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.tour-progress { animation: tour-progress linear forwards; }
+
 /* Arched and ribbon shapes for image tiles. The paths live in <ShapeDefs /> (objectBoundingBox units, so they scale with the tile). */
 .mask-arch { clip-path: url(#veno-arch); }
 .mask-ribbon { clip-path: url(#veno-ribbon); }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee, .animate-float, .animate-float-slow { animation: none; }
+  .tour-progress { animation: none; }
 }

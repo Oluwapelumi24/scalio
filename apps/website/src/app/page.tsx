@@ -1,42 +1,57 @@
-import { ArrowRight } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
-import { SkyHero, SkyButton } from '@/components/site/SkyHero'
+import { SkyHero } from '@/components/site/SkyHero'
 import { HomeHeroStage } from '@/components/home/HeroStage'
 import { CategoryMarquee } from '@/components/home/CategoryMarquee'
+import { ServicesDirectory } from '@/components/home/ServicesDirectory'
 import { BookingShowcase } from '@/components/home/BookingShowcase'
-import { ClosingCta, FeatureOrbs, ForBusiness, HowItWorks, PayYourWay } from '@/components/home/Sections'
+import { ForBusiness, HowItWorks } from '@/components/home/Sections'
 import { Testimonials } from '@/components/Testimonials'
 import { Waitlist } from '@/components/Waitlist'
 import { Faq } from '@/components/Faq'
 import { Footer } from '@/components/Footer'
+import { CATEGORIES, SITE_URL } from '@/lib/constants'
+
+// Tells search engines what Veno is and which services it covers. Every service
+// here also appears as visible text in ServicesDirectory.
+const STRUCTURED_DATA = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'Veno', url: SITE_URL, areaServed: { '@type': 'City', name: 'Lagos' } },
+    { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, name: 'Veno', url: SITE_URL, publisher: { '@id': `${SITE_URL}/#organization` } },
+    ...CATEGORIES.map((c) => ({
+      '@type': 'Service',
+      name: c.heading,
+      serviceType: c.name,
+      description: c.description,
+      areaServed: { '@type': 'City', name: 'Lagos' },
+      provider: { '@id': `${SITE_URL}/#organization` },
+    })),
+  ],
+}
 
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA).replace(/</g, '\\u003c') }}
+      />
       <Navbar />
       <main>
         <SkyHero
           audience="individuals"
           title={<>Book the services your week runs on</>}
-          subtitle="Spas, laundromats, tailors, cleaners, photographers, trainers, salons and more across Lagos. See real free times, book in a minute, and pay the way you like."
-          actions={
-            <>
-              <SkyButton href="#waitlist">Get early access <ArrowRight className="h-4 w-4" /></SkyButton>
-              <SkyButton href="#customers" variant="ghost">See how it works</SkyButton>
-            </>
-          }
+          subtitle="Discover trusted beauty experts, salons, cleaners, spas and wellness studios."
           stage={<HomeHeroStage />}
         />
         <CategoryMarquee />
         <BookingShowcase />
         <HowItWorks />
-        <PayYourWay />
-        <FeatureOrbs />
+        <ServicesDirectory />
         <ForBusiness />
         <Testimonials start="user" />
-        <Waitlist />
         <Faq />
-        <ClosingCta title="Your city's best, one tap away." cta="Join the waitlist" href="#waitlist" />
+        <Waitlist />
       </main>
       <Footer />
     </>

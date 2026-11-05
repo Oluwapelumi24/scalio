@@ -64,13 +64,11 @@ export function SkyHero({
   audience,
   title,
   subtitle,
-  actions,
   stage,
 }: {
   audience: 'individuals' | 'business'
   title: ReactNode
   subtitle: ReactNode
-  actions: ReactNode
   stage: ReactNode
 }) {
   return (
@@ -83,7 +81,7 @@ export function SkyHero({
       {/* Stars */}
       <div className="absolute inset-x-0 top-0 -z-10 h-1/2 opacity-60 [background-image:radial-gradient(1px_1px_at_12%_20%,#fff,transparent),radial-gradient(1px_1px_at_28%_8%,#fff,transparent),radial-gradient(1.5px_1.5px_at_44%_26%,#fff,transparent),radial-gradient(1px_1px_at_63%_12%,#fff,transparent),radial-gradient(1px_1px_at_78%_30%,#fff,transparent),radial-gradient(1.5px_1.5px_at_90%_10%,#fff,transparent),radial-gradient(1px_1px_at_6%_40%,#fff,transparent)]" />
 
-      <div className="mx-auto max-w-5xl px-6 text-center">
+      <div className="mx-auto max-w-6xl px-6 text-center">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <AudienceSwitch active={audience} />
         </motion.div>
@@ -91,7 +89,7 @@ export function SkyHero({
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-9 font-display text-[2.75rem] font-bold leading-[1.02] tracking-[-0.03em] text-white sm:text-6xl lg:text-[5.4rem]"
+          className="mt-9 font-display text-[2.25rem] font-bold leading-[1.06] tracking-[-0.03em] text-white sm:whitespace-nowrap sm:text-[length:min(3rem,calc((100vw_-_3rem)/21.5))]"
         >
           {title}
         </motion.h1>
@@ -99,18 +97,10 @@ export function SkyHero({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/80 sm:text-xl"
+          className="mx-auto mt-5 max-w-4xl text-balance text-lg leading-relaxed text-white/80 sm:text-xl"
         >
           {subtitle}
         </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25 }}
-          className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
-        >
-          {actions}
-        </motion.div>
       </div>
 
       <motion.div
@@ -122,21 +112,5 @@ export function SkyHero({
         {stage}
       </motion.div>
     </section>
-  )
-}
-
-/** The two button styles used on the sky. */
-export function SkyButton({ href, children, variant = 'solid' }: { href: string; children: ReactNode; variant?: 'solid' | 'ghost' }) {
-  return (
-    <a
-      href={href}
-      className={
-        variant === 'solid'
-          ? 'inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-8 py-4 text-base font-semibold text-slate-900 shadow-xl shadow-navy-deep/30 transition-transform hover:-translate-y-0.5 sm:w-auto'
-          : 'inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/50 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-white/10 sm:w-auto'
-      }
-    >
-      {children}
-    </a>
   )
 }

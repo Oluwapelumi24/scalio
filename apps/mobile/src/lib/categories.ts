@@ -58,10 +58,25 @@ export const CATEGORY_META: Record<Interest, CategoryMeta> = {
     color: '#673AB7',
     image: require('../../assets/interests/lashes-brows.jpg'),
   },
-  Photography: {
-    icon: 'camera',
-    color: '#607D8B',
-    image: require('../../assets/interests/photography.jpg'),
+  Tailoring: {
+    icon: 'crop',
+    color: '#B45309',
+    image: require('../../assets/interests/tailoring.jpg'),
+  },
+  Pilates: {
+    icon: 'target',
+    color: '#E11D48',
+    image: require('../../assets/interests/pilates.jpg'),
+  },
+  Fitness: {
+    icon: 'zap',
+    color: '#BE123C',
+    image: require('../../assets/interests/fitness.jpg'),
+  },
+  Physio: {
+    icon: 'plus-square',
+    color: '#0F766E',
+    image: require('../../assets/interests/physio.jpg'),
   },
   Laundry: {
     icon: 'wind',
@@ -72,11 +87,6 @@ export const CATEGORY_META: Record<Interest, CategoryMeta> = {
     icon: 'droplet',
     color: '#26A69A',
     image: require('../../assets/interests/cleaning.jpg'),
-  },
-  Studio: {
-    icon: 'aperture',
-    color: '#8B5CF6',
-    image: require('../../assets/interests/studio.jpg'),
   },
 };
 

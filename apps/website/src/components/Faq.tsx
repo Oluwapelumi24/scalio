@@ -6,6 +6,10 @@ import { Reveal } from './Reveal'
 
 const FAQS = [
   {
+    q: 'What services can I book on Veno?',
+    a: 'In Lagos you can book spas, massage, Pilates, fitness and personal trainers, physiotherapy, hair salons, hair stylists and braiders, wig installs and hair extensions, barbers, nails, lashes and brows, makeup artists, tailors, laundry and dry cleaning, and home and office cleaning.',
+  },
+  {
     q: 'Is Veno free to use as a customer?',
     a: 'Yes. Browsing and booking is free — you only pay the vendor for the service you book, either online or on arrival, depending on what they allow.',
   },

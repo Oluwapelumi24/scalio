@@ -30,7 +30,7 @@ const STEPS = [
     key: 'share',
     Icon: Share2,
     title: 'Share your booking link',
-    body: 'One link for WhatsApp, Instagram and your bio. Clients pick a service and a free time, day or night. No app needed.',
+    body: 'One link for WhatsApp, Instagram, TikTok and your bio. Clients pick a service and a free time, day or night. No app needed.',
   },
 ] as const
 
@@ -116,9 +116,9 @@ function Preview({ step }: { step: Key }) {
       <p className="text-[15px] font-bold text-slate-900">Your booking link</p>
       <div className="mt-3 rounded-2xl bg-navy p-4 text-white">
         <p className="text-[10px] text-white/70">Clients book you at</p>
-        <p className="mt-1 text-[13px] font-bold">veno.app/book/true-wash</p>
-        <div className="mt-3 flex gap-2">
-          {['WhatsApp', 'Instagram', 'Copy'].map((l) => (
+        <p className="mt-1 text-[13px] font-bold">venohq.com/book/true-wash</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {['WhatsApp', 'Instagram', 'TikTok', 'Copy'].map((l) => (
             <span key={l} className="rounded-full bg-white/15 px-2.5 py-1 text-[9px] font-semibold">{l}</span>
           ))}
         </div>

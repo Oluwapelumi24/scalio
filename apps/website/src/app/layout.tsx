@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ShapeDefs } from "@/components/site/ShapeDefs";
+import { SITE_URL } from "@/lib/constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,10 +20,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const TITLE = "Veno: Book Spas, Salons, Barbers, Tailors & Pilates in Lagos";
+const DESCRIPTION =
+  "Book spas, massage, Pilates, salons, barbers, nails, makeup, tailors, laundry, cleaners and physio in Lagos. See real free times and pay your way.";
+
 export const metadata: Metadata = {
-  title: "Veno — Book local services, or grow the business behind them",
-  description:
-    "Veno connects customers with trusted local service businesses — spas, laundromats, tailors, cleaners, photographers, salons and more — with real-time booking for customers and a full business toolkit for vendors.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: { type: "website", siteName: "Veno", url: "/", locale: "en_NG", title: TITLE, description: DESCRIPTION },
+  twitter: { card: "summary", title: TITLE, description: DESCRIPTION },
 };
 
 export default function RootLayout({

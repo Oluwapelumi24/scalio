@@ -23,7 +23,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Get set up', href: '/partners#setup' },
       { label: 'Inside the app', href: '/partners#features' },
       { label: 'Register your business', href: VENDOR_REGISTER_URL },
-      { label: 'Partner sign in', href: VENDOR_LOGIN_URL },
+      { label: 'Sign in', href: VENDOR_LOGIN_URL },
     ],
   },
   {

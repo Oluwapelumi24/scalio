@@ -1,17 +1,20 @@
+// Same services, names and order as the website (apps/website/src/lib/constants.ts).
 export const INTERESTS = [
-  'Salon',
-  'Barbershop',
-  'Hair Styling',
-  'Nails',
-  'Wig & Hair Extensions',
-  'Makeup',
   'Spa',
-  'Massage',
-  'Lashes & Brows',
-  'Photography',
   'Laundry',
+  'Tailoring',
+  'Salon',
   'Cleaning',
-  'Studio',
+  'Massage',
+  'Pilates',
+  'Fitness',
+  'Barbershop',
+  'Physio',
+  'Makeup',
+  'Nails',
+  'Lashes & Brows',
+  'Hair Styling',
+  'Wig & Hair Extensions',
 ] as const;
 
 export type Interest = (typeof INTERESTS)[number];

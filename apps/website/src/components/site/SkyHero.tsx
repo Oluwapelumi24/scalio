@@ -97,7 +97,7 @@ export function SkyHero({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="mx-auto mt-5 max-w-3xl text-lg leading-relaxed text-white/80 sm:text-xl"
+          className="mx-auto mt-5 max-w-4xl text-balance text-lg leading-relaxed text-white/80 sm:text-xl"
         >
           {subtitle}
         </motion.p>

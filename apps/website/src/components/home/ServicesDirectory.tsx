@@ -137,7 +137,7 @@ export function ServicesDirectory() {
       <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
           <h2 id="services-title" className="font-display text-4xl font-bold leading-[1.04] tracking-tight text-slate-900 sm:text-5xl">
-            Book local services across Lagos
+            Book local services near you
           </h2>
           <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">
             From your weekly laundry to a Pilates class or a bridal makeup artist, find a reviewed business and book a time that is really free.

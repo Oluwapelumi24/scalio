@@ -41,7 +41,7 @@ export default function Home() {
         <SkyHero
           audience="individuals"
           title={<>Book the services your week runs on</>}
-          subtitle="See real free times, book in a minute, and pay the way you like."
+          subtitle="Discover trusted beauty experts, salons, cleaners, spas and wellness studios."
           stage={<HomeHeroStage />}
         />
         <CategoryMarquee />

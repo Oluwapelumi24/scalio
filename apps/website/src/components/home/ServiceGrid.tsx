@@ -83,7 +83,6 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
                 key={category.name}
                 inert={hidden || undefined}
                 aria-hidden={hidden || undefined}
-                className={index === CATEGORIES.length - 3 ? 'lg:col-start-2' : undefined}
               >
                 {prelaunch ? (
                   <Link

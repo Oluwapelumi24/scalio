@@ -40,19 +40,19 @@ const PRELAUNCH_COLUMNS: { title: string; links: { label: string; href: string }
   {
     title: 'For users',
     links: [
-      { label: 'How it works', href: '/prelaunch#customers' },
-      { label: 'Categories', href: '/prelaunch#categories' },
-      { label: 'Questions', href: '/prelaunch#faq' },
-      { label: WAITLIST_CTA, href: '/prelaunch#waitlist' },
+      { label: 'How it works', href: '/#customers' },
+      { label: 'Categories', href: '/#categories' },
+      { label: 'Questions', href: '/#faq' },
+      { label: WAITLIST_CTA, href: '/#waitlist' },
     ],
   },
   {
     title: 'For partners',
     links: [
-      { label: 'Veno for partners', href: '/prelaunch/partners' },
-      { label: 'Get set up', href: '/prelaunch/partners#setup' },
-      { label: 'Inside the app', href: '/prelaunch/partners#features' },
-      { label: WAITLIST_CTA, href: '/prelaunch/partners#waitlist' },
+      { label: 'Veno for partners', href: '/partners' },
+      { label: 'Get set up', href: '/partners#setup' },
+      { label: 'Inside the app', href: '/partners#features' },
+      { label: WAITLIST_CTA, href: '/partners#waitlist' },
     ],
   },
   {

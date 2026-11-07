@@ -96,7 +96,7 @@ export function BookedHero({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(70%_46%_at_50%_0%,#ffffff_0%,rgba(255,255,255,0)_68%),radial-gradient(80%_42%_at_50%_100%,#d9e3fb_0%,rgba(246,247,251,0)_72%)]" />
 
       <div className="mx-auto max-w-5xl px-6 text-center">
-        <AudienceSwitch active="business" surface="light" base={prelaunch ? '/prelaunch' : ''} />
+        <AudienceSwitch active="business" surface="light" />
 
         {prelaunch ? (
           <p className="mt-8 text-sm font-semibold uppercase tracking-[0.18em] text-navy">Opening soon in Lagos</p>

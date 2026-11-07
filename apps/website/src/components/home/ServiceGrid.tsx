@@ -87,7 +87,7 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
               >
                 {prelaunch ? (
                   <Link
-                    href={`/prelaunch?service=${encodeURIComponent(category.name)}#waitlist`}
+                    href={`/?service=${encodeURIComponent(category.name)}#waitlist`}
                     className="flex h-full flex-col items-center rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center transition-colors hover:border-navy/30 hover:bg-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
                   >
                     {body}

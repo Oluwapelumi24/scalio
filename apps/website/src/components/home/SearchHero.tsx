@@ -52,7 +52,7 @@ export function SearchHero({ prelaunch = false }: { prelaunch?: boolean }) {
       <div className={`pointer-events-none absolute inset-x-0 bottom-0 -z-10 bg-gradient-to-b from-transparent to-white ${prelaunch ? 'h-16' : 'h-28'}`} />
 
       <div className="mx-auto max-w-5xl px-6 text-center">
-        <AudienceSwitch active="individuals" surface="light" base={prelaunch ? '/prelaunch' : ''} />
+        <AudienceSwitch active="individuals" surface="light" />
 
         {prelaunch ? (
           <p className="mt-8 text-sm font-semibold uppercase tracking-[0.18em] text-navy">Opening soon in Lagos</p>

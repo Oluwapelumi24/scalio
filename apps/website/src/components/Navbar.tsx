@@ -15,9 +15,9 @@ const LINKS = [
 ]
 
 const PRELAUNCH_LINKS = [
-  { label: 'Users', href: '/prelaunch#customers' },
-  { label: 'Partners', href: '/prelaunch/partners' },
-  { label: 'FAQ', href: '/prelaunch#faq' },
+  { label: 'Users', href: '/#customers' },
+  { label: 'Partners', href: '/partners' },
+  { label: 'FAQ', href: '/#faq' },
 ]
 
 export function Logo({ light = false }: { light?: boolean }) {
@@ -39,10 +39,10 @@ export function Navbar({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
   const [solid, setSolid] = useState(site === 'prelaunch')
   const pathname = usePathname()
   const links = site === 'prelaunch' ? PRELAUNCH_LINKS : LINKS
-  const partnersPath = site === 'prelaunch' ? '/prelaunch/partners' : '/partners'
+  const partnersPath = '/partners'
   const isPartners = pathname === partnersPath || pathname.startsWith(`${partnersPath}/`)
   const isActive = (href: string) => !href.includes('#') && pathname.startsWith(href)
-  const homeHref = site === 'prelaunch' ? '/prelaunch' : '/'
+  const homeHref = '/'
 
   useEffect(() => {
     if (site === 'prelaunch') return

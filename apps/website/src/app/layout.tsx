@@ -27,9 +27,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const TITLE = "Veno: Book Spas, Salons, Barbers, Tailors & Pilates in Lagos";
+const TITLE = "Veno — Opening soon. Join the waitlist.";
 const DESCRIPTION =
-  "Book spas, massage, Pilates, salons, barbers, nails, makeup, tailors, laundry, cleaners and physio in Lagos. See real free times and pay your way.";
+  "Veno is opening soon in Lagos. Join the waitlist to book spas, salons, laundry, tailors and other local services, or to list your business.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

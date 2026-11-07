@@ -144,7 +144,7 @@ export function NearbyListings({ prelaunch = false }: { prelaunch?: boolean }) {
             <li key={place.name} className="w-[280px] shrink-0 snap-start sm:w-[300px]">
               {prelaunch ? (
                 <Link
-                  href={`/prelaunch?service=${encodeURIComponent(place.category)}#waitlist`}
+                  href={`/?service=${encodeURIComponent(place.category)}#waitlist`}
                   className="block overflow-hidden rounded-2xl border border-slate-200 bg-white transition-colors hover:border-navy/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
                 >
                   <ListingCard place={place} action={WAITLIST_CTA} />

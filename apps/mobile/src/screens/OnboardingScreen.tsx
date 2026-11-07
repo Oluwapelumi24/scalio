@@ -103,7 +103,7 @@ export function OnboardingScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.wordmarkRow}>
-        <Text style={styles.wordmark}>veno</Text>
+        <Image source={require('../../assets/lockup-color.png')} style={styles.wordmark} resizeMode="contain" accessibilityLabel="Veno" />
       </View>
 
       <View style={styles.mosaicWrap} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -160,7 +160,7 @@ const useStyles = makeStyles((colors) => ({
   segmentFill: { height: 3, backgroundColor: colors.accent },
 
   wordmarkRow: { alignItems: 'center', paddingTop: 14, paddingBottom: 10 },
-  wordmark: { fontSize: 17, fontWeight: '700', letterSpacing: 2, color: colors.text },
+  wordmark: { width: 92, height: 28 },
 
   mosaicWrap: { height: MOSAIC_H, overflow: 'hidden' },
   mosaic: { flexDirection: 'row', gap: GAP, paddingHorizontal: GAP },

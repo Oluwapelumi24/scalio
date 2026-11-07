@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { ShapeDefs } from "@/components/site/ShapeDefs";
 import { SITE_URL } from "@/lib/constants";
@@ -13,6 +13,13 @@ const geistSans = Geist({
 const display = Bricolage_Grotesque({
   variable: "--font-display",
   subsets: ["latin"],
+});
+
+const serif = Instrument_Serif({
+  variable: "--font-instrument",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["italic"],
 });
 
 const geistMono = Geist_Mono({
@@ -39,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${display.variable} antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${display.variable} ${serif.variable} antialiased`}>
       <body>
         <ShapeDefs />
         {children}

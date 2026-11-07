@@ -12,12 +12,21 @@ const LABEL: Record<Testimonial['audience'], string> = { partner: 'Partners', us
  * opens on partners; on the home page it opens on users. Hidden when there's
  * nothing real to show.
  */
-export function Testimonials({ start = 'user', tone = 'light' }: { start?: Testimonial['audience']; tone?: 'light' | 'wash' }) {
-  const [audience, setAudience] = useState<Testimonial['audience']>(start)
-  const all = visibleTestimonials()
+export function Testimonials({
+  start = 'user',
+  only,
+  tone = 'light',
+}: {
+  start?: Testimonial['audience']
+  /** Lock the section to one audience and hide the switch. */
+  only?: Testimonial['audience']
+  tone?: 'light' | 'wash'
+}) {
+  const [audience, setAudience] = useState<Testimonial['audience']>(only ?? start)
+  const all = visibleTestimonials(only)
   if (all.length === 0) return null
   const available = (['partner', 'user'] as const).filter((a) => all.some((t) => t.audience === a))
-  const current = available.includes(audience) ? audience : available[0]
+  const current = only ?? (available.includes(audience) ? audience : available[0])
   const items = all.filter((t) => t.audience === current)
 
   return (
@@ -25,10 +34,16 @@ export function Testimonials({ start = 'user', tone = 'light' }: { start?: Testi
       <div className="mx-auto max-w-6xl px-6">
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">What people are saying</h2>
-          <p className="mt-4 text-lg text-slate-600">From the businesses that run on Veno, and the people who book them.</p>
+          <p className="mt-4 text-lg text-slate-600">
+            {only === 'user'
+              ? 'From the people who book on Veno.'
+              : only === 'partner'
+                ? 'From the businesses that run on Veno.'
+                : 'From the businesses that run on Veno, and the people who book them.'}
+          </p>
         </Reveal>
 
-        {available.length > 1 ? (
+        {!only && available.length > 1 ? (
           <div className="mt-8 flex justify-center">
             <div role="tablist" aria-label="Whose words" className="inline-flex rounded-2xl bg-slate-100 p-1">
               {available.map((a) => (

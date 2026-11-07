@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Check, Clock, CreditCard, Scissors, Share2 } from 'lucide-react'
+import { ArrowRight, Check, Clock, CreditCard, Scissors, Share2 } from 'lucide-react'
+import { WAITLIST_CTA, WAITLIST_HREF } from '@/components/site/JoinWaitlist'
+import { VENDOR_REGISTER_URL } from '@/lib/constants'
 import { PhoneFrame } from './VendorPhone'
 
 // The same four steps as the vendor app's "Continue setup" flow, in the same order.
@@ -136,7 +138,7 @@ function Preview({ step }: { step: Key }) {
   )
 }
 
-export function SetupSteps() {
+export function SetupSteps({ prelaunch = false }: { prelaunch?: boolean }) {
   const [active, setActive] = useState<Key>('services')
   const index = STEPS.findIndex((s) => s.key === active)
 
@@ -184,6 +186,13 @@ export function SetupSteps() {
             )
           })}
         </ol>
+        <a
+          href={prelaunch ? WAITLIST_HREF : VENDOR_REGISTER_URL}
+          className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-navy px-6 py-3 text-[15px] font-semibold text-white transition-transform duration-150 ease-out hover:bg-navy-deep active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:active:scale-100"
+        >
+          {prelaunch ? WAITLIST_CTA : 'Register your business'}
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </a>
       </div>
 
       <PhoneFrame className="hidden sm:block">

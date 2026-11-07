@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import { Logo } from './Navbar'
 import { VENDOR_LOGIN_URL, VENDOR_REGISTER_URL } from '@/lib/constants'
+import { WAITLIST_CTA } from '@/components/site/JoinWaitlist'
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -12,7 +13,6 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: 'How it works', href: '/#customers' },
       { label: 'Categories', href: '/#categories' },
-      { label: 'Join the waitlist', href: '/#waitlist' },
       { label: 'Questions', href: '/#faq' },
     ],
   },
@@ -24,6 +24,35 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: 'Inside the app', href: '/partners#features' },
       { label: 'Register your business', href: VENDOR_REGISTER_URL },
       { label: 'Sign in', href: VENDOR_LOGIN_URL },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy policy', href: '#' },
+      { label: 'Terms and conditions', href: '#' },
+      { label: 'Cookie information', href: '#' },
+    ],
+  },
+]
+
+const PRELAUNCH_COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: 'For users',
+    links: [
+      { label: 'How it works', href: '/prelaunch#customers' },
+      { label: 'Categories', href: '/prelaunch#categories' },
+      { label: 'Questions', href: '/prelaunch#faq' },
+      { label: WAITLIST_CTA, href: '/prelaunch#waitlist' },
+    ],
+  },
+  {
+    title: 'For partners',
+    links: [
+      { label: 'Veno for partners', href: '/prelaunch/partners' },
+      { label: 'Get set up', href: '/prelaunch/partners#setup' },
+      { label: 'Inside the app', href: '/prelaunch/partners#features' },
+      { label: WAITLIST_CTA, href: '/prelaunch/partners#waitlist' },
     ],
   },
   {
@@ -49,8 +78,9 @@ function Flag() {
   )
 }
 
-export function Footer() {
+export function Footer({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
   const [country] = useState(COUNTRIES[0])
+  const columns = site === 'prelaunch' ? PRELAUNCH_COLUMNS : COLUMNS
   return (
     <footer className="bg-[#111111] text-white">
       <div className="mx-auto max-w-7xl px-6 pb-10 pt-20">
@@ -67,7 +97,7 @@ export function Footer() {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
-            {COLUMNS.map((c) => (
+            {columns.map((c) => (
               <div key={c.title}>
                 <h4 className="text-base font-semibold">{c.title}</h4>
                 <ul className="mt-6 space-y-3.5">

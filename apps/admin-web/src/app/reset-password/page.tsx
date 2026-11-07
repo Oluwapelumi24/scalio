@@ -11,11 +11,10 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 mb-4">
-            <span className="text-white font-bold text-xl">V</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Veno</h1>
-          <p className="text-sm text-gray-500 mt-1">Admin Portal</p>
+          <h1>
+            <img src="/brand/lockup-color.svg" alt="Veno" className="mx-auto h-10 w-auto" />
+          </h1>
+          <p className="text-sm text-gray-500 mt-3">Admin Portal</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">

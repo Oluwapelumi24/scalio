@@ -1,6 +1,58 @@
 import Link from 'next/link'
-import { ArrowRight, Bell, CalendarCheck, Check, MapPin, Search, Star } from 'lucide-react'
+import { ArrowRight, Bell, CalendarCheck, Check, Clock, MapPin, Search, ShieldCheck, Sparkles, Star } from 'lucide-react'
+import { JoinWaitlist } from '@/components/site/JoinWaitlist'
 import { Reveal } from '@/components/Reveal'
+
+/* ── Feature orbs ───────────────────────────────────────────────────────────── */
+
+/** A soft pastel disc with a stacked, glossy icon "object" in the middle. */
+function Orb({ tint, from, to, Icon }: { tint: string; from: string; to: string; Icon: typeof Star }) {
+  return (
+    <div className={`relative flex h-40 w-40 shrink-0 items-center justify-center rounded-full sm:h-48 sm:w-48 ${tint}`} aria-hidden>
+      <div className="absolute h-20 w-20 translate-x-3 translate-y-3 rotate-12 rounded-[1.4rem] opacity-40 sm:h-24 sm:w-24" style={{ background: `linear-gradient(135deg, ${from}, ${to})` }} />
+      <div className="relative flex h-20 w-20 -rotate-6 items-center justify-center rounded-[1.4rem] shadow-2xl ring-1 ring-white/50 sm:h-24 sm:w-24" style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
+        <div className="absolute inset-x-2 top-1.5 h-1/3 rounded-full bg-white/35 blur-[2px]" />
+        <Icon className="relative h-10 w-10 text-white drop-shadow sm:h-12 sm:w-12" strokeWidth={1.8} />
+      </div>
+    </div>
+  )
+}
+
+const ORBS = [
+  { title: 'Real availability', body: 'Times come straight from each business’s own calendar, so what you see is what is free. No double bookings.', tint: 'bg-[#dfe6ff]', from: '#1e3a8a', to: '#6d8cff', Icon: Clock },
+  { title: 'Fair, clear prices', body: 'Every service shows its price and how long it takes before you book. Browsing and booking cost nothing extra.', tint: 'bg-[#ffe0ef]', from: '#be185d', to: '#f9a8d4', Icon: Sparkles },
+  { title: 'Reviewed businesses', body: 'Our team checks every business before it appears on Veno. No unverified listings.', tint: 'bg-[#d9f7e6]', from: '#047857', to: '#6ee7b7', Icon: ShieldCheck },
+  { title: 'Everything in one place', body: 'Upcoming visits, receipts, directions and the places you love, all on your phone.', tint: 'bg-[#ece6ff]', from: '#6d28d9', to: '#c4b5fd', Icon: CalendarCheck },
+]
+
+export function FeatureOrbs({ prelaunch = false }: { prelaunch?: boolean }) {
+  return (
+    <section className="bg-white px-6 py-24 sm:py-28">
+      <Reveal className={`mx-auto max-w-6xl ${prelaunch ? 'text-center' : ''}`}>
+        <h2 className={`font-display text-4xl font-bold leading-[1.04] tracking-tight text-slate-900 sm:text-6xl ${prelaunch ? 'mx-auto max-w-4xl' : 'max-w-4xl'}`}>
+          Booking you can trust, from the first tap to the last touch-up
+        </h2>
+      </Reveal>
+      <div className="mx-auto mt-16 grid max-w-6xl gap-x-12 gap-y-14 md:grid-cols-2">
+        {ORBS.map((o, i) => (
+          <Reveal key={o.title} delay={(i % 2) * 0.08} className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+            <Orb tint={o.tint} from={o.from} to={o.to} Icon={o.Icon} />
+            <div>
+              <h3 className="font-display text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.75rem]">{o.title}</h3>
+              <p className="mt-3 text-base leading-relaxed text-slate-600">{o.body}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+      {prelaunch ? (
+        <div className="mx-auto mt-16 flex max-w-6xl justify-center">
+          <JoinWaitlist />
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
 
 /* ── Find it. Book it. Pay your way. Show up. ───────────────────────────────── */
 

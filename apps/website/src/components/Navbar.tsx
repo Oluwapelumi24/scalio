@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { VENDOR_LOGIN_URL, VENDOR_REGISTER_URL } from '@/lib/constants'
+import { WAITLIST_CTA, WAITLIST_HREF } from '@/components/site/JoinWaitlist'
 
-// Absolute paths so the links work from every page; Partners has its own page.
 const LINKS = [
   { label: 'Users', href: '/#customers' },
   { label: 'Partners', href: '/partners' },
@@ -14,39 +14,51 @@ const LINKS = [
   { label: 'FAQ', href: '/#faq' },
 ]
 
+const PRELAUNCH_LINKS = [
+  { label: 'Users', href: '/prelaunch#customers' },
+  { label: 'Partners', href: '/prelaunch/partners' },
+  { label: 'FAQ', href: '/prelaunch#faq' },
+]
+
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <span className="flex items-center gap-2">
-      <span className={`flex h-8 w-8 items-center justify-center rounded-xl font-display text-base font-bold ${light ? 'bg-white text-navy' : 'bg-navy text-white'}`}>
-        V
-      </span>
-      <span className={`font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-slate-900'}`}>veno</span>
-    </span>
+    <img
+      src={light ? '/brand/lockup-reversed.svg' : '/brand/lockup-color.svg'}
+      alt="Veno"
+      className="h-8 w-auto"
+    />
   )
 }
 
 /**
- * Sits on top of the sky hero in white, and turns solid once you scroll past
- * it, so it always reads against what's underneath.
+ * Live: sits on the sky hero in white, then turns solid on scroll.
+ * Pre-launch: stays solid with waitlist CTAs.
  */
-export function Navbar() {
+export function Navbar({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
   const [open, setOpen] = useState(false)
-  const [solid, setSolid] = useState(false)
+  const [solid, setSolid] = useState(site === 'prelaunch')
   const pathname = usePathname()
-  const isPartners = pathname.startsWith('/partners')
+  const links = site === 'prelaunch' ? PRELAUNCH_LINKS : LINKS
+  const partnersPath = site === 'prelaunch' ? '/prelaunch/partners' : '/partners'
+  const isPartners = pathname === partnersPath || pathname.startsWith(`${partnersPath}/`)
   const isActive = (href: string) => !href.includes('#') && pathname.startsWith(href)
+  const homeHref = site === 'prelaunch' ? '/prelaunch' : '/'
 
   useEffect(() => {
+    if (site === 'prelaunch') return
     const onScroll = () => setSolid(window.scrollY > 40)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [site])
 
-  const light = !solid && !open
-  const primary = isPartners
-    ? { label: 'Register your business', href: VENDOR_REGISTER_URL }
-    : { label: 'Join the waitlist', href: '/#waitlist' }
+  const light = site === 'live' && !solid && !open
+  const primary =
+    site === 'prelaunch'
+      ? { label: WAITLIST_CTA, href: WAITLIST_HREF }
+      : isPartners
+        ? { label: 'Register your business', href: VENDOR_REGISTER_URL }
+        : { label: 'Join the waitlist', href: '/#waitlist' }
 
   return (
     <header
@@ -55,20 +67,24 @@ export function Navbar() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/" aria-label="Veno home">
+        <Link href={homeHref} aria-label="Veno home">
           <Logo light={light} />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
-          {LINKS.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               aria-current={isActive(link.href) ? 'page' : undefined}
               className={`rounded-full px-4 py-2 text-[15px] font-medium transition-colors ${
                 light
-                  ? isActive(link.href) ? 'bg-white/15 text-white' : 'text-white/80 hover:text-white'
-                  : isActive(link.href) ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                  ? isActive(link.href)
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/80 hover:text-white'
+                  : isActive(link.href)
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {link.label}
@@ -77,14 +93,16 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <a
-            href={VENDOR_LOGIN_URL}
-            className={`rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors ${
-              light ? 'border-white/60 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            Sign in
-          </a>
+          {site === 'live' ? (
+            <a
+              href={VENDOR_LOGIN_URL}
+              className={`rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors ${
+                light ? 'border-white/60 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              Sign in
+            </a>
+          ) : null}
           <a
             href={primary.href}
             className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
@@ -105,10 +123,10 @@ export function Navbar() {
         </button>
       </div>
 
-      {open && (
+      {open ? (
         <div className="border-t border-slate-100 bg-white px-6 pb-6 pt-2 md:hidden">
           <nav className="flex flex-col" aria-label="Main">
-            {LINKS.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -119,13 +137,21 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <a href={VENDOR_LOGIN_URL} className="py-3.5 text-base font-medium text-slate-700">Sign in</a>
-            <a href={primary.href} onClick={() => setOpen(false)} className="mt-2 rounded-xl bg-navy px-4 py-3.5 text-center text-sm font-semibold text-white">
+            {site === 'live' ? (
+              <a href={VENDOR_LOGIN_URL} className="py-3.5 text-base font-medium text-slate-700">
+                Sign in
+              </a>
+            ) : null}
+            <a
+              href={primary.href}
+              onClick={() => setOpen(false)}
+              className="mt-2 rounded-xl bg-navy px-4 py-3.5 text-center text-sm font-semibold text-white"
+            >
               {primary.label}
             </a>
           </nav>
         </div>
-      )}
+      ) : null}
     </header>
   )
 }

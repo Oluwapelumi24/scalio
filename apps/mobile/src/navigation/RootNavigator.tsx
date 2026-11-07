@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Text, View } from 'react-native';
+import { Animated, Image, View } from 'react-native';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
@@ -34,7 +34,7 @@ function SplashScreen() {
   return (
     <View style={styles.splash}>
       <Animated.View style={{ opacity: fadeAnim, alignItems: 'center' }}>
-        <Text style={styles.splashWordmark}>veno</Text>
+        <Image source={require('../../assets/lockup-reversed.png')} style={styles.splashLockup} resizeMode="contain" accessibilityLabel="Veno" />
       </Animated.View>
     </View>
   );
@@ -109,8 +109,8 @@ export function RootNavigator() {
   );
 }
 
-// Navy splash with the white wordmark, the same in light and dark.
+// Navy splash with the reversed lockup, the same in light and dark.
 const useStyles = makeStyles((colors) => ({
   splash: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accent },
-  splashWordmark: { fontSize: 30, fontWeight: '700', color: colors.onAccent, letterSpacing: 2 },
+  splashLockup: { width: 168, height: 52 },
 }));

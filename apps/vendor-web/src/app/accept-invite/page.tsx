@@ -74,8 +74,10 @@ export default function AcceptInvitePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Veno</h1>
-          <p className="text-sm text-gray-500 mt-1">Vendor Portal</p>
+          <h1>
+            <img src="/brand/lockup-color.svg" alt="Veno" className="mx-auto h-10 w-auto" />
+          </h1>
+          <p className="text-sm text-gray-500 mt-3">Vendor Portal</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">

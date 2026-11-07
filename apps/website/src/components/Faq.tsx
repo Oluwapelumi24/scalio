@@ -27,12 +27,36 @@ const FAQS = [
   },
   {
     q: 'What does it cost to list my business?',
-    a: 'Reach out after registering and our team will walk you through pricing for your business.',
+    a: 'Plans start at ₦15,000 a month for one person. Teams pay per seat, and annual billing saves 15%. The full list is on the partners page.',
   },
 ]
 
-export function Faq() {
+const PRELAUNCH_FAQS = [
+  {
+    q: 'When can I book?',
+    a: 'Veno is not open yet. Join the waitlist and we will email you the day booking opens in Lagos.',
+  },
+  {
+    q: 'What happens after I join the waitlist?',
+    a: 'We keep your email and write once, when it is your turn. You choose whether you are booking for yourself or listing a business.',
+  },
+  {
+    q: 'Which services will be on Veno?',
+    a: 'Spas, salons, barbershops, laundry, tailors, fitness and more across Lagos. Name a service when you join and we will mention it in that email.',
+  },
+  {
+    q: 'Will booking be free?',
+    a: 'Yes. Browsing and booking will be free. You pay the business for the service, either online or when you arrive.',
+  },
+  {
+    q: 'I run a business. Can I join?',
+    a: 'Yes. Choose “I’m a partner” on the waitlist. We will email you when registration opens. Plans start at ₦15,000 a month for one person.',
+  },
+]
+
+export function Faq({ variant = 'live' }: { variant?: 'live' | 'prelaunch' }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
+  const items = variant === 'prelaunch' ? PRELAUNCH_FAQS : FAQS
 
   return (
     <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-6 py-24">
@@ -43,7 +67,7 @@ export function Faq() {
       </Reveal>
 
       <div className="mt-12 space-y-2">
-        {FAQS.map((item, i) => {
+        {items.map((item, i) => {
           const isOpen = openIndex === i
           return (
             <Reveal key={item.q} delay={i * 0.05}>

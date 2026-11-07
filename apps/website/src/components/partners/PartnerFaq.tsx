@@ -30,15 +30,33 @@ const FAQS = [
   },
   {
     q: 'What does it cost?',
-    a: 'Register and our team will walk you through pricing for your business before you go live.',
+    a: 'Starter is ₦15,000 a month for one person, Professional is ₦25,000 and Premium is ₦40,000. Each extra login is a seat, and annual billing saves 15%.',
   },
 ]
 
-export function PartnerFaq() {
+export function PartnerFaq({ variant = 'live' }: { variant?: 'live' | 'prelaunch' }) {
   const [open, setOpen] = useState<number | null>(0)
+  const items =
+    variant === 'prelaunch'
+      ? FAQS.map((item) => {
+          if (item.q === 'How do I join?') {
+            return {
+              ...item,
+              a: 'Join the waitlist and choose “I’m a partner”. We will email you when registration opens. Every business is still reviewed before it goes live.',
+            }
+          }
+          if (item.q === 'Do my clients need to download an app?') {
+            return {
+              ...item,
+              a: 'No. Your booking link will open in any phone browser. Clients pick a service and a free time and get a confirmation. Clients on the Veno app will be able to find you there too.',
+            }
+          }
+          return item
+        })
+      : FAQS
   return (
     <div className="divide-y divide-slate-200 rounded-3xl border border-slate-200 bg-white">
-      {FAQS.map((f, i) => {
+      {items.map((f, i) => {
         const on = open === i
         return (
           <div key={f.q}>

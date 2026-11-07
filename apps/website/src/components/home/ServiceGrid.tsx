@@ -1,49 +1,11 @@
 'use client'
 
 import { useLayoutEffect, useRef, useState } from 'react'
-import {
-  Camera,
-  Car,
-  ChevronDown,
-  Dumbbell,
-  Eye,
-  Flower2,
-  Gem,
-  HeartHandshake,
-  Palette,
-  PawPrint,
-  Ruler,
-  Scissors,
-  Shirt,
-  Sparkles,
-  SprayCan,
-  Stethoscope,
-  Video,
-  Wind,
-} from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
-import { CATEGORIES, type Category } from '@/lib/constants'
+import { CATEGORIES } from '@/lib/constants'
 import { WAITLIST_CTA } from '@/components/site/JoinWaitlist'
-
-const ICONS: Record<Category['icon'], typeof Scissors> = {
-  scissors: Scissors,
-  wind: Wind,
-  sparkles: Sparkles,
-  gem: Gem,
-  palette: Palette,
-  flower: Flower2,
-  'heart-handshake': HeartHandshake,
-  eye: Eye,
-  camera: Camera,
-  shirt: Shirt,
-  spray: SprayCan,
-  video: Video,
-  ruler: Ruler,
-  car: Car,
-  dumbbell: Dumbbell,
-  paw: PawPrint,
-  stethoscope: Stethoscope,
-}
+import { CATEGORY_ICONS } from './CategoryMarquee'
 
 /**
  * The section under the hero: a grid of services. Choosing one starts the
@@ -105,7 +67,7 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
         >
           {CATEGORIES.map((category, index) => {
             const hidden = collapsed && clip != null && index >= clip.hiddenFrom
-            const Icon = ICONS[category.icon]
+            const Icon = CATEGORY_ICONS[category.icon]
             const body = (
               <>
                 <Icon className="h-7 w-7 text-navy" strokeWidth={1.25} aria-hidden />

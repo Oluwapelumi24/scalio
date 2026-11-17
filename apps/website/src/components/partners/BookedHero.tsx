@@ -111,7 +111,7 @@ export function BookedHero({
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
             href={prelaunch ? '#waitlist' : VENDOR_REGISTER_URL}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-navy px-6 py-3 text-[15px] font-semibold text-white transition-transform duration-150 ease-out hover:bg-navy-deep active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:active:scale-100"
+            className="inline-flex items-center justify-center gap-2 rounded-[20px] bg-navy px-6 text-[15px] font-semibold text-white transition-transform duration-150 ease-out hover:bg-navy-deep active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:active:scale-100 h-12"
           >
             {prelaunch ? WAITLIST_CTA : 'Register your business'}
             <ArrowRight className="h-4 w-4" aria-hidden />
@@ -119,7 +119,7 @@ export function BookedHero({
           {prelaunch ? null : (
             <a
               href="#features"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-[15px] font-semibold text-slate-950 transition-transform duration-150 ease-out hover:bg-slate-50 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:active:scale-100"
+              className="inline-flex items-center justify-center gap-2 rounded-[20px] border border-slate-200 bg-white px-6 text-[15px] font-semibold text-slate-950 transition-transform duration-150 ease-out hover:bg-slate-50 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:active:scale-100 h-12"
             >
               See every feature
             </a>

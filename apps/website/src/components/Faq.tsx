@@ -74,7 +74,7 @@ export function Faq({ variant = 'live' }: { variant?: 'live' | 'prelaunch' }) {
               <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : i)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                  className="keep-height flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
                 >
                   <span className="text-sm font-semibold text-slate-900">{item.q}</span>
                   <ChevronDown

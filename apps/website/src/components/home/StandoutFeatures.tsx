@@ -39,11 +39,11 @@ export function StandoutFeatures({ prelaunch = false }: { prelaunch?: boolean })
   return (
     <section className="bg-white px-6 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <div className={prelaunch ? 'text-center' : undefined}>
-          <h2 className={`font-display text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl ${prelaunch ? '' : 'max-w-2xl'}`}>
+        <div className="text-center">
+          <h2 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl">
             The details that keep a booking
           </h2>
-          <p className={`mt-4 text-lg leading-relaxed text-slate-600 ${prelaunch ? '' : 'max-w-xl'}`}>
+          <p className="mt-4 text-lg leading-relaxed text-slate-600">
             Free times are the start. These are what make the visit actually happen.
           </p>
           {prelaunch ? (
@@ -54,8 +54,8 @@ export function StandoutFeatures({ prelaunch = false }: { prelaunch?: boolean })
         </div>
         <ul className="mt-12 grid gap-4 md:grid-cols-3">
           {features.map(({ title, body, Icon, tint }) => (
-            <li key={title} className={`rounded-2xl border px-6 py-8 ${prelaunch ? `${tint} border-transparent` : 'border-slate-200 bg-white'}`}>
-              <span className={`flex h-11 w-11 items-center justify-center rounded-xl text-navy ${prelaunch ? 'bg-white' : 'bg-wash'}`}>
+            <li key={title} className={`rounded-2xl border border-transparent px-6 py-8 ${tint}`}>
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-navy">
                 <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
               </span>
               <h3 className="mt-5 font-display text-xl font-semibold tracking-tight text-slate-950">{title}</h3>

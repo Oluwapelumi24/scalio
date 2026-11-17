@@ -1,11 +1,13 @@
 'use client'
 
 import { useId, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Calendar, MapPin, Search } from 'lucide-react'
 import { AudienceSwitch } from '@/components/site/SkyHero'
 import { JoinWaitlist } from '@/components/site/JoinWaitlist'
 import { HeroGallery } from '@/components/home/HeroGallery'
 import { CATEGORIES } from '@/lib/constants'
+import { categorySlug } from '@/lib/samples'
 
 const FIELDS = [
   { name: 'service', label: 'All services', icon: Search },
@@ -36,6 +38,7 @@ function suggestionsFor(name: FieldName, query: string) {
  * The Book / Get booked switch stays above the headline.
  */
 export function SearchHero({ prelaunch = false }: { prelaunch?: boolean }) {
+  const router = useRouter()
   const listId = useId()
   const [values, setValues] = useState<Record<FieldName, string>>({ service: '', where: '', when: '' })
   const [open, setOpen] = useState<FieldName | null>(null)
@@ -74,7 +77,23 @@ export function SearchHero({ prelaunch = false }: { prelaunch?: boolean }) {
         ) : null}
 
         {prelaunch ? null : (
-        <form action="#categories" className="mx-auto mt-14 w-full max-w-[420px]">
+        <form
+          className="mx-auto mt-14 w-full max-w-[420px]"
+          onSubmit={(event) => {
+            event.preventDefault()
+            const query = values.service.trim().toLowerCase()
+            const match = CATEGORIES.find((category) => category.name.toLowerCase() === query)
+              ?? CATEGORIES.find((category) => query && category.name.toLowerCase().includes(query))
+            if (!match) {
+              document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })
+              return
+            }
+            const params = new URLSearchParams()
+            if (values.where.trim()) params.set('where', values.where.trim())
+            const search = params.toString()
+            router.push(`/samples/${categorySlug(match.name)}${search ? `?${search}` : ''}`)
+          }}
+        >
           <div className="rounded-[28px] border border-slate-200 bg-white p-2">
             {FIELDS.map(({ name, label, icon: Icon }, index) => {
               const options = suggestionsFor(name, values[name])

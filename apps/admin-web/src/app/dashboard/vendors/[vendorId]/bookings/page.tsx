@@ -45,7 +45,7 @@ export default async function VendorBookingsPage({
       <div className="mt-6 flex gap-2 mb-4 overflow-x-auto">
         {STATUS_TABS.map((s) => (
           <a key={s} href={s ? `?status=${s}` : '?'}
-            className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${status === s || (!status && !s) ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            className={`px-3 rounded-[20px] text-sm font-medium whitespace-nowrap ${status === s || (!status && !s) ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} h-12 inline-flex items-center`}>
             {s ? statusLabel(s) : 'All'}
           </a>
         ))}

@@ -80,7 +80,7 @@ export function PartnerFeatures() {
           </div>
           <a
             href="#features"
-            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-navy px-5 py-3 text-sm font-semibold text-white transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
+            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-[20px] bg-navy px-5 text-sm font-semibold text-white transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100 h-12"
           >
             All features
             <ArrowRight className="h-4 w-4" aria-hidden />

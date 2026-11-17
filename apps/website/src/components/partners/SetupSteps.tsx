@@ -188,7 +188,7 @@ export function SetupSteps({ prelaunch = false }: { prelaunch?: boolean }) {
         </ol>
         <a
           href={prelaunch ? WAITLIST_HREF : VENDOR_REGISTER_URL}
-          className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-navy px-6 py-3 text-[15px] font-semibold text-white transition-transform duration-150 ease-out hover:bg-navy-deep active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:active:scale-100"
+          className="mt-8 inline-flex items-center justify-center gap-2 rounded-[20px] bg-navy px-6 text-[15px] font-semibold text-white transition-transform duration-150 ease-out hover:bg-navy-deep active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:active:scale-100 h-12"
         >
           {prelaunch ? WAITLIST_CTA : 'Register your business'}
           <ArrowRight className="h-4 w-4" aria-hidden />

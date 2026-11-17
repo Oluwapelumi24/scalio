@@ -9,7 +9,9 @@ import { FeatureOrbs } from '@/components/home/Sections'
 import { Faq } from '@/components/Faq'
 import { Waitlist } from '@/components/Waitlist'
 import { Footer } from '@/components/Footer'
+import { DesignSwitch } from '@/components/site/DesignSwitch'
 import { CATEGORIES, SITE_URL } from '@/lib/constants'
+import { designMode } from '@/lib/design-preview'
 
 export const metadata: Metadata = {
   title: 'Veno — Opening soon. Join the waitlist.',
@@ -34,25 +36,29 @@ const STRUCTURED_DATA = {
 }
 
 /** Waitlist home — the public site until booking opens. */
-export default function Home() {
+export default async function Home() {
+  const mode = await designMode()
+  const prelaunch = mode === 'prelaunch'
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA).replace(/</g, '\\u003c') }}
       />
-      <Navbar site="prelaunch" />
+      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
       <main>
-        <SearchHero prelaunch />
-        <ServiceGrid prelaunch />
-        <StandoutFeatures prelaunch />
-        <FindBookShow prelaunch />
-        <PayYourWay prelaunch />
-        <FeatureOrbs prelaunch />
-        <Faq variant="prelaunch" />
-        <Waitlist purpose="launch" />
+        <SearchHero prelaunch={prelaunch} />
+        <ServiceGrid prelaunch={prelaunch} />
+        <StandoutFeatures prelaunch={prelaunch} />
+        <FindBookShow prelaunch={prelaunch} />
+        <PayYourWay prelaunch={prelaunch} />
+        <FeatureOrbs prelaunch={prelaunch} />
+        <Faq variant={prelaunch ? 'prelaunch' : 'live'} />
+        <Waitlist purpose={prelaunch ? 'launch' : 'later'} />
       </main>
-      <Footer site="prelaunch" />
+      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
+      <DesignSwitch mode={mode} />
     </>
   )
 }

@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 href="/reset-password"
-                className="block w-full text-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                className="flex h-12 w-full items-center justify-center rounded-[20px] bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
               >
                 Enter reset code
               </Link>

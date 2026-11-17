@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/lib/constants'
 import { WAITLIST_CTA } from '@/components/site/JoinWaitlist'
+import { categorySlug } from '@/lib/samples'
 import { CATEGORY_ICONS } from './CategoryMarquee'
 
 /**
@@ -17,7 +18,6 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
   const [clip, setClip] = useState<{ height: number; hiddenFrom: number } | null>(null)
 
   useLayoutEffect(() => {
-    if (!prelaunch) return
     const list = listRef.current
     if (!list) return
 
@@ -42,9 +42,9 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
     const observer = new ResizeObserver(measure)
     observer.observe(list)
     return () => observer.disconnect()
-  }, [prelaunch])
+  }, [])
 
-  const collapsed = prelaunch && !expanded && clip != null
+  const collapsed = !expanded && clip != null
 
   return (
     <section id="categories" aria-labelledby="services-heading" className="scroll-mt-20 bg-white px-6 py-20 sm:py-28">
@@ -84,18 +84,16 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
                 inert={hidden || undefined}
                 aria-hidden={hidden || undefined}
               >
-                {prelaunch ? (
-                  <Link
-                    href={`/?service=${encodeURIComponent(category.name)}#waitlist`}
-                    className="flex h-full flex-col items-center rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center transition-colors hover:border-navy/30 hover:bg-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-                  >
-                    {body}
-                  </Link>
-                ) : (
-                  <div className="flex h-full flex-col items-center rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center">
-                    {body}
-                  </div>
-                )}
+                <Link
+                  href={
+                    prelaunch
+                      ? `/?service=${encodeURIComponent(category.name)}#waitlist`
+                      : `/samples/${categorySlug(category.name)}`
+                  }
+                  className="flex h-full flex-col items-center rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center transition-colors hover:border-navy/30 hover:bg-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
+                >
+                  {body}
+                </Link>
               </li>
             )
           })}
@@ -104,19 +102,17 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" aria-hidden />
         ) : null}
         </div>
-        {prelaunch ? (
-          <div className="mt-8 flex justify-center">
-            <button
-              type="button"
-              aria-expanded={expanded}
-              onClick={() => setExpanded((open) => !open)}
-              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-navy transition-colors duration-150 hover:bg-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-            >
-              {expanded ? 'Show fewer' : 'Show all services'}
-              <ChevronDown className={`h-4 w-4 transition-transform duration-150 ${expanded ? 'rotate-180' : ''}`} aria-hidden />
-            </button>
-          </div>
-        ) : null}
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-navy transition-colors duration-150 hover:bg-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
+          >
+            {expanded ? 'Show fewer' : 'Show all services'}
+            <ChevronDown className={`h-4 w-4 transition-transform duration-150 ${expanded ? 'rotate-180' : ''}`} aria-hidden />
+          </button>
+        </div>
       </div>
     </section>
   )

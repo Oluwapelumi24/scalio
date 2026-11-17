@@ -11,6 +11,8 @@ import { SetupSteps } from '@/components/partners/SetupSteps'
 import { FeatureTour } from '@/components/partners/FeatureTour'
 import { PartnerFaq } from '@/components/partners/PartnerFaq'
 import { PartnerFeatures } from '@/components/partners/PartnerFeatures'
+import { DesignSwitch } from '@/components/site/DesignSwitch'
+import { designMode } from '@/lib/design-preview'
 
 export const metadata: Metadata = {
   title: 'Veno for partners — Opening soon. Join the waitlist.',
@@ -35,12 +37,15 @@ const ROLES = [
 ]
 
 /** Waitlist partners page — the public partner pitch until registration opens. */
-export default function PartnersPage() {
+export default async function PartnersPage() {
+  const mode = await designMode()
+  const prelaunch = mode === 'prelaunch'
+
   return (
     <>
-      <Navbar site="prelaunch" />
+      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
       <main>
-        <BookedHero prelaunch />
+        <BookedHero prelaunch={prelaunch} />
 
         <CategoryMarquee />
 
@@ -51,14 +56,18 @@ export default function PartnersPage() {
         <section id="setup" className="scroll-mt-20 py-24">
           <div className="mx-auto max-w-6xl px-6">
             <Reveal className="mx-auto max-w-2xl text-center">
-              <span className="text-sm font-semibold uppercase tracking-wide text-navy">When you join</span>
+              <span className="text-sm font-semibold uppercase tracking-wide text-navy">
+                {prelaunch ? 'When you join' : 'Get started'}
+              </span>
               <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Booking-ready in an afternoon</h2>
               <p className="mt-4 text-lg text-slate-600">
-                When registration opens, the app walks you through four steps. You can take your first booking after the second.
+                {prelaunch
+                  ? 'When registration opens, the app walks you through four steps. You can take your first booking after the second.'
+                  : 'Once you are approved, the app walks you through four steps. You can take your first booking after the second.'}
               </p>
             </Reveal>
             <div className="mt-12">
-              <SetupSteps prelaunch />
+              <SetupSteps prelaunch={prelaunch} />
             </div>
           </div>
         </section>
@@ -149,14 +158,15 @@ export default function PartnersPage() {
               <h2 className="text-center font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Questions from businesses</h2>
             </Reveal>
             <div className="mt-10">
-              <PartnerFaq variant="prelaunch" />
+              <PartnerFaq variant={prelaunch ? 'prelaunch' : 'live'} />
             </div>
           </div>
         </section>
 
-        <Waitlist purpose="launch" defaultAudience="vendor" />
+        <Waitlist purpose={prelaunch ? 'launch' : 'later'} defaultAudience="vendor" />
       </main>
-      <Footer site="prelaunch" />
+      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
+      <DesignSwitch mode={mode} />
     </>
   )
 }

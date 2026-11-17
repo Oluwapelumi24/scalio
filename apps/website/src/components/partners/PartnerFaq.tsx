@@ -64,7 +64,7 @@ export function PartnerFaq({ variant = 'live' }: { variant?: 'live' | 'prelaunch
               type="button"
               onClick={() => setOpen(on ? null : i)}
               aria-expanded={on}
-              className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+              className="keep-height flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
             >
               <span className="text-base font-semibold text-slate-900">{f.q}</span>
               <ChevronDown className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${on ? 'rotate-180' : ''}`} />

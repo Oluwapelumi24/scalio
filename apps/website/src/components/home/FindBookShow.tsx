@@ -195,7 +195,7 @@ export function FindBookShow({ prelaunch = false }: { prelaunch?: boolean }) {
                   role="tab"
                   aria-selected={on}
                   onClick={() => select(stepIndex)}
-                  className="w-full py-5 text-left"
+                  className="keep-height w-full py-5 text-left"
                 >
                   <span className="flex items-start gap-4">
                     <span

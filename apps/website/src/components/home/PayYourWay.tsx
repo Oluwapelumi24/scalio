@@ -41,48 +41,6 @@ function Bill() {
 
 /** A single bill, not a second step-and-panel. The price is the layout. */
 export function PayYourWay({ prelaunch = false }: { prelaunch?: boolean }) {
-  if (!prelaunch) {
-    return (
-      <section className="bg-[#f6f7f9] px-6 py-20 sm:py-28">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-medium text-slate-500">Payment</p>
-          <h2 className="mt-3 max-w-xl font-display text-4xl font-bold leading-[1.02] tracking-tight text-slate-950 sm:text-5xl">
-            Pay the way you like.
-          </h2>
-          <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600">
-            Hold the time with a deposit, or pay when you arrive. The price is settled before you book.
-          </p>
-
-          <article className="mt-12 rounded-2xl border border-slate-200 bg-white">
-            <div className="px-6 py-7 sm:px-10 sm:py-9">
-              <Bill />
-            </div>
-            <ul className="grid border-t border-slate-200 sm:grid-cols-3">
-              <li className="border-b border-slate-200 px-6 py-6 sm:border-b-0 sm:px-10 sm:border-l-0">
-                <p className="font-semibold tracking-tight text-slate-950">Pay at the visit</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
-                  Cash, card or transfer, where the business allows it.
-                </p>
-              </li>
-              <li className="border-b border-slate-200 px-6 py-6 sm:border-b-0 sm:border-l sm:px-10">
-                <p className="font-semibold tracking-tight text-slate-950">Or hold it</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
-                  A deposit keeps the time. The rest waits until you arrive.
-                </p>
-              </li>
-              <li className="px-6 py-6 sm:border-l sm:px-10">
-                <p className="font-semibold tracking-tight text-slate-950">See it first</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
-                  The figure on the bill is the whole charge. It does not change at the door.
-                </p>
-              </li>
-            </ul>
-          </article>
-        </div>
-      </section>
-    )
-  }
-
   return (
     <section className="relative overflow-hidden bg-[#f6f7f9] px-6 py-20 sm:py-28">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
@@ -207,9 +165,11 @@ export function PayYourWay({ prelaunch = false }: { prelaunch?: boolean }) {
           </li>
         </ul>
 
-        <div className="mt-10 flex justify-center">
-          <JoinWaitlist />
-        </div>
+        {prelaunch ? (
+          <div className="mt-10 flex justify-center">
+            <JoinWaitlist />
+          </div>
+        ) : null}
       </div>
     </section>
   )

@@ -46,7 +46,7 @@ export function BuiltFor() {
           </div>
           <a
             href={WAITLIST_HREF}
-            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-black/5 transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
+            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-[20px] bg-white px-5 text-sm font-semibold text-slate-950 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-black/5 transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100 h-12"
           >
             {WAITLIST_CTA}
             <ArrowRight className="h-4 w-4" aria-hidden />

@@ -35,7 +35,7 @@ export default async function VendorsPage() {
           {pendingCount > 0 && (
             <Link
               href="/dashboard/vendors/reviews"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-100"
+              className="inline-flex items-center gap-2 px-4 bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium rounded-[20px] hover:bg-amber-100 h-12"
             >
               <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-bold">{pendingCount}</span>
               Review pending
@@ -43,7 +43,7 @@ export default async function VendorsPage() {
           )}
           <Link
             href="/dashboard/vendors/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 px-4 bg-indigo-600 text-white text-sm font-semibold rounded-[20px] hover:bg-indigo-700 h-12"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>
             Onboard vendor

@@ -20,10 +20,12 @@ export default async function InterestsPage({
   ])
 
   return (
-    <div className="max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">What do you want help with?</h1>
-        <p className="text-sm text-gray-500 mt-1">
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-6 md:mb-8">
+        <h1 className="max-w-xl text-[1.75rem] font-bold leading-[1.15] tracking-tight text-[#0a0a0a] sm:text-3xl">
+          What do you want help with?
+        </h1>
+        <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-[#4a4e57]">
           Choose what matters most to your business. We&apos;ll set up Veno to help you get things done.
         </p>
       </div>

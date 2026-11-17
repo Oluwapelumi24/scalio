@@ -32,7 +32,7 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
         </div>
         <div className="flex gap-2">
           {PERIODS.map((x) => (
-            <Link key={x.id} href={`/dashboard/feedback?p=${x.id}`} className={`rounded-full border px-3 py-1 text-sm font-medium ${p === x.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'}`}>{x.label}</Link>
+            <Link key={x.id} href={`/dashboard/feedback?p=${x.id}`} className={`rounded-[20px] border px-3 text-sm font-medium ${p === x.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'} h-12 inline-flex items-center`}>{x.label}</Link>
           ))}
         </div>
       </div>

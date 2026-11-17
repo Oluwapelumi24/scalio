@@ -35,9 +35,9 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
 
       {(lead.phone || lead.email) && (
         <div className="flex flex-wrap gap-2">
-          {lead.phone && <a href={`tel:${lead.phone}`} className="rounded-full border border-indigo-600 px-3 py-1 text-sm font-medium text-indigo-600">Call {lead.phone}</a>}
-          {lead.phone && <a href={`https://wa.me/${waNumber(lead.phone)}`} target="_blank" rel="noreferrer" className="rounded-full border border-indigo-600 px-3 py-1 text-sm font-medium text-indigo-600">WhatsApp</a>}
-          {lead.email && <a href={`mailto:${lead.email}`} className="rounded-full border border-indigo-600 px-3 py-1 text-sm font-medium text-indigo-600">Email</a>}
+          {lead.phone && <a href={`tel:${lead.phone}`} className="rounded-[20px] border border-indigo-600 px-3 text-sm font-medium text-indigo-600 h-12 inline-flex items-center">Call {lead.phone}</a>}
+          {lead.phone && <a href={`https://wa.me/${waNumber(lead.phone)}`} target="_blank" rel="noreferrer" className="rounded-[20px] border border-indigo-600 px-3 text-sm font-medium text-indigo-600 h-12 inline-flex items-center">WhatsApp</a>}
+          {lead.email && <a href={`mailto:${lead.email}`} className="rounded-[20px] border border-indigo-600 px-3 text-sm font-medium text-indigo-600 h-12 inline-flex items-center">Email</a>}
         </div>
       )}
 

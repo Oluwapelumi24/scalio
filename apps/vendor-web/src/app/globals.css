@@ -12,17 +12,90 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: #ffffff;
+  color: #0a0a0a;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+/* iOS zooms the page when a focused field is under 16px. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Action buttons share one corner. Square icon buttons keep theirs. Inputs are untouched. */
+button {
+  border-radius: 20px;
+}
+button.h-5.w-5,
+button.h-6.w-6,
+button.h-7.w-7,
+button.h-8.w-8,
+button.h-9.w-9,
+button.h-10.w-10,
+button.h-11.w-11,
+button.h-12.w-12,
+button.h-14.w-14,
+button.h-16.w-16,
+button.size-5,
+button.size-6,
+button.size-7,
+button.size-8,
+button.size-9,
+button.size-10,
+button.size-11,
+button.size-12,
+button.size-14,
+button.size-16,
+button[class~="h-[52px]"][class~="w-[52px]"] {
+  border-radius: 9999px;
+}
+
+/* Action buttons are 48px tall. FAQ rows and square icon buttons keep theirs. */
+button:not(.keep-height) {
+  height: 48px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+button:not(.keep-height):not([class~="flex"]):not([class~="inline-flex"]) {
+  line-height: 48px;
+}
+button.h-5.w-5,
+button.size-5 { height: 1.25rem; line-height: normal; }
+button.h-6.w-6,
+button.size-6 { height: 1.5rem; line-height: normal; }
+button.h-7.w-7,
+button.size-7 { height: 1.75rem; line-height: normal; }
+button.h-8.w-8,
+button.size-8 { height: 2rem; line-height: normal; }
+button.h-9.w-9,
+button.size-9 { height: 2.25rem; line-height: normal; }
+button.h-10.w-10,
+button.size-10 { height: 2.5rem; line-height: normal; }
+button.h-11.w-11,
+button.size-11 { height: 2.75rem; line-height: normal; }
+button.h-12.w-12,
+button.size-12 { height: 3rem; line-height: normal; }
+button.h-14.w-14,
+button.size-14 { height: 3.5rem; line-height: normal; }
+button.h-16.w-16,
+button.size-16 { height: 4rem; line-height: normal; }
+button[class~="h-[52px]"][class~="w-[52px]"] {
+  height: 52px;
+  line-height: normal;
 }
 
 /* Step progress bar (Ads Manager): sheen across the fill, breathing current dot, tick pop. */

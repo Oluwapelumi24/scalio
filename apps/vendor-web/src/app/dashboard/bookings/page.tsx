@@ -68,35 +68,35 @@ export default async function BookingsPage({
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Bookings</h1>
 
       {today && (
-        <div className="mb-6 inline-flex rounded-xl border border-gray-200 bg-white divide-x divide-gray-200">
-          <div className="px-6 py-4">
-            <p className="text-2xl font-bold text-gray-900 tabular-nums">{today.bookings}</p>
-            <p className="text-sm text-gray-500">Today&apos;s bookings</p>
+        <div className={`mb-6 grid overflow-hidden rounded-xl border border-gray-200 bg-white divide-x divide-gray-200 ${today.salesKobo != null ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          <div className="px-4 py-4">
+            <p className="text-xl font-bold leading-none text-gray-900 tabular-nums">{today.bookings}</p>
+            <p className="mt-1 text-sm text-gray-500">Today&apos;s bookings</p>
           </div>
           {today.salesKobo != null && (
-            <div className="px-6 py-4">
-              <p className="text-2xl font-bold text-gray-900 tabular-nums">₦{(today.salesKobo / 100).toLocaleString('en-NG')}</p>
-              <p className="text-sm text-gray-500">Today&apos;s sales</p>
+            <div className="min-w-0 px-4 py-4">
+              <p className="truncate text-xl font-bold leading-none text-gray-900 tabular-nums">₦{(today.salesKobo / 100).toLocaleString('en-NG')}</p>
+              <p className="mt-1 text-sm text-gray-500">Today&apos;s sales</p>
             </div>
           )}
         </div>
       )}
 
       {/* Status filter tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
+      <div className="-mx-4 mb-6 flex gap-1 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
+      <div className="flex w-max gap-1 rounded-lg bg-gray-100 p-1">
         {STATUS_TABS.map(({ value, label }) => (
           <a
             key={value}
             href={value ? `/dashboard/bookings?status=${value}` : '/dashboard/bookings'}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              status === value
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+            className={`inline-flex h-12 items-center rounded-[20px] px-3 text-sm font-medium transition-colors ${
+              status === value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {label}
           </a>
         ))}
+      </div>
       </div>
 
       {bookings.length === 0 ? (
@@ -104,8 +104,8 @@ export default async function BookingsPage({
           <p className="text-gray-400 text-sm">No bookings found.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <table className="w-full min-w-[40rem] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">

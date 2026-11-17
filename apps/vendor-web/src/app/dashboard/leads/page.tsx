@@ -44,7 +44,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <section className="space-y-3">
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
-            <Link key={f.id} href={`/dashboard/leads?filter=${f.id}`} className={`rounded-full border px-3 py-1 text-sm font-medium ${filter === f.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'}`}>
+            <Link key={f.id} href={`/dashboard/leads?filter=${f.id}`} className={`rounded-[20px] border px-3 text-sm font-medium ${filter === f.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'} h-12 inline-flex items-center`}>
               {f.label}
             </Link>
           ))}

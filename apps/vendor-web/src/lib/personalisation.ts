@@ -26,6 +26,13 @@ export interface HomeItem {
 
 export interface HomeResponse {
   generatedAt: string
+  business: { name: string }
+  bookings: {
+    link: string
+    upcoming: { id: string; customerName: string | null; scheduledAt: string; status: string }[]
+    total: number
+    setup: { services: boolean; hours: boolean; payments: boolean }
+  }
   layers: Record<HomeLayer, HomeItem[]>
   hidden: Pick<HomeItem, 'id' | 'layer' | 'title' | 'icon'>[]
 }

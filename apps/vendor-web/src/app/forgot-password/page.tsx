@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { forgotPasswordAction } from '@/app/actions/auth'
+import { BrandLink } from '@/components/BrandLink'
 
 export default function ForgotPasswordPage() {
   const [state, formAction, pending] = useActionState(forgotPasswordAction, null)
@@ -13,7 +14,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1>
-            <img src="/brand/lockup-color.svg" alt="Veno" className="mx-auto h-10 w-auto" />
+            <BrandLink className="mx-auto h-10 w-auto" />
           </h1>
           <p className="text-sm text-gray-500 mt-3">Vendor Portal</p>
         </div>
@@ -31,7 +32,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 href="/reset-password"
-                className="block w-full text-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                className="flex h-12 w-full items-center justify-center rounded-[20px] bg-[#1e3a8a] px-4 text-sm font-semibold text-white hover:bg-[#0b1638] transition-colors"
               >
                 Enter reset code
               </Link>
@@ -57,7 +58,7 @@ export default function ForgotPasswordPage() {
 
               <button
                 type="submit" disabled={pending}
-                className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+                className="w-full rounded-lg bg-[#1e3a8a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0b1638] disabled:opacity-60 transition-colors"
               >
                 {pending ? 'Sending…' : 'Send reset code'}
               </button>

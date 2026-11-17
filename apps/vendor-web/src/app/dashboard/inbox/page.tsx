@@ -35,13 +35,13 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-4">
       <LiveRefresh seconds={10} />
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
-          <p className="text-sm text-gray-500 mt-1">Messages from Instagram, Messenger and WhatsApp in one place.</p>
+          <p className="mt-1 text-sm text-gray-500">Messages from Instagram, Messenger and WhatsApp in one place.</p>
         </div>
         {canManage && (
-          <Link href="/dashboard/inbox/settings" className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <Link href="/dashboard/inbox/settings" className="inline-flex h-12 shrink-0 items-center rounded-[20px] border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
             AI replies &amp; FAQ
           </Link>
         )}
@@ -50,14 +50,29 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
       <div className="flex gap-2">
         {(['all', 'needs_you'] as const).map((f) => (
           <Link key={f} href={`/dashboard/inbox?filter=${f}`}
-            className={`rounded-full border px-3 py-1 text-sm ${filter === f ? 'border-indigo-900 bg-indigo-900 text-white' : 'border-gray-300 bg-white text-gray-700'}`}>
+            className={`rounded-[20px] border px-3 text-sm ${filter === f ? 'border-indigo-900 bg-indigo-900 text-white' : 'border-gray-300 bg-white text-gray-700'} h-12 inline-flex items-center`}>
             {f === 'all' ? 'All chats' : 'Needs you'}
           </Link>
         ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
-        <ChatList chats={chats} selectedId={selected?.id ?? null} filter={filter} />
+        <div className={sp.c ? 'hidden lg:block' : undefined}>
+          {chats.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500 lg:hidden">
+              {filter === 'needs_you'
+                ? 'Nothing needs you right now. Chats the AI hands to you — complaints, refunds, questions it can’t answer — show here.'
+                : 'No chats yet. When customers message your Instagram or Facebook Page, they’ll show here.'}
+            </div>
+          ) : null}
+          <ChatList chats={chats} selectedId={selected?.id ?? null} filter={filter} />
+        </div>
+        <div className={sp.c ? undefined : 'hidden lg:block'}>
+        {sp.c ? (
+          <Link href={`/dashboard/inbox?filter=${filter}`} className="mb-3 inline-flex text-sm font-semibold text-[#1e3a8a] lg:hidden">
+            ← Chats
+          </Link>
+        ) : null}
         {selected ? <ChatView key={selected.id} chat={selected} /> : (
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
             {chats.length ? 'Choose a chat.' : filter === 'needs_you'
@@ -65,6 +80,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
               : 'No chats yet. When customers message your Instagram or Facebook Page, they’ll show here.'}
           </div>
         )}
+        </div>
       </div>
     </div>
   )

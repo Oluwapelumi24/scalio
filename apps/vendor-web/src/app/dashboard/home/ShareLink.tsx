@@ -2,10 +2,22 @@
 
 import { useState } from 'react'
 import { recordModuleUsage } from '@/app/actions/personalisation'
+import { Icon } from '@/components/Icon'
 
-export function ShareLink({ moduleId, url }: { moduleId: string; url: string }) {
+export function ShareLink({
+  moduleId,
+  url,
+  title = 'Share booking link',
+  body,
+}: {
+  moduleId: string
+  url: string
+  title?: string
+  body?: string
+}) {
   const [copied, setCopied] = useState(false)
   const message = `Book an appointment with us on Veno: ${url}`
+  const visible = url.replace(/^https?:\/\//, '')
 
   async function copy() {
     void recordModuleUsage(moduleId)
@@ -14,20 +26,29 @@ export function ShareLink({ moduleId, url }: { moduleId: string; url: string }) 
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      /* clipboard blocked — the link is visible to copy by hand */
+      /* the address stays on screen to copy by hand */
     }
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <p className="text-sm font-semibold text-gray-900">Share booking link</p>
-      <p className="text-xs text-gray-500 mt-1 truncate" title={url}>{url}</p>
-      <div className="flex gap-2 mt-3">
+    <div className="min-w-0 rounded-2xl border border-[#e4e6eb] bg-white p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e7f6ee] text-[#166534]">
+          <Icon name="share" className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-[#0a0a0a]">{title}</p>
+          {body ? <p className="mt-0.5 text-[13px] leading-5 text-[#4a4e57]">{body}</p> : null}
+          <p className="mt-1 truncate text-xs text-[#7d818b]" title={url}>{visible}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex gap-2">
         <button
           type="button"
-          onClick={copy}
-          className="flex-1 text-sm font-medium rounded-lg bg-indigo-600 text-white px-3 py-1.5 hover:bg-indigo-700"
+          onClick={() => void copy()}
+          className="keep-height flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#1e3a8a] px-3 text-sm font-semibold text-white"
         >
+          <Icon name={copied ? 'check' : 'copy'} className="h-4 w-4" />
           {copied ? 'Copied' : 'Copy link'}
         </button>
         <a
@@ -35,8 +56,9 @@ export function ShareLink({ moduleId, url }: { moduleId: string; url: string }) 
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => void recordModuleUsage(moduleId)}
-          className="flex-1 text-center text-sm font-medium rounded-lg border border-gray-300 text-gray-700 px-3 py-1.5 hover:bg-gray-50"
+          className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-[#e4e6eb] px-3 text-sm font-semibold text-[#0a0a0a]"
         >
+          <Icon name="message-circle" className="h-4 w-4" />
           WhatsApp
         </a>
       </div>

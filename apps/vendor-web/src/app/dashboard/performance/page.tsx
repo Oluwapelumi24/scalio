@@ -48,7 +48,7 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
             <Link
               key={d}
               href={`/dashboard/performance?days=${d}`}
-              className={`rounded-full border px-3 py-1 text-sm font-medium ${d === days ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700 hover:border-gray-400'}`}
+              className={`rounded-[20px] border px-3 text-sm font-medium ${d === days ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700 hover:border-gray-400'} h-12 inline-flex items-center`}
             >
               {d} days
             </Link>

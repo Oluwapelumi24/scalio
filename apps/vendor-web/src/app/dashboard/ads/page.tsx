@@ -35,7 +35,7 @@ export default async function AdsPage() {
       )}
 
       {setup.ready && canManage && (
-        <Link href="/dashboard/ads/new" className="flex items-center gap-4 rounded-xl bg-indigo-800 p-5 text-white shadow-sm transition hover:bg-indigo-900">
+        <Link href="/dashboard/ads/new" className="flex items-center gap-4 rounded-[20px] bg-indigo-800 p-5 text-white shadow-sm transition hover:bg-indigo-900">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15"><Icon name="plus" className="h-5 w-5" /></span>
           <span className="flex-1"><span className="block font-semibold">Create an ad</span><span className="block text-sm text-indigo-100">Get more chats from people near you — about 3 minutes.</span></span>
           <Icon name="arrow-right" className="h-5 w-5 opacity-80" />

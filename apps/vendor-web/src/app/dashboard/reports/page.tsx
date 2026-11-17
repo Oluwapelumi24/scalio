@@ -74,7 +74,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         </div>
         <div className="flex gap-2">
           {PERIOD_LABELS.map((p) => (
-            <Link key={p.id} href={`/dashboard/reports?p=${p.id}`} className={`rounded-full border px-3 py-1 text-sm font-medium ${period.id === p.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'}`}>{p.label}</Link>
+            <Link key={p.id} href={`/dashboard/reports?p=${p.id}`} className={`rounded-[20px] border px-3 text-sm font-medium ${period.id === p.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'} h-12 inline-flex items-center`}>{p.label}</Link>
           ))}
         </div>
       </div>

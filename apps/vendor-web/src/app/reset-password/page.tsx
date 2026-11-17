@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { resetPasswordAction } from '@/app/actions/auth'
+import { BrandLink } from '@/components/BrandLink'
 
 export default function ResetPasswordPage() {
   const [state, formAction, pending] = useActionState(resetPasswordAction, null)
@@ -12,7 +13,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1>
-            <img src="/brand/lockup-color.svg" alt="Veno" className="mx-auto h-10 w-auto" />
+            <BrandLink className="mx-auto h-10 w-auto" />
           </h1>
           <p className="text-sm text-gray-500 mt-3">Vendor Portal</p>
         </div>
@@ -79,7 +80,7 @@ export default function ResetPasswordPage() {
 
             <button
               type="submit" disabled={pending}
-              className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+              className="w-full rounded-lg bg-[#1e3a8a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0b1638] disabled:opacity-60 transition-colors"
             >
               {pending ? 'Saving…' : 'Set new password'}
             </button>

@@ -40,7 +40,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
         </div>
         <div className="flex gap-2">
           {[0, -1].map((o) => (
-            <Link key={o} href={o === 0 ? '/dashboard/money' : '/dashboard/money?m=-1'} className={`rounded-full border px-3 py-1 text-sm font-medium ${offset === o ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'}`}>
+            <Link key={o} href={o === 0 ? '/dashboard/money' : '/dashboard/money?m=-1'} className={`rounded-[20px] border px-3 text-sm font-medium ${offset === o ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'} h-12 inline-flex items-center`}>
               {o === 0 ? 'This month' : 'Last month'}
             </Link>
           ))}

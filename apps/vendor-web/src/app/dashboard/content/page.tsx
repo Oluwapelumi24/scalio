@@ -58,11 +58,11 @@ export default async function ContentStudioPage({ searchParams }: { searchParams
           <h1 className="text-2xl font-bold text-gray-900">Content studio</h1>
           <p className="text-sm text-gray-500 mt-1">Write posts with AI, plan them on your calendar, and keep track of what went out.</p>
         </div>
-        <Link href="/dashboard/content/new" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">New post</Link>
+        <Link href="/dashboard/content/new" className="rounded-[20px] bg-slate-900 px-4 text-sm font-semibold text-white h-12 inline-flex items-center">New post</Link>
       </div>
 
       {studio.platforms.some((p) => p.canConnect && p.publishing === 'manual') && (
-        <Link href="/dashboard/content/connections" className="block rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+        <Link href="/dashboard/content/connections" className="block rounded-[20px] bg-indigo-50 px-4 text-sm text-indigo-900 h-12 items-center">
           {studio.platforms.some((p) => p.connection?.status === 'needs_reconnect')
             ? 'Your Facebook/Instagram connection needs renewing. Reconnect →'
             : 'Connect Facebook and Instagram to publish and schedule straight from Veno →'}
@@ -82,9 +82,9 @@ export default async function ContentStudioPage({ searchParams }: { searchParams
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-gray-900">{monthStart.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</h2>
           <div className="flex gap-2 text-sm">
-            <Link href={monthHref(-1)} className="rounded-md border border-gray-300 px-2 py-1 text-gray-700" aria-label="Previous month">←</Link>
-            <Link href={`/dashboard/content?tab=${tab}`} className="rounded-md border border-gray-300 px-2 py-1 text-gray-700">Today</Link>
-            <Link href={monthHref(1)} className="rounded-md border border-gray-300 px-2 py-1 text-gray-700" aria-label="Next month">→</Link>
+            <Link href={monthHref(-1)} className="rounded-[20px] border border-gray-300 px-2 text-gray-700 h-12 inline-flex items-center" aria-label="Previous month">←</Link>
+            <Link href={`/dashboard/content?tab=${tab}`} className="rounded-[20px] border border-gray-300 px-2 text-gray-700 h-12 inline-flex items-center">Today</Link>
+            <Link href={monthHref(1)} className="rounded-[20px] border border-gray-300 px-2 text-gray-700 h-12 inline-flex items-center" aria-label="Next month">→</Link>
           </div>
         </div>
         <div className="grid grid-cols-7 gap-px rounded-lg bg-gray-200 overflow-hidden text-xs">
@@ -118,7 +118,7 @@ export default async function ContentStudioPage({ searchParams }: { searchParams
       <section className="space-y-3">
         <div className="flex gap-2">
           {TABS.map((t) => (
-            <Link key={t.id} href={tabHref(t.id)} className={`rounded-full border px-3 py-1 text-sm font-medium ${tab === t.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'}`}>
+            <Link key={t.id} href={tabHref(t.id)} className={`rounded-[20px] border px-3 text-sm font-medium ${tab === t.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 text-gray-700'} h-12 inline-flex items-center`}>
               {t.label}
             </Link>
           ))}

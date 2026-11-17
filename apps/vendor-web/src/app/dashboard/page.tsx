@@ -2,15 +2,14 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { apiFetch, ApiError } from '@/lib/api'
 import { getToken } from '@/lib/session'
-import { MANAGER_ROLES, type HomeItem, type HomeResponse, type Preferences } from '@/lib/personalisation'
+import { MANAGER_ROLES, type HomeResponse, type Preferences } from '@/lib/personalisation'
+import { Icon } from '@/components/Icon'
 import { ModuleLink } from './home/ModuleLink'
 import { ShareLink } from './home/ShareLink'
+import { BookingLinkCard } from './home/BookingLinkCard'
+import { EmptyCalendar, IconTile } from './home/visuals'
 
 interface StaffPrincipal { role: string; name: string }
-
-function formatNaira(kobo: number) {
-  return `₦${(kobo / 100).toLocaleString('en-NG')}`
-}
 
 function formatWhen(iso: string) {
   return new Date(iso).toLocaleString('en-NG', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
@@ -53,6 +52,13 @@ const HREF: Record<string, string> = {
   view_leads: '/dashboard/leads?filter=open',
 }
 
+const BOOKING_ALERTS: Record<string, { text: (n: number) => string; action: string }> = {
+  awaiting_payment: { text: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`, action: 'View' },
+  starting_soon: { text: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`, action: 'View' },
+  unassigned_today: { text: (n) => `${n} of today's ${n === 1 ? 'booking has' : 'bookings have'} no staff`, action: 'Assign' },
+  bookings_on_leave: { text: (n) => `${n} upcoming ${n === 1 ? 'booking is' : 'bookings are'} with staff on leave`, action: 'Review' },
+}
+
 const ATTENTION_TEXT: Record<string, (n: number, d: Record<string, number>) => string> = {
   awaiting_payment: (n) => `${n} ${n === 1 ? 'booking is' : 'bookings are'} waiting for payment`,
   starting_soon: (n) => `${n} ${n === 1 ? 'booking starts' : 'bookings start'} within the hour`,
@@ -76,15 +82,6 @@ const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number> & { day?: s
   ask_for_feedback: (d) => `${d.count} recent ${d.count === 1 ? 'customer has' : 'customers have'} no email. Send them the rating link on WhatsApp from Bookings.`,
   first_post: () => 'Add a photo, say what it is about, and AI writes the caption and hashtags.',
   follow_up_lapsed: (d) => `${d.count} ${d.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
-}
-
-function tileValue(item: HomeItem): string {
-  const d = item.data
-  if (typeof d.amountKobo === 'number') return formatNaira(d.amountKobo)
-  if (item.id === 'repeat_customers') return `${d.count} of ${d.totalCustomers}`
-  if (item.id === 'customer_rating') return `${d.average}★ (${d.count})`
-  if (typeof d.count === 'number') return d.count.toLocaleString()
-  return '—'
 }
 
 export default async function DashboardHome() {
@@ -114,147 +111,250 @@ export default async function DashboardHome() {
     if (!(err instanceof ApiError)) throw err
   }
 
-  const tiles = home?.layers.overview.filter((i) => i.id !== 'upcoming_bookings') ?? []
-  const upcoming = home?.layers.overview.find((i) => i.id === 'upcoming_bookings')
+  const bookings = home?.bookings
+  const ready = !!bookings && bookings.setup.services && bookings.setup.hours
+  const upcomingCount = bookings?.upcoming.length ?? 0
+  const summary = !bookings
+    ? ''
+    : !ready
+      ? 'A couple of steps and customers can book you.'
+      : upcomingCount === 0
+        ? 'No bookings coming up yet.'
+        : `You have ${upcomingCount} ${upcomingCount === 1 ? 'booking' : 'bookings'} coming up.`
+  const alerts = home?.layers.attention.filter((item) => item.id in BOOKING_ALERTS) ?? []
+  const otherAttention = home?.layers.attention.filter((item) => !(item.id in BOOKING_ALERTS)) ?? []
+  const steps = bookings
+    ? [
+        { key: 'services', label: 'Add a service', hint: 'Customers pick one when they book', done: bookings.setup.services, href: '/dashboard/services', icon: 'plus-circle' },
+        { key: 'hours', label: 'Set your opening hours', hint: 'So customers only book when you’re open', done: bookings.setup.hours, href: '/dashboard/schedule', icon: 'clock' },
+        ...(isManager
+          ? [{ key: 'payments', label: 'Take deposits online', hint: 'Optional — cuts no-shows', done: bookings.setup.payments, href: '/dashboard/payments', icon: 'credit-card' }]
+          : []),
+      ]
+    : []
+  const shareAlreadyShown = home?.layers.recommendation.some((item) => item.id === 'share_link_first') ?? false
+  const quickActions = (home?.layers.quick_action ?? []).filter((item) => {
+    if (item.id !== 'share_booking_link') return true
+    return !ready && !shareAlreadyShown
+  })
 
   return (
-    <div className="max-w-6xl">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back, {staff.name.split(' ')[0]}</h1>
-          <p className="text-sm text-gray-500 mt-1">Here&apos;s your business today.</p>
+    <div className="mx-auto min-w-0 max-w-6xl">
+      <div className="rounded-[28px] bg-gradient-to-b from-[#e8edfa] to-transparent px-1 py-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h1 className="text-xl font-bold tracking-tight">Hey, {staff.name.split(' ')[0] || 'there'}</h1>
+          {isManager && (
+            <Link href="/dashboard/customise" className="text-sm font-semibold text-[#1e3a8a]">
+              Customise home
+            </Link>
+          )}
         </div>
-        {isManager && (
-          <Link href="/dashboard/customise" className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-            Customise home
-          </Link>
-        )}
+        {summary ? <p className="mt-4 text-sm font-medium text-[#4a4e57]">{summary}</p> : null}
       </div>
 
-      {!home ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <p className="text-gray-600">We couldn&apos;t load your business overview.</p>
-          <Link href="/dashboard" className="inline-block mt-3 text-sm font-medium text-indigo-600">Try again</Link>
+      {!home || !bookings ? (
+        <div className="mt-4 rounded-[20px] border border-[#e4e6eb] bg-white p-8 text-center">
+          <p className="text-[#4a4e57]">We couldn&apos;t load your bookings.</p>
+          <Link href="/dashboard" className="mt-3 inline-block text-sm font-semibold text-[#1e3a8a]">Try again</Link>
         </div>
       ) : (
-        <div className="space-y-8">
-          {home.layers.attention.length > 0 && (
-            <section>
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Needs your attention</h2>
-              <div className="space-y-2">
-                {home.layers.attention.map((item) => (
-                  <ModuleLink
-                    key={item.id}
-                    moduleId={item.id}
-                    href={HREF[item.id] ?? '/dashboard/bookings'}
-                    className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-amber-100"
-                  >
-                    <span>{ATTENTION_TEXT[item.id]?.(item.data.count, item.data) ?? item.title}</span>
-                    <span className="text-amber-700">View →</span>
-                  </ModuleLink>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {tiles.length > 0 && (
-            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {tiles.map((item) => (
-                <ModuleLink
-                  key={item.id}
-                  moduleId={item.id}
-                  href={HREF[item.id] ?? '/dashboard'}
-                  className="bg-white rounded-xl border border-gray-200 p-5 hover:border-indigo-300 transition-colors"
-                >
-                  <p className="text-sm text-gray-500">{item.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{tileValue(item)}</p>
-                </ModuleLink>
-              ))}
-            </section>
-          )}
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
-              {upcoming && (
-                <section className="bg-white rounded-xl border border-gray-200">
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                    <h2 className="text-base font-semibold text-gray-900">{upcoming.title}</h2>
-                    <Link href="/dashboard/bookings" className="text-sm font-medium text-indigo-600">See all</Link>
-                  </div>
-                  {upcoming.data.bookings.length === 0 ? (
-                    <p className="px-5 py-8 text-sm text-gray-500 text-center">No upcoming bookings</p>
-                  ) : (
-                    <ul className="divide-y divide-gray-100">
-                      {upcoming.data.bookings.map((b: { id: string; customerName: string | null; scheduledAt: string; status: string }) => (
-                        <li key={b.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                          <span className="font-medium text-gray-900">{b.customerName ?? 'Customer'}</span>
-                          <span className="text-gray-500">
-                            {formatWhen(b.scheduledAt)}
-                            {b.status === 'pending_payment' ? ' · awaiting payment' : ''}
+        <>
+        <div className="mt-2 grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0 space-y-8">
+            {ready ? (
+              <BookingLinkCard url={bookings.link} total={bookings.total} />
+            ) : (
+              <section className="min-w-0">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 className="text-[15px] font-bold">Start taking bookings</h2>
+                  <p className="shrink-0 text-xs font-semibold text-[#7d818b]">
+                    {steps.filter((step) => step.done).length} of {steps.length}
+                  </p>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e4e6eb]">
+                  <div
+                    className="h-full rounded-full bg-[#1e3a8a]"
+                    style={{ width: `${(steps.filter((step) => step.done).length / steps.length) * 100}%` }}
+                  />
+                </div>
+                <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+                  {steps.map((step) => (
+                    <li key={step.key}>
+                      {step.done ? (
+                        <div className="flex items-center gap-3 py-4">
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e7f6ee] text-[#166534]">
+                            <Icon name="check" className="h-5 w-5" />
                           </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              )}
-
-              {home.layers.recommendation.length > 0 && (
-                <section>
-                  <h2 className="text-base font-semibold text-gray-900 mb-3">Suggested for you</h2>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {home.layers.recommendation.map((item) =>
-                      item.status === 'coming_soon' ? (
-                        <div key={item.id} className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-gray-700">{item.title}</p>
-                            <span className="text-xs font-semibold rounded-full bg-gray-200 text-gray-600 px-2 py-0.5">Soon</span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">Coming soon — we&apos;ll let you know when it&apos;s ready.</p>
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-[#7d818b] line-through">{step.label}</span>
+                            <span className="text-[13px] text-[#7d818b]">{step.hint}</span>
+                          </span>
                         </div>
-                      ) : item.id === 'share_link_first' ? (
-                        <ShareLink key={item.id} moduleId={item.id} url={item.data.url} />
                       ) : (
-                        <ModuleLink
+                        <Link href={step.href} className="flex items-center gap-3 py-4">
+                          <IconTile name={step.icon} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold">{step.label}</span>
+                            <span className="text-[13px] leading-5 text-[#4a4e57]">{step.hint}</span>
+                          </span>
+                          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {alerts.length > 0 && (
+              <section>
+                <h2 className="text-[15px] font-bold">Needs your attention</h2>
+                <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+                  {alerts.map((item) => (
+                    <li key={item.id} className="flex items-center gap-3 py-4">
+                      <IconTile name={item.icon} className="h-9 w-9 rounded-xl" />
+                      <span className="min-w-0 flex-1 text-sm leading-5">{BOOKING_ALERTS[item.id].text(item.data.count)}</span>
+                      <ModuleLink moduleId={item.id} href="/dashboard/bookings" className="shrink-0 rounded-full bg-[#0a0a0a] px-3 py-1.5 text-xs font-semibold text-white">
+                        {BOOKING_ALERTS[item.id].action}
+                      </ModuleLink>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <section className="min-w-0">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-[15px] font-bold">Up next</h2>
+                <Link href="/dashboard/bookings" className="shrink-0 text-[13px] font-semibold text-[#1e3a8a]">See all</Link>
+              </div>
+              <ul className="mt-3 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+                {bookings.upcoming.length === 0 ? (
+                  <li className="flex items-center gap-3 py-5">
+                    <EmptyCalendar />
+                    <p className="min-w-0 text-sm leading-5 text-[#4a4e57]">
+                      {ready ? 'New bookings show up here as soon as customers make them.' : 'Bookings show up here once customers can book you.'}
+                    </p>
+                  </li>
+                ) : (
+                  bookings.upcoming.map((booking) => (
+                    <li key={booking.id}>
+                      <Link href="/dashboard/bookings" className="flex items-center gap-3 py-4">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8edfa] text-sm font-semibold text-[#1e3a8a]">
+                          {(booking.customerName ?? 'C').charAt(0).toUpperCase()}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold">{booking.customerName ?? 'Customer'}</span>
+                          <span className="text-[13px] text-[#4a4e57]">
+                            {formatWhen(booking.scheduledAt)}
+                            {booking.status === 'pending_payment' ? ' · awaiting payment' : ''}
+                          </span>
+                        </span>
+                        <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                      </Link>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </section>
+          </div>
+
+          <aside className="min-w-0 space-y-8">
+            {otherAttention.length > 0 && (
+              <section>
+                <h2 className="text-[15px] font-bold">Other updates</h2>
+                <div className="mt-3 space-y-2">
+                  {otherAttention.map((item) => (
+                    <ModuleLink
+                      key={item.id}
+                      moduleId={item.id}
+                      href={HREF[item.id] ?? '/dashboard'}
+                      className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-3.5 text-sm"
+                    >
+                      <IconTile name={item.icon} />
+                      <span className="min-w-0 flex-1 leading-5">{ATTENTION_TEXT[item.id]?.(item.data.count, item.data) ?? item.title}</span>
+                      <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                    </ModuleLink>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {home.layers.recommendation.length > 0 && (
+              <section>
+                <h2 className="text-[15px] font-bold">Suggested for you</h2>
+                <div className="mt-3 space-y-2">
+                  {home.layers.recommendation.map((item) => {
+                    if (item.status === 'coming_soon') {
+                      return (
+                        <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-white p-3.5">
+                          <IconTile name={item.icon} />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold">{item.title}</span>
+                            <span className="mt-0.5 block text-[13px] leading-5 text-[#7d818b]">Coming soon. We&apos;ll let you know when it&apos;s ready.</span>
+                          </span>
+                        </div>
+                      )
+                    }
+                    if (item.id === 'share_link_first') {
+                      return (
+                        <ShareLink
                           key={item.id}
                           moduleId={item.id}
-                          href={HREF[item.id] ?? '/dashboard'}
-                          className="rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-300"
-                        >
-                          <p className="text-sm font-semibold text-gray-900">{item.title}</p>
-                          <p className="text-xs text-gray-500 mt-1">{RECOMMENDATION_TEXT[item.id]?.(item.data) ?? ''}</p>
-                        </ModuleLink>
-                      ),
-                    )}
-                  </div>
-                </section>
-              )}
-            </div>
-
-            {home.layers.quick_action.length > 0 && (
-              <section>
-                <h2 className="text-base font-semibold text-gray-900 mb-3">Quick actions</h2>
-                <div className="space-y-2">
-                  {home.layers.quick_action.map((item) =>
-                    item.id === 'share_booking_link' ? (
-                      <ShareLink key={item.id} moduleId={item.id} url={item.data.url} />
-                    ) : (
+                          url={item.data.url}
+                          title={item.title}
+                          body={RECOMMENDATION_TEXT[item.id]?.(item.data)}
+                        />
+                      )
+                    }
+                    return (
                       <ModuleLink
                         key={item.id}
                         moduleId={item.id}
                         href={HREF[item.id] ?? '/dashboard'}
-                        className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 hover:border-indigo-300"
+                        className="flex min-w-0 items-start gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-3.5"
                       >
-                        {item.title}
-                        <span className="text-gray-400">→</span>
+                        <IconTile name={item.icon} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-semibold">{item.title}</span>
+                          <span className="mt-0.5 block text-[13px] leading-5 text-[#4a4e57]">{RECOMMENDATION_TEXT[item.id]?.(item.data) ?? ''}</span>
+                        </span>
+                        <Icon name="chevron-right" className="mt-1 h-4 w-4 shrink-0 text-[#c9ced8]" />
                       </ModuleLink>
-                    ),
-                  )}
+                    )
+                  })}
                 </div>
               </section>
             )}
-          </div>
+          </aside>
         </div>
+
+        {quickActions.length > 0 && (
+          <section className="mt-8 min-w-0">
+            <h2 className="text-[15px] font-bold">Quick actions</h2>
+            <div className="mt-3 space-y-2">
+              {quickActions.filter((item) => item.id === 'share_booking_link').map((item) => (
+                <ShareLink key={item.id} moduleId={item.id} url={item.data.url} title={item.title} />
+              ))}
+              {quickActions.some((item) => item.id !== 'share_booking_link') && (
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
+                  {quickActions.filter((item) => item.id !== 'share_booking_link').map((item) => (
+                    <ModuleLink
+                      key={item.id}
+                      moduleId={item.id}
+                      href={HREF[item.id] ?? '/dashboard'}
+                      className="flex min-w-0 flex-col gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-3.5 transition-transform duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none motion-reduce:active:scale-100"
+                    >
+                      <IconTile name={item.icon} />
+                      <span className="text-sm font-semibold leading-5">{item.title}</span>
+                    </ModuleLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+        </>
       )}
     </div>
   )

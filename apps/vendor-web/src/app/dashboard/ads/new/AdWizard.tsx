@@ -377,8 +377,8 @@ export function AdWizard({ builder }: { builder: AdBuilder }) {
         </aside>
       </div>
 
-      <div className="fixed bottom-0 left-56 right-0 z-20 border-t border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
+      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] z-20 border-t border-gray-200 bg-white/95 backdrop-blur md:bottom-0 md:left-60">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-3 px-4 py-3">
           <button type="button" onClick={() => (step > 0 ? go(step - 1) : router.push('/dashboard/ads'))} className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">Back</button>
           <p className="line-clamp-2 flex-1 text-sm leading-snug text-gray-500" role="status">{error ? <span className="text-red-600">{error}</span> : blocker}</p>
           {key === 'review' ? (

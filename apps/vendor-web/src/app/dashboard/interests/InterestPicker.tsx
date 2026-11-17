@@ -27,12 +27,12 @@ export function InterestPicker({
     })
 
   return (
-    <div className="pb-28">
+    <div className="pb-44 md:pb-28">
       <div className="space-y-8">
         {groups.map((group) => (
           <section key={group.id}>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">{group.title}</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#7d818b]">{group.title}</h2>
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
               {group.interests.map((interest) => {
                 const on = selected.includes(interest.id)
                 return (
@@ -42,21 +42,21 @@ export function InterestPicker({
                     role="checkbox"
                     aria-checked={on}
                     onClick={() => toggle(interest.id)}
-                    className={`relative min-h-24 rounded-xl border-2 p-4 text-left text-sm font-medium transition-colors ${
+                    className={`keep-height relative flex min-h-16 w-full items-center rounded-2xl border-2 px-4 py-3 pr-14 text-left text-[15px] font-semibold leading-snug ${
                       on
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
-                        : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'
+                        ? 'border-[#1e3a8a] bg-[#e8edfa] text-[#1e3a8a]'
+                        : 'border-[#e4e6eb] bg-white text-[#0a0a0a]'
                     }`}
                   >
+                    <span className="min-w-0">{interest.label}</span>
                     <span
                       aria-hidden
-                      className={`absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full border-2 text-[10px] ${
-                        on ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                      className={`absolute right-4 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border-2 text-xs ${
+                        on ? 'border-[#1e3a8a] bg-[#1e3a8a] text-white' : 'border-[#c9ced8] bg-white'
                       }`}
                     >
                       {on ? '✓' : ''}
                     </span>
-                    <span className="block pr-6">{interest.label}</span>
                   </button>
                 )
               })}
@@ -65,27 +65,28 @@ export function InterestPicker({
         ))}
       </div>
 
-      {/* Stays reachable however far the list scrolls */}
-      <div className="fixed bottom-0 left-56 right-0 border-t border-gray-200 bg-white/95 backdrop-blur px-8 py-4">
-        <div className="flex items-center justify-between gap-4 max-w-6xl">
-          <p className="text-xs text-gray-500">You can change these choices anytime in Settings.</p>
-          <div className="flex items-center gap-3">
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            {welcome && (
+      <div
+        className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] z-30 border-t border-[#e4e6eb] bg-white/95 backdrop-blur md:bottom-0 md:left-60"
+      >
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:px-8">
+          <p className="text-xs leading-5 text-[#4a4e57]">You can change these choices anytime in Settings.</p>
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          <div className="flex items-center gap-2">
+            {welcome ? (
               <button
                 type="button"
                 disabled={isPending}
                 onClick={() => save(selected)}
-                className="text-sm font-medium text-gray-500 hover:text-gray-800"
+                className="keep-height h-12 shrink-0 rounded-full px-4 text-sm font-semibold text-[#4a4e57]"
               >
                 Skip
               </button>
-            )}
+            ) : null}
             <button
               type="button"
               disabled={isPending}
               onClick={() => save(selected)}
-              className="rounded-lg bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+              className="h-12 min-w-0 flex-1 rounded-full bg-[#1e3a8a] px-6 text-sm font-semibold text-white disabled:opacity-50 md:flex-none"
             >
               {isPending ? 'Saving…' : selected.length > 0 ? `Continue (${selected.length})` : 'Continue'}
             </button>

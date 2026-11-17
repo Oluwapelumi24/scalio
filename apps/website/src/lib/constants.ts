@@ -1,7 +1,25 @@
-export const VENDOR_WEB_URL = process.env.NEXT_PUBLIC_VENDOR_WEB_URL ?? 'http://localhost:3001'
+const configuredVendorWeb = process.env.NEXT_PUBLIC_VENDOR_WEB_URL?.replace(/\/$/, '') ?? ''
 
-export const VENDOR_REGISTER_URL = `${VENDOR_WEB_URL}/register`
-export const VENDOR_LOGIN_URL = `${VENDOR_WEB_URL}/login`
+/**
+ * Where the vendor portal lives. app.venohq.com is not a published host, so a
+ * link there never loads. When no real portal is configured, register and sign
+ * in stay on this site.
+ */
+function vendorWebUrl(): string {
+  if (!configuredVendorWeb) {
+    return process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001'
+  }
+  try {
+    if (new URL(configuredVendorWeb).hostname === 'app.venohq.com') return ''
+  } catch {
+    return ''
+  }
+  return configuredVendorWeb
+}
+
+export const VENDOR_WEB_URL = vendorWebUrl()
+export const VENDOR_REGISTER_URL = VENDOR_WEB_URL ? `${VENDOR_WEB_URL}/register` : '/register'
+export const VENDOR_LOGIN_URL = VENDOR_WEB_URL ? `${VENDOR_WEB_URL}/login` : '/login'
 
 /** Canonical address: Vercel forwards venohq.com here. */
 export const SITE_URL = 'https://www.venohq.com'

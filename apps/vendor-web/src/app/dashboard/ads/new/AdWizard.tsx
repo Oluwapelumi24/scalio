@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { StepProgress } from '@/components/StepProgress'
 import { Icon, type IconName } from '@/components/Icon'
+import { SelectMenu } from '@/components/SelectMenu'
 import { uploadMedia } from '@/app/actions/growth'
 import {
   checkoutAdCampaign, createAdCampaign, draftAdCopy, estimateAdReach, quoteAd, searchAdInterests, searchAdLocations, suggestAdInterests,
@@ -443,13 +444,21 @@ function AudienceStep({ targeting, onChange, reach, reachLoading }: { targeting:
         <div className="space-y-2">
           <p className="text-sm font-medium text-gray-900">Age</p>
           <div className="flex items-center gap-2">
-            <select className={input} value={targeting.ageMin} onChange={(e) => onChange({ ...targeting, ageMin: Math.min(Number(e.target.value), targeting.ageMax) })} aria-label="Youngest age">
-              {Array.from({ length: 48 }, (_, i) => 18 + i).map((a) => <option key={a} value={a}>{a}</option>)}
-            </select>
+            <SelectMenu
+              aria-label="Youngest age"
+              value={String(targeting.ageMin)}
+              onChange={(next) => onChange({ ...targeting, ageMin: Math.min(Number(next), targeting.ageMax) })}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+              options={Array.from({ length: 48 }, (_, i) => ({ value: String(18 + i), label: String(18 + i) }))}
+            />
             <span className="text-sm text-gray-500">to</span>
-            <select className={input} value={targeting.ageMax} onChange={(e) => onChange({ ...targeting, ageMax: Math.max(Number(e.target.value), targeting.ageMin) })} aria-label="Oldest age">
-              {Array.from({ length: 48 }, (_, i) => 18 + i).map((a) => <option key={a} value={a}>{a === 65 ? '65+' : a}</option>)}
-            </select>
+            <SelectMenu
+              aria-label="Oldest age"
+              value={String(targeting.ageMax)}
+              onChange={(next) => onChange({ ...targeting, ageMax: Math.max(Number(next), targeting.ageMin) })}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+              options={Array.from({ length: 48 }, (_, i) => ({ value: String(18 + i), label: 18 + i === 65 ? '65+' : String(18 + i) }))}
+            />
           </div>
         </div>
         <div className="space-y-2">

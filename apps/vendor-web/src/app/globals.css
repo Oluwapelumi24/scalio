@@ -48,6 +48,13 @@ select {
   padding-right: 2.5rem;
 }
 
+/* Menus opt out of the 48px action-button size so rows can match the field. */
+button.keep-height.select-trigger,
+button.keep-height.select-option {
+  line-height: normal;
+  border-radius: 16px;
+}
+
 /* Action buttons share one corner. Square icon buttons keep theirs. Inputs are untouched. */
 button {
   border-radius: 20px;

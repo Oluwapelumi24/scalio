@@ -72,7 +72,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   if (password !== confirm) return { error: 'Passwords do not match.' }
   if (password.length < 8) return { error: 'Password must be at least 8 characters.' }
   if (!category) return { error: 'Choose what your business does.' }
-  if (!address) return { error: 'Add the area you work in, for example Yaba, Lagos.' }
+  if (!address) return { error: 'Choose your state and local government.' }
 
   let token: string
   try {
@@ -92,7 +92,8 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
     token = data.accessToken
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }
-    throw err
+    console.error('Vendor signup could not reach the API', err)
+    return { error: 'We could not reach Veno just now. Try again in a moment.' }
   }
 
   await setToken(token)

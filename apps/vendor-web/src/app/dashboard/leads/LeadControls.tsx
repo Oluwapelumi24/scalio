@@ -3,10 +3,12 @@
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { convertLead, createLead, deleteLead, updateLead } from '@/app/actions/growth'
+import { SelectMenu } from '@/components/SelectMenu'
 import { LEAD_SOURCE_LABELS, type Lead, type LeadSource } from '@/lib/growth'
 
 const SOURCES = Object.keys(LEAD_SOURCE_LABELS) as LeadSource[]
 const input = 'mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm'
+const menu = 'mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm'
 
 /** 10am, `days` from today, in the viewer's time zone. */
 const at10 = (days: number) => {
@@ -52,18 +54,13 @@ export function AddLeadForm({ staff }: { staff: Staff[] }) {
     >
       <label className="text-sm text-gray-700">Name<input name="name" required maxLength={120} className={input} /></label>
       <label className="text-sm text-gray-700">Where did they find you?
-        <select name="source" defaultValue="instagram" className={input}>
-          {SOURCES.map((s) => <option key={s} value={s}>{LEAD_SOURCE_LABELS[s]}</option>)}
-        </select>
+        <SelectMenu name="source" defaultValue="instagram" className={menu} options={SOURCES.map((source) => ({ value: source, label: LEAD_SOURCE_LABELS[source] }))} />
       </label>
       <label className="text-sm text-gray-700">Phone<input name="phone" type="tel" placeholder="0801 234 5678" className={input} /></label>
       <label className="text-sm text-gray-700">Email<input name="email" type="email" placeholder="Optional" className={input} /></label>
       {staff.length > 1 && (
         <label className="text-sm text-gray-700">Who&apos;s following up?
-          <select name="assignedStaffId" defaultValue="" className={input}>
-            <option value="">Nobody yet</option>
-            {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          <SelectMenu name="assignedStaffId" placeholder="Nobody yet" className={menu} options={[{ value: '', label: 'Nobody yet' }, ...staff.map((member) => ({ value: member.id, label: member.name }))]} />
         </label>
       )}
       <label className="text-sm text-gray-700 sm:col-span-2">Notes<input name="note" maxLength={1000} placeholder="What are they interested in?" className={input} /></label>
@@ -153,16 +150,11 @@ export function LeadEditForm({ lead, staff, canAssign }: { lead: Lead; staff: St
       <label className="text-sm text-gray-700">Phone<input name="phone" type="tel" defaultValue={lead.phone ?? ''} className={input} /></label>
       <label className="text-sm text-gray-700">Email<input name="email" type="email" defaultValue={lead.email ?? ''} className={input} /></label>
       <label className="text-sm text-gray-700">Where did they find you?
-        <select name="source" defaultValue={lead.source} className={input}>
-          {SOURCES.map((s) => <option key={s} value={s}>{LEAD_SOURCE_LABELS[s]}</option>)}
-        </select>
+        <SelectMenu name="source" defaultValue={lead.source} className={menu} options={SOURCES.map((source) => ({ value: source, label: LEAD_SOURCE_LABELS[source] }))} />
       </label>
       {canAssign && staff.length > 1 && (
         <label className="text-sm text-gray-700">Who&apos;s following up?
-          <select name="assignedStaffId" defaultValue={lead.assignedStaff?.id ?? ''} className={input}>
-            <option value="">Nobody yet</option>
-            {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          <SelectMenu name="assignedStaffId" defaultValue={lead.assignedStaff?.id ?? ''} placeholder="Nobody yet" className={menu} options={[{ value: '', label: 'Nobody yet' }, ...staff.map((member) => ({ value: member.id, label: member.name }))]} />
         </label>
       )}
       <label className="text-sm text-gray-700">Notes<textarea name="note" rows={3} maxLength={1000} defaultValue={lead.note ?? ''} className={input} /></label>

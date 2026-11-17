@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { checkAccount, savePayoutAccount } from '@/app/actions/finance'
+import { SelectMenu } from '@/components/SelectMenu'
 import type { Bank } from '@/lib/finance'
 
 /** Bank + account number → check the name with the bank → save. Shared by payout and staff accounts. */
@@ -39,15 +40,14 @@ export function AccountForm({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        <select
+        <SelectMenu
           value={bankCode}
-          onChange={(e) => { setBankCode(e.target.value); reset() }}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900"
+          onChange={(code) => { setBankCode(code); reset() }}
+          placeholder="Choose bank"
           aria-label="Bank"
-        >
-          <option value="">Choose bank</option>
-          {banks.map((b) => <option key={b.code + b.name} value={b.code}>{b.name}</option>)}
-        </select>
+          className="min-w-56 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+          options={banks.map((bank) => ({ value: bank.code, label: bank.name }))}
+        />
         <input
           inputMode="numeric"
           value={number}

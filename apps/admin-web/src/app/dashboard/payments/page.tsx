@@ -1,3 +1,4 @@
+import { SelectMenu } from '@/components/SelectMenu'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { PaymentsTable } from './PaymentsTable'
@@ -72,13 +73,17 @@ export default async function PaymentsPage({
         <form className="flex flex-wrap gap-3 items-end w-full">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Payment mode</label>
-            <select name="mode" defaultValue={mode ?? ''}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
-              <option value="">All modes</option>
-              <option value="pay_on_arrival">Pay on arrival</option>
-              <option value="deposit">Deposit</option>
-              <option value="full_prepayment">Full prepayment</option>
-            </select>
+            <SelectMenu
+              name="mode"
+              defaultValue={mode ?? ''}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+              options={[
+                { value: '', label: 'All modes' },
+                { value: 'pay_on_arrival', label: 'Pay on arrival' },
+                { value: 'deposit', label: 'Deposit' },
+                { value: 'full_prepayment', label: 'Full prepayment' },
+              ]}
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">From</label>

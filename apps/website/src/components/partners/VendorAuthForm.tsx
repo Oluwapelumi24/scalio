@@ -1,8 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
+import { NIGERIA_STATES, serviceArea } from '@veno/shared-types'
 import { registerVendorAction, vendorSignInAction, type VendorAuthState } from '@/app/actions/vendor'
+import { SelectMenu } from '@/components/SelectMenu'
 import { CATEGORIES, VENDOR_LOGIN_URL, VENDOR_PORTAL_LINKED } from '@/lib/constants'
 
 const EMPTY: VendorAuthState = {}
@@ -56,14 +59,15 @@ export function VendorAuthForm({ mode }: { mode: 'register' | 'sign-in' }) {
             <Field label="Business name" name="businessName" autoComplete="organization" placeholder="Glow Beauty Studio" />
             <label className="block">
               <span className="text-sm font-semibold text-slate-900">What do you do?</span>
-              <select name="category" required defaultValue="" className="mt-1.5 h-[52px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base text-slate-900 outline-none focus:border-navy focus:bg-white">
-                <option value="" disabled>Choose a category</option>
-                {CATEGORIES.map((category) => (
-                  <option key={category.name} value={category.name}>{category.name}</option>
-                ))}
-              </select>
+              <SelectMenu
+                name="category"
+                required
+                placeholder="Choose a category"
+                className="mt-1.5 h-[52px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base text-slate-900"
+                options={CATEGORIES.map((category) => ({ value: category.name, label: category.name }))}
+              />
             </label>
-            <Field label="Area" name="address" autoComplete="address-level2" placeholder="Yaba, Lagos" />
+            <AreaFields />
             <Field label="Phone" name="phone" type="tel" autoComplete="tel" required={false} placeholder="0803 000 0000" hint="Optional" />
             <Field label="Your name" name="ownerName" autoComplete="name" placeholder="Amaka Okafor" />
           </>
@@ -72,15 +76,14 @@ export function VendorAuthForm({ mode }: { mode: 'register' | 'sign-in' }) {
         {register ? (
           <Field label="CAC registration number" name="registrationNumber" required={false} placeholder="RC1234567" hint="Optional" />
         ) : null}
-        <Field
+        <PasswordField
           label="Password"
           name="password"
-          type="password"
           autoComplete={register ? 'new-password' : 'current-password'}
           placeholder={register ? 'At least 8 characters' : 'Your password'}
         />
         {register ? (
-          <Field label="Confirm password" name="confirm" type="password" autoComplete="new-password" placeholder="Repeat your password" />
+          <PasswordField label="Confirm password" name="confirm" autoComplete="new-password" placeholder="Repeat your password" />
         ) : null}
         {state.error ? <p className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p> : null}
         <button
@@ -105,6 +108,79 @@ export function VendorAuthForm({ mode }: { mode: 'register' | 'sign-in' }) {
         )}
       </p>
     </div>
+  )
+}
+
+const MENU = 'mt-1.5 h-[52px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base text-slate-900'
+
+function AreaFields() {
+  const [stateName, setStateName] = useState('')
+  const [lga, setLga] = useState('')
+  const lgas = NIGERIA_STATES.find((item) => item.state === stateName)?.lgas ?? []
+  return (
+    <>
+      <label className="block">
+        <span className="text-sm font-semibold text-slate-900">State</span>
+        <SelectMenu
+          name="state"
+          required
+          value={stateName}
+          onChange={(next) => {
+            setStateName(next)
+            setLga('')
+          }}
+          placeholder="Choose a state"
+          className={MENU}
+          options={NIGERIA_STATES.map((item) => ({
+            value: item.state,
+            label: item.state === 'FCT' ? 'FCT (Abuja)' : item.state,
+          }))}
+        />
+      </label>
+      <label className="block">
+        <span className="text-sm font-semibold text-slate-900">Local government</span>
+        <SelectMenu
+          name="lga"
+          required
+          value={lga}
+          onChange={setLga}
+          disabled={!stateName}
+          placeholder={stateName ? 'Choose an LGA' : 'Choose a state first'}
+          className={MENU}
+          options={lgas.map((name) => ({ value: name, label: name }))}
+        />
+      </label>
+      <input type="hidden" name="address" value={stateName && lga ? serviceArea(lga, stateName) : ''} />
+    </>
+  )
+}
+
+function PasswordField({
+  label,
+  ...props
+}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const [shown, setShown] = useState(false)
+  return (
+    <label className="block">
+      <span className="text-sm font-semibold text-slate-900">{label}</span>
+      <span className="relative mt-1.5 block">
+        <input
+          required
+          {...props}
+          type={shown ? 'text' : 'password'}
+          className="h-[52px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pr-12 text-base text-slate-900 outline-none focus:border-navy focus:bg-white"
+        />
+        <button
+          type="button"
+          onClick={() => setShown((value) => !value)}
+          aria-label={shown ? 'Hide password' : 'Show password'}
+          aria-pressed={shown}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+        >
+          {shown ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+        </button>
+      </span>
+    </label>
   )
 }
 

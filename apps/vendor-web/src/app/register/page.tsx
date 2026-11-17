@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
+import { NIGERIA_STATES, serviceArea } from '@veno/shared-types'
 import { registerAction } from '@/app/actions/auth'
 import { BrandLink } from '@/components/BrandLink'
+import { SelectMenu } from '@/components/SelectMenu'
 import { BUSINESS_CATEGORIES } from '@/lib/categories'
 
 export default function RegisterPage() {
@@ -41,27 +43,17 @@ export default function RegisterPage() {
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
                 What do you do?
               </label>
-              <select
-                id="category" name="category" required defaultValue=""
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                <option value="" disabled>Choose a category</option>
-                {BUSINESS_CATEGORIES.map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                Area
-              </label>
-              <input
-                id="address" name="address" type="text" required autoComplete="address-level2"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="Yaba, Lagos"
+              <SelectMenu
+                id="category"
+                name="category"
+                required
+                placeholder="Choose a category"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+                options={BUSINESS_CATEGORIES.map((category) => ({ value: category, label: category }))}
               />
             </div>
+
+            <AreaFields />
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
@@ -107,27 +99,8 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                id="password" name="password" type="password" required autoComplete="new-password"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="At least 8 characters"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="confirm" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm password
-              </label>
-              <input
-                id="confirm" name="confirm" type="password" required autoComplete="new-password"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="••••••••"
-              />
-            </div>
+            <PasswordField id="password" name="password" label="Password" autoComplete="new-password" placeholder="At least 8 characters" />
+            <PasswordField id="confirm" name="confirm" label="Confirm password" autoComplete="new-password" placeholder="Repeat your password" />
 
             {state !== null && 'error' in state && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{state.error}</p>
@@ -151,5 +124,99 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+const MENU = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900'
+
+function AreaFields() {
+  const [stateName, setStateName] = useState('')
+  const [lga, setLga] = useState('')
+  const lgas = NIGERIA_STATES.find((item) => item.state === stateName)?.lgas ?? []
+  return (
+    <>
+      <div>
+        <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">State</label>
+        <SelectMenu
+          id="state"
+          name="state"
+          required
+          value={stateName}
+          onChange={(next) => {
+            setStateName(next)
+            setLga('')
+          }}
+          placeholder="Choose a state"
+          className={MENU}
+          options={NIGERIA_STATES.map((item) => ({
+            value: item.state,
+            label: item.state === 'FCT' ? 'FCT (Abuja)' : item.state,
+          }))}
+        />
+      </div>
+      <div>
+        <label htmlFor="lga" className="block text-sm font-medium text-gray-700 mb-1">Local government</label>
+        <SelectMenu
+          id="lga"
+          name="lga"
+          required
+          value={lga}
+          onChange={setLga}
+          disabled={!stateName}
+          placeholder={stateName ? 'Choose an LGA' : 'Choose a state first'}
+          className={MENU}
+          options={lgas.map((name) => ({ value: name, label: name }))}
+        />
+      </div>
+      <input type="hidden" name="address" value={stateName && lga ? serviceArea(lga, stateName) : ''} />
+    </>
+  )
+}
+
+function PasswordField({
+  id,
+  label,
+  ...props
+}: { id: string; label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const [shown, setShown] = useState(false)
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <div className="relative">
+        <input
+          id={id}
+          required
+          {...props}
+          type={shown ? 'text' : 'password'}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        />
+        <button
+          type="button"
+          onClick={() => setShown((value) => !value)}
+          aria-label={shown ? 'Hide password' : 'Show password'}
+          aria-pressed={shown}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500"
+        >
+          {shown ? <EyeOff /> : <Eye />}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Eye() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
+function EyeOff() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
+      <path d="M3 3l18 18M10.5 10.7A2.5 2.5 0 0 0 12 14.5M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-3.2 3.8M6.1 6.3C3.8 8 2 12 2 12a18 18 0 0 0 6.2 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   )
 }

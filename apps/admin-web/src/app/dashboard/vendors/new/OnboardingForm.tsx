@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createVendorAction } from '@/app/actions/vendors'
+import { SelectMenu } from '@/components/SelectMenu'
 
 const CATEGORIES = [
   'Nails', 'Salon', 'Barbing', 'Spa', 'Lashes', 'Makeup', 'Brows', 'Massage', 'Fitness', 'Laundry', 'Other',
@@ -111,14 +112,13 @@ export function OnboardingForm() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
-              <select
+              <SelectMenu
                 value={fields.category}
-                onChange={(e) => set('category', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-              >
-                <option value="">Select category…</option>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
+                onChange={(category) => set('category', category)}
+                placeholder="Select category…"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                options={CATEGORIES.map((category) => ({ value: category, label: category }))}
+              />
             </div>
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Business address</label>

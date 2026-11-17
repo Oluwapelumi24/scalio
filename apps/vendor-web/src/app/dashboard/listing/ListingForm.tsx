@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { saveListingAction, type ListingState } from '@/app/actions/profile'
+import { SelectMenu } from '@/components/SelectMenu'
 import { BUSINESS_CATEGORIES } from '@/lib/categories'
 
 export function ListingForm({
@@ -20,21 +21,14 @@ export function ListingForm({
     <form action={action} className="space-y-4">
       <label className="block">
         <span className="text-sm font-semibold">What do you offer?</span>
-        <select
+        <SelectMenu
           name="category"
           required
           defaultValue={known ? category : ''}
+          placeholder="Choose a category"
           className="mt-1.5 h-12 w-full rounded-2xl border border-[#e4e6eb] bg-white px-4 text-sm"
-        >
-          <option value="" disabled>
-            Choose a category
-          </option>
-          {BUSINESS_CATEGORIES.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
+          options={BUSINESS_CATEGORIES.map((item) => ({ value: item, label: item }))}
+        />
       </label>
       <label className="block">
         <span className="text-sm font-semibold">Where are you?</span>

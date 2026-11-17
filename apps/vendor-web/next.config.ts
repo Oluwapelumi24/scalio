@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@veno/shared-types'],
   experimental: {
     serverActions: {
       // Content studio photos go through a Server Action as base64 (resized in

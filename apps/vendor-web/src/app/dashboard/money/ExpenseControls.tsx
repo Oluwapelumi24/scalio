@@ -2,6 +2,7 @@
 
 import { useActionState, useTransition } from 'react'
 import { addExpense, voidExpense } from '@/app/actions/finance'
+import { SelectMenu } from '@/components/SelectMenu'
 
 export function ExpenseForm({ categories, today }: { categories: string[]; today: string }) {
   const [state, action, isPending] = useActionState(addExpense, null)
@@ -13,9 +14,12 @@ export function ExpenseForm({ categories, today }: { categories: string[]; today
       </label>
       <label className="text-sm text-gray-700">
         Category
-        <select name="category" defaultValue={categories[0]} className="mt-1 block rounded-md border border-gray-300 px-2 py-1.5 text-sm">
-          {categories.map((c) => <option key={c}>{c}</option>)}
-        </select>
+        <SelectMenu
+          name="category"
+          defaultValue={categories[0]}
+          className="mt-1 block rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+          options={categories.map((category) => ({ value: category, label: category }))}
+        />
       </label>
       <label className="text-sm text-gray-700">
         Date

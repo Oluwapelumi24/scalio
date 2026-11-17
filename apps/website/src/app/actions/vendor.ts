@@ -6,6 +6,7 @@ export type VendorAuthState = { error?: string; done?: 'registered' | 'signed-in
 
 function unreachable(err: unknown): VendorAuthState | null {
   if (err instanceof ApiError) return { error: err.message }
+  console.error('Vendor signup could not reach the API', err)
   return { error: 'We could not reach Veno just now. Try again in a moment.' }
 }
 
@@ -23,7 +24,7 @@ export async function registerVendorAction(_prev: VendorAuthState, formData: For
   if (password !== confirm) return { error: 'Passwords do not match.' }
   if (password.length < 8) return { error: 'Password must be at least 8 characters.' }
   if (!category) return { error: 'Choose what your business does.' }
-  if (!address) return { error: 'Add the area you work in, for example Yaba, Lagos.' }
+  if (!address) return { error: 'Choose your state and local government.' }
 
   try {
     await apiFetch('/vendor-auth/register', {

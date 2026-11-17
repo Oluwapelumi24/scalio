@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { createServiceAction } from '@/app/actions/vendor-services'
+import { SelectMenu } from '@/components/SelectMenu'
 
 export function AdminAddItemForm({ vendorId, serviceType, placeholder }: { vendorId: string; serviceType: 'package' | 'service'; placeholder: string }) {
   const [open, setOpen] = useState(false)
@@ -67,12 +68,16 @@ export function AdminAddItemForm({ vendorId, serviceType, placeholder }: { vendo
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Payment mode</label>
-          <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-            <option value="pay_on_arrival">Pay on arrival</option>
-            <option value="deposit">Deposit</option>
-            <option value="full_prepayment">Full prepayment</option>
-          </select>
+          <SelectMenu
+            value={paymentMode}
+            onChange={setPaymentMode}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+            options={[
+              { value: 'pay_on_arrival', label: 'Pay on arrival' },
+              { value: 'deposit', label: 'Deposit' },
+              { value: 'full_prepayment', label: 'Full prepayment' },
+            ]}
+          />
         </div>
         {paymentMode === 'deposit' && (
           <div>

@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { createStaffAction } from '@/app/actions/vendor-staff'
+import { SelectMenu } from '@/components/SelectMenu'
 
 export function AddStaffForm({ vendorId }: { vendorId: string }) {
   const action = createStaffAction.bind(null, vendorId)
@@ -15,12 +16,18 @@ export function AddStaffForm({ vendorId }: { vendorId: string }) {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Role *</label>
-        <select name="role" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-          <option value="owner">Owner</option>
-          <option value="manager">Manager</option>
-          <option value="practitioner">Practitioner</option>
-          <option value="front_desk">Front Desk</option>
-        </select>
+        <SelectMenu
+          name="role"
+          required
+          defaultValue="owner"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+          options={[
+            { value: 'owner', label: 'Owner' },
+            { value: 'manager', label: 'Manager' },
+            { value: 'practitioner', label: 'Practitioner' },
+            { value: 'front_desk', label: 'Front Desk' },
+          ]}
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">(sends invite)</span></label>

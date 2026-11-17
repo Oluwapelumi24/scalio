@@ -39,16 +39,23 @@ export function AudienceSwitch({
     const nav = navRef.current
     const pill = pillRef.current
     if (!nav || !pill) return
-    const current = nav.querySelector<HTMLElement>('[data-switch="on"]')
-    const other = nav.querySelector<HTMLElement>('[data-switch="off"]')
-    if (!current || !other) return
+    const current = () => nav.querySelector<HTMLElement>('[data-switch="on"]')
+    const other = () => nav.querySelector<HTMLElement>('[data-switch="off"]')
+    const on = current()
+    const off = other()
+    if (!on || !off) return
 
-    const box = nav.getBoundingClientRect()
-    const clip = (el: HTMLElement) => {
+    // A real pill, sized to the option. Clipping a full-width layer with a
+    // huge radius drew an end cap that bulged over the other option.
+    const place = (el: HTMLElement) => {
+      const box = nav.getBoundingClientRect()
       const r = el.getBoundingClientRect()
-      return `inset(${r.top - box.top}px ${box.right - r.right}px ${box.bottom - r.bottom}px ${r.left - box.left}px round 999px)`
+      pill.style.left = `${r.left - box.left}px`
+      pill.style.top = `${r.top - box.top}px`
+      pill.style.width = `${r.width}px`
+      pill.style.height = `${r.height}px`
     }
-    const destination = clip(current)
+
     let token: string | null = null
     try {
       token = sessionStorage.getItem(SWITCH_FLAG)
@@ -62,41 +69,61 @@ export function AudienceSwitch({
     const slide = target === window.location.pathname && !reduce
 
     pill.style.transition = 'none'
-    pill.style.clipPath = slide ? clip(other) : destination
+    place(slide ? off : on)
     pill.style.visibility = 'visible'
 
-    if (!slide) {
-      // Only drop a flag for the page we're actually on. A flag for the
-      // other side belongs to a navigation that hasn't committed yet.
-      if (target === window.location.pathname) {
-        try {
-          sessionStorage.removeItem(SWITCH_FLAG)
-        } catch {
-          /* private mode */
-        }
-      }
-      return
-    }
-
-    pill.getBoundingClientRect()
     let frame = 0
     let timer = 0
+    let sliding = slide
+    let cancelled = false
     const finish = () => {
+      sliding = false
       try {
         if (sessionStorage.getItem(SWITCH_FLAG) === token) sessionStorage.removeItem(SWITCH_FLAG)
       } catch {
         /* private mode */
       }
+      const el = current()
+      if (!cancelled && el) {
+        pill.style.transition = 'none'
+        place(el)
+      }
     }
-    frame = requestAnimationFrame(() => {
-      pill.style.transition = `clip-path ${SWITCH_MS}ms ${SWITCH_EASE}`
-      pill.style.clipPath = destination
-      pill.addEventListener('transitionend', finish, { once: true })
-      timer = window.setTimeout(finish, SWITCH_MS + 40)
-    })
+
+    if (!slide) {
+      // Only drop a flag for the page we're actually on. A flag for the
+      // other side belongs to a navigation that hasn't committed yet.
+      if (target === window.location.pathname) finish()
+    } else {
+      pill.getBoundingClientRect()
+      frame = requestAnimationFrame(() => {
+        if (cancelled) return
+        const dest = current()
+        if (!dest) return
+        pill.style.transition = `left ${SWITCH_MS}ms ${SWITCH_EASE}, top ${SWITCH_MS}ms ${SWITCH_EASE}, width ${SWITCH_MS}ms ${SWITCH_EASE}, height ${SWITCH_MS}ms ${SWITCH_EASE}`
+        place(dest)
+        pill.addEventListener('transitionend', finish, { once: true })
+        timer = window.setTimeout(finish, SWITCH_MS + 40)
+      })
+    }
+
+    const settle = () => {
+      if (cancelled || sliding) return
+      const el = current()
+      if (!el) return
+      pill.style.transition = 'none'
+      place(el)
+    }
+    const ro = new ResizeObserver(settle)
+    ro.observe(nav)
+    document.fonts?.ready.then(settle)
+
     return () => {
+      cancelled = true
+      ro.disconnect()
       cancelAnimationFrame(frame)
       window.clearTimeout(timer)
+      pill.removeEventListener('transitionend', finish)
     }
   }, [active])
 
@@ -116,7 +143,7 @@ export function AudienceSwitch({
             : 'bg-white/10 ring-1 ring-white/20 backdrop-blur-md [box-shadow:inset_0_1px_0_rgba(255,255,255,0.18)]'
         }`}
       >
-        <span ref={pillRef} aria-hidden className="pointer-events-none invisible absolute inset-0 bg-white" />
+        <span ref={pillRef} aria-hidden className="pointer-events-none invisible absolute rounded-full bg-white" />
         {options.map(({ key, href, label, Icon }) => {
           const on = key === active
           return (

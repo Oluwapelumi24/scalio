@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { registerVendorAction, vendorSignInAction, type VendorAuthState } from '@/app/actions/vendor'
+import { CATEGORIES, VENDOR_LOGIN_URL, VENDOR_PORTAL_LINKED } from '@/lib/constants'
 
 const EMPTY: VendorAuthState = {}
 
@@ -16,11 +17,11 @@ export function VendorAuthForm({ mode }: { mode: 'register' | 'sign-in' }) {
       <div className="rounded-3xl border border-slate-200 bg-white p-8">
         <h1 className="font-display text-3xl font-semibold tracking-tight">You&apos;re registered</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          We have your business. Our team reviews every listing before it goes live. You can sign in here once the vendor dashboard is published.
+          Your business is registered. Add services and opening hours in the business dashboard. Customers can find and book you after we approve the listing.
         </p>
-        <Link href="/partners" className="mt-6 inline-flex h-12 items-center justify-center rounded-[20px] bg-navy px-5 text-sm font-semibold text-white">
-          Back to partners
-        </Link>
+        <a href={VENDOR_LOGIN_URL} className="mt-6 inline-flex h-12 items-center justify-center rounded-[20px] bg-navy px-5 text-sm font-semibold text-white">
+          {VENDOR_PORTAL_LINKED ? 'Open the business dashboard' : 'Sign in'}
+        </a>
       </div>
     )
   }
@@ -30,11 +31,11 @@ export function VendorAuthForm({ mode }: { mode: 'register' | 'sign-in' }) {
       <div className="rounded-3xl border border-slate-200 bg-white p-8">
         <h1 className="font-display text-3xl font-semibold tracking-tight">You&apos;re signed in</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          The vendor dashboard is not on this website yet, so there is nowhere further to open from here.
+          That email and password are correct. Continue in the business dashboard to manage bookings. This page only creates the account.
         </p>
-        <Link href="/partners" className="mt-6 inline-flex h-12 items-center justify-center rounded-[20px] bg-navy px-5 text-sm font-semibold text-white">
-          Back to partners
-        </Link>
+        <a href={VENDOR_LOGIN_URL} className="mt-6 inline-flex h-12 items-center justify-center rounded-[20px] bg-navy px-5 text-sm font-semibold text-white">
+          {VENDOR_PORTAL_LINKED ? 'Open the business dashboard' : 'Continue'}
+        </a>
       </div>
     )
   }
@@ -46,13 +47,24 @@ export function VendorAuthForm({ mode }: { mode: 'register' | 'sign-in' }) {
       </h1>
       <p className="mt-2 text-sm leading-6 text-slate-600">
         {register
-          ? 'Create your vendor account. You can set up services and hours once we approve the listing.'
+          ? 'Create your account, then add services and hours. Customers see the listing after we review it.'
           : 'Sign in to the vendor dashboard for your business.'}
       </p>
       <form action={formAction} className="mt-8 space-y-4">
         {register ? (
           <>
             <Field label="Business name" name="businessName" autoComplete="organization" placeholder="Glow Beauty Studio" />
+            <label className="block">
+              <span className="text-sm font-semibold text-slate-900">What do you do?</span>
+              <select name="category" required defaultValue="" className="mt-1.5 h-[52px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base text-slate-900 outline-none focus:border-navy focus:bg-white">
+                <option value="" disabled>Choose a category</option>
+                {CATEGORIES.map((category) => (
+                  <option key={category.name} value={category.name}>{category.name}</option>
+                ))}
+              </select>
+            </label>
+            <Field label="Area" name="address" autoComplete="address-level2" placeholder="Yaba, Lagos" />
+            <Field label="Phone" name="phone" type="tel" autoComplete="tel" required={false} placeholder="0803 000 0000" hint="Optional" />
             <Field label="Your name" name="ownerName" autoComplete="name" placeholder="Amaka Okafor" />
           </>
         ) : null}

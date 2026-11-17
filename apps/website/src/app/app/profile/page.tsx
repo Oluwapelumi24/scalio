@@ -29,6 +29,7 @@ export default async function ProfilePage() {
             <span>
               <span className="block text-base font-bold">{user.name}</span>
               <span className="block text-sm text-[#4a4e57]">{user.email}</span>
+              {user.phone ? <span className="block text-sm text-[#4a4e57]">{user.phone}</span> : null}
             </span>
           </div>
           <ul className="mt-6 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb]">
@@ -37,19 +38,15 @@ export default async function ProfilePage() {
                 My bookings
               </Link>
             </li>
-            <li className="flex items-center justify-between px-4 py-3.5 text-sm">
-              <span>Saved businesses</span>
-              <span className="text-[#7d818b]">Coming soon</span>
-            </li>
-            <li className="flex items-center justify-between px-4 py-3.5 text-sm">
-              <span>Notifications</span>
-              <span className="text-[#7d818b]">Coming soon</span>
-            </li>
-            <li className="flex items-center justify-between px-4 py-3.5 text-sm">
-              <span>Help and support</span>
-              <span className="text-[#7d818b]">Coming soon</span>
+            <li>
+              <Link href="/app" className="block px-4 py-3.5 text-sm font-medium hover:bg-[#f5f6f8]">
+                Find a business
+              </Link>
             </li>
           </ul>
+          <p className="mt-4 text-sm leading-6 text-[#4a4e57]">
+            Need to change a visit? Open Bookings and cancel it, then book a new time. The business sees the cancellation straight away.
+          </p>
           <form action={signOutAction} className="mt-6">
             <button type="submit" className="text-sm font-semibold text-[#dc2626]">
               Sign out

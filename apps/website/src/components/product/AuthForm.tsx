@@ -20,7 +20,10 @@ export function AuthForm({ mode, next }: { mode: 'sign-in' | 'sign-up'; next: st
       <form action={formAction} className="mt-8 space-y-4">
         <input type="hidden" name="next" value={next} />
         {signingIn ? null : (
-          <Field label="Full name" name="name" autoComplete="name" placeholder="Ada Lovelace" />
+          <>
+            <Field label="Full name" name="name" autoComplete="name" placeholder="Adaeze Okonkwo" />
+            <Field label="Mobile number" name="phone" type="tel" autoComplete="tel" inputMode="tel" placeholder="0803 000 0000" hint="The business uses this if they need to reach you about the visit." />
+          </>
         )}
         <Field label="Email address" name="email" type="email" autoComplete="email" placeholder="you@example.com" />
         <Field

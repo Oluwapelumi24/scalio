@@ -65,15 +65,29 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
   const password = formData.get('password') as string
   const confirm = formData.get('confirm') as string
   const registrationNumber = (formData.get('registrationNumber') as string) || undefined
+  const category = String(formData.get('category') ?? '').trim()
+  const address = String(formData.get('address') ?? '').trim()
+  const phone = String(formData.get('phone') ?? '').trim()
 
   if (password !== confirm) return { error: 'Passwords do not match.' }
   if (password.length < 8) return { error: 'Password must be at least 8 characters.' }
+  if (!category) return { error: 'Choose what your business does.' }
+  if (!address) return { error: 'Add the area you work in, for example Yaba, Lagos.' }
 
   let token: string
   try {
     const data = await apiFetch<VendorSession>('/vendor-auth/register', null, {
       method: 'POST',
-      body: JSON.stringify({ ownerName, businessName, email, password, registrationNumber }),
+      body: JSON.stringify({
+        ownerName,
+        businessName,
+        email,
+        password,
+        registrationNumber,
+        category,
+        address,
+        phone: phone || undefined,
+      }),
     })
     token = data.accessToken
   } catch (err) {

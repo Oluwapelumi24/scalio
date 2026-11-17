@@ -2,17 +2,15 @@
 
 import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar, MapPin, Search } from 'lucide-react'
+import { MapPin, Search } from 'lucide-react'
 import { AudienceSwitch } from '@/components/site/SkyHero'
 import { JoinWaitlist } from '@/components/site/JoinWaitlist'
 import { HeroGallery } from '@/components/home/HeroGallery'
 import { CATEGORIES } from '@/lib/constants'
-import { categorySlug } from '@/lib/samples'
 
 const FIELDS = [
   { name: 'service', label: 'All services', icon: Search },
-  { name: 'where', label: 'Current location', icon: MapPin },
-  { name: 'when', label: 'Any time', icon: Calendar },
+  { name: 'where', label: 'Area in Lagos', icon: MapPin },
 ] as const
 
 type FieldName = (typeof FIELDS)[number]['name']
@@ -20,7 +18,6 @@ type FieldName = (typeof FIELDS)[number]['name']
 const SUGGESTIONS: Record<FieldName, readonly string[]> = {
   service: ['Salon', 'Barbershop', 'Spa', 'Nails', 'Laundry', 'Massage'],
   where: ['Lekki', 'Ikoyi', 'Victoria Island', 'Surulere', 'Yaba'],
-  when: ['Today', 'Tomorrow', 'This weekend', 'Morning', 'Afternoon', 'Evening'],
 }
 
 const ALL_SERVICES = CATEGORIES.map((category) => category.name)
@@ -40,7 +37,7 @@ function suggestionsFor(name: FieldName, query: string) {
 export function SearchHero({ prelaunch = false }: { prelaunch?: boolean }) {
   const router = useRouter()
   const listId = useId()
-  const [values, setValues] = useState<Record<FieldName, string>>({ service: '', where: '', when: '' })
+  const [values, setValues] = useState<Record<FieldName, string>>({ service: '', where: '' })
   const [open, setOpen] = useState<FieldName | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -81,17 +78,15 @@ export function SearchHero({ prelaunch = false }: { prelaunch?: boolean }) {
           className="mx-auto mt-14 w-full max-w-[420px]"
           onSubmit={(event) => {
             event.preventDefault()
-            const query = values.service.trim().toLowerCase()
-            const match = CATEGORIES.find((category) => category.name.toLowerCase() === query)
-              ?? CATEGORIES.find((category) => query && category.name.toLowerCase().includes(query))
-            if (!match) {
-              document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })
-              return
-            }
             const params = new URLSearchParams()
+            const service = values.service.trim()
+            const match = CATEGORIES.find((category) => category.name.toLowerCase() === service.toLowerCase())
+              ?? CATEGORIES.find((category) => service && category.name.toLowerCase().includes(service.toLowerCase()))
+            if (match) params.set('category', match.name)
+            else if (service) params.set('q', service)
             if (values.where.trim()) params.set('where', values.where.trim())
             const search = params.toString()
-            router.push(`/samples/${categorySlug(match.name)}${search ? `?${search}` : ''}`)
+            router.push(`/app${search ? `?${search}` : ''}`)
           }}
         >
           <div className="rounded-[28px] border border-slate-200 bg-white p-2">

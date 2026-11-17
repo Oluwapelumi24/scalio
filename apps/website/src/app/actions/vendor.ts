@@ -16,9 +16,14 @@ export async function registerVendorAction(_prev: VendorAuthState, formData: For
   const password = String(formData.get('password') ?? '')
   const confirm = String(formData.get('confirm') ?? '')
   const registrationNumber = String(formData.get('registrationNumber') ?? '').trim()
+  const category = String(formData.get('category') ?? '').trim()
+  const address = String(formData.get('address') ?? '').trim()
+  const phone = String(formData.get('phone') ?? '').trim()
 
   if (password !== confirm) return { error: 'Passwords do not match.' }
   if (password.length < 8) return { error: 'Password must be at least 8 characters.' }
+  if (!category) return { error: 'Choose what your business does.' }
+  if (!address) return { error: 'Add the area you work in, for example Yaba, Lagos.' }
 
   try {
     await apiFetch('/vendor-auth/register', {
@@ -29,6 +34,9 @@ export async function registerVendorAction(_prev: VendorAuthState, formData: For
         email,
         password,
         registrationNumber: registrationNumber || undefined,
+        category,
+        address,
+        phone: phone || undefined,
       }),
     })
   } catch (err) {

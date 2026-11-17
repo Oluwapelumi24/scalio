@@ -36,7 +36,7 @@ export class VendorAuthController {
 
   @Post('register')
   register(@Body() dto: RegisterVendorDto) {
-    return this.vendorAuth.register(dto.ownerName, dto.businessName, dto.email, dto.password, dto.registrationNumber);
+    return this.vendorAuth.register(dto.ownerName, dto.businessName, dto.email, dto.password, dto.registrationNumber, dto.category, dto.address, dto.phone);
   }
 
   @Post('login')
@@ -60,5 +60,12 @@ export class VendorAuthController {
   @UseGuards(VendorAuthGuard)
   me(@CurrentStaff() staff: VendorPrincipal) {
     return staff;
+  }
+
+  /** Whether customers can see this listing yet. New businesses stay in review. */
+  @Get('listing')
+  @UseGuards(VendorAuthGuard)
+  listing(@CurrentStaff() staff: VendorPrincipal) {
+    return this.vendorAuth.listing(staff.vendorId);
   }
 }

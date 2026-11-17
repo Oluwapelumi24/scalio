@@ -31,7 +31,7 @@ export default async function ExplorePage() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10 lg:py-10">
       <h1 className="font-display text-3xl font-semibold tracking-tight">Explore</h1>
-      <p className="mt-2 text-sm text-[#4a4e57]">Browse businesses near you by category.</p>
+      <p className="mt-2 text-sm text-[#4a4e57]">Browse by category. Home narrows this list to the area you pick.</p>
       {error ? <p className="mt-8 text-sm text-[#dc2626]">{error}</p> : null}
       {!error && sections.length === 0 ? (
         <div className="mt-8 rounded-[20px] border border-[#e4e6eb] px-6 py-10 text-center">

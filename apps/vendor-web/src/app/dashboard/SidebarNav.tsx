@@ -22,6 +22,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
   {
     title: 'Business',
     items: [
+      { href: '/dashboard/listing', label: 'Listing', roles: ['owner', 'manager'] },
       { href: '/dashboard/services', label: 'Services', roles: ['owner', 'manager'] },
       { href: '/dashboard/staff', label: 'Team', roles: ['owner', 'manager'] },
       { href: '/dashboard/schedule', label: 'Hours', roles: ['owner', 'manager'] },

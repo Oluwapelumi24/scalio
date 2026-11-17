@@ -9,6 +9,8 @@ import { VendorMetricsController } from './metrics.controller';
 import { VendorMetricsService } from './metrics.service';
 import { VendorScheduleController } from './schedule.controller';
 import { VendorScheduleService } from './schedule.service';
+import { VendorProfileController } from './profile.controller';
+import { VendorProfileService } from './profile.service';
 import { VendorServicesController } from './services.controller';
 import { VendorServicesService } from './services.service';
 import { VendorStaffController } from './staff.controller';
@@ -17,6 +19,7 @@ import { VendorStaffService } from './staff.service';
 @Module({
   imports: [VendorAuthModule, BookingModule],
   controllers: [
+    VendorProfileController,
     VendorServicesController,
     VendorStaffController,
     VendorScheduleController,
@@ -26,6 +29,7 @@ import { VendorStaffService } from './staff.service';
   ],
   providers: [
     BookingsSummaryService,
+    VendorProfileService,
     VendorServicesService,
     VendorStaffService,
     VendorScheduleService,

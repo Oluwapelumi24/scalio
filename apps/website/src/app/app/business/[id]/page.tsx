@@ -19,8 +19,15 @@ interface VendorRow {
   timezone: string | null
 }
 
-export default async function BusinessPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BusinessPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ services?: string; at?: string; duration?: string }>
+}) {
   const { id } = await params
+  const query = await searchParams
   let vendor: VendorRow
   try {
     vendor = await apiFetch<VendorRow>(`/vendors/${id}`)
@@ -109,6 +116,10 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
                 depositPercent: service.depositPercent,
               }))}
               signedIn={!!user}
+              hasPhone={Boolean(user?.phone)}
+              initialServiceIds={(query.services ?? '').split(',').filter(Boolean)}
+              initialAt={query.at ?? null}
+              initialDuration={query.duration ? Number(query.duration) : null}
             />
           )}
         </div>

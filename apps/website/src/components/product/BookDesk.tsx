@@ -1,9 +1,9 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { bookAppointment, loadOpenTimes } from '@/app/actions/customer'
+import { BookedPanel } from '@/components/product/BookedPanel'
 import { formatNaira, isLaundry, type ListedService } from '@/lib/product'
 
 const SELF_SERVICE = 'Self-service wash'
@@ -30,25 +30,43 @@ export function BookDesk({
   timezone,
   services,
   signedIn,
+  hasPhone = false,
+  initialServiceIds = [],
+  initialAt = null,
+  initialDuration = null,
 }: {
   vendorId: string
   category: string
   timezone: string
   services: ListedService[]
   signedIn: boolean
+  hasPhone?: boolean
+  initialServiceIds?: string[]
+  initialAt?: string | null
+  initialDuration?: number | null
 }) {
   const router = useRouter()
-  const days = useMemo(() => nextDays(timezone || 'Africa/Lagos', 14), [timezone])
+  const zone = timezone || 'Africa/Lagos'
+  const days = useMemo(() => nextDays(zone, 14), [zone])
   const laundry = isLaundry(category)
-  const [kind, setKind] = useState<'self_service' | 'drop_off' | null>(laundry ? null : 'self_service')
+  const restoredDay = initialAt ? new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(initialAt)) : null
+  const restoredKind: 'self_service' | 'drop_off' | null = !laundry
+    ? 'self_service'
+    : services.some((service) => initialServiceIds.includes(service.id) && service.name === DROP_OFF)
+      ? 'drop_off'
+      : initialServiceIds.length > 0
+        ? 'self_service'
+        : null
+  const [kind, setKind] = useState<'self_service' | 'drop_off' | null>(restoredKind)
   const [duvets, setDuvets] = useState(0)
-  const [selected, setSelected] = useState<string[]>([])
-  const [day, setDay] = useState(days[0]?.value ?? '')
-  const [slots, setSlots] = useState<string[] | null>(null)
-  const [duration, setDuration] = useState<number | null>(null)
-  const [slot, setSlot] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string[]>(initialServiceIds)
+  const [day, setDay] = useState(restoredDay ?? days[0]?.value ?? '')
+  const [slots, setSlots] = useState<string[] | null>(initialAt ? [initialAt] : null)
+  const [duration, setDuration] = useState<number | null>(initialDuration)
+  const [slot, setSlot] = useState<string | null>(initialAt)
+  const [phone, setPhone] = useState('')
   const [message, setMessage] = useState<string | null>(null)
-  const [booked, setBooked] = useState<string | null>(null)
+  const [booked, setBooked] = useState<{ id: string; scheduledAt: string } | null>(null)
   const [pending, startTransition] = useTransition()
 
   const washName = kind === 'drop_off' ? DROP_OFF : SELF_SERVICE
@@ -90,46 +108,46 @@ export function BookDesk({
     })
   }
 
+  function returnPath() {
+    const params = new URLSearchParams()
+    if (serviceIds.length > 0) params.set('services', serviceIds.join(','))
+    if (slot) params.set('at', slot)
+    if (duration != null) params.set('duration', String(duration))
+    const search = params.toString()
+    return `/app/business/${vendorId}${search ? `?${search}` : ''}`
+  }
+
   function confirm() {
     if (!slot || duration == null) return
     if (!signedIn) {
-      router.push(`/app/sign-in?next=${encodeURIComponent(`/app/business/${vendorId}`)}`)
+      router.push(`/app/sign-in?next=${encodeURIComponent(returnPath())}`)
       return
     }
     setMessage(null)
     startTransition(async () => {
-      const result = await bookAppointment({ vendorId, serviceIds, scheduledAt: slot, durationMinutes: duration })
+      const result = await bookAppointment({ vendorId, serviceIds, scheduledAt: slot, durationMinutes: duration, phone })
       if (result.needsSignIn) {
-        router.push(`/app/sign-in?next=${encodeURIComponent(`/app/business/${vendorId}`)}`)
+        router.push(`/app/sign-in?next=${encodeURIComponent(returnPath())}`)
         return
       }
-      if (result.error || !result.scheduledAt) {
+      if (result.error || !result.scheduledAt || !result.bookingId) {
         setMessage(result.error ?? 'Please try a different time.')
         return
       }
-      setBooked(result.scheduledAt)
+      setBooked({ id: result.bookingId, scheduledAt: result.scheduledAt })
     })
   }
 
   if (booked) {
-    const when = new Date(booked).toLocaleString('en-US', {
+    const when = new Date(booked.scheduledAt).toLocaleString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-      timeZone: timezone || 'Africa/Lagos',
+      timeZone: zone,
     })
-    return (
-      <div className="rounded-[24px] border border-[#e4e6eb] bg-white p-6">
-        <p className="text-sm font-semibold text-[#15803d]">Booked</p>
-        <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">You’re on the book</h2>
-        <p className="mt-2 text-sm text-[#4a4e57]">{when}. Pay at the appointment.</p>
-        <Link href="/app/bookings" className="mt-6 flex h-12 items-center justify-center rounded-[20px] bg-[#1e3a8a] text-sm font-semibold text-white">
-          See your bookings
-        </Link>
-      </div>
-    )
+    return <BookedPanel bookingId={booked.id} when={when} services={chosen} />
   }
 
   return (
@@ -258,6 +276,20 @@ export function BookDesk({
             <p className="mt-4 text-sm text-[#4a4e57]">
               {chosen.map((service) => service.name).join(', ')} · <span className="font-semibold text-[#0a0a0a]">{formatNaira(total)}</span>
             </p>
+          ) : null}
+          {signedIn && !hasPhone ? (
+            <label className="mt-4 block">
+              <span className="text-sm font-semibold">Mobile number</span>
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="0803 000 0000"
+                className="mt-1.5 h-12 w-full rounded-2xl border border-[#e4e6eb] px-4 text-sm outline-none focus:border-[#1e3a8a]"
+              />
+              <span className="mt-1 block text-xs text-[#7d818b]">So the business can reach you about this visit.</span>
+            </label>
           ) : null}
           {message ? <p className="mt-3 text-sm text-[#dc2626]">{message}</p> : null}
           <button

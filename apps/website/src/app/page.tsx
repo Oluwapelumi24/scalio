@@ -13,10 +13,18 @@ import { DesignSwitch } from '@/components/site/DesignSwitch'
 import { CATEGORIES, SITE_URL } from '@/lib/constants'
 import { designMode } from '@/lib/design-preview'
 
-export const metadata: Metadata = {
-  title: 'Veno — Opening soon. Join the waitlist.',
-  description:
-    'Veno is opening soon in Lagos. Join the waitlist to book spas, salons, laundry, tailors and other local services, or to list your business.',
+export async function generateMetadata(): Promise<Metadata> {
+  const prelaunch = (await designMode()) !== 'launch'
+  const title = prelaunch ? 'Veno — Opening soon. Join the waitlist.' : 'Veno — Book local services in Lagos'
+  const description = prelaunch
+    ? 'Veno is opening soon in Lagos. Join the waitlist to book spas, salons, laundry, tailors and other local services, or to list your business.'
+    : 'Book spas, salons, laundry, tailors and other local services in Lagos. See a free time and hold it.'
+  return {
+    title: { absolute: title },
+    description,
+    openGraph: { title, description },
+    twitter: { title, description },
+  }
 }
 
 const STRUCTURED_DATA = {

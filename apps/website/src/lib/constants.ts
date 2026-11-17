@@ -18,6 +18,7 @@ function vendorWebUrl(): string {
 }
 
 export const VENDOR_WEB_URL = vendorWebUrl()
+export const VENDOR_PORTAL_LINKED = VENDOR_WEB_URL.startsWith('http')
 export const VENDOR_REGISTER_URL = VENDOR_WEB_URL ? `${VENDOR_WEB_URL}/register` : '/register'
 export const VENDOR_LOGIN_URL = VENDOR_WEB_URL ? `${VENDOR_WEB_URL}/login` : '/login'
 

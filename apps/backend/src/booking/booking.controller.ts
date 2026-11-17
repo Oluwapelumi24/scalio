@@ -1,23 +1,28 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import type { InferSelectModel } from 'drizzle-orm';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { UserAuthGuard } from '../auth/user-auth.guard';
+import type { users } from '../db/schema';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { InitiateBookingPaymentDto } from './dto/initiate-booking-payment.dto';
-import { ListBookingsQueryDto } from './dto/list-bookings-query.dto';
 
 @Controller('bookings')
+@UseGuards(UserAuthGuard)
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
+  /** The signed-in customer's bookings. The caller cannot ask for someone else's. */
   @Get()
-  list(@Query() query: ListBookingsQueryDto) {
-    return this.bookingService.listForUser(query.userId);
+  list(@CurrentUser() user: InferSelectModel<typeof users>) {
+    return this.bookingService.listForUser(user.id);
   }
 
   @Post()
-  create(@Body() dto: CreateBookingDto) {
+  create(@CurrentUser() user: InferSelectModel<typeof users>, @Body() dto: CreateBookingDto) {
     return this.bookingService.createPendingBooking({
       vendorId: dto.vendorId,
-      userId: dto.userId,
+      userId: user.id,
       staffId: dto.staffId ?? null,
       serviceIds: dto.serviceIds,
       scheduledAt: new Date(dto.scheduledAt),
@@ -26,28 +31,22 @@ export class BookingController {
   }
 
   @Post(':id/payment')
-  initiatePayment(
+  async initiatePayment(
+    @CurrentUser() user: InferSelectModel<typeof users>,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: InitiateBookingPaymentDto,
   ) {
+    await this.bookingService.assertOwnedByUser(id, user.id);
     return this.bookingService.initiateBookingPayment(id, dto.paymentMode, dto.amountDueKobo);
   }
 
   @Post(':id/cancel')
-  cancel(
+  async cancel(
+    @CurrentUser() user: InferSelectModel<typeof users>,
     @Param('id', ParseUUIDPipe) id: string,
     @Body('reason') reason?: string,
   ) {
+    await this.bookingService.assertOwnedByUser(id, user.id);
     return this.bookingService.cancelByCustomer(id, reason);
-  }
-
-  @Post(':id/complete')
-  complete(@Param('id', ParseUUIDPipe) id: string) {
-    return this.bookingService.markCompleted(id);
-  }
-
-  @Post(':id/no-show')
-  noShow(@Param('id', ParseUUIDPipe) id: string) {
-    return this.bookingService.markNoShow(id);
   }
 }

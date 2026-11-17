@@ -1,4 +1,4 @@
-import { ConflictException, Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
@@ -138,6 +138,9 @@ export class VendorAuthService {
     email: string,
     password: string,
     registrationNumber?: string,
+    category?: string,
+    address?: string,
+    phone?: string,
   ): Promise<VendorSession> {
     const [existing] = await this.db.select({ id: staff.id }).from(staff).where(eq(staff.email, email));
     if (existing) throw new ConflictException('An account with this email already exists.');
@@ -148,15 +151,38 @@ export class VendorAuthService {
 
     const [vendor] = await this.db
       .insert(vendors)
-      .values({ slug, businessName, category: 'Other', ownerName, ownerEmail: email, approvalStatus: 'pending_review', registrationNumber: registrationNumber ?? null })
+      .values({
+        slug,
+        businessName,
+        category: category ?? 'Other',
+        ownerName,
+        ownerEmail: email,
+        approvalStatus: 'pending_review',
+        registrationNumber: registrationNumber ?? null,
+        address: address?.trim() || null,
+      })
       .returning();
 
     const [owner] = await this.db
       .insert(staff)
-      .values({ vendorId: vendor.id, name: ownerName, email, role: 'owner', passwordHash })
+      .values({ vendorId: vendor.id, name: ownerName, email, role: 'owner', passwordHash, phone: phone?.trim() || null })
       .returning();
 
     return this.issueSession(owner);
+  }
+
+  async listing(vendorId: string) {
+    const [row] = await this.db
+      .select({
+        businessName: vendors.businessName,
+        category: vendors.category,
+        approvalStatus: vendors.approvalStatus,
+        reviewNote: vendors.reviewNote,
+      })
+      .from(vendors)
+      .where(eq(vendors.id, vendorId));
+    if (!row) throw new NotFoundException('Business not found.');
+    return row;
   }
 
   async login(email: string, password: string): Promise<VendorSession> {

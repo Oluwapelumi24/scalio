@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { getAvailability } from '@/app/actions/availability'
+import { bookAppointment } from '@/app/actions/customer'
+import { BookedPanel } from '@/components/product/BookedPanel'
 import { formatDuration, formatNaira, type PublicService } from '@/lib/booking-page'
 
 function nextDays(timeZone: string, count: number) {
@@ -15,20 +18,37 @@ function nextDays(timeZone: string, count: number) {
 
 export function AvailabilityPicker({
   vendorId,
+  slug,
   businessName,
   timezone,
   services,
+  signedIn,
+  hasPhone = false,
+  initialServiceIds = [],
+  initialAt = null,
 }: {
   vendorId: string
+  slug: string
   businessName: string
   timezone: string
   services: PublicService[]
+  signedIn: boolean
+  hasPhone?: boolean
+  initialServiceIds?: string[]
+  initialAt?: string | null
 }) {
-  const days = nextDays(timezone, 7)
-  const [selected, setSelected] = useState<string[]>([])
-  const [date, setDate] = useState(days[0].value)
-  const [slots, setSlots] = useState<string[] | null>(null)
+  const router = useRouter()
+  const days = nextDays(timezone, 14)
+  const restoredDay = initialAt
+    ? new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(initialAt))
+    : null
+  const [selected, setSelected] = useState<string[]>(initialServiceIds)
+  const [date, setDate] = useState(restoredDay ?? days[0].value)
+  const [slots, setSlots] = useState<string[] | null>(initialAt ? [initialAt] : null)
+  const [slot, setSlot] = useState<string | null>(initialAt)
+  const [phone, setPhone] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [booked, setBooked] = useState<{ id: string; scheduledAt: string } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const timeFmt = new Intl.DateTimeFormat('en-NG', { timeZone: timezone, hour: 'numeric', minute: '2-digit' })
@@ -50,12 +70,61 @@ export function AvailabilityPicker({
   function toggle(id: string) {
     const next = selected.includes(id) ? selected.filter((v) => v !== id) : [...selected, id]
     setSelected(next)
+    setSlot(null)
     if (slots) check(date, next)
   }
 
   function pickDate(value: string) {
     setDate(value)
+    setSlot(null)
     check(value)
+  }
+
+  function returnPath(nextSlot = slot) {
+    const params = new URLSearchParams()
+    if (selected.length > 0) params.set('services', selected.join(','))
+    if (nextSlot) params.set('at', nextSlot)
+    const search = params.toString()
+    return `/book/${slug}${search ? `?${search}` : ''}`
+  }
+
+  function confirm() {
+    if (!slot) return
+    if (!signedIn) {
+      router.push(`/app/sign-in?next=${encodeURIComponent(returnPath())}`)
+      return
+    }
+    setError(null)
+    startTransition(async () => {
+      const result = await bookAppointment({
+        vendorId,
+        serviceIds: selected,
+        scheduledAt: slot,
+        durationMinutes: duration || 60,
+        phone,
+      })
+      if (result.needsSignIn) {
+        router.push(`/app/sign-in?next=${encodeURIComponent(returnPath())}`)
+        return
+      }
+      if (result.error || !result.bookingId || !result.scheduledAt) {
+        setError(result.error ?? 'Please try a different time.')
+        return
+      }
+      setBooked({ id: result.bookingId, scheduledAt: result.scheduledAt })
+    })
+  }
+
+  if (booked) {
+    const when = new Date(booked.scheduledAt).toLocaleString('en-NG', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: timezone,
+    })
+    return <BookedPanel bookingId={booked.id} when={when} services={chosen} />
   }
 
   return (
@@ -126,11 +195,19 @@ export function AvailabilityPicker({
             <p className="text-sm text-slate-500">No open times on this day. Try another day.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {slots.map((iso) => (
-                <span key={iso} className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700">
-                  {timeFmt.format(new Date(iso))}
-                </span>
-              ))}
+              {slots.map((iso) => {
+                const on = iso === slot
+                return (
+                  <button
+                    key={iso}
+                    type="button"
+                    onClick={() => setSlot(iso)}
+                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${on ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200 text-slate-700'}`}
+                  >
+                    {timeFmt.format(new Date(iso))}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
@@ -142,11 +219,29 @@ export function AvailabilityPicker({
           <p className="mt-1 text-lg font-semibold">
             {formatNaira(total)} · {formatDuration(duration)}
           </p>
-          {/* Online booking from this page needs guest checkout, which isn't built yet.
-              Say so plainly rather than offering a button that can't complete. */}
-          <p className="mt-3 text-sm text-white/70">
-            Booking straight from this page is coming soon. For now, book in the Veno app or contact {businessName}.
-          </p>
+          {signedIn && !hasPhone ? (
+            <label className="mt-4 block text-left">
+              <span className="text-sm font-semibold">Mobile number</span>
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="0803 000 0000"
+                className="mt-1.5 h-12 w-full rounded-xl border border-white/30 bg-white px-4 text-sm text-slate-900 outline-none"
+              />
+              <span className="mt-1 block text-xs text-white/70">So {businessName} can reach you about this visit.</span>
+            </label>
+          ) : null}
+          <button
+            type="button"
+            onClick={confirm}
+            disabled={!slot || isPending}
+            className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-slate-900 disabled:opacity-50"
+          >
+            {isPending ? 'Booking…' : signedIn ? 'Book this time' : 'Sign in to book'}
+          </button>
+          {!signedIn ? <p className="mt-3 text-sm text-white/70">Create a free account to hold this time. Your selection stays.</p> : null}
         </div>
       )}
     </div>

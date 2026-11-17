@@ -7,9 +7,16 @@ const API_BASE_URL = 'http://localhost:3000';
 const HTTP_NO_CONTENT = 204;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // session.ts imports this file, so the token is read at call time.
+  const { getAccessToken } = require('./session') as typeof import('./session');
+  const token = getAccessToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init?.headers,
+    },
   });
 
   if (!response.ok) {

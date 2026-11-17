@@ -1,40 +1,30 @@
-import { CalendarCheck, ListPlus, Zap } from 'lucide-react'
+import { CalendarCheck, Clock, Wallet } from 'lucide-react'
 import { JoinWaitlist } from '@/components/site/JoinWaitlist'
 
 const FEATURES = [
   {
-    title: 'Syncs with your calendar',
-    body: 'A confirmed visit lands on your phone calendar, with the place, the time, and a reminder before you need to leave.',
+    title: 'A time that is free',
+    body: 'Open times come from the business’s own book. The slot you pick is held when the booking goes through.',
     Icon: CalendarCheck,
     tint: 'bg-[#e7eeff]',
   },
   {
-    title: 'Join the waitlist',
-    body: 'If the time you want is taken, join the list. When someone cancels, that slot is offered to you first.',
-    Icon: ListPlus,
+    title: 'Change your mind',
+    body: 'Cancel an upcoming visit from Bookings. The business sees it straight away and the time opens up again.',
+    Icon: Clock,
     tint: 'bg-[#fde8f4]',
   },
   {
-    title: 'Priority when it’s urgent',
-    body: 'Need it today? Mark the request urgent and businesses that can take you sooner rise to the top.',
-    Icon: Zap,
+    title: 'Pay the way they offer',
+    body: 'Some visits are paid when you arrive. Where a business takes a deposit or full payment, you can pay with Paystack.',
+    Icon: Wallet,
     tint: 'bg-[#fff1e4]',
   },
 ] as const
 
 /** The block under the service grid: the three things that set a Veno booking apart. */
 export function StandoutFeatures({ prelaunch = false }: { prelaunch?: boolean }) {
-  const features = prelaunch
-    ? FEATURES.map((feature) =>
-        feature.title === 'Join the waitlist'
-          ? {
-              ...feature,
-              title: 'If the time is taken',
-              body: 'If the time you want is taken, you can take the next opening. When someone cancels, that slot is offered to you first.',
-            }
-          : feature,
-      )
-    : FEATURES
+  const features = FEATURES
 
   return (
     <section className="bg-white px-6 py-20 sm:py-28">

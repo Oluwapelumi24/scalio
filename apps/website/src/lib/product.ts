@@ -54,6 +54,20 @@ export function isLaundry(category: string) {
   return key === 'laundry' || key === 'laundromat'
 }
 
+/** Saved on this device. The home and explore screens use it to narrow listings. */
+export const LOCATION_KEY = 'veno_web_location'
+
+/** "Lekki Phase 1, Lagos" → "lekki phase 1". "Lagos" matches everywhere. */
+export function neighbourhood(location: string) {
+  return location.split(',')[0]?.trim().toLowerCase() ?? ''
+}
+
+export function inLocation(address: string | null, location: string) {
+  const name = neighbourhood(location)
+  if (!name || name === 'lagos') return true
+  return (address ?? '').toLowerCase().includes(name)
+}
+
 export const POPULAR_AREAS = [
   'Lekki Phase 1, Lagos',
   'Victoria Island, Lagos',

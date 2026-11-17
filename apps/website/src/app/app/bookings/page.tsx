@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ApiError, apiFetch } from '@/lib/api'
-import { getCustomer } from '@/lib/customer-session'
+import { getCustomer, getCustomerToken } from '@/lib/customer-session'
 import { BookingList } from '@/components/product/BookingList'
 import type { ListedVendor } from '@/lib/product'
 
@@ -25,15 +25,17 @@ export default async function BookingsPage() {
           </Link>
         </div>
       ) : (
-        <SignedInBookings userId={user.id} />
+        <SignedInBookings />
       )}
     </div>
   )
 }
 
-async function SignedInBookings({ userId }: { userId: string }) {
+async function SignedInBookings() {
+  const token = await getCustomerToken()
+  if (!token) return <p className="mt-8 text-sm text-[#4a4e57]">Sign in again to see your appointments.</p>
   try {
-    const bookings = await apiFetch<BookingRow[]>(`/bookings?userId=${encodeURIComponent(userId)}`)
+    const bookings = await apiFetch<BookingRow[]>('/bookings', { headers: { Authorization: `Bearer ${token}` } })
     return <BookingList bookings={bookings} />
   } catch (err) {
     const message = err instanceof ApiError ? err.message : 'Could not load your appointments.'

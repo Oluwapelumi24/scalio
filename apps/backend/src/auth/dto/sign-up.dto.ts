@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class SignUpDto {
   @IsString()
@@ -12,4 +12,11 @@ export class SignUpDto {
   @IsString()
   @MinLength(8)
   password!: string;
+
+  /** Optional so older app builds keep working. The website asks for it before a booking. */
+  @IsOptional()
+  @IsString()
+  @MinLength(10)
+  @MaxLength(20)
+  phone?: string;
 }

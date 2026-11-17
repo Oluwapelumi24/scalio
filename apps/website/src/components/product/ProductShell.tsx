@@ -74,31 +74,31 @@ export function ProductShell({ user, children }: { user: Customer | null; childr
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#e4e6eb] bg-white/90 px-5 py-3 backdrop-blur lg:hidden">
+          <header className="sticky top-0 z-20 flex items-center border-b border-[#e4e6eb] bg-white/90 px-5 py-3 backdrop-blur lg:hidden">
             <Link href="/app">
               <img src="/brand/lockup-color.svg" alt="Veno" className="h-7 w-auto" />
             </Link>
-            <nav className="flex items-center gap-1" aria-label="Veno">
-              {NAV.map((item) => {
-                const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
-                const Icon = item.icon
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-label={item.label}
-                    aria-current={active ? 'page' : undefined}
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${active ? 'bg-[#e8edfa] text-[#1e3a8a]' : 'text-[#0a0a0a]'}`}
-                  >
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </Link>
-                )
-              })}
-            </nav>
           </header>
-          <div className="flex-1">{children}</div>
+          <div className="flex-1 pb-24 lg:pb-0">{children}</div>
         </div>
       </div>
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-[#e4e6eb] bg-white pb-[env(safe-area-inset-bottom)] lg:hidden" aria-label="Veno">
+        {NAV.map((item) => {
+          const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? 'page' : undefined}
+              className={`flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${active ? 'text-[#1e3a8a]' : 'text-[#7d818b]'}`}
+            >
+              <Icon className="h-5 w-5" aria-hidden />
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
     </div>
   )
 }

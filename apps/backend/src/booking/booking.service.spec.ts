@@ -82,7 +82,9 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const paystack = makePaystack();
       const push = makePush();
-      db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
+      db.select
+        .mockReturnValueOnce(selectResult([{ id: 'user-1', name: 'Jane', email: 'jane@example.com' }]))
+        .mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       slotLock.acquire.mockResolvedValue({
         key: 'slot:vendor-1:staff-1:2026-06-10T10:00',
         token: 'tok-1',
@@ -123,12 +125,12 @@ describe('BookingService', () => {
       const paystack = makePaystack();
       const push = makePush();
       db.select
-        .mockReturnValueOnce(selectResult([])) // no existing CRM customer
         .mockReturnValueOnce(
           selectResult([
             { id: 'user-1', name: 'Jane', email: 'jane@example.com' },
           ]),
-        );
+        )
+        .mockReturnValueOnce(selectResult([])); // no existing CRM customer
       db.insert
         .mockReturnValueOnce(insertResult([{ id: 'customer-1' }]))
         .mockReturnValueOnce(
@@ -183,7 +185,9 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const paystack = makePaystack();
       const push = makePush();
-      db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
+      db.select
+        .mockReturnValueOnce(selectResult([{ id: 'user-1', name: 'Jane', email: 'jane@example.com' }]))
+        .mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       slotLock.acquire.mockResolvedValue(null);
 
       const service = new BookingService(
@@ -204,7 +208,9 @@ describe('BookingService', () => {
       const slotLock = makeSlotLock();
       const paystack = makePaystack();
       const push = makePush();
-      db.select.mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
+      db.select
+        .mockReturnValueOnce(selectResult([{ id: 'user-1', name: 'Jane', email: 'jane@example.com' }]))
+        .mockReturnValueOnce(selectResult([{ id: 'customer-1' }]));
       const lock = {
         key: 'slot:vendor-1:staff-1:2026-06-10T10:00',
         token: 'tok-1',

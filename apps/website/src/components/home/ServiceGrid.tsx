@@ -5,7 +5,6 @@ import { ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/lib/constants'
 import { WAITLIST_CTA } from '@/components/site/JoinWaitlist'
-import { categorySlug } from '@/lib/samples'
 import { CATEGORY_ICONS } from './CategoryMarquee'
 
 /**
@@ -88,7 +87,7 @@ export function ServiceGrid({ prelaunch = false }: { prelaunch?: boolean }) {
                   href={
                     prelaunch
                       ? `/?service=${encodeURIComponent(category.name)}#waitlist`
-                      : `/samples/${categorySlug(category.name)}`
+                      : `/app?category=${encodeURIComponent(category.name)}`
                   }
                   className="flex h-full flex-col items-center rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center transition-colors hover:border-navy/30 hover:bg-sky focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
                 >

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { apiFetch, ApiError } from '@/lib/api'
 import { getToken } from '@/lib/session'
+import { listingReady, type VendorProfile } from '@/lib/categories'
 import { MANAGER_ROLES, type HomeResponse, type Preferences } from '@/lib/personalisation'
 import { Icon } from '@/components/Icon'
 import { ModuleLink } from './home/ModuleLink'
@@ -110,9 +111,12 @@ export default async function DashboardHome() {
   } catch (err) {
     if (!(err instanceof ApiError)) throw err
   }
+  const profile = await apiFetch<VendorProfile>('/vendor-admin/profile', token).catch(() => null)
+  const listed = profile ? listingReady(profile) : true
+  const approved = profile?.approvalStatus === 'approved'
 
   const bookings = home?.bookings
-  const ready = !!bookings && bookings.setup.services && bookings.setup.hours
+  const ready = !!bookings && bookings.setup.services && bookings.setup.hours && listed
   const upcomingCount = bookings?.upcoming.length ?? 0
   const summary = !bookings
     ? ''
@@ -125,6 +129,9 @@ export default async function DashboardHome() {
   const otherAttention = home?.layers.attention.filter((item) => !(item.id in BOOKING_ALERTS)) ?? []
   const steps = bookings
     ? [
+        ...(profile
+          ? [{ key: 'listing', label: 'Say what you do and where', hint: 'So customers can find you in search', done: listed, href: '/dashboard/listing', icon: 'map-pin' }]
+          : []),
         { key: 'services', label: 'Add a service', hint: 'Customers pick one when they book', done: bookings.setup.services, href: '/dashboard/services', icon: 'plus-circle' },
         { key: 'hours', label: 'Set your opening hours', hint: 'So customers only book when you’re open', done: bookings.setup.hours, href: '/dashboard/schedule', icon: 'clock' },
         ...(isManager
@@ -161,8 +168,19 @@ export default async function DashboardHome() {
         <>
         <div className="mt-2 grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 space-y-8">
-            {ready ? (
+            {ready && approved ? (
               <BookingLinkCard url={bookings.link} total={bookings.total} />
+            ) : ready ? (
+              <section className="rounded-[24px] border border-[#e4e6eb] bg-white p-6">
+                <h2 className="text-lg font-semibold">
+                  {profile?.approvalStatus === 'rejected' ? 'This listing wasn’t approved' : 'Your booking page is ready'}
+                </h2>
+                <p className="mt-2 max-w-md text-sm leading-6 text-[#4a4e57]">
+                  {profile?.approvalStatus === 'rejected'
+                    ? profile.reviewNote || 'Update your listing and we’ll look again. Customers can’t book you until it’s approved.'
+                    : 'Customers can open your link and book as soon as we approve the listing. Keep setting up while you wait — don’t share the link yet, it isn’t public.'}
+                </p>
+              </section>
             ) : (
               <section className="min-w-0">
                 <div className="flex items-baseline justify-between gap-3">
@@ -280,11 +298,11 @@ export default async function DashboardHome() {
               </section>
             )}
 
-            {home.layers.recommendation.length > 0 && (
+            {home.layers.recommendation.some((item) => item.id !== 'share_link_first' || approved) && (
               <section>
                 <h2 className="text-[15px] font-bold">Suggested for you</h2>
                 <div className="mt-3 space-y-2">
-                  {home.layers.recommendation.map((item) => {
+                  {home.layers.recommendation.filter((item) => item.id !== 'share_link_first' || approved).map((item) => {
                     if (item.status === 'coming_soon') {
                       return (
                         <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-white p-3.5">
@@ -333,7 +351,7 @@ export default async function DashboardHome() {
           <section className="mt-8 min-w-0">
             <h2 className="text-[15px] font-bold">Quick actions</h2>
             <div className="mt-3 space-y-2">
-              {quickActions.filter((item) => item.id === 'share_booking_link').map((item) => (
+              {quickActions.filter((item) => item.id === 'share_booking_link' && approved).map((item) => (
                 <ShareLink key={item.id} moduleId={item.id} url={item.data.url} title={item.title} />
               ))}
               {quickActions.some((item) => item.id !== 'share_booking_link') && (

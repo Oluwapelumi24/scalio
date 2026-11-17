@@ -332,16 +332,6 @@ export class BookingService {
     vendorId: string,
     userId: string,
   ): Promise<string> {
-    const [existing] = await this.db
-      .select({ id: customers.id })
-      .from(customers)
-      .where(
-        and(eq(customers.vendorId, vendorId), eq(customers.userId, userId)),
-      );
-    if (existing) {
-      return existing.id;
-    }
-
     const [user] = await this.db
       .select()
       .from(users)
@@ -350,9 +340,25 @@ export class BookingService {
       throw new NotFoundException(`User ${userId} not found`);
     }
 
+    const [existing] = await this.db
+      .select({ id: customers.id, phone: customers.phone })
+      .from(customers)
+      .where(
+        and(eq(customers.vendorId, vendorId), eq(customers.userId, userId)),
+      );
+    if (existing) {
+      if (user.phone && !existing.phone) {
+        await this.db
+          .update(customers)
+          .set({ phone: user.phone, updatedAt: new Date() })
+          .where(eq(customers.id, existing.id));
+      }
+      return existing.id;
+    }
+
     const [created] = await this.db
       .insert(customers)
-      .values({ vendorId, userId, name: user.name, email: user.email })
+      .values({ vendorId, userId, name: user.name, email: user.email, phone: user.phone })
       .returning({ id: customers.id });
     return created.id;
   }
@@ -500,6 +506,16 @@ export class BookingService {
       notes: b.cancellationReason,
       createdAt: b.createdAt,
     }));
+  }
+
+  /** 404s unless this booking belongs to the signed-in customer. Walk-ins have no app user. */
+  async assertOwnedByUser(bookingId: string, userId: string): Promise<void> {
+    const [row] = await this.db
+      .select({ id: bookings.id })
+      .from(bookings)
+      .innerJoin(customers, eq(bookings.customerId, customers.id))
+      .where(and(eq(bookings.id, bookingId), eq(customers.userId, userId)));
+    if (!row) throw new NotFoundException('Booking not found');
   }
 
   /** This app user's bookings across every vendor, newest first, with the vendor they're for. */

@@ -15,7 +15,7 @@ const FAQS = [
   },
   {
     q: 'How do vendor payments work?',
-    a: 'Depending on the service, customers can pay a deposit, pay in full up front, or pay on arrival. Each business chooses which options to offer, and online payments settle straight into its bank account.',
+    a: 'You pay the business for the service. Many visits are paid when you arrive. If the business takes a deposit or full payment online, that payment goes to their bank through Paystack.',
   },
   {
     q: 'Is every vendor verified?',

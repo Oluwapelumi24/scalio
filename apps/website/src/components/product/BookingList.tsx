@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { cancelBooking } from '@/app/actions/customer'
 import type { ListedVendor } from '@/lib/product'
 
 interface BookingRow {
@@ -46,6 +48,10 @@ function when(iso: string) {
 
 export function BookingList({ bookings }: { bookings: BookingRow[] }) {
   const [tab, setTab] = useState<Tab>('upcoming')
+  const [confirming, setConfirming] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+  const router = useRouter()
   const rows = bookings.filter((row) => {
     if (tab === 'upcoming') return UPCOMING.has(row.booking.status)
     if (tab === 'completed') return COMPLETED.has(row.booking.status)
@@ -67,6 +73,7 @@ export function BookingList({ bookings }: { bookings: BookingRow[] }) {
           </button>
         ))}
       </div>
+      {error ? <p className="mt-4 text-sm text-[#dc2626]">{error}</p> : null}
       {rows.length === 0 ? (
         <div className="mt-8 rounded-[20px] border border-[#e4e6eb] px-6 py-10 text-center">
           <p className="font-semibold">{empty.title}</p>
@@ -88,11 +95,43 @@ export function BookingList({ bookings }: { bookings: BookingRow[] }) {
                 <p className="text-[13px] text-[#4a4e57]">{when(row.booking.scheduledAt)}</p>
                 <p className="text-[13px] font-semibold text-[#1e3a8a]">{STATUS[row.booking.status] ?? row.booking.status}</p>
               </div>
-              {tab !== 'upcoming' ? (
-                <Link href={`/app/business/${row.vendor.id}`} className="rounded-[20px] border border-[#c9ced8] px-3 text-sm font-semibold h-12 inline-flex items-center">
+              {tab === 'upcoming' ? (
+                confirming === row.booking.id ? (
+                  <span className="flex shrink-0 flex-col gap-1">
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setError(null)
+                        startTransition(async () => {
+                          const result = await cancelBooking(row.booking.id)
+                          if (result.error) setError(result.error)
+                          else router.refresh()
+                          setConfirming(null)
+                        })
+                      }}
+                      className="h-9 rounded-full bg-[#dc2626] px-3 text-xs font-semibold text-white disabled:opacity-60"
+                    >
+                      {pending ? 'Cancelling…' : 'Confirm'}
+                    </button>
+                    <button type="button" onClick={() => setConfirming(null)} className="h-9 rounded-full border border-[#c9ced8] px-3 text-xs font-semibold">
+                      Keep
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirming(row.booking.id)}
+                    className="inline-flex h-12 shrink-0 items-center rounded-[20px] border border-[#c9ced8] px-3 text-sm font-semibold"
+                  >
+                    Cancel
+                  </button>
+                )
+              ) : (
+                <Link href={`/app/business/${row.vendor.id}`} className="inline-flex h-12 shrink-0 items-center rounded-[20px] border border-[#c9ced8] px-3 text-sm font-semibold">
                   Rebook
                 </Link>
-              ) : null}
+              )}
             </li>
           ))}
         </ul>

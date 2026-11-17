@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useActionState } from 'react'
 import { registerAction } from '@/app/actions/auth'
 import { BrandLink } from '@/components/BrandLink'
+import { BUSINESS_CATEGORIES } from '@/lib/categories'
 
 export default function RegisterPage() {
   const [state, formAction, pending] = useActionState(registerAction, null)
@@ -21,7 +22,7 @@ export default function RegisterPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Create your vendor account</h2>
           <p className="text-sm text-gray-500 mb-6">
-            You&apos;ll be able to manage bookings, staff, and services as soon as we approve your listing.
+            You can add services and hours straight away. Customers find and book you after we approve the listing.
           </p>
 
           <form action={formAction} className="space-y-4">
@@ -33,6 +34,43 @@ export default function RegisterPage() {
                 id="businessName" name="businessName" type="text" required autoComplete="organization"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="Glow Beauty Studio"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                What do you do?
+              </label>
+              <select
+                id="category" name="category" required defaultValue=""
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="" disabled>Choose a category</option>
+                {BUSINESS_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                Area
+              </label>
+              <input
+                id="address" name="address" type="text" required autoComplete="address-level2"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="Yaba, Lagos"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Phone <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <input
+                id="phone" name="phone" type="tel" autoComplete="tel"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                placeholder="0803 000 0000"
               />
             </div>
 

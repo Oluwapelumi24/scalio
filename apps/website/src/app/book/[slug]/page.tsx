@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { MapPin, Star } from 'lucide-react'
 import { ApiError, apiFetch } from '@/lib/api'
 import { formatClock, PAYMENT_LABEL, type PublicVendor } from '@/lib/booking-page'
+import { getCustomer } from '@/lib/customer-session'
 import { AvailabilityPicker } from './AvailabilityPicker'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -28,9 +29,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 // The link a business shares on WhatsApp, Instagram or Facebook. Customers can
 // see services, prices, hours and live open times without installing anything.
-export default async function BookingPage({ params }: { params: Promise<{ slug: string }> }) {
-  const vendor = await loadVendor((await params).slug)
+export default async function BookingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ services?: string; at?: string }>
+}) {
+  const { slug } = await params
+  const query = await searchParams
+  const vendor = await loadVendor(slug)
   if (!vendor) notFound()
+  const user = await getCustomer()
 
   const brand = vendor.themeColor ?? '#4f46e5'
   const hours = new Map(vendor.businessHours.map((h) => [h.dayOfWeek, h]))
@@ -75,9 +85,14 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
       <main className="mx-auto grid max-w-3xl gap-8 px-6 py-8 md:grid-cols-[1fr_220px]">
         <AvailabilityPicker
           vendorId={vendor.id}
+          slug={vendor.slug}
           businessName={vendor.businessName}
           timezone={vendor.timezone}
           services={vendor.services}
+          signedIn={!!user}
+          hasPhone={Boolean(user?.phone)}
+          initialServiceIds={(query.services ?? '').split(',').filter(Boolean)}
+          initialAt={query.at ?? null}
         />
 
         <aside className="space-y-6">

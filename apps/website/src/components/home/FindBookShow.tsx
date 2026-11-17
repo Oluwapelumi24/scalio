@@ -97,9 +97,9 @@ function ShowPanel() {
       <p className="mt-1 text-slate-600">Deep tissue massage · Serene Spa, Ikoyi</p>
       <ul className="mt-5 space-y-2.5">
         {[
-          ['On your calendar', 'Added the moment you booked'],
-          ['Reminder', '1 hour before, with directions'],
-          ['Receipt', '₦30,000 · pay at the visit'],
+          ['In your bookings', 'Open it any time'],
+          ['The business', 'Sees the visit as soon as you book'],
+          ['Payment', '₦30,000 · pay at the visit, or online if they take it'],
         ].map(([title, detail]) => (
           <li key={title} className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3.5">
             <span className="font-semibold text-slate-950">{title}</span>

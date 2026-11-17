@@ -4,6 +4,7 @@ import type { users } from '../db/schema';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
 import { RegisterPushTokenDto } from './dto/register-push-token.dto';
+import { SetPhoneDto } from './dto/set-phone.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { UserAuthGuard } from './user-auth.guard';
@@ -14,7 +15,7 @@ export class AuthController {
 
   @Post('signup')
   signUp(@Body() dto: SignUpDto) {
-    return this.authService.signUp(dto.name, dto.email, dto.password);
+    return this.authService.signUp(dto.name, dto.email, dto.password, dto.phone);
   }
 
   @Post('signin')
@@ -26,7 +27,13 @@ export class AuthController {
   @Get('me')
   @UseGuards(UserAuthGuard)
   me(@CurrentUser() user: InferSelectModel<typeof users>) {
-    return { id: user.id, name: user.name, email: user.email };
+    return { id: user.id, name: user.name, email: user.email, phone: user.phone };
+  }
+
+  @Post('phone')
+  @UseGuards(UserAuthGuard)
+  setPhone(@CurrentUser() user: InferSelectModel<typeof users>, @Body() dto: SetPhoneDto) {
+    return this.authService.setPhone(user.id, dto.phone);
   }
 
   /** Stores the Expo push token the mobile app obtained after the user granted notification permission. */

@@ -29,9 +29,9 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: 'Legal',
     links: [
-      { label: 'Privacy policy', href: '#' },
-      { label: 'Terms and conditions', href: '#' },
-      { label: 'Cookie information', href: '#' },
+      { label: 'Privacy policy', href: '/privacy' },
+      { label: 'Terms and conditions', href: '/terms' },
+      { label: 'Cookie information', href: '/cookies' },
     ],
   },
 ]
@@ -58,9 +58,9 @@ const PRELAUNCH_COLUMNS: { title: string; links: { label: string; href: string }
   {
     title: 'Legal',
     links: [
-      { label: 'Privacy policy', href: '#' },
-      { label: 'Terms and conditions', href: '#' },
-      { label: 'Cookie information', href: '#' },
+      { label: 'Privacy policy', href: '/privacy' },
+      { label: 'Terms and conditions', href: '/terms' },
+      { label: 'Cookie information', href: '/cookies' },
     ],
   },
 ]

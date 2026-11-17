@@ -27,17 +27,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const TITLE = "Veno — Opening soon. Join the waitlist.";
-const DESCRIPTION =
-  "Veno is opening soon in Lagos. Join the waitlist to book spas, salons, laundry, tailors and other local services, or to list your business.";
+const DESCRIPTION = "Book spas, salons, laundry, tailors and other local services in Lagos, or list your business.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: TITLE,
+  title: { default: "Veno", template: "%s — Veno" },
   description: DESCRIPTION,
-  alternates: { canonical: "/" },
-  openGraph: { type: "website", siteName: "Veno", url: "/", locale: "en_NG", title: TITLE, description: DESCRIPTION },
-  twitter: { card: "summary", title: TITLE, description: DESCRIPTION },
+  openGraph: { type: "website", siteName: "Veno", url: "/", locale: "en_NG", title: "Veno", description: DESCRIPTION },
+  twitter: { card: "summary", title: "Veno", description: DESCRIPTION },
 };
 
 export default function RootLayout({

@@ -9,12 +9,12 @@ import {
   POPULAR_AREAS,
   areaOf,
   categoryLook,
+  inLocation,
+  LOCATION_KEY,
   shortAddress,
   type ListedVendor,
 } from '@/lib/product'
 import type { Customer } from '@/lib/customer-session'
-
-const LOCATION_KEY = 'veno_web_location'
 
 interface Filters {
   minRating: number | null
@@ -34,10 +34,16 @@ function countFilters(filters: Filters) {
   return (filters.minRating ? 1 : 0) + filters.areas.length + filters.categories.length
 }
 
+function sameCategory(vendorCategory: string, selected: string) {
+  const left = vendorCategory.toLowerCase()
+  const right = selected.toLowerCase()
+  return left === right || (right === 'laundry' && left === 'laundromat')
+}
+
 function matchesFilters(vendor: ListedVendor, filters: Filters) {
   if (filters.minRating && (vendor.rating ?? 0) < filters.minRating) return false
   if (filters.areas.length > 0 && !filters.areas.includes(areaOf(vendor.address) ?? '')) return false
-  if (filters.categories.length > 0 && !filters.categories.includes(vendor.category)) return false
+  if (filters.categories.length > 0 && !filters.categories.some((category) => sameCategory(vendor.category, category))) return false
   return true
 }
 
@@ -82,20 +88,40 @@ function Chip({ label, selected, onClick }: { label: string; selected: boolean; 
   )
 }
 
-export function DiscoverHome({ user, vendors, error }: { user: Customer | null; vendors: ListedVendor[]; error: string | null }) {
+export function DiscoverHome({
+  user,
+  vendors,
+  error,
+  initialQuery = '',
+  initialArea = '',
+  initialCategory = '',
+}: {
+  user: Customer | null
+  vendors: ListedVendor[]
+  error: string | null
+  initialQuery?: string
+  initialArea?: string
+  initialCategory?: string
+}) {
   const router = useRouter()
-  const [location, setLocation] = useState('Yaba, Lagos')
+  const [location, setLocation] = useState(initialArea || 'Yaba, Lagos')
   const [locationOpen, setLocationOpen] = useState(false)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [locationQuery, setLocationQuery] = useState('')
-  const [filters, setFilters] = useState<Filters>(NO_FILTERS)
+  const [filters, setFilters] = useState<Filters>(
+    initialCategory ? { ...NO_FILTERS, categories: [initialCategory] } : NO_FILTERS,
+  )
   const [draft, setDraft] = useState<Filters>(NO_FILTERS)
   const [filterOpen, setFilterOpen] = useState(false)
 
   useEffect(() => {
+    if (initialArea) {
+      window.localStorage.setItem(LOCATION_KEY, initialArea)
+      return
+    }
     const saved = window.localStorage.getItem(LOCATION_KEY)
     if (saved) setLocation(saved)
-  }, [])
+  }, [initialArea])
 
   function chooseLocation(next: string) {
     setLocation(next)
@@ -112,25 +138,20 @@ export function DiscoverHome({ user, vendors, error }: { user: Customer | null; 
   const filterCount = countFilters(filters)
   const searching = query.trim().length > 0 || filterCount > 0
   const q = query.trim().toLowerCase()
-  const results = vendors.filter((vendor) => {
+  const located = vendors.filter((vendor) => inLocation(vendor.address, location))
+  function matchesText(vendor: ListedVendor, filtersToUse: Filters) {
     const matchesQuery =
       !q ||
       vendor.businessName.toLowerCase().includes(q) ||
       vendor.category.toLowerCase().includes(q) ||
       (vendor.address ?? '').toLowerCase().includes(q)
-    return matchesQuery && matchesFilters(vendor, filters)
-  })
-  const draftCount = vendors.filter((vendor) => {
-    const matchesQuery =
-      !q ||
-      vendor.businessName.toLowerCase().includes(q) ||
-      vendor.category.toLowerCase().includes(q) ||
-      (vendor.address ?? '').toLowerCase().includes(q)
-    return matchesQuery && matchesFilters(vendor, draft)
-  }).length
+    return matchesQuery && matchesFilters(vendor, filtersToUse)
+  }
+  const results = located.filter((vendor) => matchesText(vendor, filters))
+  const draftCount = located.filter((vendor) => matchesText(vendor, draft)).length
 
-  const recommended = vendors.filter((vendor) => vendor.featured)
-  const rest = vendors.filter((vendor) => !vendor.featured)
+  const recommended = located.filter((vendor) => vendor.featured)
+  const rest = located.filter((vendor) => !vendor.featured)
   const firstName = user?.name.split(' ')[0] ?? null
   const suggestions = locationQuery.trim()
     ? POPULAR_AREAS.filter((area) => area.toLowerCase().includes(locationQuery.trim().toLowerCase()))
@@ -332,7 +353,14 @@ export function DiscoverHome({ user, vendors, error }: { user: Customer | null; 
             ) : null}
           </div>
           {results.length === 0 ? (
-            <Empty title="Nothing matches" body="Try a different word or clear the filters." />
+            <div>
+              <Empty title="Nothing matches" body={location === 'Lagos' ? 'Try a different word or clear the filters.' : `Nothing in ${location} matches. Try another area, or look across Lagos.`} />
+              {location !== 'Lagos' ? (
+                <button type="button" onClick={() => chooseLocation('Lagos')} className="mx-auto mt-4 flex h-12 items-center rounded-full border border-[#c9ced8] px-5 text-sm font-semibold">
+                  Show all of Lagos
+                </button>
+              ) : null}
+            </div>
           ) : (
             <ul className="mt-4 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb]">
               {results.map((vendor) => (
@@ -353,6 +381,13 @@ export function DiscoverHome({ user, vendors, error }: { user: Customer | null; 
             </ul>
           )}
         </section>
+      ) : located.length === 0 && vendors.length > 0 ? (
+        <div className="mt-8">
+          <Empty title={`Nothing in ${location} yet`} body="Try another area, or look across Lagos." />
+          <button type="button" onClick={() => chooseLocation('Lagos')} className="mx-auto mt-4 flex h-12 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white">
+            Show all of Lagos
+          </button>
+        </div>
       ) : (
         <>
           <div className="mt-8 grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">

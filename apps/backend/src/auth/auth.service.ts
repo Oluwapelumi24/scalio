@@ -1,4 +1,4 @@
-import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 import { eq, type InferSelectModel } from 'drizzle-orm';
@@ -6,6 +6,13 @@ import { DB, type Database } from '../db/db.module';
 import { users } from '../db/schema';
 
 const PASSWORD_HASH_ROUNDS = 10;
+
+/** Keeps 0803… and +234… and drops spaces. Returns null when it is not a usable number. */
+export function normalizePhone(raw: string): string | null {
+  const compact = raw.trim().replace(/[\s()-]/g, '');
+  if (!/^\+?[0-9]{10,15}$/.test(compact)) return null;
+  return compact;
+}
 
 export interface UserSession {
   accessToken: string;
@@ -23,18 +30,37 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async signUp(name: string, email: string, password: string): Promise<UserSession> {
+  async signUp(name: string, email: string, password: string, phone?: string): Promise<UserSession> {
     const [existing] = await this.db.select({ id: users.id }).from(users).where(eq(users.email, email));
     if (existing) {
       throw new ConflictException('An account with this email already exists.');
     }
 
+    const normalized = phone ? normalizePhone(phone) : null;
+    if (phone && !normalized) {
+      throw new BadRequestException('Enter a mobile number the business can call, like 0803 000 0000.');
+    }
+
     const passwordHash = await hash(password, PASSWORD_HASH_ROUNDS);
     const [created] = await this.db
       .insert(users)
-      .values({ name, email, passwordHash })
+      .values({ name, email, passwordHash, phone: normalized })
       .returning();
     return this.issueSession(created);
+  }
+
+  async setPhone(userId: string, phone: string) {
+    const normalized = normalizePhone(phone);
+    if (!normalized) {
+      throw new BadRequestException('Enter a mobile number the business can call, like 0803 000 0000.');
+    }
+    const [updated] = await this.db
+      .update(users)
+      .set({ phone: normalized })
+      .where(eq(users.id, userId))
+      .returning({ id: users.id, phone: users.phone });
+    if (!updated) throw new NotFoundException(`User ${userId} not found`);
+    return updated;
   }
 
   async signIn(email: string, password: string): Promise<UserSession> {

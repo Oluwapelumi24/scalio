@@ -11,7 +11,6 @@ const LINKS = [
   { label: 'Book', href: '/app' },
   { label: 'Users', href: '/#customers' },
   { label: 'Partners', href: '/partners' },
-  { label: 'Waitlist', href: '/#waitlist' },
   { label: 'FAQ', href: '/#faq' },
 ]
 
@@ -52,7 +51,7 @@ export function Navbar({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
       ? { label: WAITLIST_CTA, href: WAITLIST_HREF }
       : isPartners
         ? { label: 'Register your business', href: VENDOR_REGISTER_URL }
-        : { label: 'Join the waitlist', href: '/#waitlist' }
+        : { label: 'Book a service', href: '/app' }
 
   return (
     <header

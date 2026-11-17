@@ -22,7 +22,7 @@ const ORBS = [
   { title: 'Real availability', body: 'Times come straight from each business’s own calendar, so what you see is what is free. No double bookings.', tint: 'bg-[#dfe6ff]', from: '#1e3a8a', to: '#6d8cff', Icon: Clock },
   { title: 'Fair, clear prices', body: 'Every service shows its price and how long it takes before you book. Browsing and booking cost nothing extra.', tint: 'bg-[#ffe0ef]', from: '#be185d', to: '#f9a8d4', Icon: Sparkles },
   { title: 'Reviewed businesses', body: 'Our team checks every business before it appears on Veno. No unverified listings.', tint: 'bg-[#d9f7e6]', from: '#047857', to: '#6ee7b7', Icon: ShieldCheck },
-  { title: 'Everything in one place', body: 'Upcoming visits, receipts, directions and the places you love, all on your phone.', tint: 'bg-[#ece6ff]', from: '#6d28d9', to: '#c4b5fd', Icon: CalendarCheck },
+  { title: 'Everything in one place', body: 'Upcoming visits, past bookings and the businesses you have been to, in one account.', tint: 'bg-[#ece6ff]', from: '#6d28d9', to: '#c4b5fd', Icon: CalendarCheck },
 ]
 
 export function FeatureOrbs({ prelaunch = false }: { prelaunch?: boolean }) {

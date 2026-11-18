@@ -6,6 +6,7 @@ import { eq, like, sql, type InferSelectModel } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
 import { staff, vendors } from '../db/schema';
 import { MailService } from '../mail/mail.service';
+import { VendorHandoffService } from './vendor-handoff.service';
 import { VendorInviteService } from './vendor-invite.service';
 import { VendorPasswordResetService } from './vendor-password-reset.service';
 import { VendorSignupCodeService } from './vendor-signup-code.service';
@@ -32,6 +33,7 @@ export class VendorAuthService {
     private readonly invites: VendorInviteService,
     private readonly passwordReset: VendorPasswordResetService,
     private readonly signupCodes: VendorSignupCodeService,
+    private readonly handoff: VendorHandoffService,
     private readonly mail: MailService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
@@ -213,6 +215,25 @@ export class VendorAuthService {
       throw new UnauthorizedException('Incorrect email or password.');
     }
 
+    await this.db
+      .update(staff)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(staff.id, row.id));
+    return this.issueSession(row);
+  }
+
+  /** One-time code so the marketing site can open the dashboard without putting the JWT in the URL. */
+  async createHandoff(staffId: string): Promise<{ code: string }> {
+    const code = await this.handoff.issue(staffId);
+    return { code };
+  }
+
+  async exchangeHandoff(code: string): Promise<VendorSession> {
+    const staffId = await this.handoff.consume(code);
+    const row = await this.findActiveStaffById(staffId);
+    if (!row) {
+      throw new UnauthorizedException('This link has expired. Sign in again.');
+    }
     await this.db
       .update(staff)
       .set({ lastLoginAt: new Date() })

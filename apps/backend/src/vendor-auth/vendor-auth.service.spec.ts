@@ -65,6 +65,13 @@ function makeSignupCodes() {
   };
 }
 
+function makeHandoff() {
+  return {
+    issue: jest.fn().mockResolvedValue('handoff-code'),
+    consume: jest.fn(),
+  };
+}
+
 function makeJwt() {
   return { sign: jest.fn().mockReturnValue('signed-jwt') };
 }
@@ -106,6 +113,7 @@ describe('VendorAuthService', () => {
         invites as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         mail as any,
         makeJwt() as any,
         makeConfig({ VENDOR_WEB_URL: 'https://vendors.veno.app' }) as any,
@@ -132,6 +140,7 @@ describe('VendorAuthService', () => {
         invites as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         mail as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -162,6 +171,7 @@ describe('VendorAuthService', () => {
         invites as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         mail as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -185,6 +195,7 @@ describe('VendorAuthService', () => {
         invites as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -210,6 +221,7 @@ describe('VendorAuthService', () => {
         invites as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         makeMail() as any,
         jwt as any,
         makeConfig() as any,
@@ -245,6 +257,7 @@ describe('VendorAuthService', () => {
         makeInvites() as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -264,6 +277,7 @@ describe('VendorAuthService', () => {
         makeInvites() as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -284,6 +298,7 @@ describe('VendorAuthService', () => {
         makeInvites() as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,
@@ -308,6 +323,7 @@ describe('VendorAuthService', () => {
         makeInvites() as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         makeMail() as any,
         jwt as any,
         makeConfig() as any,
@@ -341,6 +357,7 @@ describe('VendorAuthService', () => {
         makeInvites() as any,
         makePasswordReset() as any,
         makeSignupCodes() as any,
+        makeHandoff() as any,
         makeMail() as any,
         makeJwt() as any,
         makeConfig() as any,

@@ -150,6 +150,13 @@ export default async function DashboardHome() {
           )}
         </div>
         {summary ? <p className="mt-4 text-sm font-medium text-[#4a4e57]">{summary}</p> : null}
+        {profile && !approved ? (
+          <p className="mt-4 max-w-xl rounded-2xl bg-white/70 px-4 py-3 text-sm leading-5 text-[#4a4e57]">
+            {profile.approvalStatus === 'rejected'
+              ? profile.reviewNote || 'This listing wasn’t approved. Update the details and we’ll look again.'
+              : 'We’ll review the listing shortly. Customers can book you after it’s approved — keep setting up while you wait.'}
+          </p>
+        ) : null}
       </div>
 
       {!home || !bookings ? (
@@ -191,26 +198,24 @@ export default async function DashboardHome() {
                 <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
                   {steps.map((step) => (
                     <li key={step.key}>
-                      {step.done ? (
-                        <div className="flex items-center gap-3 py-4">
+                      <Link href={step.href} className="flex items-center gap-3 py-4">
+                        {step.done ? (
                           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e7f6ee] text-[#166534]">
                             <Icon name="check" className="h-5 w-5" />
                           </span>
-                          <span className="min-w-0">
-                            <span className="block text-sm font-semibold text-[#7d818b] line-through">{step.label}</span>
-                            <span className="text-[13px] text-[#7d818b]">{step.hint}</span>
-                          </span>
-                        </div>
-                      ) : (
-                        <Link href={step.href} className="flex items-center gap-3 py-4">
+                        ) : (
                           <IconTile name={step.icon} />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-semibold">{step.label}</span>
-                            <span className="text-[13px] leading-5 text-[#4a4e57]">{step.hint}</span>
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className={`block text-sm font-semibold ${step.done ? 'text-[#7d818b] line-through' : ''}`}>
+                            {step.label}
                           </span>
-                          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
-                        </Link>
-                      )}
+                          <span className={`text-[13px] leading-5 ${step.done ? 'text-[#7d818b]' : 'text-[#4a4e57]'}`}>
+                            {step.hint}
+                          </span>
+                        </span>
+                        <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                      </Link>
                     </li>
                   ))}
                 </ul>

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { ApiError, apiFetch } from '@/lib/api'
 import { businessToken, clearBusinessSession, setBusinessSession } from '@/lib/business-session'
+import { dashboardPortalUrl } from '@/lib/vendor-portal'
 
 export type VendorAuthState = { error?: string; email?: string }
 
@@ -196,4 +197,29 @@ export async function resetBusinessPassword(_prev: VendorAuthState, formData: Fo
 export async function signOutBusinessAction(): Promise<void> {
   await clearBusinessSession()
   redirect('/login')
+}
+
+/** Opens the real business dashboard on its own origin, still signed in. */
+export async function openDashboardAction(): Promise<VendorAuthState> {
+  const token = await businessToken()
+  if (!token) redirect('/login')
+
+  const portal = dashboardPortalUrl()
+  if (!portal) {
+    return { error: 'The business dashboard is not linked yet. Try again shortly.' }
+  }
+
+  let code: string
+  try {
+    const data = await authed<{ code: string }>('/vendor-auth/handoff', token, { method: 'POST' })
+    code = data.code
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+      await clearBusinessSession()
+      redirect('/login')
+    }
+    return failure(err, 'Could not open the dashboard')
+  }
+
+  redirect(`${portal}/session/start?code=${encodeURIComponent(code)}`)
 }

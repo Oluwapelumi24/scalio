@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { VendorAuthController } from './vendor-auth.controller';
 import { VendorAuthGuard } from './vendor-auth.guard';
 import { VendorAuthService } from './vendor-auth.service';
+import { VendorHandoffService } from './vendor-handoff.service';
 import { VendorInviteService } from './vendor-invite.service';
 import { VendorJwtStrategy } from './vendor-jwt.strategy';
 import { VendorPasswordResetService } from './vendor-password-reset.service';
@@ -32,6 +33,7 @@ import { RolesGuard } from './roles.guard';
     VendorInviteService,
     VendorPasswordResetService,
     VendorSignupCodeService,
+    VendorHandoffService,
     VendorJwtStrategy,
     VendorAuthGuard,
     RolesGuard,

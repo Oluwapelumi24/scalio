@@ -1,7 +1,12 @@
 'use client'
 
 import { useActionState } from 'react'
-import { addServiceAction, setWeekdayHoursAction, type VendorAuthState } from '@/app/actions/vendor'
+import {
+  addServiceAction,
+  openDashboardAction,
+  setWeekdayHoursAction,
+  type VendorAuthState,
+} from '@/app/actions/vendor'
 
 const EMPTY: VendorAuthState = {}
 
@@ -43,6 +48,7 @@ export function SetupBoard({
   const hasHours = hours.length > 0
   const done = 1 + Number(hasService) + Number(hasHours)
   const approval = approvalCopy(approvalStatus, reviewNote)
+  const [dashState, dashAction, dashPending] = useActionState(openDashboardAction, EMPTY)
 
   return (
     <div>
@@ -55,6 +61,17 @@ export function SetupBoard({
           ? `${businessName} is set up. We’ll review the listing, and customers can book you once it’s approved.`
           : `${businessName} is registered. Add a service and your hours. Customers can book you once we approve the listing.`}
       </p>
+
+      <form action={dashAction} className="mt-6">
+        <button
+          type="submit"
+          disabled={dashPending}
+          className="h-12 rounded-2xl bg-navy px-5 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {dashPending ? 'Opening…' : 'Open dashboard'}
+        </button>
+        {dashState.error ? <p className="mt-2 text-sm text-red-700">{dashState.error}</p> : null}
+      </form>
 
       <div className="mt-6 flex items-center gap-3">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">

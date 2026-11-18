@@ -11,6 +11,7 @@ import { CurrentStaff } from './current-staff.decorator';
 import { AcceptVendorInviteDto } from './dto/accept-vendor-invite.dto';
 import { ForgotVendorPasswordDto } from './dto/forgot-vendor-password.dto';
 import { RegisterVendorDto } from './dto/register-vendor.dto';
+import { ExchangeHandoffDto } from './dto/handoff.dto';
 import { SignupCodeDto, VerifySignupCodeDto } from './dto/signup-code.dto';
 import { RequestVendorInviteDto } from './dto/request-vendor-invite.dto';
 import { ResetVendorPasswordDto } from './dto/reset-vendor-password.dto';
@@ -84,6 +85,18 @@ export class VendorAuthController {
   @UseGuards(VendorAuthGuard)
   me(@CurrentStaff() staff: VendorPrincipal) {
     return staff;
+  }
+
+  /** Mint a short-lived code that opens the dashboard on another origin. */
+  @Post('handoff')
+  @UseGuards(VendorAuthGuard)
+  createHandoff(@CurrentStaff() staff: VendorPrincipal) {
+    return this.vendorAuth.createHandoff(staff.staffId);
+  }
+
+  @Post('handoff/exchange')
+  exchangeHandoff(@Body() dto: ExchangeHandoffDto) {
+    return this.vendorAuth.exchangeHandoff(dto.code);
   }
 
   /** Whether customers can see this listing yet. New businesses stay in review. */

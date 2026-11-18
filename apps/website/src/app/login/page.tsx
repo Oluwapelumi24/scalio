@@ -23,7 +23,7 @@ export default function VendorLoginPage() {
         </div>
       </header>
       <div className="mx-auto max-w-md px-6 py-12">
-        <VendorAuthForm mode="sign-in" />
+        <VendorAuthForm />
       </div>
     </main>
   )

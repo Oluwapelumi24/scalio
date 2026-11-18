@@ -8,6 +8,7 @@ import { VendorAuthService } from './vendor-auth.service';
 import { VendorInviteService } from './vendor-invite.service';
 import { VendorJwtStrategy } from './vendor-jwt.strategy';
 import { VendorPasswordResetService } from './vendor-password-reset.service';
+import { VendorSignupCodeService } from './vendor-signup-code.service';
 import { RolesGuard } from './roles.guard';
 
 @Module({
@@ -30,6 +31,7 @@ import { RolesGuard } from './roles.guard';
     VendorAuthService,
     VendorInviteService,
     VendorPasswordResetService,
+    VendorSignupCodeService,
     VendorJwtStrategy,
     VendorAuthGuard,
     RolesGuard,

@@ -9,7 +9,7 @@ interface VendorSession {
   staff: { id: string; vendorId: string; name: string; email: string | null; role: string }
 }
 
-export type AuthState = { error: string } | { success: true } | null
+export type AuthState = { error: string; email?: string } | { success: true; email?: string } | null
 
 export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = formData.get('email') as string
@@ -23,7 +23,7 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     })
     token = data.accessToken
   } catch (err) {
-    if (err instanceof ApiError) return { error: err.message }
+    if (err instanceof ApiError) return { error: err.message, email }
     throw err
   }
 
@@ -87,6 +87,7 @@ export async function registerAction(_prev: AuthState, formData: FormData): Prom
         category,
         address,
         phone: phone || undefined,
+        proof: String(formData.get('proof') ?? ''),
       }),
     })
     token = data.accessToken
@@ -110,7 +111,7 @@ export async function forgotPasswordAction(_prev: AuthState, formData: FormData)
   } catch {
     /* never reveal whether email exists */
   }
-  return { success: true }
+  return { success: true, email: email.trim() }
 }
 
 export async function resetPasswordAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -136,6 +137,32 @@ export async function resetPasswordAction(_prev: AuthState, formData: FormData):
 
   await setToken(token)
   redirect('/dashboard')
+}
+
+export async function sendVendorSignupCode(email: string): Promise<{ error?: string }> {
+  try {
+    await apiFetch('/vendor-auth/signup-code', null, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+    return {}
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message }
+    return { error: 'We could not reach Veno just now. Try again in a moment.' }
+  }
+}
+
+export async function verifyVendorSignupCode(email: string, code: string): Promise<{ error?: string; proof?: string }> {
+  try {
+    const data = await apiFetch<{ proof: string }>('/vendor-auth/signup-code/verify', null, {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    })
+    return { proof: data.proof }
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message }
+    return { error: 'We could not reach Veno just now. Try again in a moment.' }
+  }
 }
 
 export async function logoutAction() {

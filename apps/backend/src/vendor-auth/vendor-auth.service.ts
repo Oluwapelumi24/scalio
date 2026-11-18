@@ -2,12 +2,13 @@ import { ConflictException, Inject, Injectable, Logger, NotFoundException, Unaut
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
-import { eq, like, type InferSelectModel } from 'drizzle-orm';
+import { eq, like, sql, type InferSelectModel } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
 import { staff, vendors } from '../db/schema';
 import { MailService } from '../mail/mail.service';
 import { VendorInviteService } from './vendor-invite.service';
 import { VendorPasswordResetService } from './vendor-password-reset.service';
+import { VendorSignupCodeService } from './vendor-signup-code.service';
 
 const PASSWORD_HASH_ROUNDS = 10;
 
@@ -30,6 +31,7 @@ export class VendorAuthService {
     @Inject(DB) private readonly db: Database,
     private readonly invites: VendorInviteService,
     private readonly passwordReset: VendorPasswordResetService,
+    private readonly signupCodes: VendorSignupCodeService,
     private readonly mail: MailService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
@@ -94,11 +96,15 @@ export class VendorAuthService {
     const [row] = await this.db
       .select({ id: staff.id })
       .from(staff)
-      .where(eq(staff.email, email));
+      .where(sql`lower(${staff.email}) = ${email.trim().toLowerCase()}`);
 
     if (!row) return;
 
-    const code = await this.passwordReset.issueCode(email, row.id);
+    const normalised = email.trim().toLowerCase();
+    const code = await this.passwordReset.issueCode(normalised, row.id);
+    if (process.env.NODE_ENV !== 'production') {
+      this.logger.log(`Password reset code for ${normalised} is ${code}`);
+    }
     // Never fail the request (that would reveal the account exists), but say why the email didn't go.
     await this.mail.sendPasswordResetEmail(email, code).catch((err: unknown) => {
       this.logger.warn(`Password reset email to ${email} failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -108,11 +114,12 @@ export class VendorAuthService {
   /** Validates the reset code and sets a new password, returning a fresh session. */
   async resetPassword(email: string, code: string, newPassword: string): Promise<VendorSession> {
     let staffId: string | null;
+    const normalised = email.trim().toLowerCase();
     if (this.passwordReset.isDevCode(code)) {
-      const [row] = await this.db.select({ id: staff.id }).from(staff).where(eq(staff.email, email));
+      const [row] = await this.db.select({ id: staff.id }).from(staff).where(sql`lower(${staff.email}) = ${normalised}`);
       staffId = row?.id ?? null;
     } else {
-      staffId = await this.passwordReset.consumeCode(email, code);
+      staffId = await this.passwordReset.consumeCode(normalised, code);
     }
     if (!staffId) {
       throw new UnauthorizedException('Invalid or expired reset code.');
@@ -132,18 +139,30 @@ export class VendorAuthService {
     return this.issueSession(updated);
   }
 
+  requestSignupCode(email: string): Promise<void> {
+    return this.signupCodes.send(email);
+  }
+
+  confirmSignupCode(email: string, code: string): Promise<string> {
+    return this.signupCodes.verify(email, code);
+  }
+
   async register(
     ownerName: string,
     businessName: string,
     email: string,
     password: string,
+    proof: string,
     registrationNumber?: string,
     category?: string,
     address?: string,
     phone?: string,
   ): Promise<VendorSession> {
-    const [existing] = await this.db.select({ id: staff.id }).from(staff).where(eq(staff.email, email));
+    const normalised = email.trim().toLowerCase();
+    const [existing] = await this.db.select({ id: staff.id }).from(staff).where(sql`lower(${staff.email}) = ${normalised}`);
     if (existing) throw new ConflictException('An account with this email already exists.');
+    await this.signupCodes.consumeProof(normalised, proof);
+    email = normalised;
 
     const baseSlug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const slug = await this.findUniqueSlug(baseSlug);
@@ -189,7 +208,7 @@ export class VendorAuthService {
     const [row] = await this.db
       .select()
       .from(staff)
-      .where(eq(staff.email, email));
+      .where(sql`lower(${staff.email}) = ${email.trim().toLowerCase()}`);
     if (!row?.passwordHash || !(await compare(password, row.passwordHash))) {
       throw new UnauthorizedException('Incorrect email or password.');
     }

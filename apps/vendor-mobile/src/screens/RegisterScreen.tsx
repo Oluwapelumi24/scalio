@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
-import { vendorRegister } from '../lib/api';
+import { sendVendorSignupCode, vendorRegister, verifyVendorSignupCode } from '../lib/api';
 import { saveSession } from '../lib/session';
 import { routeAfterSignIn } from '../lib/postAuth';
 import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
@@ -28,13 +28,51 @@ export function RegisterScreen({ navigation }: Props) {
   const [businessName, setBusinessName] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [proof, setProof] = useState('');
+  const [step, setStep] = useState<'email' | 'code' | 'business'>('email');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  async function handleSendCode() {
+    setError('');
+    if (!email.trim()) {
+      setError('Enter your email address.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendVendorSignupCode(email.trim().toLowerCase());
+      setStep('code');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send the code.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerify() {
+    setError('');
+    if (!/^\d{6}$/.test(code.trim())) {
+      setError('Enter the 6-digit code.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await verifyVendorSignupCode(email.trim().toLowerCase(), code.trim());
+      setProof(result.proof);
+      setStep('business');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'That code is wrong or has expired.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleRegister() {
     setError('');
-    if (!ownerName.trim() || !businessName.trim() || !email.trim() || !password) {
+    if (!ownerName.trim() || !businessName.trim() || !proof || !password) {
       setError('Please fill in all fields.');
       return;
     }
@@ -44,7 +82,7 @@ export function RegisterScreen({ navigation }: Props) {
     }
     setLoading(true);
     try {
-      const res = await vendorRegister(ownerName.trim(), businessName.trim(), email.trim().toLowerCase(), password, registrationNumber.trim() || undefined);
+      const res = await vendorRegister(ownerName.trim(), businessName.trim(), email.trim().toLowerCase(), password, proof, registrationNumber.trim() || undefined);
       await saveSession({
         staffId: res.staff.id,
         vendorId: res.staff.vendorId,
@@ -79,11 +117,50 @@ export function RegisterScreen({ navigation }: Props) {
             </Pressable>
 
             {/* Header */}
-            <Text style={s.title}>Register your business</Text>
-            <Text style={s.subtitle}>Create your Veno vendor account. Your listing will be reviewed before going live.</Text>
+            <Text style={s.title}>{step === 'business' ? 'Register your business' : 'Start with your email'}</Text>
+            <Text style={s.subtitle}>
+              {step === 'email'
+                ? 'We’ll send a 6-digit code. After you confirm it, you’ll create the business and go straight into the dashboard.'
+                : step === 'code'
+                  ? `Enter the code sent to ${email.trim().toLowerCase()}.`
+                  : 'Create your Veno vendor account. Your listing will be reviewed before going live.'}
+            </Text>
 
             {/* Fields */}
             <View style={s.form}>
+              {step === 'email' ? (
+                <View style={s.fieldGroup}>
+                  <Text style={s.label}>Email address</Text>
+                  <TextInput
+                    style={s.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="you@business.com"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                  />
+                </View>
+              ) : null}
+
+              {step === 'code' ? (
+                <View style={s.fieldGroup}>
+                  <Text style={s.label}>6-digit code</Text>
+                  <TextInput
+                    style={s.input}
+                    value={code}
+                    onChangeText={(value) => setCode(value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType="number-pad"
+                    autoComplete="one-time-code"
+                  />
+                </View>
+              ) : null}
+
+              {step === 'business' ? (
+              <>
               <View style={s.fieldGroup}>
                 <Text style={s.label}>Your name</Text>
                 <TextInput
@@ -122,20 +199,6 @@ export function RegisterScreen({ navigation }: Props) {
               </View>
 
               <View style={s.fieldGroup}>
-                <Text style={s.label}>Email address</Text>
-                <TextInput
-                  style={s.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="you@business.com"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
-              </View>
-
-              <View style={s.fieldGroup}>
                 <Text style={s.label}>Password</Text>
                 <TextInput
                   style={s.input}
@@ -147,6 +210,8 @@ export function RegisterScreen({ navigation }: Props) {
                   autoComplete="new-password"
                 />
               </View>
+              </>
+              ) : null}
 
               {error ? (
                 <View style={s.errorBox}>
@@ -156,14 +221,14 @@ export function RegisterScreen({ navigation }: Props) {
 
               <Pressable
                 style={[s.btn, loading && s.btnDisabled]}
-                onPress={() => void handleRegister()}
+                onPress={() => void (step === 'email' ? handleSendCode() : step === 'code' ? handleVerify() : handleRegister())}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <>
-                    <Text style={s.btnLabel}>Create account</Text>
+                    <Text style={s.btnLabel}>{step === 'email' ? 'Send code' : step === 'code' ? 'Continue' : 'Create account'}</Text>
                     <Feather name="arrow-right" size={18} color="#fff" />
                   </>
                 )}

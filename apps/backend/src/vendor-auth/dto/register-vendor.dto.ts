@@ -5,6 +5,8 @@ export class RegisterVendorDto {
   @IsString() @MinLength(1) ownerName!: string;
   @IsString() @MinLength(1) businessName!: string;
   @IsEmail() email!: string;
+  /** Proof returned after the email code is accepted. */
+  @IsString() @MinLength(32) @MaxLength(64) proof!: string;
   @IsString() @MinLength(8) password!: string;
   @IsOptional() @IsString() registrationNumber?: string;
   /** What customers browse by. Omitted listings stay in "Other" until the business sets one. */

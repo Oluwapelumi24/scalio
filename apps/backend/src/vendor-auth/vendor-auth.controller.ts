@@ -11,6 +11,7 @@ import { CurrentStaff } from './current-staff.decorator';
 import { AcceptVendorInviteDto } from './dto/accept-vendor-invite.dto';
 import { ForgotVendorPasswordDto } from './dto/forgot-vendor-password.dto';
 import { RegisterVendorDto } from './dto/register-vendor.dto';
+import { SignupCodeDto, VerifySignupCodeDto } from './dto/signup-code.dto';
 import { RequestVendorInviteDto } from './dto/request-vendor-invite.dto';
 import { ResetVendorPasswordDto } from './dto/reset-vendor-password.dto';
 import { VendorLoginDto } from './dto/vendor-login.dto';
@@ -34,9 +35,32 @@ export class VendorAuthController {
     return this.vendorAuth.acceptInvite(dto.token, dto.password);
   }
 
+  /** Sends a 6-digit code so the person can prove the email before a business is created. */
+  @Post('signup-code')
+  async sendSignupCode(@Body() dto: SignupCodeDto) {
+    await this.vendorAuth.requestSignupCode(dto.email);
+    return { ok: true };
+  }
+
+  @Post('signup-code/verify')
+  async verifySignupCode(@Body() dto: VerifySignupCodeDto) {
+    const proof = await this.vendorAuth.confirmSignupCode(dto.email, dto.code);
+    return { proof };
+  }
+
   @Post('register')
   register(@Body() dto: RegisterVendorDto) {
-    return this.vendorAuth.register(dto.ownerName, dto.businessName, dto.email, dto.password, dto.registrationNumber, dto.category, dto.address, dto.phone);
+    return this.vendorAuth.register(
+      dto.ownerName,
+      dto.businessName,
+      dto.email,
+      dto.password,
+      dto.proof,
+      dto.registrationNumber,
+      dto.category,
+      dto.address,
+      dto.phone,
+    );
   }
 
   @Post('login')

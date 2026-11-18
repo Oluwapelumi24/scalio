@@ -31,6 +31,16 @@ export class MailService {
     });
   }
 
+  async sendSignupCodeEmail(to: string, code: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.config.get<string>('MAIL_FROM') ?? 'Veno <onboarding@resend.dev>',
+      to,
+      subject: 'Your Veno code',
+      text: `Your Veno code is ${code}.\n\nEnter it to continue setting up your business. It expires in 15 minutes.\n\nIf you didn't ask for this, you can ignore this email.`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+  }
+
   async sendPasswordResetEmail(to: string, code: string): Promise<void> {
     // Resend reports failures in the result rather than throwing.
     const { error } = await this.resend.emails.send({

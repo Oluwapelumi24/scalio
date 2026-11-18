@@ -3,131 +3,205 @@
 import Link from 'next/link'
 import { useActionState, useState } from 'react'
 import { NIGERIA_STATES, serviceArea } from '@veno/shared-types'
-import { registerAction } from '@/app/actions/auth'
+import { registerAction, sendVendorSignupCode, verifyVendorSignupCode } from '@/app/actions/auth'
 import { BrandLink } from '@/components/BrandLink'
 import { SelectMenu } from '@/components/SelectMenu'
 import { BUSINESS_CATEGORIES } from '@/lib/categories'
 
+const INPUT = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+const MENU = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900'
+
 export default function RegisterPage() {
-  const [state, formAction, pending] = useActionState(registerAction, null)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [email, setEmail] = useState('')
+  const [proof, setProof] = useState('')
+  const [code, setCode] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+  const [wait, setWait] = useState(0)
+
+  async function sendCode(nextEmail = email) {
+    setError(null)
+    setPending(true)
+    const result = await sendVendorSignupCode(nextEmail.trim())
+    setPending(false)
+    if (result.error) {
+      setError(result.error)
+      return
+    }
+    setEmail(nextEmail.trim())
+    setStep(2)
+    setWait(30)
+    const timer = window.setInterval(() => {
+      setWait((value) => {
+        if (value <= 1) {
+          window.clearInterval(timer)
+          return 0
+        }
+        return value - 1
+      })
+    }, 1000)
+  }
+
+  async function checkCode() {
+    setError(null)
+    setPending(true)
+    const result = await verifyVendorSignupCode(email, code.trim())
+    setPending(false)
+    if (result.error || !result.proof) {
+      setError(result.error ?? 'That code is wrong or has expired.')
+      return
+    }
+    setProof(result.proof)
+    setStep(3)
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1>
             <BrandLink className="mx-auto h-10 w-auto" />
           </h1>
-          <p className="text-sm text-gray-500 mt-3">Register your business</p>
+          <p className="text-sm text-gray-500 mt-3">Step {step} of 3</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Create your vendor account</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            You can add services and hours straight away. Customers find and book you after we approve the listing.
-          </p>
-
-          <form action={formAction} className="space-y-4">
-            <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
-                Business name
-              </label>
-              <input
-                id="businessName" name="businessName" type="text" required autoComplete="organization"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="Glow Beauty Studio"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                What do you do?
-              </label>
-              <SelectMenu
-                id="category"
-                name="category"
-                required
-                placeholder="Choose a category"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
-                options={BUSINESS_CATEGORIES.map((category) => ({ value: category, label: category }))}
-              />
-            </div>
-
-            <AreaFields />
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                id="phone" name="phone" type="tel" autoComplete="tel"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="0803 000 0000"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700 mb-1">
-                Your name
-              </label>
-              <input
-                id="ownerName" name="ownerName" type="text" required autoComplete="name"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="Amaka Okafor"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                id="email" name="email" type="email" required autoComplete="email"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                CAC registration number <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <input
-                id="registrationNumber" name="registrationNumber" type="text" autoComplete="off"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="RC1234567"
-              />
-            </div>
-
-            <PasswordField id="password" name="password" label="Password" autoComplete="new-password" placeholder="At least 8 characters" />
-            <PasswordField id="confirm" name="confirm" label="Confirm password" autoComplete="new-password" placeholder="Repeat your password" />
-
-            {state !== null && 'error' in state && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{state.error}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={pending}
-              className="w-full rounded-lg bg-[#1e3a8a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0b1638] disabled:opacity-60 transition-colors"
+          {step === 1 ? (
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                const next = new FormData(event.currentTarget).get('email')
+                void sendCode(String(next ?? ''))
+              }}
             >
-              {pending ? 'Creating account…' : 'Register your business'}
-            </button>
-          </form>
+              <h2 className="text-lg font-semibold text-gray-900">Start with your email</h2>
+              <p className="text-sm text-gray-500">
+                We’ll send a 6-digit code. After you confirm it, you’ll create the business and land in the dashboard.
+              </p>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input id="email" name="email" type="email" required autoComplete="email" defaultValue={email} placeholder="you@example.com" className={INPUT} />
+              </div>
+              {error ? <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p> : null}
+              <button type="submit" disabled={pending} className="w-full rounded-lg bg-[#1e3a8a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0b1638] disabled:opacity-60">
+                {pending ? 'Sending code…' : 'Send code'}
+              </button>
+            </form>
+          ) : null}
+
+          {step === 2 ? (
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void checkCode()
+              }}
+            >
+              <h2 className="text-lg font-semibold text-gray-900">Enter the code</h2>
+              <p className="text-sm text-gray-500">Sent to {email}. It expires in 15 minutes.</p>
+              <input
+                value={code}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                minLength={6}
+                maxLength={6}
+                aria-label="6-digit code"
+                className="w-full rounded-lg border border-gray-300 px-3 py-3 text-center text-2xl font-semibold tracking-[0.4em] text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              {error ? <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p> : null}
+              <button type="submit" disabled={pending || code.length < 6} className="w-full rounded-lg bg-[#1e3a8a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0b1638] disabled:opacity-60">
+                {pending ? 'Checking…' : 'Continue'}
+              </button>
+              <div className="flex items-center justify-between text-sm">
+                <button type="button" className="text-gray-500" onClick={() => { setStep(1); setError(null); setCode('') }}>Different email</button>
+                <button type="button" disabled={pending || wait > 0} className="font-semibold text-[#1e3a8a] disabled:text-gray-400" onClick={() => void sendCode(email)}>
+                  {wait > 0 ? `Resend in ${wait}s` : 'Resend code'}
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          {step === 3 ? <BusinessStep email={email} proof={proof} onBack={() => setStep(2)} /> : null}
         </div>
 
-        <p className="text-center text-sm text-gray-400 mt-4">
-          Already have an account?{' '}
-          <Link href="/login" className="hover:text-gray-600 transition-colors">
-            Sign in
-          </Link>
-        </p>
+        {step === 1 ? (
+          <p className="text-center text-sm text-gray-400 mt-4">
+            Already have an account?{' '}
+            <Link href="/login" className="hover:text-gray-600 transition-colors">Sign in</Link>
+          </p>
+        ) : null}
       </div>
     </div>
   )
 }
 
-const MENU = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900'
+function BusinessStep({ email, proof, onBack }: { email: string; proof: string; onBack: () => void }) {
+  const [state, formAction, pending] = useActionState(registerAction, null)
+  const [password, setPassword] = useState('')
+  const [shown, setShown] = useState(false)
+  return (
+    <form action={formAction} className="space-y-4">
+      <input type="hidden" name="email" value={email} />
+      <input type="hidden" name="proof" value={proof} />
+      <input type="hidden" name="confirm" value={password} />
+      <h2 className="text-lg font-semibold text-gray-900">Create the business</h2>
+      <p className="text-sm text-gray-500">You’ll go straight into the dashboard when this is saved.</p>
+      <div>
+        <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">Business name</label>
+        <input id="businessName" name="businessName" type="text" required autoComplete="organization" placeholder="Glow Beauty Studio" className={INPUT} />
+      </div>
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">What do you do?</label>
+        <SelectMenu
+          id="category"
+          name="category"
+          required
+          placeholder="Choose a category"
+          className={MENU}
+          options={BUSINESS_CATEGORIES.map((category) => ({ value: category, label: category }))}
+        />
+      </div>
+      <AreaFields />
+      <div>
+        <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700 mb-1">Your name</label>
+        <input id="ownerName" name="ownerName" type="text" required autoComplete="name" placeholder="Amaka Okafor" className={INPUT} />
+      </div>
+      <div>
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
+        <input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="0803 000 0000" className={INPUT} />
+      </div>
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <div className="relative">
+          <input
+            id="password"
+            name="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="At least 8 characters"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            type={shown ? 'text' : 'password'}
+            className={`${INPUT} pr-16`}
+          />
+          <button type="button" onClick={() => setShown((value) => !value)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500">
+            {shown ? 'Hide' : 'Show'}
+          </button>
+        </div>
+      </div>
+      {state !== null && 'error' in state ? <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{state.error}</p> : null}
+      <button type="submit" disabled={pending} className="w-full rounded-lg bg-[#1e3a8a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0b1638] disabled:opacity-60">
+        {pending ? 'Opening your dashboard…' : 'Create business'}
+      </button>
+      <button type="button" onClick={onBack} className="w-full text-sm text-gray-500">Back</button>
+    </form>
+  )
+}
 
 function AreaFields() {
   const [stateName, setStateName] = useState('')
@@ -170,53 +244,5 @@ function AreaFields() {
       </div>
       <input type="hidden" name="address" value={stateName && lga ? serviceArea(lga, stateName) : ''} />
     </>
-  )
-}
-
-function PasswordField({
-  id,
-  label,
-  ...props
-}: { id: string; label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
-  const [shown, setShown] = useState(false)
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <div className="relative">
-        <input
-          id={id}
-          required
-          {...props}
-          type={shown ? 'text' : 'password'}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-        <button
-          type="button"
-          onClick={() => setShown((value) => !value)}
-          aria-label={shown ? 'Hide password' : 'Show password'}
-          aria-pressed={shown}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500"
-        >
-          {shown ? <EyeOff /> : <Eye />}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function Eye() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
-      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  )
-}
-
-function EyeOff() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="h-4 w-4">
-      <path d="M3 3l18 18M10.5 10.7A2.5 2.5 0 0 0 12 14.5M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-3.2 3.8M6.1 6.3C3.8 8 2 12 2 12a18 18 0 0 0 6.2 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
   )
 }

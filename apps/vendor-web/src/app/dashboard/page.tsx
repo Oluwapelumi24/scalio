@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { apiFetch, ApiError } from '@/lib/api'
 import { getToken } from '@/lib/session'
 import { listingReady, type VendorProfile } from '@/lib/categories'
-import { MANAGER_ROLES, type HomeResponse, type Preferences } from '@/lib/personalisation'
+import { MANAGER_ROLES, type HomeResponse } from '@/lib/personalisation'
 import { Icon } from '@/components/Icon'
 import { ModuleLink } from './home/ModuleLink'
 import { ShareLink } from './home/ShareLink'
@@ -98,13 +98,6 @@ export default async function DashboardHome() {
 
   const isManager = MANAGER_ROLES.includes(staff.role)
 
-  // First visit for an owner or manager: ask what they want help with. Skipping
-  // counts as answering, so this only ever happens once.
-  if (isManager) {
-    const prefs = await apiFetch<Preferences>('/vendor-admin/preferences', token).catch(() => null)
-    if (prefs && !prefs.interestsCompletedAt) redirect('/dashboard/interests?welcome=1')
-  }
-
   let home: HomeResponse | null = null
   try {
     home = await apiFetch<HomeResponse>('/vendor-admin/home', token)
@@ -121,7 +114,7 @@ export default async function DashboardHome() {
   const summary = !bookings
     ? ''
     : !ready
-      ? 'A couple of steps and customers can book you.'
+      ? 'Add a service and your opening hours. Customers can book you after we approve the listing.'
       : upcomingCount === 0
         ? 'No bookings coming up yet.'
         : `You have ${upcomingCount} ${upcomingCount === 1 ? 'booking' : 'bookings'} coming up.`

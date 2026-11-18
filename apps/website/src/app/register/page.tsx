@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Logo } from '@/components/Navbar'
-import { VendorAuthForm } from '@/components/partners/VendorAuthForm'
+import { BusinessOnboarding } from '@/components/partners/BusinessOnboarding'
 import { VENDOR_PORTAL_LINKED, VENDOR_REGISTER_URL } from '@/lib/constants'
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function RegisterPage() {
   if (VENDOR_PORTAL_LINKED) redirect(VENDOR_REGISTER_URL)
   return (
-    <main className="min-h-screen bg-[#f7f8fa]">
+    <main className="flex min-h-screen flex-col bg-[#f6f7f9]">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center px-6 py-4">
           <Link href="/" aria-label="Veno home">
@@ -22,8 +22,8 @@ export default function RegisterPage() {
           </Link>
         </div>
       </header>
-      <div className="mx-auto max-w-md px-6 py-12">
-        <VendorAuthForm mode="register" />
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-10">
+        <BusinessOnboarding />
       </div>
     </main>
   )

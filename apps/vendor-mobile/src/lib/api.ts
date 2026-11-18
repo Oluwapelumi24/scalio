@@ -102,8 +102,16 @@ export function vendorLogin(email: string, password: string): Promise<LoginRespo
   return req('POST', '/vendor-auth/login', { email, password });
 }
 
-export function vendorRegister(ownerName: string, businessName: string, email: string, password: string, registrationNumber?: string): Promise<LoginResponse> {
-  return req('POST', '/vendor-auth/register', { ownerName, businessName, email, password, ...(registrationNumber ? { registrationNumber } : {}) });
+export function sendVendorSignupCode(email: string): Promise<{ ok: boolean }> {
+  return req('POST', '/vendor-auth/signup-code', { email });
+}
+
+export function verifyVendorSignupCode(email: string, code: string): Promise<{ proof: string }> {
+  return req('POST', '/vendor-auth/signup-code/verify', { email, code });
+}
+
+export function vendorRegister(ownerName: string, businessName: string, email: string, password: string, proof: string, registrationNumber?: string): Promise<LoginResponse> {
+  return req('POST', '/vendor-auth/register', { ownerName, businessName, email, password, proof, ...(registrationNumber ? { registrationNumber } : {}) });
 }
 
 export function requestPasswordReset(email: string): Promise<void> {

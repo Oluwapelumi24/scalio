@@ -29,11 +29,13 @@ export default function LoginPage() {
               <input
                 id="email"
                 name="email"
+                key={state && 'error' in state ? state.email ?? 'email' : 'email'}
                 type="email"
                 required
                 autoComplete="email"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="you@example.com"
+                defaultValue={state && 'error' in state ? state.email ?? '' : ''}
               />
             </div>
 

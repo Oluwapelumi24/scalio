@@ -206,7 +206,10 @@ export async function openDashboardAction(): Promise<VendorAuthState> {
 
   const portal = dashboardPortalUrl()
   if (!portal) {
-    return { error: 'The business dashboard is not linked yet. Try again shortly.' }
+    return {
+      error:
+        'Set VENDOR_WEB_URL on Vercel to your Railway vendor-web https address, then redeploy.',
+    }
   }
 
   let code: string

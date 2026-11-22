@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiError, apiFetch } from '@/lib/api'
+import { publicOrigin } from '@/lib/public-origin'
 
 interface VendorSession {
   accessToken: string
@@ -12,8 +13,9 @@ const COOKIE = 'vendor_token'
  * cookie on this origin, and opens the dashboard.
  */
 export async function GET(request: NextRequest) {
+  const origin = publicOrigin(request)
   const code = (request.nextUrl.searchParams.get('code') ?? '').trim().toLowerCase()
-  const login = new URL('/login', request.url)
+  const login = new URL('/login', origin)
 
   if (!/^[0-9a-f]{32,64}$/.test(code)) {
     return NextResponse.redirect(login)
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
     throw err
   }
 
-  const dashboard = new URL('/dashboard', request.url)
+  const dashboard = new URL('/dashboard', origin)
   const response = NextResponse.redirect(dashboard)
   response.cookies.set(COOKIE, accessToken, {
     httpOnly: true,

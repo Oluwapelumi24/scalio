@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ApiError, apiFetch } from '@/lib/api'
-import { publicOrigin } from '@/lib/public-origin'
 
 interface VendorSession {
   accessToken: string
@@ -11,14 +10,17 @@ const COOKIE = 'vendor_token'
 /**
  * Receives a one-time handoff code from the marketing site, stores the session
  * cookie on this origin, and opens the dashboard.
+ *
+ * Redirects use relative Location paths on purpose. On Railway, request.url is
+ * the container bind address (0.0.0.0:8080); an absolute redirect there sends
+ * the browser to a non-routable host. A relative /dashboard resolves against
+ * the public URL the browser already used.
  */
 export async function GET(request: NextRequest) {
-  const origin = publicOrigin(request)
   const code = (request.nextUrl.searchParams.get('code') ?? '').trim().toLowerCase()
-  const login = new URL('/login', origin)
 
   if (!/^[0-9a-f]{32,64}$/.test(code)) {
-    return NextResponse.redirect(login)
+    return relativeRedirect('/login')
   }
 
   let accessToken: string
@@ -29,12 +31,11 @@ export async function GET(request: NextRequest) {
     })
     accessToken = session.accessToken
   } catch (err) {
-    if (err instanceof ApiError) return NextResponse.redirect(login)
+    if (err instanceof ApiError) return relativeRedirect('/login')
     throw err
   }
 
-  const dashboard = new URL('/dashboard', origin)
-  const response = NextResponse.redirect(dashboard)
+  const response = relativeRedirect('/dashboard')
   response.cookies.set(COOKIE, accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -43,4 +44,11 @@ export async function GET(request: NextRequest) {
     path: '/',
   })
   return response
+}
+
+function relativeRedirect(path: string) {
+  return new NextResponse(null, {
+    status: 307,
+    headers: { Location: path },
+  })
 }

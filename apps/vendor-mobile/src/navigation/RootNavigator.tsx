@@ -15,6 +15,7 @@ import { ServiceFormScreen } from '../screens/ServiceFormScreen';
 import { CustomerDetailScreen } from '../screens/CustomerDetailScreen';
 import { ServicesScreen } from '../screens/ServicesScreen';
 import { BusinessHoursScreen } from '../screens/BusinessHoursScreen';
+import { BusinessPageScreen } from '../screens/BusinessPageScreen';
 import { BlackoutDatesScreen } from '../screens/BlackoutDatesScreen';
 import { StaffManagementScreen } from '../screens/StaffManagementScreen';
 import { StaffFormScreen } from '../screens/StaffFormScreen';
@@ -100,6 +101,7 @@ export function RootNavigator() {
         <Stack.Screen name="ServiceForm" component={ServiceFormScreen} />
         <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} />
         <Stack.Screen name="BusinessHours" component={BusinessHoursScreen} />
+        <Stack.Screen name="BusinessPage" component={BusinessPageScreen} />
         <Stack.Screen name="BlackoutDates" component={BlackoutDatesScreen} />
         <Stack.Screen name="StaffManagement" component={StaffManagementScreen} />
         <Stack.Screen name="StaffForm" component={StaffFormScreen} />

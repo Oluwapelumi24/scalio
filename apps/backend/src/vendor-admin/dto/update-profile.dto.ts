@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 import { BUSINESS_CATEGORIES } from '../categories';
 
 export class UpdateVendorProfileDto {
@@ -14,4 +14,13 @@ export class UpdateVendorProfileDto {
   @IsString()
   @MaxLength(600)
   description?: string;
+
+  /** Studio media id — becomes the permanent marketplace photo URL. */
+  @IsOptional()
+  @IsUUID()
+  logoMediaId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  clearLogo?: boolean;
 }

@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
-import { MANAGER_ROLES, type InterestGroup, type Preferences } from '@/lib/personalisation'
+import { listingReady, type VendorProfile } from '@/lib/categories'
+import { MANAGER_ROLES, type HomeResponse, type InterestGroup, type Preferences } from '@/lib/personalisation'
 import { InterestPicker } from './InterestPicker'
 
 export default async function InterestsPage({
@@ -12,6 +13,16 @@ export default async function InterestsPage({
   const token = await requireToken()
   const staff = await apiFetch<{ role: string }>('/vendor-auth/me', token)
   if (!MANAGER_ROLES.includes(staff.role)) redirect('/dashboard')
+
+  const [profile, home] = await Promise.all([
+    apiFetch<VendorProfile>('/vendor-admin/profile', token).catch(() => null),
+    apiFetch<HomeResponse>('/vendor-admin/home', token).catch(() => null),
+  ])
+  const setupReady =
+    !!home?.bookings.setup.services &&
+    !!home?.bookings.setup.hours &&
+    listingReady(profile)
+  if (profile?.approvalStatus !== 'approved' || !setupReady) redirect('/dashboard')
 
   const { welcome } = await searchParams
   const [groups, prefs] = await Promise.all([

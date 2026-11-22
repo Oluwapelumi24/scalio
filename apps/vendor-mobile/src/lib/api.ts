@@ -110,8 +110,24 @@ export function verifyVendorSignupCode(email: string, code: string): Promise<{ p
   return req('POST', '/vendor-auth/signup-code/verify', { email, code });
 }
 
-export function vendorRegister(ownerName: string, businessName: string, email: string, password: string, proof: string, registrationNumber?: string): Promise<LoginResponse> {
-  return req('POST', '/vendor-auth/register', { ownerName, businessName, email, password, proof, ...(registrationNumber ? { registrationNumber } : {}) });
+export function vendorRegister(
+  ownerName: string,
+  businessName: string,
+  email: string,
+  password: string,
+  proof: string,
+  opts?: { registrationNumber?: string; category?: string; address?: string },
+): Promise<LoginResponse> {
+  return req('POST', '/vendor-auth/register', {
+    ownerName,
+    businessName,
+    email,
+    password,
+    proof,
+    ...(opts?.registrationNumber ? { registrationNumber: opts.registrationNumber } : {}),
+    ...(opts?.category ? { category: opts.category } : {}),
+    ...(opts?.address ? { address: opts.address } : {}),
+  });
 }
 
 export function requestPasswordReset(email: string): Promise<void> {
@@ -171,6 +187,33 @@ export function cancelBooking(id: string, reason?: string): Promise<VendorBookin
 
 export function markNoShow(id: string): Promise<VendorBooking> {
   return req('POST', `/vendor-admin/bookings/${id}/no-show`);
+}
+
+// ─── Business page (public listing) ──────────────────────────────────────────
+
+export interface VendorProfile {
+  businessName: string;
+  category: string;
+  address: string | null;
+  description: string | null;
+  logoUrl: string | null;
+  approvalStatus: 'pending_review' | 'approved' | 'rejected';
+  reviewNote: string | null;
+  slug: string;
+}
+
+export function getVendorProfile(): Promise<VendorProfile> {
+  return req('GET', '/vendor-admin/profile');
+}
+
+export function updateVendorProfile(data: {
+  category: string;
+  address: string;
+  description?: string;
+  logoMediaId?: string;
+  clearLogo?: boolean;
+}): Promise<VendorProfile> {
+  return req('PATCH', '/vendor-admin/profile', data);
 }
 
 // ─── Services ────────────────────────────────────────────────────────────────
@@ -572,7 +615,12 @@ export interface HomeItem {
 
 export interface HomeResponse {
   generatedAt: string;
-  business: { name: string };
+  business: {
+    name: string;
+    approvalStatus: 'pending_review' | 'approved' | 'rejected';
+    reviewNote: string | null;
+    listingReady: boolean;
+  };
   /** The basics, always present whatever the business's interests or home settings. */
   bookings: {
     link: string;

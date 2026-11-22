@@ -31,6 +31,8 @@ export function DashboardChrome({
   initials,
   unread,
   logout,
+  banner,
+  suiteUnlocked = true,
   children,
 }: {
   name: string
@@ -38,6 +40,9 @@ export function DashboardChrome({
   initials: string
   unread: number
   logout: () => Promise<void>
+  banner?: React.ReactNode
+  /** When false, Marketing / Money / Attendance stay hidden so day-1 stays on setup. */
+  suiteUnlocked?: boolean
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -76,7 +81,7 @@ export function DashboardChrome({
         <div className="px-5 py-5">
           <BrandLink className="h-7 w-auto" />
         </div>
-        <SidebarNav role={role} />
+        <SidebarNav role={role} suiteUnlocked={suiteUnlocked} />
         <Account name={name} role={role} initials={initials} logout={logout} />
       </aside>
 
@@ -125,6 +130,7 @@ export function DashboardChrome({
         </header>
 
         <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#f7f8fa]">
+          {banner}
           <div className="min-w-0 p-4 pb-8 md:p-8">{children}</div>
         </main>
       </div>
@@ -187,7 +193,7 @@ export function DashboardChrome({
                 <Icon name="x" className="h-5 w-5" />
               </button>
             </div>
-            <SidebarNav role={role} onNavigate={() => setMenuOpen(false)} />
+            <SidebarNav role={role} suiteUnlocked={suiteUnlocked} onNavigate={() => setMenuOpen(false)} />
             <Account name={name} role={role} initials={initials} logout={logout} />
           </div>
         </div>
@@ -208,18 +214,21 @@ function Account({
   logout: () => Promise<void>
 }) {
   return (
-    <div className="border-t border-[#e4e6eb] px-4 py-4">
+    <div className="border-t border-[#e4e6eb] px-4 pb-4 pt-5">
       <div className="flex items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e3a8a] text-[11px] font-bold text-white">
           {initials}
         </span>
         <span className="min-w-0">
-          <p className="truncate text-sm font-semibold">{name}</p>
-          <p className="text-xs text-[#7d818b]">{ROLE_LABELS[role] ?? role}</p>
+          <p className="truncate text-sm font-semibold leading-5">{name}</p>
+          <p className="mt-0.5 text-xs leading-4 text-[#7d818b]">{ROLE_LABELS[role] ?? role}</p>
         </span>
       </div>
       <form action={logout} className="mt-3">
-        <button type="submit" className="keep-height h-11 w-full rounded-full text-sm font-semibold text-[#4a4e57]">
+        <button
+          type="submit"
+          className="keep-height h-10 w-full rounded-full text-left text-sm font-semibold text-[#4a4e57] hover:bg-[#f5f6f8] px-3"
+        >
           Sign out
         </button>
       </form>

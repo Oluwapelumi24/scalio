@@ -4,6 +4,9 @@ const now = new Date('2026-10-15T08:00:00Z');
 
 const snapshot: HomeSnapshot = {
   businessName: 'Fade House',
+  approvalStatus: 'approved',
+  reviewNote: null,
+  listingReady: true,
   bookingLink: 'http://localhost:3003/book/fade-house',
   sales30dKobo: 92_000_000,
   upcoming: [{ id: 'b1', scheduledAt: '2026-10-15T10:00:00Z', status: 'confirmed', customerName: 'Tunde' }],
@@ -59,7 +62,7 @@ describe('buildHome — reference businesses', () => {
     expect(top(home, 'overview', 1)).toEqual(['new_customers']);
     expect(top(home, 'quick_action', 3)).toEqual(['create_post', 'view_leads', 'share_booking_link']);
     expect(home.layers.recommendation.map((i) => i.id)).toEqual(
-      expect.arrayContaining(['first_post', 'ads_soon']),
+      expect.arrayContaining(['first_post', 'try_ads']),
     );
   });
 
@@ -122,24 +125,32 @@ describe('buildHome — rules', () => {
     const none = buildHome(snapshot, prefs([]), 'owner', now);
     expect(none.layers.recommendation.filter((i) => i.status === 'coming_soon')).toEqual([]);
 
-    const ads = buildHome(snapshot, prefs(['run_ads']), 'owner', now);
-    const item = ads.layers.recommendation.find((i) => i.id === 'ads_soon');
+    const stock = buildHome(snapshot, prefs(['manage_stock_orders']), 'owner', now);
+    const item = stock.layers.recommendation.find((i) => i.id === 'orders_soon');
     expect(item?.status).toBe('coming_soon');
   });
 
-  it('suggests setup steps for a brand-new business, starting with interests', () => {
+  it('suggests setup steps for a brand-new business without personalisation yet', () => {
     const fresh = buildHome(
-      { ...snapshot, totalBookings: 0, serviceCount: 0, hasBusinessHours: false },
+      { ...snapshot, totalBookings: 0, serviceCount: 0, hasBusinessHours: false, approvalStatus: 'pending_review' },
       prefs([], { interestsCompletedAt: null }),
       'owner',
       now,
     );
     expect(fresh.layers.recommendation.map((i) => i.id)).toEqual([
-      'choose_interests',
       'setup_services',
       'setup_hours',
-      'share_link_first',
     ]);
+  });
+
+  it('offers interests only after the listing is live and set up', () => {
+    const home = buildHome(
+      { ...snapshot, totalBookings: 0, serviceCount: 2, hasBusinessHours: true, approvalStatus: 'approved' },
+      prefs([], { interestsCompletedAt: null }),
+      'owner',
+      now,
+    );
+    expect(home.layers.recommendation.map((i) => i.id)).toContain('choose_interests');
   });
 
   it('keeps hidden modules reachable in the hidden list', () => {

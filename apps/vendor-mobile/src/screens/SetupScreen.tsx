@@ -39,6 +39,16 @@ export function SetupScreen({ navigation }: Props) {
 
   const steps: Step[] = [
     {
+      key: 'listing',
+      icon: 'map-pin',
+      title: 'Complete your business page',
+      summary: 'Category and area so customers can find you.',
+      headline: 'Tell customers what you do',
+      body: 'Pick a category and the neighbourhood you work in. This is what people see when they search on Veno.',
+      done: !!setup?.listed,
+      open: () => navigation.navigate('BusinessPage'),
+    },
+    {
       key: 'services',
       icon: 'scissors',
       title: 'Add your services',
@@ -73,12 +83,16 @@ export function SetupScreen({ navigation }: Props) {
       key: 'share',
       icon: 'share-2',
       title: 'Share your booking link',
-      summary: 'Put it on WhatsApp, Instagram and in your bio.',
-      headline: 'Get your first booking',
-      body: 'Your booking link lets clients see your services and book a free time themselves. Share it wherever your clients already find you.',
-      done: (setup?.total ?? 0) > 0,
+      summary: setup?.approved
+        ? 'Put it on WhatsApp, Instagram and in your bio.'
+        : 'Available after your business page is approved.',
+      headline: setup?.approved ? 'Get your first booking' : 'Almost there',
+      body: setup?.approved
+        ? 'Your booking link lets clients see your services and book a free time themselves. Share it wherever your clients already find you.'
+        : 'We’re reviewing your business page. You can share the link once it’s approved — usually within one business day.',
+      done: !!setup?.approved && (setup?.total ?? 0) > 0,
       open: () => {
-        if (!setup?.link) return;
+        if (!setup?.link || !setup.approved) return;
         recordModuleUsage('share_link_first');
         void Share.share({ message: `Book an appointment with us on Veno: ${setup.link}` });
       },
@@ -94,7 +108,12 @@ export function SetupScreen({ navigation }: Props) {
       <Page
         footer={
           <StickyFooter>
-            <Button label={step.key === 'share' ? 'Share link' : 'Continue'} onPress={step.open} style={{ flex: 1 }} />
+            <Button
+              label={step.key === 'share' ? (setup?.approved ? 'Share link' : 'Waiting for approval') : 'Continue'}
+              onPress={step.open}
+              disabled={step.key === 'share' && !setup?.approved}
+              style={{ flex: 1 }}
+            />
           </StickyFooter>
         }
       >

@@ -51,6 +51,8 @@ const HREF: Record<string, string> = {
   quiet_day_offer: '/dashboard/content/new',
   ask_for_feedback: '/dashboard/bookings?status=completed',
   view_leads: '/dashboard/leads?filter=open',
+  try_ads: '/dashboard/ads',
+  open_inbox: '/dashboard/inbox',
 }
 
 const BOOKING_ALERTS: Record<string, { text: (n: number) => string; action: string }> = {
@@ -83,6 +85,8 @@ const RECOMMENDATION_TEXT: Record<string, (d: Record<string, number> & { day?: s
   ask_for_feedback: (d) => `${d.count} recent ${d.count === 1 ? 'customer has' : 'customers have'} no email. Send them the rating link on WhatsApp from Bookings.`,
   first_post: () => 'Add a photo, say what it is about, and AI writes the caption and hashtags.',
   follow_up_lapsed: (d) => `${d.count} ${d.count === 1 ? 'customer is' : 'customers are'} past their usual return time.`,
+  try_ads: () => 'Reach more customers near you with Facebook and Instagram ads.',
+  open_inbox: () => 'Reply to WhatsApp and Instagram messages in one place.',
 }
 
 export default async function DashboardHome() {
@@ -111,10 +115,11 @@ export default async function DashboardHome() {
   const bookings = home?.bookings
   const ready = !!bookings && bookings.setup.services && bookings.setup.hours && listed
   const upcomingCount = bookings?.upcoming.length ?? 0
+  // Approval status lives in the layout banner — keep the greeting to the job in front of them.
   const summary = !bookings
     ? ''
     : !ready
-      ? 'Add a service and your opening hours. Customers can book you after we approve the listing.'
+      ? 'Add a service and your opening hours to finish setup.'
       : upcomingCount === 0
         ? 'No bookings coming up yet.'
         : `You have ${upcomingCount} ${upcomingCount === 1 ? 'booking' : 'bookings'} coming up.`
@@ -132,54 +137,74 @@ export default async function DashboardHome() {
           : []),
       ]
     : []
-  const shareAlreadyShown = home?.layers.recommendation.some((item) => item.id === 'share_link_first') ?? false
-  const quickActions = (home?.layers.quick_action ?? []).filter((item) => {
-    if (item.id !== 'share_booking_link') return true
-    return !ready && !shareAlreadyShown
-  })
+  const activated = ready && approved
+  // During setup / review: Suggested only (max 3). Quick actions after the listing is live.
+  const suggestions = (home?.layers.recommendation ?? [])
+    .filter((item) => {
+      if (item.id === 'share_link_first' && !approved) return false
+      if (item.status === 'coming_soon' && !activated) return false
+      // Checklist already covers these while setup is incomplete.
+      if (!ready && (item.id === 'setup_services' || item.id === 'setup_hours')) return false
+      return true
+    })
+    .slice(0, 3)
+  const quickActions = activated
+    ? (home?.layers.quick_action ?? []).filter((item) => item.id !== 'share_booking_link' || approved)
+    : []
 
   return (
     <div className="mx-auto min-w-0 max-w-6xl">
-      <div className="rounded-[28px] bg-gradient-to-b from-[#e8edfa] to-transparent px-1 py-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <h1 className="text-xl font-bold tracking-tight">Hey, {staff.name.split(' ')[0] || 'there'}</h1>
-          {isManager && (
-            <Link href="/dashboard/customise" className="text-sm font-semibold text-[#1e3a8a]">
+      <section className="rounded-[24px] bg-[#e8edfa] px-5 py-5 sm:px-6 sm:py-6">
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-xl font-bold tracking-tight leading-7">
+            Hey, {staff.name.split(' ')[0] || 'there'}
+          </h1>
+          {isManager && activated ? (
+            <Link href="/dashboard/customise" className="shrink-0 pt-0.5 text-sm font-semibold text-[#1e3a8a]">
               Customise home
             </Link>
-          )}
+          ) : null}
         </div>
-        {summary ? <p className="mt-4 text-sm font-medium text-[#4a4e57]">{summary}</p> : null}
-        {profile && !approved ? (
-          <p className="mt-4 max-w-xl rounded-2xl bg-white/70 px-4 py-3 text-sm leading-5 text-[#4a4e57]">
-            {profile.approvalStatus === 'rejected'
-              ? profile.reviewNote || 'This listing wasn’t approved. Update the details and we’ll look again.'
-              : 'We’ll review the listing shortly. Customers can book you after it’s approved — keep setting up while you wait.'}
-          </p>
-        ) : null}
-      </div>
+        {summary ? <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a4e57]">{summary}</p> : null}
+      </section>
 
       {!home || !bookings ? (
-        <div className="mt-4 rounded-[20px] border border-[#e4e6eb] bg-white p-8 text-center">
+        <div className="mt-6 rounded-[20px] border border-[#e4e6eb] bg-white p-8 text-center">
           <p className="text-[#4a4e57]">We couldn&apos;t load your bookings.</p>
           <Link href="/dashboard" className="mt-3 inline-block text-sm font-semibold text-[#1e3a8a]">Try again</Link>
         </div>
       ) : (
         <>
-        <div className="mt-2 grid min-w-0 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="min-w-0 space-y-8">
+        <div className="mt-6 grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
+          <div className="min-w-0 space-y-6">
             {ready && approved ? (
               <BookingLinkCard url={bookings.link} total={bookings.total} />
             ) : ready ? (
-              <section className="rounded-[24px] border border-[#e4e6eb] bg-white p-6">
-                <h2 className="text-lg font-semibold">
-                  {profile?.approvalStatus === 'rejected' ? 'This listing wasn’t approved' : 'Your booking page is ready'}
-                </h2>
-                <p className="mt-2 max-w-md text-sm leading-6 text-[#4a4e57]">
-                  {profile?.approvalStatus === 'rejected'
-                    ? profile.reviewNote || 'Update your listing and we’ll look again. Customers can’t book you until it’s approved.'
-                    : 'Customers can open your link and book as soon as we approve the listing. Keep setting up while you wait — don’t share the link yet, it isn’t public.'}
-                </p>
+              <section className="flex items-start gap-4 rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
+                <IconTile
+                  name={profile?.approvalStatus === 'rejected' ? 'edit-3' : 'shield'}
+                  className="h-11 w-11"
+                />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-semibold leading-6">
+                    {profile?.approvalStatus === 'rejected' ? 'Update your business page' : 'Your booking page is ready'}
+                  </h2>
+                  <p className="mt-1.5 text-sm leading-6 text-[#4a4e57]">
+                    {profile?.approvalStatus === 'rejected'
+                      ? 'Fix what’s noted in the banner, then we’ll look again.'
+                      : 'Your public booking link stays private until approval. Keep polishing your business page while you wait.'}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                    <Link href="/dashboard/listing" className="text-sm font-semibold text-[#1e3a8a]">
+                      {profile?.approvalStatus === 'rejected' ? 'Edit business page' : 'Review business page'}
+                    </Link>
+                    {profile?.approvalStatus !== 'rejected' ? (
+                      <Link href="/dashboard/bookings/new" className="text-sm font-semibold text-[#1e3a8a]">
+                        Book a walk-in
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
               </section>
             ) : (
               <section className="min-w-0">
@@ -244,18 +269,33 @@ export default async function DashboardHome() {
                 <h2 className="text-[15px] font-bold">Up next</h2>
                 <Link href="/dashboard/bookings" className="shrink-0 text-[13px] font-semibold text-[#1e3a8a]">See all</Link>
               </div>
-              <ul className="mt-3 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+              <ul className="mt-3 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white px-5">
                 {bookings.upcoming.length === 0 ? (
-                  <li className="flex items-center gap-3 py-5">
+                  <li className="flex items-center gap-3.5 py-5">
                     <EmptyCalendar />
-                    <p className="min-w-0 text-sm leading-5 text-[#4a4e57]">
-                      {ready ? 'New bookings show up here as soon as customers make them.' : 'Bookings show up here once customers can book you.'}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-5 text-[#4a4e57]">
+                        {ready
+                          ? approved
+                            ? 'New bookings show up here as soon as customers make them.'
+                            : 'We’ll notify you when you’re live — then new bookings show up here.'
+                          : 'Bookings show up here once customers can book you.'}
+                      </p>
+                      {!ready ? (
+                        <Link href="/dashboard/services" className="mt-1.5 inline-block text-sm font-semibold text-[#1e3a8a]">
+                          Add a service
+                        </Link>
+                      ) : approved ? (
+                        <Link href="/dashboard/bookings/new" className="mt-1.5 inline-block text-sm font-semibold text-[#1e3a8a]">
+                          Book a walk-in
+                        </Link>
+                      ) : null}
+                    </div>
                   </li>
                 ) : (
                   bookings.upcoming.map((booking) => (
                     <li key={booking.id}>
-                      <Link href="/dashboard/bookings" className="flex items-center gap-3 py-4">
+                      <Link href="/dashboard/bookings" className="flex items-center gap-3.5 py-4">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8edfa] text-sm font-semibold text-[#1e3a8a]">
                           {(booking.customerName ?? 'C').charAt(0).toUpperCase()}
                         </span>
@@ -275,7 +315,7 @@ export default async function DashboardHome() {
             </section>
           </div>
 
-          <aside className="min-w-0 space-y-8">
+          <aside className="min-w-0 space-y-6">
             {otherAttention.length > 0 && (
               <section>
                 <h2 className="text-[15px] font-bold">Other updates</h2>
@@ -285,7 +325,7 @@ export default async function DashboardHome() {
                       key={item.id}
                       moduleId={item.id}
                       href={HREF[item.id] ?? '/dashboard'}
-                      className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-3.5 text-sm"
+                      className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-4 text-sm"
                     >
                       <IconTile name={item.icon} />
                       <span className="min-w-0 flex-1 leading-5">{ATTENTION_TEXT[item.id]?.(item.data.count, item.data) ?? item.title}</span>
@@ -296,14 +336,14 @@ export default async function DashboardHome() {
               </section>
             )}
 
-            {home.layers.recommendation.some((item) => item.id !== 'share_link_first' || approved) && (
+            {suggestions.length > 0 && (
               <section>
-                <h2 className="text-[15px] font-bold">Suggested for you</h2>
+                <h2 className="text-[15px] font-bold leading-5">Suggested for you</h2>
                 <div className="mt-3 space-y-2">
-                  {home.layers.recommendation.filter((item) => item.id !== 'share_link_first' || approved).map((item) => {
+                  {suggestions.map((item) => {
                     if (item.status === 'coming_soon') {
                       return (
-                        <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-white p-3.5">
+                        <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-white p-4">
                           <IconTile name={item.icon} />
                           <span className="min-w-0">
                             <span className="block text-sm font-semibold">{item.title}</span>
@@ -328,7 +368,7 @@ export default async function DashboardHome() {
                         key={item.id}
                         moduleId={item.id}
                         href={HREF[item.id] ?? '/dashboard'}
-                        className="flex min-w-0 items-start gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-3.5"
+                        className="flex min-w-0 items-start gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-4"
                       >
                         <IconTile name={item.icon} />
                         <span className="min-w-0 flex-1">
@@ -346,10 +386,10 @@ export default async function DashboardHome() {
         </div>
 
         {quickActions.length > 0 && (
-          <section className="mt-8 min-w-0">
+          <section className="mt-6 min-w-0">
             <h2 className="text-[15px] font-bold">Quick actions</h2>
             <div className="mt-3 space-y-2">
-              {quickActions.filter((item) => item.id === 'share_booking_link' && approved).map((item) => (
+              {quickActions.filter((item) => item.id === 'share_booking_link').map((item) => (
                 <ShareLink key={item.id} moduleId={item.id} url={item.data.url} title={item.title} />
               ))}
               {quickActions.some((item) => item.id !== 'share_booking_link') && (

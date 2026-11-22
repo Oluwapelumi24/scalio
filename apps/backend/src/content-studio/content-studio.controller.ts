@@ -98,3 +98,19 @@ export class PublicMediaController {
     return new StreamableFile(Buffer.from(m.dataBase64, 'base64'), { type: m.mimeType });
   }
 }
+
+/**
+ * Long-lived marketplace photos (business page / explore cards). Media IDs are
+ * unguessable UUIDs; no signature so logoUrl stays stable on the vendor record.
+ */
+@Controller('public/listing-media')
+export class PublicListingMediaController {
+  constructor(private readonly studio: ContentStudioService) {}
+
+  @Get(':id')
+  @Header('Cache-Control', 'public, max-age=86400, immutable')
+  async media(@Param('id', ParseUUIDPipe) id: string) {
+    const m = await this.studio.mediaById(id);
+    return new StreamableFile(Buffer.from(m.dataBase64, 'base64'), { type: m.mimeType });
+  }
+}

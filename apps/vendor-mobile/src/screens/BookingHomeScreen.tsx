@@ -89,9 +89,23 @@ export function BookingHomeScreen({ navigation }: Props) {
   const alerts = home?.layers.attention.filter((i) => i.id in BOOKING_ALERTS) ?? [];
   const otherUpdates = (home?.layers.attention.length ?? 0) - alerts.length;
 
+  const listed = home?.business.listingReady ?? true;
+  const approved = home?.business.approvalStatus === 'approved';
+  const rejected = home?.business.approvalStatus === 'rejected';
+
   // Only what stops customers booking. Payments are optional, and only managers can set them up.
   const steps: SetupStep[] = bookings
     ? [
+        ...(isManager
+          ? [{
+              key: 'listing',
+              label: 'Say what you do and where',
+              hint: 'So customers can find you in search',
+              icon: 'map-pin' as FeatherName,
+              done: listed,
+              onPress: () => navigation.navigate('BusinessPage'),
+            }]
+          : []),
         { key: 'services', label: 'Add a service', hint: 'Customers pick one when they book', icon: 'scissors', done: bookings.setup.services, onPress: () => navigation.navigate('ServiceForm', {}) },
         { key: 'hours', label: 'Set your opening hours', hint: 'So customers only book when you’re open', icon: 'clock', done: bookings.setup.hours, onPress: () => navigation.navigate('BusinessHours') },
         ...(isManager
@@ -99,7 +113,7 @@ export function BookingHomeScreen({ navigation }: Props) {
           : []),
       ]
     : [];
-  const ready = !!bookings && bookings.setup.services && bookings.setup.hours;
+  const ready = !!bookings && bookings.setup.services && bookings.setup.hours && listed;
 
   function openAlert(item: HomeItem) {
     recordModuleUsage(item.id);
@@ -107,13 +121,13 @@ export function BookingHomeScreen({ navigation }: Props) {
   }
 
   function shareLink() {
-    if (!bookings) return;
+    if (!bookings || !approved) return;
     recordModuleUsage('share_booking_link');
     void Share.share({ message: `Book an appointment with us on Veno: ${bookings.link}` });
   }
 
   async function copyLink() {
-    if (!bookings) return;
+    if (!bookings || !approved) return;
     await Clipboard.setStringAsync(bookings.link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -123,7 +137,11 @@ export function BookingHomeScreen({ navigation }: Props) {
   const summary = !bookings
     ? ''
     : !ready
-      ? 'A couple of steps and customers can book you.'
+      ? 'Add a service and your opening hours to finish setup.'
+      : !approved
+        ? rejected
+          ? 'Update your business page, then we’ll look again.'
+          : 'We’re reviewing your listing — usually within one business day.'
       : upcomingCount === 0
         ? 'No bookings coming up yet.'
         : `You have ${upcomingCount} ${upcomingCount === 1 ? 'booking' : 'bookings'} coming up.`;
@@ -163,6 +181,16 @@ export function BookingHomeScreen({ navigation }: Props) {
         </View>
 
         {summary ? <Text style={styles.greetingSub}>{summary}</Text> : null}
+        {isManager && ready && approved ? (
+          <Pressable
+            onPress={() => navigation.navigate('CustomiseHome')}
+            hitSlop={8}
+            accessibilityRole="button"
+            style={{ alignSelf: 'flex-start', marginTop: spacing.sm }}
+          >
+            <Text style={styles.sectionLink}>Customise home</Text>
+          </Pressable>
+        ) : null}
       </LinearGradient>
 
       {loading ? (
@@ -177,7 +205,7 @@ export function BookingHomeScreen({ navigation }: Props) {
         </View>
       ) : (
         <View style={styles.body}>
-          {ready ? (
+          {ready && approved ? (
             /* The one thing that brings in bookings: the link */
             <View style={styles.section}>
               <View style={styles.hero}>
@@ -194,6 +222,45 @@ export function BookingHomeScreen({ navigation }: Props) {
                   <Feather name="share-2" size={16} color="#1e3a8a" />
                   <Text style={styles.heroBtnText}>Share booking link</Text>
                 </Pressable>
+              </View>
+            </View>
+          ) : ready ? (
+            <View style={styles.section}>
+              <View style={styles.panel}>
+                <View style={styles.row}>
+                  <View style={[styles.stepDisc, rejected ? undefined : styles.stepDiscDone]}>
+                    <Feather name={rejected ? 'edit-3' : 'shield'} size={17} color={rejected ? colors.link : colors.white} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowStrong}>
+                      {rejected ? 'Update your business page' : 'Your booking page is ready'}
+                    </Text>
+                    <Text style={styles.metaText}>
+                      {rejected
+                        ? home?.business.reviewNote || 'Fix what’s noted, then we’ll look again.'
+                        : 'We’ll make the link public when the review is done — don’t share it yet.'}
+                    </Text>
+                  </View>
+                </View>
+                {rejected ? (
+                  <Pressable
+                    style={[styles.row, styles.divider]}
+                    onPress={() => navigation.navigate('BusinessPage')}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.sectionLink, { flex: 1 }]}>Edit business page</Text>
+                    <Feather name="chevron-right" size={16} color={colors.borderStrong} />
+                  </Pressable>
+                ) : !approved ? (
+                  <Pressable
+                    style={[styles.row, styles.divider]}
+                    onPress={() => navigation.navigate('BusinessPage')}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.sectionLink, { flex: 1 }]}>Review business page</Text>
+                    <Feather name="chevron-right" size={16} color={colors.borderStrong} />
+                  </Pressable>
+                ) : null}
               </View>
             </View>
           ) : (

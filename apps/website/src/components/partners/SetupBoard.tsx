@@ -58,8 +58,8 @@ export function SetupBoard({
       </h1>
       <p className="mt-3 max-w-xl text-[15px] leading-6 text-slate-600">
         {done === 3
-          ? `${businessName} is set up. We’ll review the listing, and customers can book you once it’s approved.`
-          : `${businessName} is registered. Add a service and your hours. Customers can book you once we approve the listing.`}
+          ? `${businessName} is set up. We’ll review your business page, and customers can book you once it’s approved.`
+          : `${businessName} is registered. Add a service and your hours. Customers can book you once we approve your business page.`}
       </p>
 
       <form action={dashAction} className="mt-6">
@@ -219,7 +219,7 @@ function clock(minutes: number) {
 }
 
 function approvalCopy(status: string, note: string | null) {
-  if (status === 'approved') return 'The listing is approved. Customers can find you and book the services you added.'
-  if (status === 'rejected') return note || 'This listing wasn’t approved. Update the details and we’ll look again.'
-  return 'We’ll review the listing shortly. You can keep setting up while you wait — customers book you after it’s approved.'
+  if (status === 'approved') return 'Your business page is approved. Customers can find you and book the services you added.'
+  if (status === 'rejected') return note || 'Your business page wasn’t approved. Update the details and we’ll look again.'
+  return 'We’ll review your business page shortly. You can keep setting up while you wait — customers book you after it’s approved.'
 }

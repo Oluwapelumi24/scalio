@@ -13,7 +13,7 @@ export default async function ListingPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-2xl font-bold tracking-tight">Your listing</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Your business page</h1>
       <p className="mt-2 text-sm leading-6 text-[#4a4e57]">
         This is what customers see when they search. Pick the category that matches how people look for you, and the area you work in.
       </p>
@@ -22,6 +22,7 @@ export default async function ListingPage() {
           category={profile.category}
           address={profile.address ?? ''}
           description={profile.description ?? ''}
+          logoUrl={profile.logoUrl}
         />
       </div>
     </div>

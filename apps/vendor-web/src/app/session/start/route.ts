@@ -13,21 +13,6 @@ const COOKIE = 'vendor_token'
  * cookie on this origin, and opens the dashboard.
  */
 export async function GET(request: NextRequest) {
-  // Temporary probe while we confirm Railway's forwarded host. Remove after live.
-  if (request.nextUrl.searchParams.get('debug') === '1') {
-    const headers: Record<string, string> = {}
-    request.headers.forEach((value, key) => {
-      headers[key] = value
-    })
-    return NextResponse.json({
-      requestUrl: request.url,
-      origin: publicOrigin(request),
-      railwayPublicDomain: process.env['RAILWAY_PUBLIC_DOMAIN'] ?? null,
-      vendorWebPublicUrl: process.env['VENDOR_WEB_PUBLIC_URL'] ?? null,
-      headers,
-    })
-  }
-
   const origin = publicOrigin(request)
   const code = (request.nextUrl.searchParams.get('code') ?? '').trim().toLowerCase()
   const login = `${origin}/login`

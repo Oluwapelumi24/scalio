@@ -43,3 +43,18 @@ export const NIGERIA_STATES: { state: string; lgas: readonly string[] }[] = [
 export function serviceArea(lga: string, state: string): string {
   return `${lga}, ${state}`
 }
+
+/**
+ * Reverse of serviceArea. Accepts "LGA, State" (and longer freeform that ends
+ * with those two parts). Returns null when the pair isn't in NIGERIA_STATES.
+ */
+export function parseServiceArea(address: string | null | undefined): { lga: string; state: string } | null {
+  if (!address?.trim()) return null
+  const parts = address.split(',').map((part) => part.trim()).filter(Boolean)
+  if (parts.length < 2) return null
+  const state = parts[parts.length - 1]
+  const lga = parts[parts.length - 2]
+  const found = NIGERIA_STATES.find((item) => item.state === state)
+  if (!found || !found.lgas.includes(lga)) return null
+  return { lga, state }
+}

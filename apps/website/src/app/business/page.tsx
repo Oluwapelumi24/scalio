@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { signOutBusinessAction } from '@/app/actions/vendor'
+import { openDashboardAction, signOutBusinessAction } from '@/app/actions/vendor'
 import { Logo } from '@/components/Navbar'
 import { SetupBoard, type SetupHour, type SetupService } from '@/components/partners/SetupBoard'
 import { ApiError, apiFetch } from '@/lib/api'
 import { businessToken } from '@/lib/business-session'
+import { dashboardPortalLinked } from '@/lib/vendor-portal'
 
 export const metadata: Metadata = {
   title: 'Your business',
@@ -23,6 +24,12 @@ interface Profile {
 export default async function BusinessPage() {
   const token = await businessToken()
   if (!token) redirect('/login')
+
+  // When the vendor portal is linked, send people straight to the dashboard —
+  // one checklist lives there; don't retell setup on this site.
+  if (dashboardPortalLinked()) {
+    await openDashboardAction()
+  }
 
   const headers = { Authorization: `Bearer ${token}` }
   let me: { name: string }

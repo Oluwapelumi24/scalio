@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import { BUSINESS_CATEGORIES } from '@veno/shared-types'
 import { updateVendorAction } from '@/app/actions/vendors'
 import { SelectMenu } from '@/components/SelectMenu'
 
@@ -11,10 +12,14 @@ interface Vendor {
 }
 
 const SLOT_INTERVALS = [10, 15, 20, 30, 45, 60]
+const CATEGORIES = [...BUSINESS_CATEGORIES, 'Other']
 
 export function EditVendorForm({ vendor }: { vendor: Vendor }) {
   const action = updateVendorAction.bind(null, vendor.id)
   const [state, formAction, pending] = useActionState(action, null)
+  const categoryOptions = CATEGORIES.includes(vendor.category as (typeof CATEGORIES)[number])
+    ? CATEGORIES
+    : [vendor.category, ...CATEGORIES]
 
   return (
     <form action={formAction} className="grid grid-cols-2 gap-4">
@@ -30,8 +35,12 @@ export function EditVendorForm({ vendor }: { vendor: Vendor }) {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-        <input name="category" defaultValue={vendor.category}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+        <SelectMenu
+          name="category"
+          defaultValue={vendor.category}
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+          options={categoryOptions.map((category) => ({ value: category, label: category }))}
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>

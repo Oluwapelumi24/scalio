@@ -2,12 +2,12 @@
 
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { BUSINESS_CATEGORIES } from '@veno/shared-types'
 import { createVendorAction } from '@/app/actions/vendors'
 import { SelectMenu } from '@/components/SelectMenu'
 
-const CATEGORIES = [
-  'Nails', 'Salon', 'Barbing', 'Spa', 'Lashes', 'Makeup', 'Brows', 'Massage', 'Fitness', 'Laundry', 'Other',
-]
+/** Same browse categories as the marketplace, plus Other for incomplete admin drafts. */
+const CATEGORIES = [...BUSINESS_CATEGORIES, 'Other']
 
 const STEPS = ['Business details', 'Owner contact', 'Review & submit']
 

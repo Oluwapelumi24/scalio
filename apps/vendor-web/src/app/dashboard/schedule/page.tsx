@@ -37,7 +37,11 @@ export default async function SchedulePage() {
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-sm font-semibold text-gray-900 mb-1">Business hours</h2>
-        <p className="text-xs text-gray-500 mb-4">Set the days and times your business is open for bookings.</p>
+        <p className="text-xs text-gray-500 mb-4">
+          {hours.length === 0
+            ? 'You haven’t set opening hours yet. Tick the days you’re open and save — customers can only book inside these times.'
+            : 'Set the days and times your business is open for bookings.'}
+        </p>
         <ScheduleHoursForm initialHours={hours} />
       </div>
 

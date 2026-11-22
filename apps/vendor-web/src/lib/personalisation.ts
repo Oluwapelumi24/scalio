@@ -26,7 +26,12 @@ export interface HomeItem {
 
 export interface HomeResponse {
   generatedAt: string
-  business: { name: string }
+  business: {
+    name: string
+    approvalStatus: 'pending_review' | 'approved' | 'rejected'
+    reviewNote: string | null
+    listingReady: boolean
+  }
   bookings: {
     link: string
     upcoming: { id: string; customerName: string | null; scheduledAt: string; status: string }[]

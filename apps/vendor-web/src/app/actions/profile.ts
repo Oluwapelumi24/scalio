@@ -11,12 +11,20 @@ export async function saveListingAction(_prev: ListingState, formData: FormData)
   const category = String(formData.get('category') ?? '')
   const address = String(formData.get('address') ?? '').trim()
   const description = String(formData.get('description') ?? '').trim()
-  if (address.length < 3) return { error: 'Add the area customers should look for, like “Lekki Phase 1, Lagos”.' }
+  const logoMediaId = String(formData.get('logoMediaId') ?? '').trim()
+  const clearLogo = String(formData.get('clearLogo') ?? '') === '1'
+  if (address.length < 3) return { error: 'Choose your state and local government.' }
 
   try {
     await apiFetch('/vendor-admin/profile', token, {
       method: 'PATCH',
-      body: JSON.stringify({ category, address, description: description || undefined }),
+      body: JSON.stringify({
+        category,
+        address,
+        description,
+        ...(logoMediaId ? { logoMediaId } : {}),
+        ...(clearLogo ? { clearLogo: true } : {}),
+      }),
     })
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }

@@ -126,10 +126,11 @@ export const MODULES: readonly ModuleDef[] = [
   { id: 'quiet_day_offer', layer: 'recommendation', title: 'Fill your quiet day', icon: 'trending-up', interests: ['find_customers', 'social_posts', 'run_ads', 'business_insights'], basePriority: 40, roles: MARKETING },
   { id: 'ask_for_feedback', layer: 'recommendation', title: 'Ask customers how it went', icon: 'star', interests: ['reviews_feedback', 'repeat_customers'], basePriority: 35, roles: MARKETING },
   { id: 'first_post', layer: 'recommendation', title: 'Make your first post with AI', icon: 'image', interests: ['social_posts', 'manage_social', 'find_customers'], basePriority: 45, roles: MARKETING },
+  // Shipped surfaces that used to be "coming soon" — point people at the real page.
+  { id: 'try_ads', layer: 'recommendation', title: 'Run ads on Facebook and Instagram', icon: 'target', interests: ['run_ads'], basePriority: 18, roles: MARKETING },
+  { id: 'open_inbox', layer: 'recommendation', title: 'Chat with customers in one inbox', icon: 'message-circle', interests: ['chat_customers'], basePriority: 16 },
   // Features on the roadmap. Shown only to businesses that asked for them, and
   // only as "coming soon" — never as if they already work.
-  { id: 'ads_soon', layer: 'recommendation', title: 'Run ads on Facebook and Instagram', icon: 'target', interests: ['run_ads'], basePriority: 10, status: 'coming_soon' },
-  { id: 'inbox_soon', layer: 'recommendation', title: 'Chat with customers in one inbox', icon: 'message-circle', interests: ['chat_customers'], basePriority: 10, status: 'coming_soon' },
   { id: 'orders_soon', layer: 'recommendation', title: 'Track stock and orders', icon: 'package', interests: ['manage_stock_orders'], basePriority: 10, status: 'coming_soon', roles: MANAGERS },
   { id: 'financing_soon', layer: 'recommendation', title: 'Get financing to grow', icon: 'dollar-sign', interests: ['get_financing'], basePriority: 10, status: 'coming_soon', roles: ['owner'] },
   { id: 'branches_soon', layer: 'recommendation', title: 'Manage more than one branch', icon: 'map-pin', interests: ['multi_branch'], basePriority: 10, status: 'coming_soon', roles: MANAGERS },

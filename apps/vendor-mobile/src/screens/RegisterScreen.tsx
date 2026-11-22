@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -15,11 +16,14 @@ import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { sendVendorSignupCode, vendorRegister, verifyVendorSignupCode } from '../lib/api';
+import { BUSINESS_CATEGORIES } from '../lib/categories';
+import { NIGERIA_STATES, serviceArea } from '../lib/nigeria';
 import { saveSession } from '../lib/session';
 import { routeAfterSignIn } from '../lib/postAuth';
 import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
+type PickerKind = 'category' | 'state' | 'lga' | null;
 
 export function RegisterScreen({ navigation }: Props) {
   const s = useSStyles();
@@ -27,6 +31,9 @@ export function RegisterScreen({ navigation }: Props) {
   const [ownerName, setOwnerName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
+  const [category, setCategory] = useState('');
+  const [stateName, setStateName] = useState('');
+  const [lga, setLga] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [proof, setProof] = useState('');
@@ -34,6 +41,24 @@ export function RegisterScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [picker, setPicker] = useState<PickerKind>(null);
+  const [pickerQuery, setPickerQuery] = useState('');
+
+  const lgas = useMemo(
+    () => NIGERIA_STATES.find((item) => item.state === stateName)?.lgas ?? [],
+    [stateName],
+  );
+
+  const pickerOptions = useMemo(() => {
+    const q = pickerQuery.trim().toLowerCase();
+    const all =
+      picker === 'category' ? [...BUSINESS_CATEGORIES]
+        : picker === 'state' ? NIGERIA_STATES.map((item) => item.state)
+          : picker === 'lga' ? [...lgas]
+            : [];
+    if (!q) return all;
+    return all.filter((item) => item.toLowerCase().includes(q));
+  }, [picker, pickerQuery, lgas]);
 
   async function handleSendCode() {
     setError('');
@@ -76,13 +101,32 @@ export function RegisterScreen({ navigation }: Props) {
       setError('Please fill in all fields.');
       return;
     }
+    if (!category) {
+      setError('Choose what you offer.');
+      return;
+    }
+    if (!stateName || !lga) {
+      setError('Choose your state and local government.');
+      return;
+    }
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
     setLoading(true);
     try {
-      const res = await vendorRegister(ownerName.trim(), businessName.trim(), email.trim().toLowerCase(), password, proof, registrationNumber.trim() || undefined);
+      const res = await vendorRegister(
+        ownerName.trim(),
+        businessName.trim(),
+        email.trim().toLowerCase(),
+        password,
+        proof,
+        {
+          registrationNumber: registrationNumber.trim() || undefined,
+          category,
+          address: serviceArea(lga, stateName),
+        },
+      );
       await saveSession({
         staffId: res.staff.id,
         vendorId: res.staff.vendorId,
@@ -187,6 +231,54 @@ export function RegisterScreen({ navigation }: Props) {
               </View>
 
               <View style={s.fieldGroup}>
+                <Text style={s.label}>What do you offer?</Text>
+                <Pressable
+                  style={s.picker}
+                  onPress={() => { setPickerQuery(''); setPicker('category'); }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Choose category"
+                >
+                  <Text style={[s.pickerText, !category && { color: colors.textMuted }]}>
+                    {category || 'Choose a category'}
+                  </Text>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </Pressable>
+              </View>
+
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>State</Text>
+                <Pressable
+                  style={s.picker}
+                  onPress={() => { setPickerQuery(''); setPicker('state'); }}
+                  accessibilityRole="button"
+                >
+                  <Text style={[s.pickerText, !stateName && { color: colors.textMuted }]}>
+                    {stateName === 'FCT' ? 'FCT (Abuja)' : stateName || 'Choose a state'}
+                  </Text>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </Pressable>
+              </View>
+
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Local government</Text>
+                <Pressable
+                  style={[s.picker, !stateName && { opacity: 0.5 }]}
+                  onPress={() => {
+                    if (!stateName) return;
+                    setPickerQuery('');
+                    setPicker('lga');
+                  }}
+                  disabled={!stateName}
+                  accessibilityRole="button"
+                >
+                  <Text style={[s.pickerText, !lga && { color: colors.textMuted }]}>
+                    {lga || (stateName ? 'Choose an LGA' : 'Choose a state first')}
+                  </Text>
+                  <Feather name="chevron-down" size={16} color={colors.textMuted} />
+                </Pressable>
+              </View>
+
+              <View style={s.fieldGroup}>
                 <Text style={s.label}>Business registration number <Text style={s.optional}>(optional)</Text></Text>
                 <TextInput
                   style={s.input}
@@ -244,6 +336,63 @@ export function RegisterScreen({ navigation }: Props) {
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
+
+      <Modal visible={picker != null} animationType="slide" onRequestClose={() => setPicker(null)}>
+        <SafeAreaView style={s.sheet}>
+          <View style={s.sheetHead}>
+            <Text style={s.sheetTitle}>
+              {picker === 'category' ? 'Choose a category' : picker === 'state' ? 'Choose a state' : 'Choose an LGA'}
+            </Text>
+            <Pressable onPress={() => setPicker(null)} hitSlop={10} accessibilityLabel="Close">
+              <Feather name="x" size={22} color={colors.text} />
+            </Pressable>
+          </View>
+          <View style={s.searchWrap}>
+            <Feather name="search" size={16} color={colors.textMuted} />
+            <TextInput
+              style={s.searchInput}
+              value={pickerQuery}
+              onChangeText={setPickerQuery}
+              placeholder="Search"
+              placeholderTextColor={colors.textMuted}
+              autoCorrect={false}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
+          </View>
+          <FlatList
+            data={pickerOptions}
+            keyExtractor={(item) => item}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 24 }}
+            ListEmptyComponent={<Text style={s.emptySearch}>No matches.</Text>}
+            renderItem={({ item }) => {
+              const selected =
+                (picker === 'category' && category === item)
+                || (picker === 'state' && stateName === item)
+                || (picker === 'lga' && lga === item);
+              return (
+                <Pressable
+                  style={s.option}
+                  onPress={() => {
+                    if (picker === 'category') setCategory(item);
+                    if (picker === 'state') {
+                      setStateName(item);
+                      setLga('');
+                    }
+                    if (picker === 'lga') setLga(item);
+                    setPicker(null);
+                  }}
+                  accessibilityRole="button"
+                >
+                  <Text style={s.optionText}>{item === 'FCT' ? 'FCT (Abuja)' : item}</Text>
+                  {selected ? <Feather name="check" size={16} color={colors.accent} /> : null}
+                </Pressable>
+              );
+            }}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -335,4 +484,62 @@ const useSStyles = makeStyles((colors) => ({
     color: colors.accent,
     fontWeight: typography.weight.semibold,
   },
+  picker: {
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+  },
+  pickerText: {
+    fontSize: typography.size.md,
+    color: colors.text,
+  },
+  sheet: { flex: 1, backgroundColor: colors.background },
+  sheetHead: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: typography.weight.bold,
+    color: colors.text,
+  },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 12,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  searchInput: { flex: 1, fontSize: typography.size.md, color: colors.text, padding: 0 },
+  emptySearch: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
+    fontSize: typography.size.sm,
+    color: colors.textMuted,
+  },
+  option: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  optionText: { fontSize: typography.size.md, color: colors.text },
 }));

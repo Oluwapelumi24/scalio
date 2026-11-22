@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
-import { getInterestGroups, getPreferences, updatePreferences, type InterestGroup } from '../lib/api';
+import { getHome, getInterestGroups, getPreferences, updatePreferences, type InterestGroup } from '../lib/api';
 import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InterestSelection'>;
@@ -58,6 +58,19 @@ export function InterestSelectionScreen({ navigation, route }: Props) {
     setLoading(true);
     setError('');
     try {
+      // Defer personalisation until the listing is live — matches web suiteUnlocked.
+      if (!fromSettings) {
+        const home = await getHome();
+        const suiteUnlocked =
+          home.business.approvalStatus === 'approved' &&
+          home.business.listingReady &&
+          home.bookings.setup.services &&
+          home.bookings.setup.hours;
+        if (!suiteUnlocked) {
+          navigation.replace('Main');
+          return;
+        }
+      }
       const [g, prefs] = await Promise.all([getInterestGroups(), getPreferences()]);
       setGroups(g);
       setSelected(prefs.interests);
@@ -66,7 +79,7 @@ export function InterestSelectionScreen({ navigation, route }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fromSettings, navigation]);
 
   useEffect(() => { void load(); }, [load]);
 

@@ -12,6 +12,10 @@ export interface UpcomingBooking {
 /** Real figures for one business (and, for practitioners, one staff member). */
 export interface HomeSnapshot {
   businessName: string;
+  approvalStatus: 'pending_review' | 'approved' | 'rejected';
+  reviewNote: string | null;
+  /** Category set and address present — same bar as the web listing step. */
+  listingReady: boolean;
   bookingLink: string;
   sales30dKobo: number;
   upcoming: UpcomingBooking[];
@@ -67,7 +71,12 @@ export interface HomeItem {
 
 export interface HomeResponse {
   generatedAt: string;
-  business: { name: string };
+  business: {
+    name: string;
+    approvalStatus: 'pending_review' | 'approved' | 'rejected';
+    reviewNote: string | null;
+    listingReady: boolean;
+  };
   /**
    * The basics every business needs, whatever its interests or home settings:
    * its booking link, what's coming up and what still stops customers booking.
@@ -120,13 +129,28 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
     case 'share_booking_link':
       return { url: s.bookingLink };
     case 'choose_interests':
-      return prefs.interestsCompletedAt ? null : {};
+      // After activation only — don't pull people off the setup checklist.
+      if (prefs.interestsCompletedAt) return null;
+      if (
+        s.serviceCount === 0 ||
+        !s.hasBusinessHours ||
+        !s.listingReady ||
+        s.approvalStatus !== 'approved'
+      ) {
+        return null;
+      }
+      return {};
     case 'setup_services':
       return s.serviceCount === 0 ? {} : null;
     case 'setup_hours':
       return s.hasBusinessHours ? null : {};
     case 'share_link_first':
-      return s.totalBookings === 0 ? { url: s.bookingLink } : null;
+      // Never push share while the listing isn't public yet.
+      return s.totalBookings === 0 && s.approvalStatus === 'approved' ? { url: s.bookingLink } : null;
+    case 'try_ads':
+      return s.approvalStatus === 'approved' ? {} : null;
+    case 'open_inbox':
+      return s.approvalStatus === 'approved' ? {} : null;
     case 'unhappy_customers':
       return s.unhappyToCall > 0 ? { count: s.unhappyToCall } : null;
     case 'customer_rating':
@@ -188,7 +212,12 @@ export function buildHome(
 
   return {
     generatedAt: now.toISOString(),
-    business: { name: snapshot.businessName },
+    business: {
+      name: snapshot.businessName,
+      approvalStatus: snapshot.approvalStatus,
+      reviewNote: snapshot.reviewNote,
+      listingReady: snapshot.listingReady,
+    },
     bookings: {
       link: snapshot.bookingLink,
       upcoming: snapshot.upcoming,

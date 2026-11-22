@@ -17,10 +17,12 @@ export default async function PaymentsPage() {
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Online payments</h1>
-        <p className="text-sm text-gray-500 mt-1">Where customers&apos; deposits and online payments go.</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Optional — you can take walk-ins and pay-on-arrival without this. Add a bank account when you want deposits or card payments.
+        </p>
       </div>
       <p className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-gray-800">
-        Paystack pays customers&apos; money straight into your bank account. Veno never holds it.
+        We verify the account name with Paystack, then Paystack pays customers&apos; money straight into your bank. Veno never holds it. No BVN or NIN is required for this step.
       </p>
       {account && (
         <section className="bg-white rounded-xl border border-gray-200 px-5 py-4">

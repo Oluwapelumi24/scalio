@@ -22,6 +22,7 @@
     "create-admin": "node dist/src/scripts/create-admin.js"
   },
   "dependencies": {
+    "@veno/shared-types": "*",
     "@anthropic-ai/sdk": "^0.135.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",

@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
+import { serviceExamples, type VendorProfile } from '@/lib/categories'
 import { ItemList } from './ItemList'
 import { AddItemForm } from './AddItemForm'
 
@@ -23,6 +24,9 @@ export default async function ServicesPage() {
     /* show empty state */
   }
 
+  const profile = await apiFetch<VendorProfile>('/vendor-admin/profile', token).catch(() => null)
+  const examples = serviceExamples(profile?.category)
+
   const packages = items.filter((i) => i.serviceType === 'package')
   const services = items.filter((i) => i.serviceType === 'service')
 
@@ -32,11 +36,15 @@ export default async function ServicesPage() {
       <section>
         <div className="mb-3">
           <h2 className="text-lg font-bold text-gray-900">Packages</h2>
-          <p className="text-sm text-gray-500">Booking types customers select — e.g. &ldquo;Self Service Wash&rdquo;, &ldquo;Drop Off&rdquo;</p>
+          <p className="text-sm text-gray-500">{examples.packagesHelp}</p>
         </div>
-        <ItemList items={packages} emptyLabel="No packages yet." />
+        <ItemList
+          items={packages}
+          emptyLabel="No packages yet."
+          emptyHint="Add one below so customers have a booking type to pick."
+        />
         <div className="mt-3">
-          <AddItemForm serviceType="package" placeholder="e.g. Self Service Wash" />
+          <AddItemForm serviceType="package" placeholder={examples.packagePlaceholder} />
         </div>
       </section>
 
@@ -46,11 +54,15 @@ export default async function ServicesPage() {
       <section>
         <div className="mb-3">
           <h2 className="text-lg font-bold text-gray-900">Services</h2>
-          <p className="text-sm text-gray-500">What customers are booking — e.g. &ldquo;Duvet Laundry&rdquo;, &ldquo;Clothing Laundry&rdquo;</p>
+          <p className="text-sm text-gray-500">{examples.servicesHelp}</p>
         </div>
-        <ItemList items={services} emptyLabel="No services yet." />
+        <ItemList
+          items={services}
+          emptyLabel="No services yet."
+          emptyHint="Add at least one service so customers can book you."
+        />
         <div className="mt-3">
-          <AddItemForm serviceType="service" placeholder="e.g. Duvet Laundry" />
+          <AddItemForm serviceType="service" placeholder={examples.servicePlaceholder} />
         </div>
       </section>
     </div>

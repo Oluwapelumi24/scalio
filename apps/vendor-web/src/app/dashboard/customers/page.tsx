@@ -32,7 +32,21 @@ export default async function CustomersPage() {
 
       {customers.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-400 text-sm">No customers yet. They appear automatically after their first booking.</p>
+          <p className="text-sm font-medium text-gray-700">No clients yet</p>
+          <p className="mt-1 text-sm text-gray-400">
+            They appear automatically after their first booking — or book a walk-in yourself.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/dashboard/bookings/new"
+              className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white"
+            >
+              Book a walk-in
+            </Link>
+            <Link href="/dashboard" className="text-sm font-semibold text-[#1e3a8a]">
+              Go to home
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">

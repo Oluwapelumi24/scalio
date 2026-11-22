@@ -82,6 +82,7 @@ export function HubScreen({ navigation, route }: Props) {
       {
         title: 'Shortcuts',
         items: [
+          { label: 'Business page', go: () => navigation.navigate('BusinessPage'), shortcut: true, show: isManager },
           { label: 'Payroll', go: () => void openFeature(navigation, 'payroll'), shortcut: true, show: isManager },
           { label: 'Opening hours', go: () => navigation.navigate('BusinessHours'), shortcut: true, show: isManager },
         ],

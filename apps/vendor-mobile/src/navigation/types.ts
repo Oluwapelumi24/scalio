@@ -18,6 +18,8 @@ export type RootStackParamList = {
   ServiceForm: { service?: VendorService };
   CustomerDetail: { customerId: string };
   BusinessHours: undefined;
+  /** Category, area and description — the public business page. */
+  BusinessPage: undefined;
   BlackoutDates: undefined;
   StaffManagement: undefined;
   StaffForm: { member?: StaffMember };

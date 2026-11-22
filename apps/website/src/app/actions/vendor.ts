@@ -78,7 +78,7 @@ export async function registerVendorAction(_prev: VendorAuthState, formData: For
   }
 
   await setBusinessSession(token)
-  redirect('/business')
+  await enterBusinessApp(token)
 }
 
 export async function vendorSignInAction(_prev: VendorAuthState, formData: FormData): Promise<VendorAuthState> {
@@ -98,7 +98,7 @@ export async function vendorSignInAction(_prev: VendorAuthState, formData: FormD
   }
 
   await setBusinessSession(token)
-  redirect('/business')
+  await enterBusinessApp(token)
 }
 
 async function authed<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
@@ -106,6 +106,29 @@ async function authed<T>(path: string, token: string, init: RequestInit = {}): P
     ...init,
     headers: { Authorization: `Bearer ${token}`, ...(init.headers as Record<string, string>) },
   })
+}
+
+/**
+ * Prefer the real vendor dashboard when the portal is linked.
+ * Falls back to the website SetupBoard only when VENDOR_WEB_URL is missing.
+ */
+async function enterBusinessApp(token: string): Promise<void> {
+  const portal = dashboardPortalUrl()
+  if (!portal) {
+    redirect('/business')
+  }
+
+  try {
+    const data = await authed<{ code: string }>('/vendor-auth/handoff', token, { method: 'POST' })
+    redirect(`${portal}/session/start?code=${encodeURIComponent(data.code)}`)
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+      await clearBusinessSession()
+      redirect('/login')
+    }
+    // Portal misconfigured or handoff failed — keep them moving on this site.
+    redirect('/business')
+  }
 }
 
 export async function addServiceAction(_prev: VendorAuthState, formData: FormData): Promise<VendorAuthState> {
@@ -191,7 +214,7 @@ export async function resetBusinessPassword(_prev: VendorAuthState, formData: Fo
   }
 
   await setBusinessSession(token)
-  redirect('/business')
+  await enterBusinessApp(token)
 }
 
 export async function signOutBusinessAction(): Promise<void> {

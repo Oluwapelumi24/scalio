@@ -36,6 +36,10 @@ export class HomeDataService {
       .select({
         slug: vendors.slug,
         businessName: vendors.businessName,
+        category: vendors.category,
+        address: vendors.address,
+        approvalStatus: vendors.approvalStatus,
+        reviewNote: vendors.reviewNote,
         timezone: vendors.timezone,
         averageDaysBetweenVisits: vendors.averageDaysBetweenVisits,
       })
@@ -193,6 +197,9 @@ export class HomeDataService {
 
     return {
       businessName: vendor.businessName,
+      approvalStatus: vendor.approvalStatus,
+      reviewNote: vendor.reviewNote,
+      listingReady: vendor.category !== 'Other' && !!vendor.address?.trim(),
       bookingLink: this.bookingLinkFor(vendor.slug),
       sales30dKobo: b?.sales30d ?? 0,
       upcoming: upcomingRows.map((r) => ({

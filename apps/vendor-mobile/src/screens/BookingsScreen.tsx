@@ -120,7 +120,7 @@ export function BookingsScreen({ navigation }: Props) {
             <EmptyState
               icon="calendar"
               title={filter === 'all' ? 'No bookings yet' : 'Nothing here'}
-              body={filter === 'all' ? 'Share your booking link, or add a booking yourself.' : 'No bookings match this filter.'}
+              body={filter === 'all' ? 'Add a walk-in yourself, or share your booking link once you’re approved.' : 'No bookings match this filter.'}
               action={filter === 'all' ? 'New booking' : undefined}
               onAction={() => navigation.navigate('NewBooking')}
             />

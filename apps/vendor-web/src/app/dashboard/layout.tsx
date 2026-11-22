@@ -4,6 +4,7 @@ import { getToken } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth'
 import type { VendorProfile } from '@/lib/categories'
 import { DashboardChrome } from './DashboardChrome'
+import { PendingReviewCopy, RejectedReviewCopy, ReviewBanner } from './ReviewBanner'
 
 interface StaffPrincipal {
   staffId: string
@@ -30,17 +31,29 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .then((row) => row.unread)
     .catch(() => 0)
 
+  const banner =
+    profile?.approvalStatus === 'pending_review' ? (
+      <ReviewBanner tone="pending" storageKey={`veno-review-banner:pending:${profile.slug}`}>
+        <PendingReviewCopy businessName={profile.businessName} />
+      </ReviewBanner>
+    ) : profile?.approvalStatus === 'rejected' ? (
+      <ReviewBanner tone="rejected" storageKey={`veno-review-banner:rejected:${profile.slug}`}>
+        <RejectedReviewCopy note={profile.reviewNote} businessName={profile.businessName} />
+      </ReviewBanner>
+    ) : null
+
+  const suiteUnlocked = profile?.approvalStatus === 'approved'
+
   return (
-    <DashboardChrome name={staff.name} role={staff.role} initials={initials} unread={unread} logout={logoutAction}>
-      {profile?.approvalStatus === 'pending_review' ? (
-        <p className="border-b border-[#fde8d8] bg-[#fff7ed] px-4 py-3 text-sm text-[#9a3412] md:px-8">
-          We’re reviewing {profile.businessName}. Set up services and hours now. Customers can find and book you after approval.
-        </p>
-      ) : profile?.approvalStatus === 'rejected' ? (
-        <p className="border-b border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 md:px-8">
-          {profile.reviewNote || `${profile.businessName} wasn’t approved.`} Update the listing and we’ll look again.
-        </p>
-      ) : null}
+    <DashboardChrome
+      name={staff.name}
+      role={staff.role}
+      initials={initials}
+      unread={unread}
+      logout={logoutAction}
+      banner={banner}
+      suiteUnlocked={suiteUnlocked}
+    >
       {children}
     </DashboardChrome>
   )

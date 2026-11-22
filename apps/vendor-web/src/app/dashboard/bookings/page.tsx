@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { BookingActions } from './BookingActions'
@@ -65,7 +66,15 @@ export default async function BookingsPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Bookings</h1>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
+        <Link
+          href="/dashboard/bookings/new"
+          className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white"
+        >
+          New booking
+        </Link>
+      </div>
 
       {today && (
         <div className={`mb-6 grid overflow-hidden rounded-xl border border-gray-200 bg-white divide-x divide-gray-200 ${today.salesKobo != null ? 'grid-cols-2' : 'grid-cols-1'}`}>
@@ -101,7 +110,20 @@ export default async function BookingsPage({
 
       {bookings.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-400 text-sm">No bookings found.</p>
+          <p className="text-sm font-medium text-gray-700">
+            {status ? 'No bookings with this status' : 'No bookings yet'}
+          </p>
+          <p className="mt-1 text-sm text-gray-400">
+            {status
+              ? 'Try another filter, or book a walk-in for someone who just arrived.'
+              : 'When customers book — or you add a walk-in — they’ll show up here.'}
+          </p>
+          <Link
+            href="/dashboard/bookings/new"
+            className="mt-4 inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white"
+          >
+            New booking
+          </Link>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">

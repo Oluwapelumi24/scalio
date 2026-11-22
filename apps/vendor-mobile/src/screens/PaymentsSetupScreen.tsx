@@ -81,7 +81,7 @@ export function PaymentsSetupScreen({ navigation }: Props) {
           <Feather name="arrow-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>Online payments</Text>
-        <Text style={styles.subtitle}>Where customers' deposits and payments go</Text>
+        <Text style={styles.subtitle}>Optional — add a bank when you want deposits or card payments</Text>
       </SafeAreaView>
 
       {loading ? (
@@ -91,7 +91,7 @@ export function PaymentsSetupScreen({ navigation }: Props) {
           <View style={styles.note}>
             <Feather name="shield" size={16} color={colors.accent} />
             <Text style={styles.noteText}>
-              Paystack pays customers' money straight into your bank account. Veno never holds it.
+              We verify the account name with Paystack, then money goes straight to your bank. Veno never holds it. Walk-ins and pay-on-arrival work without this. No BVN or NIN is required here.
             </Text>
           </View>
 

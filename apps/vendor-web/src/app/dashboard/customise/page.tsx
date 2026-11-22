@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
+import { listingReady, type VendorProfile } from '@/lib/categories'
 import { MANAGER_ROLES, type HomeResponse, type Preferences } from '@/lib/personalisation'
 import { CustomiseList, type CustomiseRow } from './CustomiseList'
 
@@ -10,8 +11,16 @@ export default async function CustomisePage() {
   const staff = await apiFetch<{ role: string }>('/vendor-auth/me', token)
   if (!MANAGER_ROLES.includes(staff.role)) redirect('/dashboard')
 
+  const profile = await apiFetch<VendorProfile>('/vendor-admin/profile', token).catch(() => null)
+  const homePreview = await apiFetch<HomeResponse>('/vendor-admin/home', token).catch(() => null)
+  const setupReady =
+    !!homePreview?.bookings.setup.services &&
+    !!homePreview?.bookings.setup.hours &&
+    listingReady(profile)
+  if (profile?.approvalStatus !== 'approved' || !setupReady) redirect('/dashboard')
+
   const [home, prefs] = await Promise.all([
-    apiFetch<HomeResponse>('/vendor-admin/home', token),
+    homePreview ? Promise.resolve(homePreview) : apiFetch<HomeResponse>('/vendor-admin/home', token),
     apiFetch<Preferences>('/vendor-admin/preferences', token),
   ])
   const rows: CustomiseRow[] = [

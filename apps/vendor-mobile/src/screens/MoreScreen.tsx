@@ -39,6 +39,7 @@ export function MoreScreen({ navigation }: Props) {
   const tiles: Tile[] = [
     { key: 'calendar', icon: 'calendar', label: 'Calendar', onPress: () => navigation.navigate('Calendar'), show: true },
     { key: 'dashboard', icon: 'bar-chart-2', label: 'Dashboard', onPress: () => navigation.navigate('Dashboard'), show: true },
+    { key: 'business', icon: 'map-pin', label: 'Business page', onPress: () => navigation.navigate('BusinessPage'), show: isManager },
     { key: 'services', icon: 'book-open', label: 'Services', onPress: () => navigation.navigate('Services'), show: isManager },
     { key: 'team', icon: 'users', label: 'Team', onPress: () => navigation.navigate('Hub', { hub: 'team' }), show: true },
     { key: 'marketing', icon: 'volume-2', label: 'Marketing', onPress: () => navigation.navigate('Hub', { hub: 'marketing' }), show: true },
@@ -71,7 +72,7 @@ export function MoreScreen({ navigation }: Props) {
         </View>
 
         <ListGroup>
-          {setup?.link ? (
+          {setup?.link && setup.approved ? (
             <ListRow
               icon="link"
               label="Share your booking link"

@@ -50,6 +50,7 @@ export interface Category {
   description: string
 }
 
+// Names must match BUSINESS_CATEGORIES in @veno/shared-types (browse + vendor setup).
 // Ordered so the strip and lists show the range: beauty is one group among many.
 export const CATEGORIES: Category[] = [
   {

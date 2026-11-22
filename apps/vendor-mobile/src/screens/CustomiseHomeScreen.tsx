@@ -40,6 +40,15 @@ export function CustomiseHomeScreen({ navigation }: Props) {
   const load = useCallback(async () => {
     try {
       const [home, p] = await Promise.all([getHome(), getPreferences()]);
+      const suiteUnlocked =
+        home.business.approvalStatus === 'approved' &&
+        home.business.listingReady &&
+        home.bookings.setup.services &&
+        home.bookings.setup.hours;
+      if (!suiteUnlocked) {
+        navigation.goBack();
+        return;
+      }
       const visible = (['overview', 'quick_action', 'recommendation'] as const).flatMap((l) => home.layers[l]);
       setRows([...visible, ...home.hidden].map(({ id, layer, title, icon }) => ({ id, layer, title, icon })));
       setPrefs(p);
@@ -49,7 +58,7 @@ export function CustomiseHomeScreen({ navigation }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigation]);
 
   useEffect(() => { void load(); }, [load]);
 

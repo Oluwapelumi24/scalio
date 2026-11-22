@@ -26,11 +26,20 @@ function DeleteBtn({ id }: { id: string }) {
   )
 }
 
-export function ItemList({ items, emptyLabel }: { items: ServiceItem[]; emptyLabel: string }) {
+export function ItemList({
+  items,
+  emptyLabel,
+  emptyHint,
+}: {
+  items: ServiceItem[]
+  emptyLabel: string
+  emptyHint?: string
+}) {
   if (items.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-dashed border-gray-200 px-5 py-6 text-center">
-        <p className="text-sm text-gray-400">{emptyLabel}</p>
+        <p className="text-sm font-medium text-gray-600">{emptyLabel}</p>
+        {emptyHint ? <p className="mt-1 text-sm text-gray-400">{emptyHint}</p> : null}
       </div>
     )
   }

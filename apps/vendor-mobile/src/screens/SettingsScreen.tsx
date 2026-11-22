@@ -1,6 +1,9 @@
+import { useCallback, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
+import { getHome } from '../lib/api';
 import { clearSession, getSession } from '../lib/session';
 import { openFeature } from '../lib/features';
 import { Avatar, ListGroup, ListRow, Page, PageHeader, PillTabs, SectionTitle } from '../components/ui';
@@ -21,6 +24,32 @@ export function SettingsScreen({ navigation }: Props) {
   const styles = useStyles();
   const session = getSession();
   const isManager = session?.role === 'owner' || session?.role === 'manager';
+  const [suiteUnlocked, setSuiteUnlocked] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isManager) {
+        setSuiteUnlocked(false);
+        return;
+      }
+      let live = true;
+      void getHome()
+        .then((home) => {
+          if (!live) return;
+          const ready =
+            home.business.listingReady &&
+            home.bookings.setup.services &&
+            home.bookings.setup.hours;
+          setSuiteUnlocked(home.business.approvalStatus === 'approved' && ready);
+        })
+        .catch(() => {
+          if (live) setSuiteUnlocked(false);
+        });
+      return () => {
+        live = false;
+      };
+    }, [isManager]),
+  );
 
   function signOut() {
     Alert.alert('Sign out', 'Are you sure you want to sign out?', [
@@ -64,12 +93,15 @@ export function SettingsScreen({ navigation }: Props) {
 
       {isManager ? (
         <ListGroup title="Business">
+          <ListRow icon="map-pin" label="Business page" onPress={() => navigation.navigate('BusinessPage')} />
           <ListRow icon="book-open" label="Services" onPress={() => navigation.navigate('Services')} />
           <ListRow icon="clock" label="Opening hours" onPress={() => navigation.navigate('BusinessHours')} />
           <ListRow icon="slash" label="Days off" onPress={() => navigation.navigate('BlackoutDates')} />
           <ListRow icon="shield" label="Online payments" onPress={() => void openFeature(navigation, 'online_payments')} />
           <ListRow icon="users" label="Team members" onPress={() => navigation.navigate('StaffManagement')} />
-          <ListRow icon="sliders" label="What you want help with" onPress={() => navigation.navigate('InterestSelection', { fromSettings: true })} />
+          {suiteUnlocked ? (
+            <ListRow icon="sliders" label="What you want help with" onPress={() => navigation.navigate('InterestSelection', { fromSettings: true })} />
+          ) : null}
         </ListGroup>
       ) : (
         <ListGroup title="Your work">

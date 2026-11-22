@@ -3,18 +3,22 @@ import { useFocusEffect } from '@react-navigation/native';
 import { getHome, type HomeResponse } from './api';
 
 export type SetupState = HomeResponse['bookings'] & {
-  /** Customers can book once there's a service and opening hours. */
+  /** Customers can book once there's a service, hours and a complete business page. */
   ready: boolean;
+  listed: boolean;
+  approved: boolean;
+  approvalStatus: HomeResponse['business']['approvalStatus'];
 };
 
 let last: SetupState | null = null;
 
 /** The steps on the Setup screen, in the same order, as short names. */
 const STEPS: { name: string; done: (s: SetupState) => boolean }[] = [
+  { name: 'Complete your business page', done: (s) => s.listed },
   { name: 'Add your services', done: (s) => s.setup.services },
   { name: 'Set opening hours', done: (s) => s.setup.hours },
   { name: 'Take payments online', done: (s) => s.setup.payments },
-  { name: 'Share your booking link', done: (s) => s.total > 0 },
+  { name: 'Share your booking link', done: (s) => s.approved && s.total > 0 },
 ];
 
 /** How far through setup the business is, for the "Continue setup" bar. */
@@ -28,8 +32,16 @@ export function setupProgress(s: SetupState): { done: number; total: number; lef
   };
 }
 
-function toState(b: HomeResponse['bookings']): SetupState {
-  return { ...b, ready: b.setup.services && b.setup.hours };
+function toState(h: HomeResponse): SetupState | null {
+  if (!h.bookings) return null;
+  const listed = h.business.listingReady;
+  return {
+    ...h.bookings,
+    listed,
+    ready: h.bookings.setup.services && h.bookings.setup.hours && listed,
+    approved: h.business.approvalStatus === 'approved',
+    approvalStatus: h.business.approvalStatus,
+  };
 }
 
 /**
@@ -44,8 +56,9 @@ export function useSetupStatus(): SetupState | null {
       let live = true;
       getHome()
         .then((h) => {
-          if (!h.bookings) return;
-          last = toState(h.bookings);
+          const next = toState(h);
+          if (!next) return;
+          last = next;
           if (live) setState(last);
         })
         .catch(() => {});

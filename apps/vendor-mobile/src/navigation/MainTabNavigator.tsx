@@ -109,11 +109,12 @@ function CreateSheet({ visible, onClose }: { visible: boolean; onClose: () => vo
       label: 'Share booking link',
       sub: 'Let clients book themselves',
       onPress: () => {
-        if (!setup?.link) return;
+        if (!setup?.link || !setup.approved) return;
         recordModuleUsage('share_booking_link');
         void Share.share({ message: `Book an appointment with us on Veno: ${setup.link}` });
       },
-      show: !!setup?.link,
+      // Same gate as web: never share while the listing is still in review.
+      show: !!setup?.link && !!setup.approved,
     },
     { icon: 'slash', label: 'Block a day off', sub: 'Close for a holiday or event', onPress: () => navigation.navigate('BlackoutDates'), show: isManager },
     { icon: 'scissors', label: 'Add a service', sub: 'Something clients can book', onPress: () => navigation.navigate('ServiceForm', {}), show: isManager },

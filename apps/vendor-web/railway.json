@@ -2,14 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm run build --workspace=@veno/shared-types && npm run build --workspace=apps/vendor-web",
-    "watchPatterns": [
-      "/apps/vendor-web/**",
-      "/packages/**",
-      "/package.json",
-      "/package-lock.json",
-      "/apps/vendor-web/railway.json"
-    ]
+    "buildCommand": "npm run build --workspace=@veno/shared-types && npm run build --workspace=apps/vendor-web"
   },
   "deploy": {
     "startCommand": "sh -c 'cd apps/vendor-web && npx next start --hostname 0.0.0.0 --port ${PORT:-3001}'",

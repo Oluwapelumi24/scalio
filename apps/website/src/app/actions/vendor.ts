@@ -78,7 +78,7 @@ export async function registerVendorAction(_prev: VendorAuthState, formData: For
   }
 
   await setBusinessSession(token)
-  await enterBusinessApp(token)
+  return enterBusinessApp(token)
 }
 
 export async function vendorSignInAction(_prev: VendorAuthState, formData: FormData): Promise<VendorAuthState> {
@@ -98,7 +98,7 @@ export async function vendorSignInAction(_prev: VendorAuthState, formData: FormD
   }
 
   await setBusinessSession(token)
-  await enterBusinessApp(token)
+  return enterBusinessApp(token)
 }
 
 async function authed<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
@@ -112,7 +112,8 @@ async function authed<T>(path: string, token: string, init: RequestInit = {}): P
  * Prefer the real vendor dashboard when the portal is linked.
  * Falls back to /business only when VENDOR_WEB_URL is missing (setup fallback).
  */
-async function enterBusinessApp(token: string): Promise<void> {
+/** Always redirects — typed as never so callers need no return after it. */
+async function enterBusinessApp(token: string): Promise<never> {
   const portal = dashboardPortalUrl()
   if (!portal) {
     redirect('/business')
@@ -215,7 +216,7 @@ export async function resetBusinessPassword(_prev: VendorAuthState, formData: Fo
   }
 
   await setBusinessSession(token)
-  await enterBusinessApp(token)
+  return enterBusinessApp(token)
 }
 
 export async function signOutBusinessAction(): Promise<void> {

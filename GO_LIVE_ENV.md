@@ -15,6 +15,8 @@ Until custom domains exist, use the Railway `*.up.railway.app` URLs in env vars.
 
 ## Website (Vercel)
 
+**Project settings:** Root Directory = `apps/website`. `apps/website/vercel.json` installs from the monorepo root and builds `@veno/shared-types` before Next.
+
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin (no trailing slash) |

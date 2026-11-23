@@ -46,7 +46,7 @@ export function DashboardChrome({
   unread: number
   logout: () => Promise<void>
   banner?: React.ReactNode
-  /** When false, Marketing / Money / Attendance stay hidden so day-1 stays on setup. */
+  /** When false, Marketing / Money stay hidden so day-1 stays on setup. */
   suiteUnlocked?: boolean
   previewUrl?: string | null
   /** Public /book/:slug link customers use to check the business out and book. */

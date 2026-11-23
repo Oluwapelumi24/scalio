@@ -32,19 +32,6 @@ export async function StaffPanel() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#e4e6eb] bg-white px-4 py-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[#0a0a0a]">Attendance</p>
-          <p className="text-[13px] text-[#7d818b]">Clock in and out for the team — same records on mobile.</p>
-        </div>
-        <Link
-          href="/dashboard/attendance"
-          className="inline-flex h-9 shrink-0 items-center rounded-full bg-[#e8edfa] px-3.5 text-sm font-semibold text-[#1e3a8a]"
-        >
-          Open attendance
-        </Link>
-      </div>
-
       {staffList.length === 0 ? (
         <div className="mb-6 rounded-xl border border-gray-200 bg-white p-12 text-center">
           <p className="text-sm text-gray-400">No staff members yet.</p>

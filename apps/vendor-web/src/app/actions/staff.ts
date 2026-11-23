@@ -20,7 +20,7 @@ export async function createStaff(_prev: StaffActionState, formData: FormData): 
       method: 'POST',
       body: JSON.stringify({ name, role, email, phone }),
     })
-    revalidatePath('/dashboard/staff')
+    revalidatePath('/dashboard/storefront')
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }
@@ -32,7 +32,7 @@ export async function deleteStaff(staffId: string): Promise<StaffActionState> {
   const token = await requireToken()
   try {
     await apiFetch(`/vendor-admin/staff/${staffId}`, token, { method: 'DELETE' })
-    revalidatePath('/dashboard/staff')
+    revalidatePath('/dashboard/storefront')
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }

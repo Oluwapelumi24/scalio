@@ -24,7 +24,7 @@ export default async function StaffSchedulePage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-4xl space-y-8">
       <div>
-        {canEdit && <Link href="/dashboard/staff" className="text-sm text-indigo-600">← Staff</Link>}
+        {canEdit && <Link href="/dashboard/storefront?tab=team" className="text-sm text-indigo-600">← Team</Link>}
         <h1 className="mt-1 text-2xl font-bold text-gray-900">{schedule.name}</h1>
         <p className="text-sm text-gray-500 mt-1">Working hours and time off. The mobile app shows the same schedule.</p>
       </div>

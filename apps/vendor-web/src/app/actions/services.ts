@@ -33,7 +33,7 @@ export async function createService(_prev: ServiceActionState, formData: FormDat
       method: 'POST',
       body: JSON.stringify(body),
     })
-    revalidatePath('/dashboard/services')
+    revalidatePath('/dashboard/storefront')
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }
@@ -45,7 +45,7 @@ export async function deleteService(serviceId: string): Promise<ServiceActionSta
   const token = await requireToken()
   try {
     await apiFetch(`/vendor-admin/services/${serviceId}`, token, { method: 'DELETE' })
-    revalidatePath('/dashboard/services')
+    revalidatePath('/dashboard/storefront')
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }

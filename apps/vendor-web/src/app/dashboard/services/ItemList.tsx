@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { deleteService } from '@/app/actions/services'
-import type { ServiceItem } from './page'
+import type { ServiceItem } from './ServicesPanel'
 
 function formatPrice(kobo: number) {
   return `₦${(kobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 0 })}`

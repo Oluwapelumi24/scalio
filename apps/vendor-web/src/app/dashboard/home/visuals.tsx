@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Icon, type IconName } from '@/components/Icon'
 
 const ICONS: Record<string, IconName> = {
@@ -85,11 +86,28 @@ export function IconTile({ name, className = 'h-11 w-11' }: { name: string; clas
   )
 }
 
-/** A small calendar, used when there is nothing booked yet. */
-export function EmptyCalendar() {
+/** Shared frame for home empty-state illustrations. */
+function EmptyBadge({
+  fill,
+  children,
+  className = 'h-16 w-16',
+}: {
+  fill: string
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <svg viewBox="0 0 72 72" className="h-16 w-16 shrink-0" aria-hidden>
-      <circle cx="36" cy="36" r="36" fill="#e8edfa" />
+    <svg viewBox="0 0 72 72" className={`shrink-0 ${className}`} aria-hidden>
+      <circle cx="36" cy="36" r="36" fill={fill} />
+      {children}
+    </svg>
+  )
+}
+
+/** A small calendar, used when there is nothing booked yet. */
+export function EmptyCalendar({ className }: { className?: string } = {}) {
+  return (
+    <EmptyBadge fill="#e8edfa" className={className}>
       <rect x="18" y="20" width="36" height="34" rx="8" fill="#ffffff" />
       <path d="M18 31h36" stroke="#1e3a8a" strokeWidth="2" />
       <rect x="26" y="16" width="4" height="8" rx="2" fill="#1e3a8a" />
@@ -98,6 +116,42 @@ export function EmptyCalendar() {
       <rect x="40" y="37" width="8" height="8" rx="2" fill="#e8edfa" />
       <circle cx="54" cy="52" r="9" fill="#1e3a8a" />
       <path d="M54 48v4.2l2.4 1.4" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    </EmptyBadge>
+  )
+}
+
+/** Chat bubble stack for an empty inbox. */
+export function EmptyInbox({ className }: { className?: string } = {}) {
+  return (
+    <EmptyBadge fill="#fce7f3" className={className}>
+      <rect x="16" y="22" width="32" height="22" rx="8" fill="#ffffff" />
+      <path d="M24 44l-4 8 10-6" fill="#ffffff" />
+      <rect x="22" y="28" width="16" height="3" rx="1.5" fill="#f9a8d4" />
+      <rect x="22" y="35" width="11" height="3" rx="1.5" fill="#fbcfe8" />
+      <circle cx="52" cy="24" r="10" fill="#9d174d" />
+      <path
+        d="M48.5 24h7M52 20.5v7"
+        stroke="#ffffff"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </EmptyBadge>
+  )
+}
+
+/** People + star for empty clients / favorites. */
+export function EmptyClients({ className }: { className?: string } = {}) {
+  return (
+    <EmptyBadge fill="#e7f6ee" className={className}>
+      <circle cx="28" cy="28" r="8" fill="#ffffff" />
+      <path d="M16 48c0-6.6 5.4-12 12-12h0c6.6 0 12 5.4 12 12" fill="#ffffff" />
+      <circle cx="46" cy="30" r="6" fill="#bbf7d0" />
+      <path d="M38 48c0-4.4 3.6-8 8-8h2c4.4 0 8 3.6 8 8" fill="#bbf7d0" />
+      <circle cx="54" cy="20" r="9" fill="#166534" />
+      <path
+        d="M54 15.8l1.2 2.5 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z"
+        fill="#ffffff"
+      />
+    </EmptyBadge>
   )
 }

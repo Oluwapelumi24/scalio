@@ -35,7 +35,7 @@ export function NewBookingForm({
     return (
       <div className="rounded-[20px] border border-[#e4e6eb] bg-white p-6">
         <p className="text-sm leading-6 text-[#4a4e57]">Add a service before you book someone in.</p>
-        <Link href="/dashboard/services" className="mt-3 inline-block text-sm font-semibold text-[#1e3a8a]">
+        <Link href="/dashboard/storefront?tab=services" className="mt-3 inline-block text-sm font-semibold text-[#1e3a8a]">
           Add a service
         </Link>
       </div>

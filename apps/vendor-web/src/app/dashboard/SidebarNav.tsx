@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icon, type IconName } from '@/components/Icon'
@@ -31,10 +31,7 @@ const GROUPS: Group[] = [
   {
     title: 'Business',
     items: [
-      { href: '/dashboard/listing', label: 'Business page', icon: 'map-pin', roles: ['owner', 'manager'] },
-      { href: '/dashboard/services', label: 'Services', icon: 'package', roles: ['owner', 'manager'] },
-      { href: '/dashboard/staff', label: 'Team', icon: 'users', roles: ['owner', 'manager'] },
-      { href: '/dashboard/schedule', label: 'Hours', icon: 'clock', roles: ['owner', 'manager'] },
+      { href: '/dashboard/storefront?tab=page', label: 'Manage storefront', icon: 'shopping-bag', roles: ['owner', 'manager'] },
       { href: '/dashboard/attendance', label: 'Attendance', icon: 'check', roles: ['owner', 'manager', 'practitioner', 'front_desk'], requiresSuite: true },
     ],
   },
@@ -63,13 +60,17 @@ const GROUPS: Group[] = [
 
 const CREATE: (Item & { requiresSuite?: boolean })[] = [
   { href: '/dashboard/bookings/new', label: 'New booking', icon: 'calendar', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
-  { href: '/dashboard/services', label: 'Add a service', icon: 'plus', roles: ['owner', 'manager'] },
-  { href: '/dashboard/schedule', label: 'Block a day off', icon: 'clock', roles: ['owner', 'manager'] },
+  { href: '/dashboard/storefront?tab=services', label: 'Add a service', icon: 'plus', roles: ['owner', 'manager'] },
+  { href: '/dashboard/storefront?tab=hours', label: 'Block a day off', icon: 'clock', roles: ['owner', 'manager'] },
   { href: '/dashboard/content/new', label: 'New post', icon: 'edit', roles: ['owner', 'manager', 'front_desk'], requiresSuite: true },
 ]
 
 function active(pathname: string, item: Item) {
-  return item.exact ? pathname === item.href : pathname.startsWith(item.href)
+  const pathOnly = item.href.split('?')[0]
+  if (pathOnly === '/dashboard/storefront') {
+    return pathname.startsWith('/dashboard/storefront') || pathname.startsWith('/dashboard/staff/')
+  }
+  return item.exact ? pathname === pathOnly : pathname.startsWith(pathOnly)
 }
 
 function Row({ item, pathname, onNavigate }: { item: Item; pathname: string; onNavigate?: () => void }) {
@@ -102,29 +103,55 @@ export function SidebarNav({
 }) {
   const pathname = usePathname()
   const [createOpen, setCreateOpen] = useState(false)
+  const createRef = useRef<HTMLDivElement>(null)
   const primary = PRIMARY.filter((item) => item.roles.includes(role))
   const create = CREATE.filter(
     (item) => item.roles.includes(role) && (suiteUnlocked || !item.requiresSuite),
   )
 
+  useEffect(() => {
+    setCreateOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!createOpen) return
+    const onPointer = (event: PointerEvent) => {
+      if (!createRef.current?.contains(event.target as Node)) setCreateOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCreateOpen(false)
+    }
+    window.addEventListener('pointerdown', onPointer)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('pointerdown', onPointer)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [createOpen])
+
   return (
-    <nav className="flex-1 overflow-y-auto px-3 py-2" aria-label="Business">
+    <div className="flex min-h-0 flex-1 flex-col overflow-visible">
       {create.length > 0 ? (
-        <div className="mb-3">
+        <div ref={createRef} className="relative z-30 shrink-0 px-3 pb-1 pt-2">
           <button
             type="button"
             onClick={() => setCreateOpen((open) => !open)}
             aria-expanded={createOpen}
+            aria-haspopup="menu"
             className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#1e3a8a] text-sm font-semibold text-white"
           >
             <Icon name="plus" className="h-4 w-4" />
             Create
           </button>
           {createOpen ? (
-            <div className="mt-2 rounded-2xl border border-[#e4e6eb] p-1">
+            <div
+              role="menu"
+              className="absolute top-full z-40 mt-2 w-full rounded-2xl border border-[#e4e6eb] bg-white p-1 shadow-lg md:top-2 md:left-full md:mt-0 md:ml-2 md:w-52"
+            >
               {create.map((item) => (
                 <Link
                   key={item.label}
+                  role="menuitem"
                   href={item.href}
                   onClick={() => {
                     setCreateOpen(false)
@@ -141,39 +168,41 @@ export function SidebarNav({
         </div>
       ) : null}
 
-      <div className="space-y-0.5">
-        {primary.map((item) => (
-          <Row key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
-        ))}
-      </div>
-
-      {GROUPS.map((group) => {
-        if (group.requiresSuite && !suiteUnlocked) return null
-        const items = group.items.filter(
-          (item) => item.roles.includes(role) && (suiteUnlocked || !item.requiresSuite),
-        )
-        if (items.length === 0) return null
-        return (
-          <div key={group.title} className="mt-6">
-            <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#7d818b]">{group.title}</p>
-            <div className="space-y-0.5">
-              {items.map((item) => (
-                <Row key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
-              ))}
-            </div>
-          </div>
-        )
-      })}
-
-      {(role === 'owner' || role === 'manager') && suiteUnlocked ? (
-        <div className="mt-6">
-          <Row
-            item={{ href: '/dashboard/interests', label: 'Your interests', icon: 'sliders', roles: ['owner', 'manager'] }}
-            pathname={pathname}
-            onNavigate={onNavigate}
-          />
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-2" aria-label="Business">
+        <div className="space-y-0.5">
+          {primary.map((item) => (
+            <Row key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+          ))}
         </div>
-      ) : null}
-    </nav>
+
+        {GROUPS.map((group) => {
+          if (group.requiresSuite && !suiteUnlocked) return null
+          const items = group.items.filter(
+            (item) => item.roles.includes(role) && (suiteUnlocked || !item.requiresSuite),
+          )
+          if (items.length === 0) return null
+          return (
+            <div key={group.title} className="mt-6">
+              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#7d818b]">{group.title}</p>
+              <div className="space-y-0.5">
+                {items.map((item) => (
+                  <Row key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        {(role === 'owner' || role === 'manager') && suiteUnlocked ? (
+          <div className="mt-6">
+            <Row
+              item={{ href: '/dashboard/interests', label: 'Your interests', icon: 'sliders', roles: ['owner', 'manager'] }}
+              pathname={pathname}
+              onNavigate={onNavigate}
+            />
+          </div>
+        ) : null}
+      </nav>
+    </div>
   )
 }

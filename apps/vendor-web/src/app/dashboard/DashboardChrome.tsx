@@ -77,7 +77,7 @@ export function DashboardChrome({
 
   return (
     <div className="dashboard-shell flex h-dvh min-h-0 w-full max-h-dvh flex-col overflow-hidden bg-white pt-[env(safe-area-inset-top)] text-[#0a0a0a] md:flex-row md:pt-0">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-[#e4e6eb] bg-white md:flex md:min-h-0">
+      <aside className="hidden w-60 shrink-0 flex-col overflow-visible border-r border-[#e4e6eb] bg-white md:flex md:min-h-0">
         <div className="px-5 py-5">
           <BrandLink className="h-7 w-auto" />
         </div>

@@ -19,7 +19,7 @@ export async function setBusinessHours(days: HoursEntry[]): Promise<ScheduleActi
       method: 'PUT',
       body: JSON.stringify({ days }),
     })
-    revalidatePath('/dashboard/schedule')
+    revalidatePath('/dashboard/storefront')
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }
@@ -42,7 +42,7 @@ export async function addBlackoutDate(
       method: 'POST',
       body: JSON.stringify({ date, reason }),
     })
-    revalidatePath('/dashboard/schedule')
+    revalidatePath('/dashboard/storefront')
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }
@@ -56,7 +56,7 @@ export async function removeBlackoutDate(blackoutId: string): Promise<ScheduleAc
     await apiFetch(`/vendor-admin/schedule/blackout-dates/${blackoutId}`, token, {
       method: 'DELETE',
     })
-    revalidatePath('/dashboard/schedule')
+    revalidatePath('/dashboard/storefront')
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }

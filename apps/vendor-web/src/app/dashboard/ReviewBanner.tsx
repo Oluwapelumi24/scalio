@@ -91,7 +91,7 @@ export function RejectedReviewCopy({ note, businessName }: { note: string | null
   return (
     <span>
       {note || `${businessName} wasn’t approved.`}{' '}
-      <Link href="/dashboard/listing" className="font-semibold underline underline-offset-2">
+      <Link href="/dashboard/storefront?tab=page" className="font-semibold underline underline-offset-2">
         Update the business page
       </Link>{' '}
       and we’ll look again.

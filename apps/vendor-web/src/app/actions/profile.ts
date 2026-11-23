@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { ApiError, apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
@@ -31,5 +32,7 @@ export async function saveListingAction(_prev: ListingState, formData: FormData)
     throw err
   }
 
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/storefront')
   redirect('/dashboard')
 }

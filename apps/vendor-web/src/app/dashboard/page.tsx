@@ -8,7 +8,8 @@ import { Icon } from '@/components/Icon'
 import { ModuleLink } from './home/ModuleLink'
 import { ShareLink } from './home/ShareLink'
 import { BookingLinkCard } from './home/BookingLinkCard'
-import { EmptyCalendar, IconTile } from './home/visuals'
+import { ActivityEmptyCards } from './home/ActivityEmptyCards'
+import { IconTile } from './home/visuals'
 
 interface StaffPrincipal { role: string; name: string }
 
@@ -29,12 +30,12 @@ const HREF: Record<string, string> = {
   new_customers: '/dashboard/customers',
   view_customers: '/dashboard/customers',
   follow_up_lapsed: '/dashboard/customers',
-  team: '/dashboard/staff',
-  manage_team: '/dashboard/staff',
-  add_service: '/dashboard/services',
-  setup_services: '/dashboard/services',
-  business_hours: '/dashboard/schedule',
-  setup_hours: '/dashboard/schedule',
+  team: '/dashboard/storefront?tab=team',
+  manage_team: '/dashboard/storefront?tab=team',
+  add_service: '/dashboard/storefront?tab=services',
+  setup_services: '/dashboard/storefront?tab=services',
+  business_hours: '/dashboard/storefront?tab=hours',
+  setup_hours: '/dashboard/storefront?tab=hours',
   choose_interests: '/dashboard/interests',
   payroll_open: '/dashboard/payroll',
   pay_staff: '/dashboard/payroll',
@@ -47,7 +48,7 @@ const HREF: Record<string, string> = {
   unhappy_customers: '/dashboard/feedback',
   customer_rating: '/dashboard/feedback',
   view_reports: '/dashboard/reports',
-  deposits_for_no_shows: '/dashboard/services',
+  deposits_for_no_shows: '/dashboard/storefront?tab=services',
   quiet_day_offer: '/dashboard/content/new',
   ask_for_feedback: '/dashboard/bookings?status=completed',
   view_leads: '/dashboard/leads?filter=open',
@@ -128,10 +129,10 @@ export default async function DashboardHome() {
   const steps = bookings
     ? [
         ...(profile
-          ? [{ key: 'listing', label: 'Say what you do and where', hint: 'So customers can find you in search', done: listed, href: '/dashboard/listing', icon: 'map-pin' }]
+          ? [{ key: 'listing', label: 'Say what you do and where', hint: 'So customers can find you in search', done: listed, href: '/dashboard/storefront?tab=page', icon: 'map-pin' }]
           : []),
-        { key: 'services', label: 'Add a service', hint: 'Customers pick one when they book', done: bookings.setup.services, href: '/dashboard/services', icon: 'plus-circle' },
-        { key: 'hours', label: 'Set your opening hours', hint: 'So customers only book when you’re open', done: bookings.setup.hours, href: '/dashboard/schedule', icon: 'clock' },
+        { key: 'services', label: 'Add a service', hint: 'Customers pick one when they book', done: bookings.setup.services, href: '/dashboard/storefront?tab=services', icon: 'plus-circle' },
+        { key: 'hours', label: 'Set your opening hours', hint: 'So customers only book when you’re open', done: bookings.setup.hours, href: '/dashboard/storefront?tab=hours', icon: 'clock' },
         ...(isManager
           ? [{ key: 'payments', label: 'Take deposits online', hint: 'Optional — cuts no-shows', done: bookings.setup.payments, href: '/dashboard/payments', icon: 'credit-card' }]
           : []),
@@ -195,7 +196,7 @@ export default async function DashboardHome() {
                       : 'Your public booking link stays private until approval. Keep polishing your business page while you wait.'}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-                    <Link href="/dashboard/listing" className="text-sm font-semibold text-[#1e3a8a]">
+                    <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
                       {profile?.approvalStatus === 'rejected' ? 'Edit business page' : 'Review business page'}
                     </Link>
                     {profile?.approvalStatus !== 'rejected' ? (
@@ -266,34 +267,20 @@ export default async function DashboardHome() {
 
             <section className="min-w-0">
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-[15px] font-bold">Up next</h2>
-                <Link href="/dashboard/bookings" className="shrink-0 text-[13px] font-semibold text-[#1e3a8a]">See all</Link>
+                <h2 className="text-[15px] font-bold">
+                  {bookings.upcoming.length === 0 ? 'Around your business' : 'Up next'}
+                </h2>
+                {bookings.upcoming.length > 0 ? (
+                  <Link href="/dashboard/bookings" className="shrink-0 text-[13px] font-semibold text-[#1e3a8a]">
+                    See all
+                  </Link>
+                ) : null}
               </div>
-              <ul className="mt-3 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white px-5">
-                {bookings.upcoming.length === 0 ? (
-                  <li className="flex items-center gap-3.5 py-5">
-                    <EmptyCalendar />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm leading-5 text-[#4a4e57]">
-                        {ready
-                          ? approved
-                            ? 'New bookings show up here as soon as customers make them.'
-                            : 'We’ll notify you when you’re live — then new bookings show up here.'
-                          : 'Bookings show up here once customers can book you.'}
-                      </p>
-                      {!ready ? (
-                        <Link href="/dashboard/services" className="mt-1.5 inline-block text-sm font-semibold text-[#1e3a8a]">
-                          Add a service
-                        </Link>
-                      ) : approved ? (
-                        <Link href="/dashboard/bookings/new" className="mt-1.5 inline-block text-sm font-semibold text-[#1e3a8a]">
-                          Book a walk-in
-                        </Link>
-                      ) : null}
-                    </div>
-                  </li>
-                ) : (
-                  bookings.upcoming.map((booking) => (
+              {bookings.upcoming.length === 0 ? (
+                <ActivityEmptyCards ready={ready} approved={approved} role={staff.role} />
+              ) : (
+                <ul className="mt-3 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white px-5">
+                  {bookings.upcoming.map((booking) => (
                     <li key={booking.id}>
                       <Link href="/dashboard/bookings" className="flex items-center gap-3.5 py-4">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8edfa] text-sm font-semibold text-[#1e3a8a]">
@@ -309,9 +296,9 @@ export default async function DashboardHome() {
                         <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
                       </Link>
                     </li>
-                  ))
-                )}
-              </ul>
+                  ))}
+                </ul>
+              )}
             </section>
           </div>
 

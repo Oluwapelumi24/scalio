@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { openDashboardAction, signOutBusinessAction } from '@/app/actions/vendor'
 import { Logo } from '@/components/Navbar'
+import { OpenDashboardButton } from '@/components/partners/OpenDashboardButton'
 import { SetupBoard, type SetupHour, type SetupService } from '@/components/partners/SetupBoard'
 import { ApiError, apiFetch } from '@/lib/api'
 import { businessToken } from '@/lib/business-session'
@@ -21,12 +22,16 @@ interface Profile {
   reviewNote: string | null
 }
 
+/**
+ * Fallback only when the seller portal URL is not configured.
+ * When the portal is linked, always hand off — never trap people on this page.
+ */
 export default async function BusinessPage() {
   const token = await businessToken()
   if (!token) redirect('/login')
 
-  // When the vendor portal is linked, send people straight to the dashboard —
-  // one checklist lives there; don't retell setup on this site.
+  // One seller product: if the dashboard exists, go there. Do not retell setup here.
+  // redirect() throws on success; a returned error means handoff failed — fall through.
   if (dashboardPortalLinked()) {
     await openDashboardAction()
   }
@@ -49,6 +54,7 @@ export default async function BusinessPage() {
   }
 
   const firstName = me.name.trim().split(/\s+/)[0] ?? ''
+  const setupComplete = services.length > 0 && hours.length > 0
 
   return (
     <main className="min-h-screen bg-[#f6f7f9]">
@@ -65,17 +71,58 @@ export default async function BusinessPage() {
         </div>
       </header>
       <div className="mx-auto max-w-3xl px-6 py-10">
-        <SetupBoard
-          firstName={firstName}
-          businessName={profile.businessName}
-          category={profile.category}
-          area={profile.address}
-          approvalStatus={profile.approvalStatus}
-          reviewNote={profile.reviewNote}
-          services={services}
-          hours={hours}
-        />
+        {setupComplete ? (
+          <PortalMissing
+            firstName={firstName}
+            businessName={profile.businessName}
+            approvalStatus={profile.approvalStatus}
+          />
+        ) : (
+          <SetupBoard
+            firstName={firstName}
+            businessName={profile.businessName}
+            category={profile.category}
+            area={profile.address}
+            approvalStatus={profile.approvalStatus}
+            reviewNote={profile.reviewNote}
+            services={services}
+            hours={hours}
+          />
+        )}
       </div>
     </main>
+  )
+}
+
+/** Shown only when setup is done but VENDOR_WEB_URL is still missing on Vercel. */
+function PortalMissing({
+  firstName,
+  businessName,
+  approvalStatus,
+}: {
+  firstName: string
+  businessName: string
+  approvalStatus: string
+}) {
+  const pending = approvalStatus === 'pending_review'
+  return (
+    <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
+      <p className="text-sm font-semibold text-navy">You’re in</p>
+      <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-slate-950">
+        {firstName ? `Welcome, ${firstName}` : 'Welcome'}
+      </h1>
+      <p className="mt-3 max-w-xl text-[15px] leading-6 text-slate-600">
+        {businessName} is set up
+        {pending ? '. We’ll review the listing before customers can book.' : '.'} Open the
+        business dashboard to keep going.
+      </p>
+      <div className="mt-6">
+        <OpenDashboardButton />
+      </div>
+      <p className="mt-4 max-w-xl text-sm leading-6 text-slate-500">
+        If this button fails, set <span className="font-mono text-slate-700">VENDOR_WEB_URL</span> on
+        the website (Vercel) to your Railway vendor-web HTTPS address, then redeploy.
+      </p>
+    </div>
   )
 }

@@ -110,7 +110,7 @@ async function authed<T>(path: string, token: string, init: RequestInit = {}): P
 
 /**
  * Prefer the real vendor dashboard when the portal is linked.
- * Falls back to the website SetupBoard only when VENDOR_WEB_URL is missing.
+ * Falls back to /business only when VENDOR_WEB_URL is missing (setup fallback).
  */
 async function enterBusinessApp(token: string): Promise<void> {
   const portal = dashboardPortalUrl()
@@ -126,8 +126,9 @@ async function enterBusinessApp(token: string): Promise<void> {
       await clearBusinessSession()
       redirect('/login')
     }
-    // Portal misconfigured or handoff failed — keep them moving on this site.
-    redirect('/business')
+    // Portal is configured but handoff failed — still send them to the seller app login
+    // rather than trapping them on the marketing setup page.
+    redirect(`${portal}/login`)
   }
 }
 

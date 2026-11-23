@@ -1,13 +1,14 @@
 /**
- * Where the signed-in business dashboard lives. Prefer a server-only
- * VENDOR_WEB_URL so production can open the dashboard without also redirecting
- * /register and /login off this site (those still use NEXT_PUBLIC_VENDOR_WEB_URL).
+ * Where the signed-in business dashboard lives.
+ *
+ * Prefer server-only VENDOR_WEB_URL so production can hand off after login
+ * without forcing NEXT_PUBLIC_* (which also redirects /register and /login).
  * app.venohq.com is unpublished and must never be used.
  */
 export function dashboardPortalUrl(): string {
   let raw = (process.env.VENDOR_WEB_URL || '').trim().replace(/\/$/, '')
 
-  // Fall back only when the public var is a real host — never app.venohq.com.
+  // Fall back to the public var when the server-only one is unset.
   if (!raw) {
     const publicUrl = (process.env.NEXT_PUBLIC_VENDOR_WEB_URL || '').trim().replace(/\/$/, '')
     if (publicUrl && !publicUrl.includes('app.venohq.com')) raw = publicUrl
@@ -35,4 +36,14 @@ export function dashboardPortalUrl(): string {
 
 export function dashboardPortalLinked(): boolean {
   return dashboardPortalUrl().startsWith('http')
+}
+
+export function dashboardLoginUrl(): string {
+  const portal = dashboardPortalUrl()
+  return portal ? `${portal}/login` : '/login'
+}
+
+export function dashboardRegisterUrl(): string {
+  const portal = dashboardPortalUrl()
+  return portal ? `${portal}/register` : '/register'
 }

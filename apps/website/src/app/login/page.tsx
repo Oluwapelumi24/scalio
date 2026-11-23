@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Logo } from '@/components/Navbar'
 import { VendorAuthForm } from '@/components/partners/VendorAuthForm'
-import { VENDOR_LOGIN_URL, VENDOR_PORTAL_LINKED } from '@/lib/constants'
+import { dashboardLoginUrl, dashboardPortalLinked } from '@/lib/vendor-portal'
 
 export const metadata: Metadata = {
   title: 'Vendor sign in — Veno',
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 }
 
 export default function VendorLoginPage() {
-  if (VENDOR_PORTAL_LINKED) redirect(VENDOR_LOGIN_URL)
+  // Seller product owns auth when the portal is linked — marketing site does not.
+  if (dashboardPortalLinked()) redirect(dashboardLoginUrl())
   return (
     <main className="min-h-screen bg-[#f7f8fa]">
       <header className="border-b border-slate-200 bg-white">

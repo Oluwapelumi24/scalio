@@ -1,10 +1,10 @@
+/**
+ * Client-safe portal links (navbar / footer). Needs NEXT_PUBLIC_VENDOR_WEB_URL.
+ * Server handoff uses dashboardPortalUrl() in vendor-portal.ts (VENDOR_WEB_URL).
+ * Set both to the same Railway vendor-web HTTPS origin in production.
+ */
 const configuredVendorWeb = process.env.NEXT_PUBLIC_VENDOR_WEB_URL?.replace(/\/$/, '') ?? ''
 
-/**
- * Where the vendor portal lives. app.venohq.com is not a published host, so a
- * link there never loads. When no real portal is configured, register and sign
- * in stay on this site.
- */
 function vendorWebUrl(): string {
   if (!configuredVendorWeb) {
     return process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001'

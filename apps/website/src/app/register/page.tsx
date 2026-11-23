@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Logo } from '@/components/Navbar'
 import { BusinessOnboarding } from '@/components/partners/BusinessOnboarding'
-import { VENDOR_PORTAL_LINKED, VENDOR_REGISTER_URL } from '@/lib/constants'
+import { dashboardPortalLinked, dashboardRegisterUrl } from '@/lib/vendor-portal'
 
 export const metadata: Metadata = {
   title: 'Register your business — Veno',
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 }
 
 export default function RegisterPage() {
-  if (VENDOR_PORTAL_LINKED) redirect(VENDOR_REGISTER_URL)
+  // Seller product owns registration when the portal is linked.
+  if (dashboardPortalLinked()) redirect(dashboardRegisterUrl())
   return (
     <main className="flex min-h-screen flex-col bg-[#f6f7f9]">
       <header className="border-b border-slate-200 bg-white">

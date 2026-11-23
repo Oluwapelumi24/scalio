@@ -11,11 +11,15 @@ export class MailService {
     private readonly config: ConfigService,
   ) {}
 
+  private fromAddress(): string {
+    const key = this.config.get<string>('RESEND_API_KEY')?.trim();
+    if (!key) throw new Error('Email is not configured. Set RESEND_API_KEY.');
+    return this.config.get<string>('MAIL_FROM') ?? 'Veno <onboarding@resend.dev>';
+  }
+
   async sendVendorInviteEmail(to: string, businessName: string, acceptUrl: string): Promise<void> {
     await this.resend.emails.send({
-      from:
-        this.config.get<string>('MAIL_FROM') ??
-        'Veno <onboarding@resend.dev>',
+      from: this.fromAddress(),
       to,
       subject: `You've been invited to manage ${businessName} on Veno`,
       text: `You've been added as a team member for ${businessName} on Veno. Set your password to finish setting up your account: ${acceptUrl}\n\nThis link expires in 7 days.`,
@@ -24,7 +28,7 @@ export class MailService {
 
   async sendAdminInviteEmail(to: string, acceptUrl: string): Promise<void> {
     await this.resend.emails.send({
-      from: this.config.get<string>('MAIL_FROM') ?? 'Veno <onboarding@resend.dev>',
+      from: this.fromAddress(),
       to,
       subject: "You've been invited to the Veno admin portal",
       text: `You've been added as an operations manager on Veno. Set your password to activate your account: ${acceptUrl}\n\nThis link expires in 7 days.`,
@@ -33,7 +37,7 @@ export class MailService {
 
   async sendSignupCodeEmail(to: string, code: string): Promise<void> {
     const { error } = await this.resend.emails.send({
-      from: this.config.get<string>('MAIL_FROM') ?? 'Veno <onboarding@resend.dev>',
+      from: this.fromAddress(),
       to,
       subject: 'Your Veno code',
       text: `Your Veno code is ${code}.\n\nEnter it to continue setting up your business. It expires in 15 minutes.\n\nIf you didn't ask for this, you can ignore this email.`,
@@ -44,9 +48,7 @@ export class MailService {
   async sendPasswordResetEmail(to: string, code: string): Promise<void> {
     // Resend reports failures in the result rather than throwing.
     const { error } = await this.resend.emails.send({
-      from:
-        this.config.get<string>('MAIL_FROM') ??
-        'Veno <onboarding@resend.dev>',
+      from: this.fromAddress(),
       to,
       subject: 'Reset your Veno Vendor password',
       text: `Your password reset code is: ${code}\n\nEnter this code in the app to set a new password. It expires in 15 minutes.\n\nIf you didn't request this, you can ignore this email.`,
@@ -57,7 +59,7 @@ export class MailService {
   /** Asks a customer to rate a visit. Throws if Resend rejects it, so the caller can log why. */
   async sendFeedbackRequestEmail(to: string, customerName: string, businessName: string, link: string): Promise<void> {
     const { error } = await this.resend.emails.send({
-      from: this.config.get<string>('MAIL_FROM') ?? 'Veno <onboarding@resend.dev>',
+      from: this.fromAddress(),
       to,
       subject: `How was your visit to ${businessName}?`,
       text: `Hi ${customerName},\n\nThanks for visiting ${businessName}. How did it go? It takes 10 seconds:\n\n${link}\n\nYour feedback goes to ${businessName} so they can keep doing what you liked and fix what you didn't.`,
@@ -68,7 +70,7 @@ export class MailService {
   /** Tells the owner the inbox AI stopped on a chat and it needs a person. */
   async sendInboxHandoffEmail(to: string, businessName: string, customerName: string, channel: string, reason: string, link: string): Promise<void> {
     const { error } = await this.resend.emails.send({
-      from: this.config.get<string>('MAIL_FROM') ?? 'Veno <onboarding@resend.dev>',
+      from: this.fromAddress(),
       to,
       subject: `${customerName} on ${channel} needs a reply from you`,
       text: `${reason}, so Veno's AI has stopped replying to ${customerName} on ${channel} and left the chat for you.\n\nOpen the chat: ${link}\n\nWhen it's sorted, you can turn the AI back on for this chat from the same screen.\n\n— Veno for ${businessName}`,

@@ -10,6 +10,25 @@ import { BUSINESS_CATEGORIES } from '@/lib/categories'
 
 const MAX_EDGE = 1600
 
+/** Same photo colours customers see when a business has no picture yet. */
+const CATEGORY_FACE: Record<string, [string, string]> = {
+  Spa: ['#065F46', '#10B981'],
+  Laundry: ['#1E40AF', '#60A5FA'],
+  Tailoring: ['#7C2D12', '#F59E0B'],
+  Salon: ['#4338CA', '#7C3AED'],
+  Cleaning: ['#166534', '#4ADE80'],
+  Massage: ['#075985', '#38BDF8'],
+  Pilates: ['#BE123C', '#FDA4AF'],
+  Fitness: ['#9F1239', '#FB7185'],
+  Barbershop: ['#0F172A', '#334155'],
+  Physio: ['#134E4A', '#2DD4BF'],
+  Makeup: ['#86198F', '#D946EF'],
+  Nails: ['#C2410C', '#FB923C'],
+  'Lashes & Brows': ['#5B21B6', '#8B5CF6'],
+  'Hair Styling': ['#9D174D', '#EC4899'],
+  'Wig & Hair Extensions': ['#92400E', '#F59E0B'],
+}
+
 async function photoToJpegBase64(file: File): Promise<string> {
   const bitmap = await createImageBitmap(file)
   const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height))
@@ -21,11 +40,13 @@ async function photoToJpegBase64(file: File): Promise<string> {
 }
 
 export function ListingForm({
+  businessName,
   category,
   address,
   description,
   logoUrl,
 }: {
+  businessName: string
   category: string
   address: string
   description: string
@@ -34,6 +55,8 @@ export function ListingForm({
   const [state, action, pending] = useActionState(saveListingAction, null as ListingState)
   const known = BUSINESS_CATEGORIES.includes(category as (typeof BUSINESS_CATEGORIES)[number])
   const parsed = parseServiceArea(address)
+  const [categoryName, setCategoryName] = useState(known ? category : '')
+  const [blurb, setBlurb] = useState(description)
   const [stateName, setStateName] = useState(parsed?.state ?? '')
   const [lga, setLga] = useState(parsed?.lga ?? '')
   const [photoUrl, setPhotoUrl] = useState(logoUrl)
@@ -64,8 +87,12 @@ export function ListingForm({
     })
   }
 
+  const shownPhoto = photoUrl && !clearLogo ? photoUrl : null
+  const areaLabel = stateName && lga ? `${lga}, ${stateName}` : ''
+
   return (
-    <form action={action} className="space-y-4">
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+    <form action={action} className="order-2 space-y-5 rounded-[20px] bg-white p-5 sm:p-6 lg:order-1">
       <input type="hidden" name="address" value={areaValue} />
       <input type="hidden" name="logoMediaId" value={logoMediaId} />
       <input type="hidden" name="clearLogo" value={clearLogo ? '1' : ''} />
@@ -74,7 +101,7 @@ export function ListingForm({
         <span className="text-sm font-semibold">Business photo</span>
         <p className="mt-1 text-xs text-[#7d818b]">Shown on search and your booking page. Square crops work best.</p>
         <div className="mt-2 flex items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-[#e4e6eb] bg-[#f5f6f8]">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-[#f7f8fa]">
             {photoUrl && !clearLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photoUrl} alt="" className="h-full w-full object-cover" />
@@ -121,7 +148,8 @@ export function ListingForm({
         <SelectMenu
           name="category"
           required
-          defaultValue={known ? category : ''}
+          value={categoryName}
+          onChange={setCategoryName}
           placeholder="Choose a category"
           className="mt-1.5 h-12 w-full rounded-2xl border border-[#e4e6eb] bg-white px-4 text-sm"
           options={BUSINESS_CATEGORIES.map((item) => ({ value: item, label: item }))}
@@ -165,7 +193,8 @@ export function ListingForm({
         <span className="text-sm font-semibold">A short description</span>
         <textarea
           name="description"
-          defaultValue={description}
+          value={blurb}
+          onChange={(event) => setBlurb(event.target.value)}
           maxLength={600}
           rows={4}
           placeholder="What should a customer know before they book?"
@@ -176,10 +205,61 @@ export function ListingForm({
       <button
         type="submit"
         disabled={pending || uploading || !areaValue}
-        className="flex h-12 w-full items-center justify-center rounded-full bg-[#1e3a8a] text-sm font-semibold text-white disabled:opacity-60"
+        className="inline-flex h-12 items-center justify-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white disabled:opacity-60"
       >
         {pending ? 'Saving…' : 'Save business page'}
       </button>
     </form>
+    <BusinessCardPreview
+      name={businessName}
+      category={categoryName}
+      area={areaLabel}
+      description={blurb}
+      photoUrl={shownPhoto}
+    />
+    </div>
+  )
+}
+
+function BusinessCardPreview({
+  name,
+  category,
+  area,
+  description,
+  photoUrl,
+}: {
+  name: string
+  category: string
+  area: string
+  description: string
+  photoUrl: string | null
+}) {
+  const face = CATEGORY_FACE[category] ?? ['#1e3a8a', '#3f5fd9']
+  return (
+    <aside className="order-1 lg:sticky lg:top-16 lg:order-2">
+      <p className="text-sm font-semibold text-[#0a0a0a]">What customers see</p>
+      <p className="mt-1 text-sm leading-5 text-[#4a4e57]">It updates as you edit. People see the photo, name, area, and category when they search.</p>
+      <div className="mt-3 overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white">
+        {photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoUrl} alt="" className="aspect-[4/3] w-full object-cover" />
+        ) : (
+          <div
+            className="flex aspect-[4/3] w-full items-end p-3 text-sm font-semibold text-white"
+            style={{ backgroundImage: `linear-gradient(145deg, ${face[0]}, ${face[1]})` }}
+          >
+            {category || 'Your photo'}
+          </div>
+        )}
+        <div className="p-3.5">
+          <p className="truncate text-sm font-semibold text-[#0a0a0a]">{name}</p>
+          <p className="mt-0.5 truncate text-[13px] text-[#4a4e57]">{area || 'Your area'}</p>
+          <p className="mt-1 truncate text-[13px] font-semibold text-[#1e3a8a]">{category || 'Category'}</p>
+          {description.trim() ? (
+            <p className="mt-2 line-clamp-3 text-[13px] leading-5 text-[#4a4e57]">{description.trim()}</p>
+          ) : null}
+        </div>
+      </div>
+    </aside>
   )
 }

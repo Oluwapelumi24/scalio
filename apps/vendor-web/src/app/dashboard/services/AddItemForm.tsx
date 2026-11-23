@@ -41,16 +41,16 @@ export function AddItemForm({ serviceType, placeholder }: { serviceType: 'packag
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+        className="flex items-center gap-2 text-sm font-medium text-[#1e3a8a]"
       >
-        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm leading-none font-bold">+</span>
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1e3a8a] text-sm font-bold leading-none text-white">+</span>
         Add {serviceType}
       </button>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl border border-indigo-200 p-4">
+    <div className="rounded-2xl bg-[#f7f8fa] p-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
           <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
@@ -99,7 +99,7 @@ export function AddItemForm({ serviceType, placeholder }: { serviceType: 'packag
 
       <div className="flex items-center gap-3 mt-3">
         <button onClick={handleSave} disabled={isPending}
-          className="rounded-full bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors">
+          className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white disabled:opacity-60">
           {isPending ? 'Saving…' : 'Save'}
         </button>
         <button onClick={reset} className="text-sm text-gray-400 hover:text-gray-600">Cancel</button>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useState } from 'react'
+import { useState } from 'react'
 import { approveVendorAction, rejectVendorAction } from '@/app/actions/vendors'
 
 interface Props {
@@ -13,16 +13,34 @@ interface Props {
 export function ApproveRejectButtons({ vendorId, vendorName: _vendorName, manageHref }: Props) {
   const [showRejectForm, setShowRejectForm] = useState(false)
   const [approving, setApproving] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [approved, setApproved] = useState(false)
   const [rejected, setRejected] = useState(false)
 
-  const [rejectState, rejectAction, rejectPending] = useActionState(rejectVendorAction, null)
-
   async function handleApprove() {
     setApproving(true)
+    setError(null)
     const result = await approveVendorAction(vendorId)
     setApproving(false)
-    if (!result) setApproved(true)
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    setApproved(true)
+  }
+
+  async function handleReject(formData: FormData) {
+    setRejecting(true)
+    setError(null)
+    formData.set('vendorId', vendorId)
+    const result = await rejectVendorAction(null, formData)
+    setRejecting(false)
+    if (result?.error) {
+      setError(result.error)
+      return
+    }
+    setRejected(true)
   }
 
   if (approved) {
@@ -53,34 +71,28 @@ export function ApproveRejectButtons({ vendorId, vendorName: _vendorName, manage
 
   if (showRejectForm) {
     return (
-      <form
-        action={async (fd) => {
-          fd.set('vendorId', vendorId)
-          await rejectAction(fd)
-          setRejected(true)
-        }}
-        className="flex flex-col gap-2 min-w-[240px]"
-      >
+      <form action={handleReject} className="flex flex-col gap-2 min-w-[240px]">
         <textarea
           name="note"
-          placeholder="Reason for rejection (optional — sent to owner)"
+          placeholder="Reason for rejection (optional — emailed to the owner)"
           rows={2}
           className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
         />
-        {rejectState?.error && (
-          <p className="text-xs text-red-600">{rejectState.error}</p>
-        )}
+        {error ? <p className="text-xs text-red-600">{error}</p> : null}
         <div className="flex gap-2">
           <button
             type="submit"
-            disabled={rejectPending}
+            disabled={rejecting}
             className="flex-1 px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 disabled:opacity-60"
           >
-            {rejectPending ? 'Rejecting…' : 'Confirm reject'}
+            {rejecting ? 'Rejecting…' : 'Confirm reject'}
           </button>
           <button
             type="button"
-            onClick={() => setShowRejectForm(false)}
+            onClick={() => {
+              setShowRejectForm(false)
+              setError(null)
+            }}
             className="px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
           >
             Cancel
@@ -91,20 +103,25 @@ export function ApproveRejectButtons({ vendorId, vendorName: _vendorName, manage
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={handleApprove}
-        disabled={approving}
-        className="px-4 py-1.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-60"
-      >
-        {approving ? 'Approving…' : '✓ Approve'}
-      </button>
-      <button
-        onClick={() => setShowRejectForm(true)}
-        className="px-4 py-1.5 border border-red-200 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50"
-      >
-        Reject
-      </button>
+    <div className="flex flex-col items-end gap-2">
+      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleApprove}
+          disabled={approving}
+          className="px-4 py-1.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-60"
+        >
+          {approving ? 'Approving…' : '✓ Approve'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowRejectForm(true)}
+          className="px-4 py-1.5 border border-red-200 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50"
+        >
+          Reject
+        </button>
+      </div>
     </div>
   )
 }

@@ -133,7 +133,7 @@ export function SelectMenu({
           tabIndex={-1}
           aria-label={ariaLabel}
           onKeyDown={onMenuKey}
-          style={{ position: 'fixed', left: box.left, width: box.width, top: box.top, bottom: box.bottom, zIndex: 80 }}
+          style={{ position: 'fixed', left: box.left, width: box.width, top: box.top, bottom: box.bottom, zIndex: 200 }}
           className="overflow-hidden rounded-2xl border border-[#e4e6eb] bg-white shadow-[0_18px_50px_rgba(15,23,42,0.14)] outline-none"
         >
           {searchable ? (

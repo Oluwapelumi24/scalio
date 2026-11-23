@@ -70,7 +70,7 @@ export function ScheduleHoursForm({ initialHours }: { initialHours: HoursEntry[]
     <div>
       <div className="space-y-2">
         {DAYS.map((dayName, i) => (
-          <div key={i} className="flex items-center gap-3">
+          <div key={i} className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <label className="flex items-center gap-2 w-32">
               <input
                 type="checkbox"
@@ -108,7 +108,7 @@ export function ScheduleHoursForm({ initialHours }: { initialHours: HoursEntry[]
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+          className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white disabled:opacity-60"
         >
           {isPending ? 'Saving…' : 'Save hours'}
         </button>

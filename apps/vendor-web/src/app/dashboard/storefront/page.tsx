@@ -51,6 +51,7 @@ export default async function StorefrontPage({
         role="tabpanel"
         id={`storefront-panel-${tab}`}
         aria-labelledby={`storefront-tab-${tab}`}
+        className="max-w-5xl"
       >
         {tab === 'page' ? <ListingPanel /> : null}
         {tab === 'services' ? <ServicesPanel /> : null}

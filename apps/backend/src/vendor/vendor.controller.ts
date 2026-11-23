@@ -19,7 +19,7 @@ export class VendorController {
 
   @Get(':id')
   getById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.vendorService.getById(id);
+    return this.vendorService.getApprovedById(id);
   }
 
   @Get(':id/services')

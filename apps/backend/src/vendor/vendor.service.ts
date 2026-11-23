@@ -51,6 +51,18 @@ export class VendorService {
     return vendor;
   }
 
+  /** Customer directory detail — only live listings. */
+  async getApprovedById(vendorId: string) {
+    const [vendor] = await this.db
+      .select()
+      .from(vendors)
+      .where(and(eq(vendors.id, vendorId), eq(vendors.approvalStatus, 'approved')));
+    if (!vendor) {
+      throw new NotFoundException(`Vendor ${vendorId} not found`);
+    }
+    return vendor;
+  }
+
   /**
    * Everything the public booking page (`/book/:slug`) needs in one call. Only
    * approved businesses are public, and only customer-facing fields go out —

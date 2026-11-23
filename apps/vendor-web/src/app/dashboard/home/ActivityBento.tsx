@@ -66,8 +66,11 @@ function Tile({
   return (
     <section className={`flex min-w-0 flex-col rounded-[24px] bg-white p-4 sm:p-5 ${span}`}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-[15px] font-bold text-[#0a0a0a]">{title}</h2>
-        <Link href={href} className="shrink-0 text-[13px] font-semibold text-[#1e3a8a]">
+        <h2 className="text-sm font-semibold text-[#4a4e57]">{title}</h2>
+        <Link
+          href={href}
+          className="shrink-0 text-[13px] font-medium text-[#7d818b] hover:text-[#0a0a0a]"
+        >
           {seeAll}
         </Link>
       </div>
@@ -96,8 +99,8 @@ function Row({
           {avatar}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-[#0a0a0a]">{title}</span>
-          <span className="block truncate text-[13px] leading-5 text-[#4a4e57]">{meta}</span>
+          <span className="block truncate text-sm font-medium text-[#0a0a0a]">{title}</span>
+          <span className="block truncate text-[13px] leading-5 text-[#7d818b]">{meta}</span>
         </span>
         {badge ? (
           <span className="shrink-0 rounded-full bg-[#1e3a8a] px-1.5 py-0.5 text-[10px] font-bold text-white">
@@ -125,8 +128,8 @@ function EmptyBody({
   return (
     <div className="flex h-full flex-col justify-center py-2">
       {art}
-      <p className="mt-3 text-[13px] leading-5 text-[#4a4e57]">{body}</p>
-      <Link href={href} className="mt-2 text-sm font-semibold text-[#1e3a8a]">
+      <p className="mt-3 text-[13px] leading-5 text-[#7d818b]">{body}</p>
+      <Link href={href} className="mt-2 text-sm font-medium text-[#4a4e57] hover:text-[#0a0a0a]">
         {action}
       </Link>
     </div>

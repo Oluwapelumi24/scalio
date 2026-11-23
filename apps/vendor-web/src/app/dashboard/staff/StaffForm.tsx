@@ -61,7 +61,7 @@ export function CreateStaffForm() {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+          className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white disabled:opacity-60"
         >
           {pending ? 'Adding…' : 'Add staff member'}
         </button>

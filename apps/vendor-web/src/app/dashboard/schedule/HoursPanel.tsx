@@ -32,23 +32,27 @@ export async function HoursPanel() {
   }
 
   return (
-    <div className="grid max-w-5xl items-start gap-4 lg:grid-cols-2">
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-1 text-sm font-semibold text-gray-900">Business hours</h2>
-        <p className="mb-4 text-xs text-gray-500">
+    <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="min-w-0 rounded-[20px] bg-white p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-[#0a0a0a]">Business hours</h2>
+        <p className="mt-1 text-sm leading-6 text-[#4a4e57]">
           {hours.length === 0
             ? 'You haven’t set opening hours yet. Tick the days you’re open and save — customers can only book inside these times.'
             : 'Set the days and times your business is open for bookings.'}
         </p>
-        <ScheduleHoursForm initialHours={hours} />
+        <div className="mt-5">
+          <ScheduleHoursForm initialHours={hours} />
+        </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-1 text-sm font-semibold text-gray-900">Blackout dates</h2>
-        <p className="mb-4 text-xs text-gray-500">
+      <div className="min-w-0 rounded-[20px] bg-white p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-[#0a0a0a]">Blackout dates</h2>
+        <p className="mt-1 text-sm leading-6 text-[#4a4e57]">
           Block specific dates when no bookings should be accepted (holidays, closures, etc.).
         </p>
-        <BlackoutDatesForm initialBlackouts={blackouts} />
+        <div className="mt-5">
+          <BlackoutDatesForm initialBlackouts={blackouts} />
+        </div>
       </div>
     </div>
   )

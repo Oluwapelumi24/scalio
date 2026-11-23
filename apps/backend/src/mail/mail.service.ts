@@ -77,4 +77,33 @@ export class MailService {
     });
     if (error) throw new Error(`${error.name}: ${error.message}`);
   }
+
+  /** Lets the business owner know their listing was approved or sent back. */
+  async sendVendorListingDecisionEmail(
+    to: string,
+    businessName: string,
+    decision: 'approved' | 'rejected',
+    dashboardUrl: string,
+    note?: string | null,
+  ): Promise<void> {
+    const approved = decision === 'approved';
+    const subject = approved
+      ? `${businessName} is live on Veno`
+      : `We need a change before ${businessName} goes live`;
+    const noteBlock =
+      !approved && note?.trim()
+        ? `\n\nWhat to fix:\n${note.trim()}\n`
+        : !approved
+          ? '\n\nUpdate your business details in the dashboard and we’ll look again.\n'
+          : '\n';
+    const { error } = await this.resend.emails.send({
+      from: this.fromAddress(),
+      to,
+      subject,
+      text: approved
+        ? `Good news — ${businessName} is approved and customers can find you on Veno.\n\nOpen your dashboard: ${dashboardUrl}\n\n— Veno`
+        : `We reviewed ${businessName} and it isn’t live yet.${noteBlock}\nOpen your dashboard: ${dashboardUrl}\n\n— Veno`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+  }
 }

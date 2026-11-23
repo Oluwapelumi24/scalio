@@ -20,7 +20,7 @@ const PRIMARY: Item[] = [
   { href: '/dashboard/bookings', label: 'Calendar', icon: 'calendar', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/customers', label: 'Clients', icon: 'users', roles: ['owner', 'manager', 'front_desk'] },
   { href: '/dashboard/inbox', label: 'Inbox', icon: 'inbox', roles: ['owner', 'manager', 'front_desk'] },
-  { href: '/dashboard/attendance', label: 'Attendance', icon: 'clock', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
+  { href: '/dashboard/attendance', label: 'Attendance', icon: 'check', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
 ]
 
 interface Group {

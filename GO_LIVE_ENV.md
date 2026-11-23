@@ -48,19 +48,24 @@ Config: `apps/vendor-web/railway.json`. Set service root / config-as-code to tha
 |---|---|
 | `API_URL` | Backend origin |
 
-## Admin-web (Railway) — P1
+## Admin-web (Railway) — P0 (required to approve listings)
 
-Config: `apps/admin-web/railway.json`.
+Config: `apps/admin-web/railway.json`. Without this service, registered businesses stay `pending_review` and never appear on `/vendors`.
 
-1. New Railway service from this repo  
-2. Config-as-code path: `apps/admin-web/railway.json`  
-3. Set `API_URL` to the backend origin  
-4. Attach custom domain `admin.venohq.com` when ready  
-5. Create the first admin: `DATABASE_URL=… npm run create-admin --workspace=apps/backend -- you@venohq.com "Your Name"`
+1. Railway → **New service** → same GitHub repo as backend  
+2. Settings → **Config-as-code** path: `apps/admin-web/railway.json`  
+3. Variables: `API_URL` = backend public HTTPS origin (no trailing slash)  
+4. Deploy until `https://<admin-service>/login` returns 200  
+5. Create the first admin (uses production `DATABASE_URL` from the backend service):  
+   `DATABASE_URL=… npm run create-admin --workspace=apps/backend -- you@email "Your Name"`  
+6. Sign in → **Reviews** → Approve  
+7. Optional: attach custom domain `admin.venohq.com`
 
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin |
+
+Approve/reject emails the business `ownerEmail` when `RESEND_API_KEY` is set on the backend. Rejected owners re-enter the queue when they update their business profile.
 
 ## Vendor-mobile (EAS) — P1
 

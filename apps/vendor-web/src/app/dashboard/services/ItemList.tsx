@@ -37,17 +37,17 @@ export function ItemList({
 }) {
   if (items.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-dashed border-gray-200 px-5 py-6 text-center">
-        <p className="text-sm font-medium text-gray-600">{emptyLabel}</p>
-        {emptyHint ? <p className="mt-1 text-sm text-gray-400">{emptyHint}</p> : null}
+      <div className="rounded-2xl bg-[#f7f8fa] px-5 py-6 text-center">
+        <p className="text-sm font-medium text-[#4a4e57]">{emptyLabel}</p>
+        {emptyHint ? <p className="mt-1 text-sm text-[#7d818b]">{emptyHint}</p> : null}
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+    <div className="divide-y divide-[#eef0f3] overflow-hidden rounded-2xl bg-[#f7f8fa]">
       {items.map((item) => (
-        <div key={item.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors">
+        <div key={item.id} className="flex items-center gap-4 px-4 py-3.5">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900">{item.name}</p>
             {item.priceKobo > 0 && (

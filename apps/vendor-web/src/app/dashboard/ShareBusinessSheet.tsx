@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Icon } from '@/components/Icon'
 
 /** Lets staff copy or send the public booking page so customers can check them out and book. */
@@ -19,10 +20,15 @@ export function ShareBusinessSheet({
   live: boolean
 }) {
   const [copied, setCopied] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const panel = useRef<HTMLDivElement>(null)
   const visible = url.replace(/^https?:\/\//, '')
   const message = `Check out ${businessName} on Veno and book a time: ${url}`
   const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -41,8 +47,6 @@ export function ShareBusinessSheet({
       previous?.focus?.()
     }
   }, [open, onClose])
-
-  if (!open) return null
 
   async function copy() {
     try {
@@ -63,8 +67,10 @@ export function ShareBusinessSheet({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-6">
+  if (!open || !mounted) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-6">
       <button type="button" aria-label="Close" className="absolute inset-0 bg-[#0a0a0a]/40 backdrop-blur-[2px]" onClick={onClose} />
       <div
         ref={panel}
@@ -138,6 +144,7 @@ export function ShareBusinessSheet({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

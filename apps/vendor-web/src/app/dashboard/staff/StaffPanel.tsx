@@ -31,16 +31,16 @@ export async function StaffPanel() {
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       {staffList.length === 0 ? (
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-12 text-center">
-          <p className="text-sm text-gray-400">No staff members yet.</p>
+        <div className="rounded-[20px] bg-white px-6 py-12 text-center">
+          <p className="text-sm text-[#7d818b]">No staff members yet.</p>
         </div>
       ) : (
-        <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-hidden rounded-[20px] bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
+              <tr className="bg-[#f7f8fa]">
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Name
                 </th>
@@ -97,12 +97,14 @@ export async function StaffPanel() {
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-1 text-sm font-semibold text-gray-900">Add a staff member</h2>
-        <p className="mb-4 text-xs text-gray-500">
+      <div className="rounded-[20px] bg-white p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-[#0a0a0a]">Add a staff member</h2>
+        <p className="mt-1 text-sm leading-6 text-[#4a4e57]">
           Staff with an email address will receive an invite link to set their password.
         </p>
-        <CreateStaffForm />
+        <div className="mt-5">
+          <CreateStaffForm />
+        </div>
       </div>
     </div>
   )

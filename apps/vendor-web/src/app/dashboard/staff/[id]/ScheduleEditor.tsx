@@ -53,7 +53,7 @@ export function ScheduleEditor({ staffId, initial, canEdit }: { staffId: string;
   const input = 'rounded-md border border-gray-300 px-2 py-1 text-sm disabled:bg-gray-50'
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200">
+    <div className="rounded-[20px] bg-white">
       <p className="px-5 pt-4 text-sm text-gray-500">
         {anyWorking
           ? 'Customers can only book this person on the days and times below.'
@@ -100,7 +100,7 @@ export function ScheduleEditor({ staffId, initial, canEdit }: { staffId: string;
             type="button"
             onClick={save}
             disabled={isPending}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white disabled:opacity-60"
           >
             {isPending ? 'Saving…' : 'Save working hours'}
           </button>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { NewBookingForm } from './NewBookingForm'
 
@@ -21,12 +22,18 @@ export function NewBookingModal({
 }) {
   const router = useRouter()
   const panel = useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = useState(false)
 
   function close() {
     router.back()
   }
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     const previous = document.activeElement as HTMLElement | null
     const root = panel.current
     const focusable = root?.querySelector<HTMLElement>(
@@ -49,10 +56,12 @@ export function NewBookingModal({
       previous?.focus?.()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only dialog chrome
-  }, [])
+  }, [mounted])
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center sm:p-6">
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-6">
       <button
         type="button"
         aria-label="Close"
@@ -99,6 +108,7 @@ export function NewBookingModal({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

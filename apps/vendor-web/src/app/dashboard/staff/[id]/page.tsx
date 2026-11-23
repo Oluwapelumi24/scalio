@@ -22,7 +22,7 @@ export default async function StaffSchedulePage({ params }: { params: Promise<{ 
   }
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="max-w-5xl space-y-6">
       <div>
         {canEdit && <Link href="/dashboard/storefront?tab=team" className="text-sm text-indigo-600">← Team</Link>}
         <h1 className="mt-1 text-2xl font-bold text-gray-900">{schedule.name}</h1>

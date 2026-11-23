@@ -49,6 +49,23 @@ export class VendorProfileService {
       logoUrl = listingMediaUrl(media.id);
     }
 
+    const [current] = await this.db
+      .select({ approvalStatus: vendors.approvalStatus })
+      .from(vendors)
+      .where(eq(vendors.id, vendorId));
+    if (!current) throw new NotFoundException('Business not found');
+
+    // Rejected listings re-enter the admin queue when the owner updates the page.
+    const requeue =
+      current.approvalStatus === 'rejected'
+        ? {
+            approvalStatus: 'pending_review' as const,
+            reviewNote: null,
+            reviewedAt: null,
+            reviewedById: null,
+          }
+        : {};
+
     const [updated] = await this.db
       .update(vendors)
       .set({
@@ -57,6 +74,7 @@ export class VendorProfileService {
         // Only clear description when the client sends the field; omit keeps existing.
         ...(dto.description !== undefined ? { description: dto.description.trim() || null } : {}),
         ...(logoUrl !== undefined ? { logoUrl } : {}),
+        ...requeue,
         updatedAt: new Date(),
       })
       .where(eq(vendors.id, vendorId))

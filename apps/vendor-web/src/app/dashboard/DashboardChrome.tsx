@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BrandLink } from '@/components/BrandLink'
 import { Icon, type IconName } from '@/components/Icon'
+import { NotificationsBell } from './notifications/NotificationsBell'
 import { ShareBusinessSheet } from './ShareBusinessSheet'
 import { SidebarNav } from './SidebarNav'
 
@@ -38,6 +39,7 @@ export function DashboardChrome({
   shareUrl = null,
   businessName = null,
   shareLive = false,
+  modal = null,
   children,
 }: {
   name: string
@@ -53,6 +55,8 @@ export function DashboardChrome({
   shareUrl?: string | null
   businessName?: string | null
   shareLive?: boolean
+  /** Parallel-route overlays (e.g. new booking) — kept outside the scroll main. */
+  modal?: React.ReactNode
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -111,19 +115,7 @@ export function DashboardChrome({
             <BrandLink className="h-6 w-auto" />
           </span>
           <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard/notifications"
-              aria-current={pathname.startsWith('/dashboard/notifications') ? 'page' : undefined}
-              aria-label={unread > 0 ? `Notifications, ${unread} new` : 'Notifications'}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#0a0a0a] hover:bg-[#f5f6f8]"
-            >
-              <Icon name="bell" className="h-5 w-5" />
-              {unread > 0 ? (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c2410c] px-1 text-[10px] font-bold leading-none text-white">
-                  {unread > 9 ? '9+' : unread}
-                </span>
-              ) : null}
-            </Link>
+            <NotificationsBell unread={unread} />
             <div className="relative" ref={accountRef}>
               <button
                 type="button"
@@ -242,6 +234,8 @@ export function DashboardChrome({
           live={shareLive}
         />
       ) : null}
+
+      {modal}
     </div>
   )
 }

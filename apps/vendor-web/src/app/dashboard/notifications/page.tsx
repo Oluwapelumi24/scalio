@@ -1,35 +1,14 @@
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
+import {
+  notificationAgo,
+  notificationHref,
+  type VendorNotification,
+} from '@/lib/notifications'
+import { EmptyState } from '../EmptyState'
+import { IconTile } from '../home/visuals'
 import { MarkRead } from './MarkRead'
-
-interface VendorNotification {
-  id: string
-  type: 'booking_new' | 'booking_cancelled' | 'payment_received' | 'review' | 'inbox_handoff'
-  title: string
-  body: string
-  bookingId: string | null
-  conversationId: string | null
-  createdAt: string
-  unread: boolean
-}
-
-function ago(iso: string): string {
-  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins}m`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h`
-  if (hours < 48) return 'Yesterday'
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
-
-function destination(item: VendorNotification): string | null {
-  if (item.conversationId) return `/dashboard/inbox?c=${item.conversationId}`
-  if (item.type === 'review') return '/dashboard/feedback'
-  if (item.bookingId) return '/dashboard/bookings'
-  return null
-}
 
 export default async function NotificationsPage() {
   const token = await requireToken()
@@ -45,20 +24,25 @@ export default async function NotificationsPage() {
       </p>
 
       {feed.items.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-[#e4e6eb] bg-white px-4 py-10 text-center">
-          <p className="text-sm font-semibold">Nothing yet</p>
-          <p className="mt-1 text-sm text-[#7d818b]">When a client books, cancels, pays or rates a visit, it shows up here.</p>
+        <div className="mt-6">
+          <EmptyState
+            art={<IconTile name="bell" className="mx-auto h-14 w-14" />}
+            title="Nothing yet"
+            body="When a client books, cancels, pays or rates a visit, it shows up here."
+          />
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-[#e4e6eb] overflow-hidden rounded-2xl border border-[#e4e6eb] bg-white">
+        <ul className="mt-6 divide-y divide-[#e4e6eb] overflow-hidden rounded-2xl bg-white">
           {feed.items.map((item) => {
-            const href = destination(item)
+            const href = notificationHref(item)
             const row = (
               <>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline gap-3">
-                    <span className={`truncate text-sm ${item.unread ? 'font-bold' : 'font-semibold'}`}>{item.title}</span>
-                    <span className="shrink-0 text-xs text-[#7d818b]">{ago(item.createdAt)}</span>
+                    <span className={`truncate text-sm ${item.unread ? 'font-bold' : 'font-semibold'} text-[#0a0a0a]`}>
+                      {item.title}
+                    </span>
+                    <span className="shrink-0 text-xs text-[#7d818b]">{notificationAgo(item.createdAt)}</span>
                   </span>
                   <span className="mt-0.5 block text-sm leading-5 text-[#4a4e57]">{item.body}</span>
                 </span>
@@ -68,7 +52,7 @@ export default async function NotificationsPage() {
             return (
               <li key={item.id}>
                 {href ? (
-                  <Link href={href} className="flex items-start gap-3 px-4 py-3.5">
+                  <Link href={href} className="flex items-start gap-3 px-4 py-3.5 hover:bg-[#fafbfc]">
                     {row}
                   </Link>
                 ) : (

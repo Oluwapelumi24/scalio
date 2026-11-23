@@ -31,35 +31,33 @@ export async function ServicesPanel() {
   const services = items.filter((i) => i.serviceType === 'service')
 
   return (
-    <div className="max-w-3xl space-y-8">
-      <section>
-        <div className="mb-3">
-          <h2 className="text-lg font-bold text-gray-900">Packages</h2>
-          <p className="text-sm text-gray-500">{examples.packagesHelp}</p>
+    <div className="space-y-4">
+      <section className="rounded-[20px] bg-white p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-[#0a0a0a]">Packages</h2>
+        <p className="mt-1 text-sm leading-6 text-[#4a4e57]">{examples.packagesHelp}</p>
+        <div className="mt-5">
+          <ItemList
+            items={packages}
+            emptyLabel="No packages yet."
+            emptyHint="Add one below so customers have a booking type to pick."
+          />
         </div>
-        <ItemList
-          items={packages}
-          emptyLabel="No packages yet."
-          emptyHint="Add one below so customers have a booking type to pick."
-        />
-        <div className="mt-3">
+        <div className="mt-4">
           <AddItemForm serviceType="package" placeholder={examples.packagePlaceholder} />
         </div>
       </section>
 
-      <div className="border-t border-gray-200" />
-
-      <section>
-        <div className="mb-3">
-          <h2 className="text-lg font-bold text-gray-900">Services</h2>
-          <p className="text-sm text-gray-500">{examples.servicesHelp}</p>
+      <section className="rounded-[20px] bg-white p-5 sm:p-6">
+        <h2 className="text-base font-semibold text-[#0a0a0a]">Services</h2>
+        <p className="mt-1 text-sm leading-6 text-[#4a4e57]">{examples.servicesHelp}</p>
+        <div className="mt-5">
+          <ItemList
+            items={services}
+            emptyLabel="No services yet."
+            emptyHint="Add at least one service so customers can book you."
+          />
         </div>
-        <ItemList
-          items={services}
-          emptyLabel="No services yet."
-          emptyHint="Add at least one service so customers can book you."
-        />
-        <div className="mt-3">
+        <div className="mt-4">
           <AddItemForm serviceType="service" placeholder={examples.servicePlaceholder} />
         </div>
       </section>

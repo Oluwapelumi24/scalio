@@ -206,10 +206,12 @@ export default async function DashboardHome() {
         />
         <div className="relative flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold tracking-tight leading-7 sm:text-2xl">
+            <h1 className="text-2xl font-bold tracking-tight text-[#0a0a0a] sm:text-[1.75rem] sm:leading-8">
               Hey, {staff.name.split(' ')[0] || 'there'}
             </h1>
-            {summary ? <p className="mt-2 max-w-md text-sm leading-6 text-[#4a4e57]">{summary}</p> : null}
+            {summary ? (
+              <p className="mt-1.5 max-w-md text-[15px] leading-6 text-[#4a4e57]">{summary}</p>
+            ) : null}
             {!ready ? (
               <Link
                 href="/dashboard/storefront?tab=services"
@@ -218,14 +220,17 @@ export default async function DashboardHome() {
                 Finish setup
               </Link>
             ) : ready && !approved && profile?.approvalStatus !== 'rejected' ? (
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <Link
                   href="/dashboard/bookings/new"
                   className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white"
                 >
                   Book a walk-in
                 </Link>
-                <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
+                <Link
+                  href="/dashboard/storefront?tab=page"
+                  className="text-sm font-medium text-[#4a4e57] hover:text-[#0a0a0a]"
+                >
                   Edit business page
                 </Link>
               </div>
@@ -244,26 +249,21 @@ export default async function DashboardHome() {
         <>
         <div className="mt-3 space-y-3">
           {ready && !approved ? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-white px-4 py-3 text-sm">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-white px-4 py-2.5 text-[13px] leading-5 text-[#7d818b]">
               <span
-                className={`inline-flex h-2 w-2 shrink-0 rounded-full ${profile?.approvalStatus === 'rejected' ? 'bg-[#b91c1c]' : 'bg-[#166534]'}`}
+                className={`inline-flex h-1.5 w-1.5 shrink-0 rounded-full ${profile?.approvalStatus === 'rejected' ? 'bg-[#b91c1c]' : 'bg-[#166534]'}`}
                 aria-hidden
               />
-              <p className="min-w-0 flex-1 text-[#4a4e57]">
-                {profile?.approvalStatus === 'rejected' ? (
-                  <>
-                    <span className="font-semibold text-[#0a0a0a]">Update your business page. </span>
-                    Fix what’s noted in the banner, then we’ll look again.
-                  </>
-                ) : (
-                  <>
-                    <span className="font-semibold text-[#0a0a0a]">Booking page ready — awaiting approval. </span>
-                    Your public link stays private; walk-ins still work.
-                  </>
-                )}
+              <p className="min-w-0 flex-1">
+                {profile?.approvalStatus === 'rejected'
+                  ? 'Update your business page with what’s noted above, then we’ll look again.'
+                  : 'Booking page ready — awaiting approval. Walk-ins still work.'}
               </p>
               {profile?.approvalStatus === 'rejected' ? (
-                <Link href="/dashboard/storefront?tab=page" className="shrink-0 font-semibold text-[#1e3a8a]">
+                <Link
+                  href="/dashboard/storefront?tab=page"
+                  className="shrink-0 font-medium text-[#4a4e57] hover:text-[#0a0a0a]"
+                >
                   Edit page
                 </Link>
               ) : null}
@@ -286,8 +286,8 @@ export default async function DashboardHome() {
           {waitingActions.length > 0 ? (
             <section>
               <div className="mb-3">
-                <h2 className="text-[15px] font-bold">While you wait</h2>
-                <p className="mt-0.5 text-sm text-[#7d818b]">
+                <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">While you wait</h2>
+                <p className="mt-1 text-sm leading-5 text-[#7d818b]">
                   Small polish now means a stronger first impression when you’re live.
                 </p>
               </div>
@@ -296,16 +296,16 @@ export default async function DashboardHome() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex min-h-[8.5rem] flex-col rounded-[20px] border border-[#e4e6eb] bg-white p-5 transition-colors hover:border-[#c7d2fe] hover:bg-[#fafbff]"
+                    className="flex min-h-[8.5rem] flex-col rounded-[20px] bg-white p-5 transition-colors hover:bg-[#fafbfc]"
                   >
                     <IconTile name={item.icon} className="h-11 w-11" />
                     <span className="mt-4 block text-[15px] font-semibold leading-5 text-[#0a0a0a]">
                       {item.title}
                     </span>
-                    <span className="mt-1.5 block flex-1 text-sm leading-5 text-[#4a4e57]">
+                    <span className="mt-1.5 block flex-1 text-[13px] leading-5 text-[#7d818b]">
                       {item.hint}
                     </span>
-                    <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#1e3a8a]">
+                    <span className="mt-3 inline-flex items-center gap-0.5 text-sm font-medium text-[#4a4e57]">
                       Open
                       <Icon name="chevron-right" className="h-4 w-4" />
                     </span>
@@ -318,7 +318,7 @@ export default async function DashboardHome() {
           {!ready ? (
             <section className="min-w-0">
               <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-[15px] font-bold">Start taking bookings</h2>
+                <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">Start taking bookings</h2>
                 <p className="shrink-0 text-xs font-semibold text-[#7d818b]">
                   {steps.filter((step) => step.done).length} of {steps.length}
                 </p>
@@ -358,7 +358,7 @@ export default async function DashboardHome() {
 
           {alerts.length > 0 && (
             <section>
-              <h2 className="text-[15px] font-bold">Needs your attention</h2>
+              <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">Needs your attention</h2>
               <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] bg-white px-4">
                 {alerts.map((item) => (
                   <li key={item.id} className="flex items-center gap-3 py-4">
@@ -375,7 +375,7 @@ export default async function DashboardHome() {
 
           {otherAttention.length > 0 && (
             <section>
-              <h2 className="text-[15px] font-bold">Other updates</h2>
+              <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">Other updates</h2>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {otherAttention.map((item) => (
                   <ModuleLink
@@ -395,7 +395,7 @@ export default async function DashboardHome() {
 
           {suggestions.length > 0 && (
             <section className="rounded-[24px] bg-white p-5 sm:p-6">
-              <h2 className="text-[15px] font-bold">Suggested for you</h2>
+              <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">Suggested for you</h2>
               <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {suggestions.map((item) => {
                   if (item.status === 'coming_soon') {
@@ -452,7 +452,7 @@ export default async function DashboardHome() {
 
         {quickActions.length > 0 && (
           <section className="mt-6 min-w-0">
-            <h2 className="text-[15px] font-bold">Quick actions</h2>
+            <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">Quick actions</h2>
             <div className="mt-3 space-y-2">
               {quickActions.filter((item) => item.id === 'share_booking_link').map((item) => (
                 <ShareLink key={item.id} moduleId={item.id} url={item.data.url} title={item.title} />

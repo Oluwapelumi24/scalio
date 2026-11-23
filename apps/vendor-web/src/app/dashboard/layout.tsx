@@ -67,9 +67,9 @@ export default async function DashboardLayout({
       shareUrl={shareUrl}
       businessName={profile?.businessName ?? null}
       shareLive={profile?.approvalStatus === 'approved'}
+      modal={modal}
     >
       {children}
-      {modal}
     </DashboardChrome>
   )
 }

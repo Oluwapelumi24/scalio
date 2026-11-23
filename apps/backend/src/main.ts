@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { productionConfigProblems } from './common/production-config';
 
 async function bootstrap() {
+  // Shared-types must be built to JS before start:prod (see railway.json buildCommand).
   const problems = productionConfigProblems(process.env);
   if (problems.length) {
     throw new Error(`Refusing to start:\n- ${problems.join('\n- ')}`);

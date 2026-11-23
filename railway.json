@@ -3,7 +3,13 @@
   "build": {
     "builder": "RAILPACK",
     "buildCommand": "npm run build --workspace=@veno/shared-types && npm run build --workspace=apps/backend",
-    "watchPatterns": ["apps/backend/**", "packages/**", "package.json", "package-lock.json", "railway.json"]
+    "watchPatterns": [
+      "/apps/backend/**",
+      "/packages/**",
+      "/package.json",
+      "/package-lock.json",
+      "/railway.json"
+    ]
   },
   "deploy": {
     "startCommand": "npm run start:prod --workspace=apps/backend",

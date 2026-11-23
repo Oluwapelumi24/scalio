@@ -3,7 +3,6 @@ import { apiFetch } from '@/lib/api'
 import { getToken } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth'
 import type { VendorProfile } from '@/lib/categories'
-import { WEBSITE_URL } from '@/lib/site'
 import { DashboardChrome } from './DashboardChrome'
 import { PendingReviewCopy, RejectedReviewCopy, ReviewBanner } from './ReviewBanner'
 
@@ -54,7 +53,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       logout={logoutAction}
       banner={banner}
       suiteUnlocked={suiteUnlocked}
-      previewUrl={profile?.slug ? `${WEBSITE_URL.replace(/\/$/, '')}/book/${profile.slug}` : null}
+      previewUrl={profile?.slug ? '/dashboard/preview-storefront' : null}
     >
       {children}
     </DashboardChrome>

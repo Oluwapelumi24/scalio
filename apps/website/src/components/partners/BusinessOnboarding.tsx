@@ -34,6 +34,7 @@ export function BusinessOnboarding() {
       return
     }
     setEmail(nextEmail.trim())
+    setCode('')
     setStep(2)
     setWait(30)
     if (timer.current) window.clearInterval(timer.current)

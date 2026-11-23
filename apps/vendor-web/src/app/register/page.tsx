@@ -30,6 +30,7 @@ export default function RegisterPage() {
       return
     }
     setEmail(nextEmail.trim())
+    setCode('')
     setStep(2)
     setWait(30)
     const timer = window.setInterval(() => {

@@ -22,6 +22,8 @@ export interface PublicVendor {
   timezone: string
   services: PublicService[]
   businessHours: { dayOfWeek: number; opensAtMinutes: number; closesAtMinutes: number }[]
+  /** True when staff opened this page with a dashboard preview token. */
+  preview?: boolean
 }
 
 export function formatNaira(kobo: number) {

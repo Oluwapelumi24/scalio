@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
+import { EmptyClients } from '../home/visuals'
+import { EmptyState } from '../EmptyState'
 
 interface Customer {
   id: string
@@ -28,41 +30,40 @@ export default async function CustomersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Clients</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+        <p className="mt-1 text-sm text-[#4a4e57]">People who have booked you — contact details and last visit.</p>
+      </div>
 
       {customers.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-sm font-medium text-gray-700">No clients yet</p>
-          <p className="mt-1 text-sm text-gray-400">
-            They appear automatically after their first booking — or book a walk-in yourself.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+        <EmptyState
+          art={<EmptyClients className="h-20 w-20" />}
+          title="No clients yet"
+          body="They appear automatically after their first booking — or book a walk-in yourself."
+          action={
             <Link
               href="/dashboard/bookings/new"
               className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white"
             >
               Book a walk-in
             </Link>
-            <Link href="/dashboard" className="text-sm font-semibold text-[#1e3a8a]">
-              Go to home
-            </Link>
-          </div>
-        </div>
+          }
+        />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-[20px] border border-[#e4e6eb] bg-white">
           <table className="w-full min-w-[36rem] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Last Visit</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Email</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Phone</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Last visit</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {customers.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={c.id} className="transition-colors hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
                   <td className="px-4 py-3 text-gray-600">{c.email ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{c.phone ?? '—'}</td>
@@ -70,7 +71,7 @@ export default async function CustomersPage() {
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/dashboard/customers/${c.id}`}
-                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                      className="text-xs font-medium text-[#1e3a8a] hover:underline"
                     >
                       View
                     </Link>

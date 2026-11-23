@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BookingModule } from '../booking/booking.module';
+import { VendorModule } from '../vendor/vendor.module';
 import { VendorAuthModule } from '../vendor-auth/vendor-auth.module';
 import { VendorBookingsController } from './bookings.controller';
 import { BookingsSummaryService } from './bookings-summary.service';
@@ -17,7 +18,7 @@ import { VendorStaffController } from './staff.controller';
 import { VendorStaffService } from './staff.service';
 
 @Module({
-  imports: [VendorAuthModule, BookingModule],
+  imports: [VendorAuthModule, BookingModule, VendorModule],
   controllers: [
     VendorProfileController,
     VendorServicesController,

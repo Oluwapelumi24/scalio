@@ -9,7 +9,7 @@ import { ModuleLink } from './home/ModuleLink'
 import { ShareLink } from './home/ShareLink'
 import { BookingLinkCard } from './home/BookingLinkCard'
 import { ActivityBento, type BentoClient } from './home/ActivityBento'
-import { IconTile } from './home/visuals'
+import { GreetingArt, IconTile } from './home/visuals'
 import type { InboxConversation } from '@/lib/inbox'
 
 interface StaffPrincipal { role: string; name: string }
@@ -147,34 +147,82 @@ export default async function DashboardHome() {
       ]
     : []
   const activated = ready && approved
-  // During setup / review: Suggested only (max 3). Quick actions after the listing is live.
-  const suggestions = (home?.layers.recommendation ?? [])
-    .filter((item) => {
-      if (item.id === 'share_link_first' && !approved) return false
-      if (item.status === 'coming_soon' && !activated) return false
-      // Checklist already covers these while setup is incomplete.
-      if (!ready && (item.id === 'setup_services' || item.id === 'setup_hours')) return false
-      return true
-    })
-    .slice(0, 3)
+  // After go-live only — payments / ads tips feel wrong while the listing is still in review.
+  const suggestions = activated
+    ? (home?.layers.recommendation ?? [])
+        .filter((item) => item.status !== 'coming_soon' || activated)
+        .slice(0, 3)
+    : []
+  const waitingActions =
+    ready && !approved && profile?.approvalStatus !== 'rejected'
+      ? [
+          {
+            href: '/dashboard/storefront?tab=page',
+            title: 'Polish your business page',
+            hint: 'Photo, category, and area help customers recognise you.',
+            icon: 'map-pin',
+          },
+          {
+            href: '/dashboard/storefront?tab=services',
+            title: 'Check your services',
+            hint: 'Prices and durations should match what you offer in person.',
+            icon: 'package',
+          },
+          {
+            href: '/dashboard/storefront?tab=hours',
+            title: 'Confirm opening hours',
+            hint: 'Customers can only book inside the hours you set.',
+            icon: 'clock',
+          },
+        ]
+      : []
   const quickActions = activated
     ? (home?.layers.quick_action ?? []).filter((item) => item.id !== 'share_booking_link' || approved)
     : []
 
+  const greetingTone = !ready
+    ? 'setup'
+    : !approved
+      ? 'review'
+      : upcomingCount > 0
+        ? 'busy'
+        : 'quiet'
+
   return (
     <div className="mx-auto min-w-0 max-w-6xl">
-      <section className="rounded-[24px] bg-[#e8edfa] px-5 py-4 sm:px-6">
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="text-xl font-bold tracking-tight leading-7">
-            Hey, {staff.name.split(' ')[0] || 'there'}
-          </h1>
-          {isManager && activated ? (
-            <Link href="/dashboard/customise" className="shrink-0 pt-0.5 text-sm font-semibold text-[#1e3a8a]">
-              Customise home
-            </Link>
-          ) : null}
+      <section className="relative overflow-hidden rounded-[24px] bg-[#e8edfa] px-5 py-5 sm:px-6 sm:py-6">
+        <div
+          className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-[#c7d2fe]/50"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-[#fde8d8]/45"
+          aria-hidden
+        />
+        <div className="relative flex items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-xl font-bold tracking-tight leading-7 sm:text-2xl">
+                Hey, {staff.name.split(' ')[0] || 'there'}
+              </h1>
+              {isManager && activated ? (
+                <Link href="/dashboard/customise" className="shrink-0 pt-0.5 text-sm font-semibold text-[#1e3a8a]">
+                  Customise home
+                </Link>
+              ) : null}
+            </div>
+            {summary ? <p className="mt-2 max-w-md text-sm leading-6 text-[#4a4e57]">{summary}</p> : null}
+            {!ready ? (
+              <Link
+                href="/dashboard/storefront?tab=services"
+                className="mt-4 inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white"
+              >
+                Finish setup
+              </Link>
+            ) : null}
+          </div>
+          <GreetingArt tone={greetingTone} className="hidden h-28 w-40 sm:block" />
         </div>
-        {summary ? <p className="mt-2 max-w-2xl text-sm leading-6 text-[#4a4e57]">{summary}</p> : null}
       </section>
 
       {!home || !bookings ? (
@@ -184,188 +232,208 @@ export default async function DashboardHome() {
         </div>
       ) : (
         <>
-        <div className="mt-3 grid min-w-0 items-start gap-3 lg:grid-cols-12">
-          <div className="min-w-0 space-y-3 lg:col-span-8">
-            {ready && approved ? (
-              <BookingLinkCard url={bookings.link} total={bookings.total} />
-            ) : ready ? (
-              <section className="flex items-start gap-4 rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
-                <IconTile
-                  name={profile?.approvalStatus === 'rejected' ? 'edit-3' : 'shield'}
-                  className="h-11 w-11"
-                />
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-lg font-semibold leading-6">
-                    {profile?.approvalStatus === 'rejected' ? 'Update your business page' : 'Your booking page is ready'}
-                  </h2>
-                  <p className="mt-1.5 text-sm leading-6 text-[#4a4e57]">
-                    {profile?.approvalStatus === 'rejected'
-                      ? 'Fix what’s noted in the banner, then we’ll look again.'
-                      : 'Your public booking link stays private until approval. Keep polishing your business page while you wait.'}
-                  </p>
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
-                    {profile?.approvalStatus !== 'rejected' ? (
-                      <Link
-                        href="/dashboard/bookings/new"
-                        className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
-                      >
-                        Book a walk-in
-                      </Link>
-                    ) : (
-                      <Link
-                        href="/dashboard/storefront?tab=page"
-                        className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
-                      >
-                        Edit business page
-                      </Link>
-                    )}
-                    {profile?.approvalStatus !== 'rejected' ? (
-                      <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
-                        Edit business page
-                      </Link>
-                    ) : null}
+        <div className="mt-3 space-y-3">
+          {ready && approved ? (
+            <BookingLinkCard url={bookings.link} total={bookings.total} />
+          ) : ready ? (
+            <div className="grid gap-3 lg:grid-cols-2 lg:items-stretch">
+              <section className="flex h-full flex-col rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
+                <div className="flex items-start gap-4">
+                  <IconTile
+                    name={profile?.approvalStatus === 'rejected' ? 'edit-3' : 'shield'}
+                    className="h-11 w-11"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg font-semibold leading-6">
+                      {profile?.approvalStatus === 'rejected' ? 'Update your business page' : 'Your booking page is ready'}
+                    </h2>
+                    <p className="mt-1.5 text-sm leading-6 text-[#4a4e57]">
+                      {profile?.approvalStatus === 'rejected'
+                        ? 'Fix what’s noted in the banner, then we’ll look again.'
+                        : 'Your public booking link stays private until approval. You can still book walk-ins while you wait.'}
+                    </p>
                   </div>
                 </div>
+                <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
+                  {profile?.approvalStatus !== 'rejected' ? (
+                    <Link
+                      href="/dashboard/bookings/new"
+                      className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
+                    >
+                      Book a walk-in
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/dashboard/storefront?tab=page"
+                      className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
+                    >
+                      Edit business page
+                    </Link>
+                  )}
+                  {profile?.approvalStatus !== 'rejected' ? (
+                    <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
+                      Edit business page
+                    </Link>
+                  ) : null}
+                </div>
               </section>
-            ) : (
-              <section className="min-w-0">
-                <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="text-[15px] font-bold">Start taking bookings</h2>
-                  <p className="shrink-0 text-xs font-semibold text-[#7d818b]">
-                    {steps.filter((step) => step.done).length} of {steps.length}
+
+              {waitingActions.length > 0 ? (
+                <section className="flex h-full flex-col rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
+                  <h2 className="text-[15px] font-bold">While you wait</h2>
+                  <p className="mt-1 text-[13px] leading-5 text-[#4a4e57]">
+                    Small polish now means a stronger first impression when you’re live.
                   </p>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e4e6eb]">
-                  <div
-                    className="h-full rounded-full bg-[#1e3a8a]"
-                    style={{ width: `${(steps.filter((step) => step.done).length / steps.length) * 100}%` }}
-                  />
-                </div>
-                <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
-                  {steps.map((step) => (
-                    <li key={step.key}>
-                      <Link href={step.href} className="flex items-center gap-3 py-4">
-                        {step.done ? (
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e7f6ee] text-[#166534]">
-                            <Icon name="check" className="h-5 w-5" />
+                  <ul className="mt-4 divide-y divide-[#f0f1f4]">
+                    {waitingActions.map((item) => (
+                      <li key={item.href}>
+                        <Link href={item.href} className="flex items-center gap-3 py-3">
+                          <IconTile name={item.icon} className="h-9 w-9 rounded-xl" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold">{item.title}</span>
+                            <span className="block text-[13px] leading-5 text-[#4a4e57]">{item.hint}</span>
                           </span>
-                        ) : (
-                          <IconTile name={step.icon} />
-                        )}
-                        <span className="min-w-0 flex-1">
-                          <span className={`block text-sm font-semibold ${step.done ? 'text-[#7d818b] line-through' : ''}`}>
-                            {step.label}
-                          </span>
-                          <span className={`text-[13px] leading-5 ${step.done ? 'text-[#7d818b]' : 'text-[#4a4e57]'}`}>
-                            {step.hint}
-                          </span>
+                          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+            </div>
+          ) : (
+            <section className="min-w-0">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-[15px] font-bold">Start taking bookings</h2>
+                <p className="shrink-0 text-xs font-semibold text-[#7d818b]">
+                  {steps.filter((step) => step.done).length} of {steps.length}
+                </p>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e4e6eb]">
+                <div
+                  className="h-full rounded-full bg-[#1e3a8a]"
+                  style={{ width: `${(steps.filter((step) => step.done).length / steps.length) * 100}%` }}
+                />
+              </div>
+              <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+                {steps.map((step) => (
+                  <li key={step.key}>
+                    <Link href={step.href} className="flex items-center gap-3 py-4">
+                      {step.done ? (
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e7f6ee] text-[#166534]">
+                          <Icon name="check" className="h-5 w-5" />
                         </span>
-                        <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+                      ) : (
+                        <IconTile name={step.icon} />
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className={`block text-sm font-semibold ${step.done ? 'text-[#7d818b] line-through' : ''}`}>
+                          {step.label}
+                        </span>
+                        <span className={`text-[13px] leading-5 ${step.done ? 'text-[#7d818b]' : 'text-[#4a4e57]'}`}>
+                          {step.hint}
+                        </span>
+                      </span>
+                      <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
-            {alerts.length > 0 && (
-              <section>
-                <h2 className="text-[15px] font-bold">Needs your attention</h2>
-                <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
-                  {alerts.map((item) => (
-                    <li key={item.id} className="flex items-center gap-3 py-4">
-                      <IconTile name={item.icon} className="h-9 w-9 rounded-xl" />
-                      <span className="min-w-0 flex-1 text-sm leading-5">{BOOKING_ALERTS[item.id].text(item.data.count)}</span>
-                      <ModuleLink moduleId={item.id} href="/dashboard/bookings" className="shrink-0 rounded-full bg-[#0a0a0a] px-3 py-1.5 text-xs font-semibold text-white">
-                        {BOOKING_ALERTS[item.id].action}
-                      </ModuleLink>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+          {alerts.length > 0 && (
+            <section>
+              <h2 className="text-[15px] font-bold">Needs your attention</h2>
+              <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+                {alerts.map((item) => (
+                  <li key={item.id} className="flex items-center gap-3 py-4">
+                    <IconTile name={item.icon} className="h-9 w-9 rounded-xl" />
+                    <span className="min-w-0 flex-1 text-sm leading-5">{BOOKING_ALERTS[item.id].text(item.data.count)}</span>
+                    <ModuleLink moduleId={item.id} href="/dashboard/bookings" className="shrink-0 rounded-full bg-[#0a0a0a] px-3 py-1.5 text-xs font-semibold text-white">
+                      {BOOKING_ALERTS[item.id].action}
+                    </ModuleLink>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
-          </div>
+          {otherAttention.length > 0 && (
+            <section>
+              <h2 className="text-[15px] font-bold">Other updates</h2>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {otherAttention.map((item) => (
+                  <ModuleLink
+                    key={item.id}
+                    moduleId={item.id}
+                    href={HREF[item.id] ?? '/dashboard'}
+                    className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-4 text-sm"
+                  >
+                    <IconTile name={item.icon} />
+                    <span className="min-w-0 flex-1 leading-5">{ATTENTION_TEXT[item.id]?.(item.data.count, item.data) ?? item.title}</span>
+                    <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                  </ModuleLink>
+                ))}
+              </div>
+            </section>
+          )}
 
-          <aside className="min-w-0 space-y-3 lg:col-span-4">
-            {otherAttention.length > 0 && (
-              <section>
-                <h2 className="text-[15px] font-bold">Other updates</h2>
-                <div className="mt-3 space-y-2">
-                  {otherAttention.map((item) => (
+          {suggestions.length > 0 && (
+            <section className="rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
+              <h2 className="text-[15px] font-bold">Suggested for you</h2>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {suggestions.map((item) => {
+                  if (item.status === 'coming_soon') {
+                    return (
+                      <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-[#fafbfc] p-4">
+                        <IconTile name={item.icon} />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold">{item.title}</span>
+                          <span className="mt-0.5 block text-[13px] leading-5 text-[#7d818b]">Coming soon.</span>
+                        </span>
+                      </div>
+                    )
+                  }
+                  if (item.id === 'share_link_first') {
+                    return (
+                      <ShareLink
+                        key={item.id}
+                        moduleId={item.id}
+                        url={item.data.url}
+                        title={item.title}
+                        body={RECOMMENDATION_TEXT[item.id]?.(item.data)}
+                      />
+                    )
+                  }
+                  return (
                     <ModuleLink
                       key={item.id}
                       moduleId={item.id}
                       href={HREF[item.id] ?? '/dashboard'}
-                      className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-4 text-sm"
+                      className="flex min-w-0 items-start gap-3 rounded-2xl border border-[#e4e6eb] bg-[#fafbfc] p-4"
                     >
                       <IconTile name={item.icon} />
-                      <span className="min-w-0 flex-1 leading-5">{ATTENTION_TEXT[item.id]?.(item.data.count, item.data) ?? item.title}</span>
-                      <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold">{item.title}</span>
+                        <span className="mt-0.5 block text-[13px] leading-5 text-[#4a4e57]">{RECOMMENDATION_TEXT[item.id]?.(item.data) ?? ''}</span>
+                      </span>
+                      <Icon name="chevron-right" className="mt-1 h-4 w-4 shrink-0 text-[#c9ced8]" />
                     </ModuleLink>
-                  ))}
-                </div>
-              </section>
-            )}
+                  )
+                })}
+              </div>
+            </section>
+          )}
 
-            {suggestions.length > 0 && (
-              <section>
-                <h2 className="text-[15px] font-bold leading-5">Suggested for you</h2>
-                <div className="mt-3 space-y-2">
-                  {suggestions.map((item) => {
-                    if (item.status === 'coming_soon') {
-                      return (
-                        <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-white p-4">
-                          <IconTile name={item.icon} />
-                          <span className="min-w-0">
-                            <span className="block text-sm font-semibold">{item.title}</span>
-                            <span className="mt-0.5 block text-[13px] leading-5 text-[#7d818b]">Coming soon. We&apos;ll let you know when it&apos;s ready.</span>
-                          </span>
-                        </div>
-                      )
-                    }
-                    if (item.id === 'share_link_first') {
-                      return (
-                        <ShareLink
-                          key={item.id}
-                          moduleId={item.id}
-                          url={item.data.url}
-                          title={item.title}
-                          body={RECOMMENDATION_TEXT[item.id]?.(item.data)}
-                        />
-                      )
-                    }
-                    return (
-                      <ModuleLink
-                        key={item.id}
-                        moduleId={item.id}
-                        href={HREF[item.id] ?? '/dashboard'}
-                        className="flex min-w-0 items-start gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-4"
-                      >
-                        <IconTile name={item.icon} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-semibold">{item.title}</span>
-                          <span className="mt-0.5 block text-[13px] leading-5 text-[#4a4e57]">{RECOMMENDATION_TEXT[item.id]?.(item.data) ?? ''}</span>
-                        </span>
-                        <Icon name="chevron-right" className="mt-1 h-4 w-4 shrink-0 text-[#c9ced8]" />
-                      </ModuleLink>
-                    )
-                  })}
-                </div>
-              </section>
-            )}
-          </aside>
-
-          <div className="lg:col-span-12">
-            <ActivityBento
-              role={staff.role}
-              ready={ready}
-              approved={approved}
-              bookings={bookings.upcoming.slice(0, 5)}
-              chats={recentChats}
-              clients={recentClients}
-            />
-          </div>
+          <ActivityBento
+            role={staff.role}
+            ready={ready}
+            approved={approved}
+            bookings={bookings.upcoming.slice(0, 5)}
+            chats={recentChats}
+            clients={recentClients}
+          />
         </div>
 
         {quickActions.length > 0 && (

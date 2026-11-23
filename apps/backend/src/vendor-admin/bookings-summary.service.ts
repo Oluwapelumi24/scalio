@@ -7,6 +7,10 @@ import { bookings, vendors } from '../db/schema';
 export interface TodaySummary {
   date: string;
   bookings: number;
+  /** Confirmed / pending bookings still ahead of now. */
+  upcoming: number;
+  /** Waiting on a deposit or prepayment. */
+  awaitingPayment: number;
   /** Value of today's completed bookings; null for roles that don't see money. */
   salesKobo: number | null;
 }
@@ -29,6 +33,8 @@ export class BookingsSummaryService {
     const [row] = await this.db
       .select({
         bookings: sql<number>`count(*) filter (where ${isToday} and ${bookings.status} in ('pending_payment', 'confirmed', 'completed'))`.mapWith(Number),
+        upcoming: sql<number>`count(*) filter (where ${bookings.scheduledAt} > ${now} and ${bookings.status} in ('pending_payment', 'confirmed'))`.mapWith(Number),
+        awaitingPayment: sql<number>`count(*) filter (where ${bookings.status} = 'pending_payment')`.mapWith(Number),
         sales: sql<number>`coalesce(sum(${bookings.totalPriceKobo}) filter (where ${isToday} and ${bookings.status} = 'completed'), 0)`.mapWith(Number),
       })
       .from(bookings)
@@ -37,6 +43,8 @@ export class BookingsSummaryService {
     return {
       date: new Intl.DateTimeFormat('en-CA', { timeZone: vendor.timezone }).format(now),
       bookings: row?.bookings ?? 0,
+      upcoming: row?.upcoming ?? 0,
+      awaitingPayment: row?.awaitingPayment ?? 0,
       salesKobo: opts.includeSales ? (row?.sales ?? 0) : null,
     };
   }

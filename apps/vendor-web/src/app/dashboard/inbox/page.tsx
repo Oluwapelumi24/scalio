@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { ApiError, apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import type { InboxConversation, InboxConversationDetail } from '@/lib/inbox'
+import { EmptyInbox } from '../home/visuals'
+import { EmptyState } from '../EmptyState'
 import { ChatList, ChatView, LiveRefresh } from './InboxClient'
 
 /** Inbox — Instagram, Messenger and WhatsApp chats in one place, with AI replies (ADS_MANAGER_PLAN.md §2d). */
@@ -24,9 +26,13 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   } catch (err) {
     if (!(err instanceof ApiError)) throw err
     return (
-      <div className="max-w-xl space-y-4">
+      <div className="space-y-4">
         <h1 className="text-2xl font-bold text-gray-900">Inbox</h1>
-        <p className="rounded-lg bg-slate-100 px-4 py-3 text-sm text-gray-600">{err.message}</p>
+        <EmptyState
+          art={<EmptyInbox className="h-20 w-20" />}
+          title="Inbox isn’t ready yet"
+          body={err.message}
+        />
       </div>
     )
   }
@@ -56,32 +62,45 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
-        <div className={sp.c ? 'hidden lg:block' : undefined}>
-          {chats.length === 0 ? (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500 lg:hidden">
-              {filter === 'needs_you'
-                ? 'Nothing needs you right now. Chats the AI hands to you — complaints, refunds, questions it can’t answer — show here.'
-                : 'No chats yet. When customers message your Instagram or Facebook Page, they’ll show here.'}
-            </div>
-          ) : null}
-          <ChatList chats={chats} selectedId={selected?.id ?? null} filter={filter} />
-        </div>
-        <div className={sp.c ? undefined : 'hidden lg:block'}>
-        {sp.c ? (
-          <Link href={`/dashboard/inbox?filter=${filter}`} className="mb-3 inline-flex text-sm font-semibold text-[#1e3a8a] lg:hidden">
-            ← Chats
-          </Link>
-        ) : null}
-        {selected ? <ChatView key={selected.id} chat={selected} /> : (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
-            {chats.length ? 'Choose a chat.' : filter === 'needs_you'
-              ? 'Nothing needs you right now. Chats the AI hands to you — complaints, refunds, questions it can’t answer — show here.'
-              : 'No chats yet. When customers message your Instagram or Facebook Page, they’ll show here.'}
+      {chats.length === 0 ? (
+        <EmptyState
+          art={<EmptyInbox className="h-20 w-20" />}
+          title={filter === 'needs_you' ? 'Nothing needs you right now' : 'No chats yet'}
+          body={
+            filter === 'needs_you'
+              ? 'Chats the AI hands to you — complaints, refunds, questions it can’t answer — show here.'
+              : 'When customers message your Instagram or Facebook Page, they show up here.'
+          }
+          action={
+            canManage ? (
+              <Link
+                href="/dashboard/inbox/settings"
+                className="inline-flex h-10 items-center rounded-full border border-[#e4e6eb] bg-white px-4 text-sm font-semibold text-[#0a0a0a]"
+              >
+                AI replies &amp; FAQ
+              </Link>
+            ) : null
+          }
+        />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[minmax(260px,340px)_1fr]">
+          <div className={sp.c ? 'hidden lg:block' : undefined}>
+            <ChatList chats={chats} selectedId={selected?.id ?? null} filter={filter} />
           </div>
-        )}
+          <div className={sp.c ? undefined : 'hidden lg:block'}>
+            {sp.c ? (
+              <Link href={`/dashboard/inbox?filter=${filter}`} className="mb-3 inline-flex text-sm font-semibold text-[#1e3a8a] lg:hidden">
+                ← Chats
+              </Link>
+            ) : null}
+            {selected ? (
+              <ChatView key={selected.id} chat={selected} />
+            ) : (
+              <EmptyState art={<EmptyInbox className="h-16 w-16" />} title="Choose a chat" body="Pick a conversation on the left to reply." />
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

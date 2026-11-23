@@ -26,6 +26,8 @@ export function AvailabilityPicker({
   hasPhone = false,
   initialServiceIds = [],
   initialAt = null,
+  preview = false,
+  previewToken,
 }: {
   vendorId: string
   slug: string
@@ -36,6 +38,8 @@ export function AvailabilityPicker({
   hasPhone?: boolean
   initialServiceIds?: string[]
   initialAt?: string | null
+  preview?: boolean
+  previewToken?: string
 }) {
   const router = useRouter()
   const days = nextDays(timezone, 14)
@@ -84,12 +88,13 @@ export function AvailabilityPicker({
     const params = new URLSearchParams()
     if (selected.length > 0) params.set('services', selected.join(','))
     if (nextSlot) params.set('at', nextSlot)
+    if (previewToken) params.set('preview', previewToken)
     const search = params.toString()
     return `/book/${slug}${search ? `?${search}` : ''}`
   }
 
   function confirm() {
-    if (!slot) return
+    if (!slot || preview) return
     if (!signedIn) {
       router.push(`/app/sign-in?next=${encodeURIComponent(returnPath())}`)
       return
@@ -233,15 +238,23 @@ export function AvailabilityPicker({
               <span className="mt-1 block text-xs text-white/70">So {businessName} can reach you about this visit.</span>
             </label>
           ) : null}
-          <button
-            type="button"
-            onClick={confirm}
-            disabled={!slot || isPending}
-            className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-slate-900 disabled:opacity-50"
-          >
-            {isPending ? 'Booking…' : signedIn ? 'Book this time' : 'Sign in to book'}
-          </button>
-          {!signedIn ? <p className="mt-3 text-sm text-white/70">Create a free account to hold this time. Your selection stays.</p> : null}
+          {preview ? (
+            <p className="mt-4 rounded-xl bg-white/10 px-4 py-3 text-sm text-white/80">
+              Booking stays off in preview. Customers can book here after approval.
+            </p>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={confirm}
+                disabled={!slot || isPending}
+                className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-slate-900 disabled:opacity-50"
+              >
+                {isPending ? 'Booking…' : signedIn ? 'Book this time' : 'Sign in to book'}
+              </button>
+              {!signedIn ? <p className="mt-3 text-sm text-white/70">Create a free account to hold this time. Your selection stays.</p> : null}
+            </>
+          )}
         </div>
       )}
     </div>

@@ -18,6 +18,7 @@ import {
   type BusyInterval,
   type OpenHours,
 } from './availability';
+import { BookingPreviewService } from './booking-preview.service';
 import { loadStaffDay } from '../staff-schedule/staff-day';
 
 export interface AvailabilityQuery {
@@ -28,7 +29,10 @@ export interface AvailabilityQuery {
 
 @Injectable()
 export class VendorService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly bookingPreview: BookingPreviewService,
+  ) {}
 
   // TODO: paginate + support search/category/location filters once the
   // vendor directory grows beyond what a single page can hold.
@@ -51,8 +55,15 @@ export class VendorService {
    * Everything the public booking page (`/book/:slug`) needs in one call. Only
    * approved businesses are public, and only customer-facing fields go out —
    * owner contact details, review notes and registration numbers stay private.
+   * A short-lived preview token (from the vendor dashboard) unlocks the page
+   * while the business is still in review, without listing it publicly.
    */
-  async getPublicProfile(slug: string) {
+  async getPublicProfile(slug: string, previewToken?: string) {
+    const preview =
+      typeof previewToken === 'string' && previewToken.length > 0
+        ? await this.bookingPreview.matches(previewToken, slug)
+        : false;
+
     const [vendor] = await this.db
       .select({
         id: vendors.id,
@@ -68,7 +79,11 @@ export class VendorService {
         timezone: vendors.timezone,
       })
       .from(vendors)
-      .where(and(eq(vendors.slug, slug), eq(vendors.approvalStatus, 'approved')));
+      .where(
+        preview
+          ? eq(vendors.slug, slug)
+          : and(eq(vendors.slug, slug), eq(vendors.approvalStatus, 'approved')),
+      );
     if (!vendor) {
       throw new NotFoundException('This business is not on Veno, or is not taking bookings yet');
     }
@@ -96,7 +111,7 @@ export class VendorService {
         .where(eq(businessHours.vendorId, vendor.id)),
     ]);
 
-    return { ...vendor, services: serviceRows, businessHours: hourRows };
+    return { ...vendor, services: serviceRows, businessHours: hourRows, preview };
   }
 
   async listServices(vendorId: string) {

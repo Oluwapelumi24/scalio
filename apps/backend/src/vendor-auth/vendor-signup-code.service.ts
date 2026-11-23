@@ -12,10 +12,11 @@ const PROOF_TTL_SECONDS = 30 * 60;
 const RESEND_COOLDOWN_SECONDS = 30;
 const MAX_WRONG_ATTEMPTS = 5;
 
-// A wrong digit counts, and five wrong tries throw the code away. A match deletes it.
+// 1 = match (code consumed). 0 = wrong guess. -1 = missing / already used / expired.
+// Five wrong tries throw the code away so guessing cannot continue.
 const CONSUME_CODE = `
 local v = redis.call("get", KEYS[1])
-if not v then return 0 end
+if not v then return -1 end
 if v == ARGV[1] then
   redis.call("del", KEYS[1], KEYS[2])
   return 1
@@ -84,8 +85,12 @@ export class VendorSignupCodeService {
       String(CODE_TTL_SECONDS),
       String(MAX_WRONG_ATTEMPTS),
     );
-    if (Number(result) !== 1) {
-      throw new BadRequestException('That code is wrong or has expired.');
+    const outcome = Number(result);
+    if (outcome === -1) {
+      throw new BadRequestException('That code has expired. Request a new one.');
+    }
+    if (outcome !== 1) {
+      throw new BadRequestException('That code is wrong. Use the latest email we sent.');
     }
 
     const proof = randomBytes(24).toString('hex');

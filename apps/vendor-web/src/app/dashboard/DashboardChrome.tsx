@@ -115,7 +115,7 @@ export function DashboardChrome({
             <div className="relative" ref={accountRef}>
               <button
                 type="button"
-                className="flex h-10 max-w-[14rem] items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-[#f5f6f8] sm:pr-3"
+                className="flex h-10 max-w-[16rem] items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-[#f5f6f8] sm:pr-2.5"
                 aria-expanded={accountOpen}
                 aria-haspopup="menu"
                 aria-label={`${name}, ${ROLE_LABELS[role] ?? role}`}
@@ -128,6 +128,10 @@ export function DashboardChrome({
                   <span className="block truncate text-sm font-semibold leading-4">{name}</span>
                   <span className="block truncate text-[11px] leading-4 text-[#7d818b]">{ROLE_LABELS[role] ?? role}</span>
                 </span>
+                <Icon
+                  name="chevron-down"
+                  className={`h-4 w-4 shrink-0 text-[#7d818b] transition-transform duration-150 ${accountOpen ? 'rotate-180' : ''}`}
+                />
               </button>
               {accountOpen ? (
                 <AccountMenu
@@ -244,9 +248,25 @@ function AccountMenu({
         <Icon name="sliders" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
         Settings
       </Link>
-      <div className="my-1 border-t border-[#e4e6eb]" />
+      <div className="my-1.5 border-t border-[#e4e6eb]" />
+      <Link
+        href="/dashboard/help"
+        role="menuitem"
+        onClick={onNavigate}
+        className="mx-0.5 mb-1 flex items-start gap-3 rounded-xl bg-[#f5f6f8] px-3 py-3 hover:bg-[#eef0f4]"
+      >
+        <Icon name="help-circle" className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#1e3a8a]" />
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold text-[#0a0a0a]">Help and support</span>
+          <span className="mt-0.5 block text-[12px] leading-4 text-[#7d818b]">Guides, FAQs, and email us</span>
+        </span>
+      </Link>
       <form action={logout}>
-        <button type="submit" role="menuitem" className={`${item} w-full text-left`}>
+        <button
+          type="submit"
+          role="menuitem"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#b91c1c] hover:bg-[#fef2f2]"
+        >
           Sign out
         </button>
       </form>

@@ -69,6 +69,7 @@ export function RegisterScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await sendVendorSignupCode(email.trim().toLowerCase());
+      setCode('');
       setStep('code');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not send the code.');

@@ -203,6 +203,20 @@ export function SidebarNav({
           </div>
         ) : null}
       </nav>
+
+      <div className="shrink-0 border-t border-[#e4e6eb] p-3">
+        <Link
+          href="/dashboard/help"
+          onClick={onNavigate}
+          className="flex items-start gap-3 rounded-2xl bg-[#f5f6f8] px-3 py-3 hover:bg-[#eef0f4]"
+        >
+          <Icon name="help-circle" className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#1e3a8a]" />
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-[#0a0a0a]">Help and support</span>
+            <span className="mt-0.5 block text-[12px] leading-4 text-[#7d818b]">We’re here if you get stuck</span>
+          </span>
+        </Link>
+      </div>
     </div>
   )
 }

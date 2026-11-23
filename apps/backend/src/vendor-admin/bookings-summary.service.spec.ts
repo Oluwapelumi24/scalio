@@ -12,10 +12,12 @@ describe('BookingsSummaryService.today', () => {
     const db = { select: jest.fn() };
     db.select
       .mockReturnValueOnce(selectResult([{ timezone: 'Africa/Lagos' }]))
-      .mockReturnValueOnce(selectResult([{ bookings: 14, sales: 18_600_000 }]));
+      .mockReturnValueOnce(selectResult([{ bookings: 14, upcoming: 5, awaitingPayment: 2, sales: 18_600_000 }]));
     await expect(new BookingsSummaryService(db as any).today('v-1', { now, includeSales: true })).resolves.toEqual({
       date: '2026-10-17',
       bookings: 14,
+      upcoming: 5,
+      awaitingPayment: 2,
       salesKobo: 18_600_000,
     });
   });
@@ -24,10 +26,11 @@ describe('BookingsSummaryService.today', () => {
     const db = { select: jest.fn() };
     db.select
       .mockReturnValueOnce(selectResult([{ timezone: 'Africa/Lagos' }]))
-      .mockReturnValueOnce(selectResult([{ bookings: 3, sales: 900_000 }]));
+      .mockReturnValueOnce(selectResult([{ bookings: 3, upcoming: 1, awaitingPayment: 0, sales: 900_000 }]));
     const summary = await new BookingsSummaryService(db as any).today('v-1', { now, staffId: 's-1', includeSales: false });
     expect(summary.salesKobo).toBeNull();
     expect(summary.bookings).toBe(3);
+    expect(summary.upcoming).toBe(1);
   });
 
   it('404s for an unknown business', async () => {

@@ -9,21 +9,31 @@ import { AvailabilityPicker } from './AvailabilityPicker'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-async function loadVendor(slug: string): Promise<PublicVendor | null> {
+async function loadVendor(slug: string, preview?: string): Promise<PublicVendor | null> {
   try {
-    return await apiFetch<PublicVendor>(`/vendors/by-slug/${encodeURIComponent(slug)}`)
+    const q = preview ? `?preview=${encodeURIComponent(preview)}` : ''
+    return await apiFetch<PublicVendor>(`/vendors/by-slug/${encodeURIComponent(slug)}${q}`)
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) return null
     throw err
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const vendor = await loadVendor((await params).slug)
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ preview?: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const { preview } = await searchParams
+  const vendor = await loadVendor(slug, preview)
   if (!vendor) return { title: 'Business not found — Veno' }
   return {
-    title: `Book ${vendor.businessName} — Veno`,
+    title: vendor.preview ? `Preview ${vendor.businessName} — Veno` : `Book ${vendor.businessName} — Veno`,
     description: vendor.description ?? `See services, prices and open times for ${vendor.businessName}.`,
+    robots: vendor.preview ? { index: false, follow: false } : undefined,
   }
 }
 
@@ -34,11 +44,11 @@ export default async function BookingPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ services?: string; at?: string }>
+  searchParams: Promise<{ services?: string; at?: string; preview?: string }>
 }) {
   const { slug } = await params
   const query = await searchParams
-  const vendor = await loadVendor(slug)
+  const vendor = await loadVendor(slug, query.preview)
   if (!vendor) notFound()
   const user = await getCustomer()
 
@@ -48,6 +58,11 @@ export default async function BookingPage({
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {vendor.preview ? (
+        <div role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-950">
+          Preview only — customers can’t open this page until your business is approved.
+        </div>
+      ) : null}
       <header style={{ backgroundColor: brand }} className="text-white">
         <div className="mx-auto max-w-3xl px-6 pb-10 pt-8">
           <Link href="/" className="text-sm font-semibold text-white/80 hover:text-white">Veno</Link>
@@ -93,6 +108,8 @@ export default async function BookingPage({
           hasPhone={Boolean(user?.phone)}
           initialServiceIds={(query.services ?? '').split(',').filter(Boolean)}
           initialAt={query.at ?? null}
+          preview={Boolean(vendor.preview)}
+          previewToken={query.preview}
         />
 
         <aside className="space-y-6">

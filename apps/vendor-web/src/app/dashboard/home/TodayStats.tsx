@@ -45,7 +45,7 @@ export function TodayStats({ data }: { data: TodayStatsData }) {
   ]
 
   return (
-    <section className={`grid overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white divide-x divide-[#e4e6eb] ${cells.length === 4 ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-3'}`}>
+    <section className={`grid overflow-hidden rounded-[20px] bg-white divide-x divide-[#e4e6eb] ${cells.length === 4 ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-3'}`}>
       {cells.map((cell) => (
         <Link key={cell.label} href={cell.href} className="block px-4 py-4 hover:bg-[#fafbfc]">
           <p className="truncate text-xl font-bold leading-none text-[#0a0a0a] tabular-nums">{cell.value}</p>

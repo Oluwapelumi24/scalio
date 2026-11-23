@@ -26,7 +26,10 @@ export default async function BookingPaymentReturnPage({
   const user = await getCustomer()
 
   if (!user) {
-    const next = `/app/bookings/return${bookingId ? `?booking=${encodeURIComponent(bookingId)}` : ''}`
+    const qs = new URLSearchParams()
+    if (bookingId) qs.set('booking', bookingId)
+    if (reference) qs.set('reference', reference)
+    const next = `/app/bookings/return${qs.toString() ? `?${qs}` : ''}`
     return (
       <ReturnCard
         title="Sign in to finish"

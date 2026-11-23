@@ -7,7 +7,7 @@ export function StorefrontTabs({ active }: { active: StorefrontTabId }) {
   return (
     <div
       role="tablist"
-      aria-label="Storefront sections"
+      aria-label="Business sections"
       className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto bg-[#f7f8fa] pb-1 pt-1"
     >
       {STOREFRONT_TABS.map((tab) => {

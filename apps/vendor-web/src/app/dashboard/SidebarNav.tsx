@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Icon, type IconName } from '@/components/Icon'
 
 interface Item {
@@ -11,11 +11,13 @@ interface Item {
   icon: IconName
   roles: string[]
   exact?: boolean
+  /** Match storefront tab id when href includes ?tab= */
+  storefrontTab?: string
 }
 
 const PRIMARY: Item[] = [
   { href: '/dashboard', label: 'Home', icon: 'home', roles: ['owner', 'manager', 'practitioner', 'front_desk'], exact: true },
-  { href: '/dashboard/bookings', label: 'Bookings', icon: 'calendar', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
+  { href: '/dashboard/bookings', label: 'Calendar', icon: 'calendar', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/customers', label: 'Clients', icon: 'users', roles: ['owner', 'manager', 'front_desk'] },
   { href: '/dashboard/inbox', label: 'Inbox', icon: 'inbox', roles: ['owner', 'manager', 'front_desk'] },
 ]
@@ -31,8 +33,10 @@ const GROUPS: Group[] = [
   {
     title: 'Business',
     items: [
-      { href: '/dashboard/storefront?tab=page', label: 'Manage storefront', icon: 'shopping-bag', roles: ['owner', 'manager'] },
-      { href: '/dashboard/attendance', label: 'Attendance', icon: 'check', roles: ['owner', 'manager', 'practitioner', 'front_desk'], requiresSuite: true },
+      { href: '/dashboard/storefront?tab=page', label: 'Business page', icon: 'shopping-bag', roles: ['owner', 'manager'], storefrontTab: 'page' },
+      { href: '/dashboard/storefront?tab=services', label: 'Services', icon: 'package', roles: ['owner', 'manager'], storefrontTab: 'services' },
+      { href: '/dashboard/storefront?tab=team', label: 'Team', icon: 'users', roles: ['owner', 'manager'], storefrontTab: 'team' },
+      { href: '/dashboard/storefront?tab=hours', label: 'Hours', icon: 'clock', roles: ['owner', 'manager'], storefrontTab: 'hours' },
     ],
   },
   {
@@ -51,9 +55,8 @@ const GROUPS: Group[] = [
     items: [
       { href: '/dashboard/money', label: 'Money', icon: 'dollar', roles: ['owner', 'manager'] },
       { href: '/dashboard/reports', label: 'Reports', icon: 'chart', roles: ['owner', 'manager'] },
+      { href: '/dashboard/payroll', label: 'Payroll', icon: 'credit-card', roles: ['owner', 'manager'] },
       { href: '/dashboard/performance', label: 'Performance', icon: 'trending-up', roles: ['owner', 'manager', 'practitioner'] },
-      { href: '/dashboard/payroll', label: 'Payroll', icon: 'users', roles: ['owner', 'manager'] },
-      { href: '/dashboard/payments', label: 'Online payments', icon: 'credit-card', roles: ['owner', 'manager'] },
     ],
   },
 ]
@@ -65,16 +68,36 @@ const CREATE: (Item & { requiresSuite?: boolean })[] = [
   { href: '/dashboard/content/new', label: 'New post', icon: 'edit', roles: ['owner', 'manager', 'front_desk'], requiresSuite: true },
 ]
 
-function active(pathname: string, item: Item) {
+function active(pathname: string, searchTab: string | null, item: Item) {
   const pathOnly = item.href.split('?')[0]
-  if (pathOnly === '/dashboard/storefront') {
-    return pathname.startsWith('/dashboard/storefront') || pathname.startsWith('/dashboard/staff/')
+
+  if (item.storefrontTab) {
+    if (pathname.startsWith('/dashboard/staff')) return item.storefrontTab === 'team'
+    if (pathname.startsWith('/dashboard/attendance')) return item.storefrontTab === 'team'
+    if (!pathname.startsWith('/dashboard/storefront')) return false
+    const tab = searchTab || 'page'
+    return tab === item.storefrontTab
   }
+
+  if (pathOnly === '/dashboard/bookings') {
+    return pathname.startsWith('/dashboard/bookings')
+  }
+
   return item.exact ? pathname === pathOnly : pathname.startsWith(pathOnly)
 }
 
-function Row({ item, pathname, onNavigate }: { item: Item; pathname: string; onNavigate?: () => void }) {
-  const on = active(pathname, item)
+function Row({
+  item,
+  pathname,
+  searchTab,
+  onNavigate,
+}: {
+  item: Item
+  pathname: string
+  searchTab: string | null
+  onNavigate?: () => void
+}) {
+  const on = active(pathname, searchTab, item)
   return (
     <Link
       href={item.href}
@@ -102,6 +125,8 @@ export function SidebarNav({
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const searchTab = searchParams.get('tab')
   const [createOpen, setCreateOpen] = useState(false)
   const createRef = useRef<HTMLDivElement>(null)
   const primary = PRIMARY.filter((item) => item.roles.includes(role))
@@ -171,7 +196,7 @@ export function SidebarNav({
       <nav className="min-h-0 flex-1 overflow-y-auto px-5 py-2" aria-label="Business">
         <div className="space-y-0.5">
           {primary.map((item) => (
-            <Row key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+            <Row key={item.href} item={item} pathname={pathname} searchTab={searchTab} onNavigate={onNavigate} />
           ))}
         </div>
 
@@ -186,22 +211,12 @@ export function SidebarNav({
               <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#7d818b]">{group.title}</p>
               <div className="space-y-0.5">
                 {items.map((item) => (
-                  <Row key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+                  <Row key={item.href} item={item} pathname={pathname} searchTab={searchTab} onNavigate={onNavigate} />
                 ))}
               </div>
             </div>
           )
         })}
-
-        {(role === 'owner' || role === 'manager') && suiteUnlocked ? (
-          <div className="mt-6">
-            <Row
-              item={{ href: '/dashboard/interests', label: 'Your interests', icon: 'sliders', roles: ['owner', 'manager'] }}
-              pathname={pathname}
-              onNavigate={onNavigate}
-            />
-          </div>
-        ) : null}
       </nav>
 
       <div className="shrink-0 border-t border-[#e4e6eb] px-5 py-3">

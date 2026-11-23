@@ -64,7 +64,7 @@ function Tile({
   children: ReactNode
 }) {
   return (
-    <section className={`flex min-w-0 flex-col rounded-[24px] border border-[#e4e6eb] bg-white p-4 sm:p-5 ${span}`}>
+    <section className={`flex min-w-0 flex-col rounded-[24px] bg-white p-4 sm:p-5 ${span}`}>
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-[15px] font-bold text-[#0a0a0a]">{title}</h2>
         <Link href={href} className="shrink-0 text-[13px] font-semibold text-[#1e3a8a]">

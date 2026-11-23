@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Calendar, Compass, Home, UserRound } from 'lucide-react'
+import { Calendar, Compass, Home, LogIn, UserRound } from 'lucide-react'
 import type { Customer } from '@/lib/customer-session'
 
 const NAV = [
@@ -65,8 +65,9 @@ export function ProductShell({ user, children }: { user: Customer | null; childr
             ) : (
               <Link
                 href="/app/sign-in"
-                className="flex h-12 items-center justify-center rounded-[20px] bg-[#1e3a8a] text-sm font-semibold text-white hover:bg-[#0b1638]"
+                className="flex h-12 items-center justify-center gap-2 rounded-[20px] bg-[#1e3a8a] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(30,58,138,0.28)] hover:bg-[#0b1638]"
               >
+                <LogIn className="h-4 w-4" aria-hidden />
                 Sign in
               </Link>
             )}

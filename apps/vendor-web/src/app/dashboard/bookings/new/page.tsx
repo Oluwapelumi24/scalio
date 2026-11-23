@@ -1,18 +1,10 @@
 import Link from 'next/link'
-import { apiFetch } from '@/lib/api'
-import { requireToken } from '@/lib/session'
 import { NewBookingForm } from './NewBookingForm'
+import { loadBookingFormOptions } from './load-booking-form'
 
+/** Hard refresh / direct URL fallback when the intercept modal isn’t available. */
 export default async function NewBookingPage() {
-  const token = await requireToken()
-  const me = await apiFetch<{ role: string; staffId: string }>('/vendor-auth/me', token)
-
-  const [services, staff] = await Promise.all([
-    apiFetch<{ id: string; name: string }[]>('/vendor-admin/services', token).catch(() => []),
-    me.role === 'practitioner'
-      ? Promise.resolve([])
-      : apiFetch<{ id: string; name: string }[]>('/vendor-admin/staff', token).catch(() => []),
-  ])
+  const options = await loadBookingFormOptions()
 
   return (
     <div className="mx-auto max-w-xl">
@@ -25,11 +17,7 @@ export default async function NewBookingPage() {
           Book a walk-in, phone call or DM — same as customers booking themselves online.
         </p>
       </div>
-      <NewBookingForm
-        services={services}
-        staff={staff}
-        lockStaffId={me.role === 'practitioner' ? me.staffId : undefined}
-      />
+      <NewBookingForm {...options} />
     </div>
   )
 }

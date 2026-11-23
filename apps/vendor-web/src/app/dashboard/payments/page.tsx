@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
@@ -16,8 +17,11 @@ export default async function PaymentsPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Online payments</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <Link href="/dashboard/settings" className="text-sm font-semibold text-[#1e3a8a]">
+          ← Settings
+        </Link>
+        <h1 className="mt-1 text-2xl font-bold text-gray-900">Online payments</h1>
+        <p className="mt-1 text-sm text-gray-500">
           Optional — you can take walk-ins and pay-on-arrival without this. Add a bank account when you want deposits or card payments.
         </p>
       </div>

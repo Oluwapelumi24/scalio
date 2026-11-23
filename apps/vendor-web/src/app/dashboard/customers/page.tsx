@@ -50,7 +50,7 @@ export default async function CustomersPage() {
           }
         />
       ) : (
-        <div className="overflow-x-auto rounded-[20px] border border-[#e4e6eb] bg-white">
+        <div className="overflow-x-auto rounded-[20px] bg-white">
           <table className="w-full min-w-[36rem] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">

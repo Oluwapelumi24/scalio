@@ -23,17 +23,22 @@ export function NewBookingForm({
   services,
   staff,
   lockStaffId,
+  variant = 'page',
+  onCancel,
 }: {
   services: Option[]
   staff: Option[]
   /** Practitioners can only book themselves. */
   lockStaffId?: string
+  variant?: 'page' | 'modal'
+  onCancel?: () => void
 }) {
   const [state, formAction, pending] = useActionState(createBooking, null)
+  const modal = variant === 'modal'
 
   if (services.length === 0) {
     return (
-      <div className="rounded-[20px] border border-[#e4e6eb] bg-white p-6">
+      <div className={modal ? '' : 'rounded-[20px] border border-[#e4e6eb] bg-white p-6'}>
         <p className="text-sm leading-6 text-[#4a4e57]">Add a service before you book someone in.</p>
         <Link href="/dashboard/storefront?tab=services" className="mt-3 inline-block text-sm font-semibold text-[#1e3a8a]">
           Add a service
@@ -43,7 +48,10 @@ export function NewBookingForm({
   }
 
   return (
-    <form action={formAction} className="space-y-5 rounded-[20px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
+    <form
+      action={formAction}
+      className={modal ? 'space-y-5' : 'space-y-5 rounded-[20px] border border-[#e4e6eb] bg-white p-5 sm:p-6'}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className="mb-1.5 block text-xs font-semibold text-[#4a4e57]">Client name</label>
@@ -51,6 +59,7 @@ export function NewBookingForm({
             name="customerName"
             required
             autoComplete="name"
+            autoFocus={modal}
             placeholder="e.g. Chioma"
             className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm outline-none focus:border-[#1e3a8a]"
           />
@@ -110,7 +119,7 @@ export function NewBookingForm({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 pt-1">
         <button
           type="submit"
           disabled={pending}
@@ -118,10 +127,16 @@ export function NewBookingForm({
         >
           {pending ? 'Booking…' : 'Book client'}
         </button>
-        <Link href="/dashboard/bookings" className="text-sm font-semibold text-[#4a4e57]">
-          Cancel
-        </Link>
-        {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
+        {onCancel ? (
+          <button type="button" onClick={onCancel} className="text-sm font-semibold text-[#4a4e57]">
+            Cancel
+          </button>
+        ) : (
+          <Link href="/dashboard/bookings" className="text-sm font-semibold text-[#4a4e57]">
+            Cancel
+          </Link>
+        )}
+        {state?.error ? <p className="basis-full text-sm text-red-600">{state.error}</p> : null}
       </div>
     </form>
   )

@@ -32,10 +32,11 @@ export default async function SampleListingPage({
   const listing = listingBySlug(category.name, slug)
   if (!listing) notFound()
   const mode = await designMode()
+  const prelaunch = mode === 'prelaunch'
 
   return (
     <>
-      <Navbar site="live" />
+      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
       <main className="bg-white px-6 pb-24 pt-32">
         <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div>
@@ -95,7 +96,7 @@ export default async function SampleListingPage({
           </div>
         </div>
       </main>
-      <Footer site="live" />
+      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
       <DesignSwitchGate mode={mode} />
     </>
   )

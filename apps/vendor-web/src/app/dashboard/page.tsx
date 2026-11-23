@@ -206,16 +206,9 @@ export default async function DashboardHome() {
         />
         <div className="relative flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <h1 className="text-xl font-bold tracking-tight leading-7 sm:text-2xl">
-                Hey, {staff.name.split(' ')[0] || 'there'}
-              </h1>
-              {isManager && activated ? (
-                <Link href="/dashboard/customise" className="shrink-0 pt-0.5 text-sm font-semibold text-[#1e3a8a]">
-                  Customise home
-                </Link>
-              ) : null}
-            </div>
+            <h1 className="text-xl font-bold tracking-tight leading-7 sm:text-2xl">
+              Hey, {staff.name.split(' ')[0] || 'there'}
+            </h1>
             {summary ? <p className="mt-2 max-w-md text-sm leading-6 text-[#4a4e57]">{summary}</p> : null}
             {!ready ? (
               <Link
@@ -243,7 +236,7 @@ export default async function DashboardHome() {
       </section>
 
       {!home || !bookings ? (
-        <div className="mt-6 rounded-[20px] border border-[#e4e6eb] bg-white p-8 text-center">
+        <div className="mt-6 rounded-[20px] bg-white p-8 text-center">
           <p className="text-[#4a4e57]">We couldn&apos;t load your bookings.</p>
           <Link href="/dashboard" className="mt-3 inline-block text-sm font-semibold text-[#1e3a8a]">Try again</Link>
         </div>
@@ -251,7 +244,7 @@ export default async function DashboardHome() {
         <>
         <div className="mt-3 space-y-3">
           {ready && !approved ? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-[#e4e6eb] bg-white px-4 py-3 text-sm">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-white px-4 py-3 text-sm">
               <span
                 className={`inline-flex h-2 w-2 shrink-0 rounded-full ${profile?.approvalStatus === 'rejected' ? 'bg-[#b91c1c]' : 'bg-[#166534]'}`}
                 aria-hidden
@@ -291,21 +284,35 @@ export default async function DashboardHome() {
           {ready && approved ? <BookingLinkCard url={bookings.link} total={bookings.total} /> : null}
 
           {waitingActions.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {waitingActions.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex min-w-[11.5rem] shrink-0 items-center gap-2.5 rounded-2xl border border-[#e4e6eb] bg-white px-3.5 py-3"
-                >
-                  <IconTile name={item.icon} className="h-8 w-8 rounded-lg" />
-                  <span className="min-w-0">
-                    <span className="block text-[13px] font-semibold leading-4">{item.title}</span>
-                    <span className="mt-0.5 block text-[11px] leading-4 text-[#7d818b]">{item.hint}</span>
-                  </span>
-                </Link>
-              ))}
-            </div>
+            <section>
+              <div className="mb-3">
+                <h2 className="text-[15px] font-bold">While you wait</h2>
+                <p className="mt-0.5 text-sm text-[#7d818b]">
+                  Small polish now means a stronger first impression when you’re live.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {waitingActions.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex min-h-[8.5rem] flex-col rounded-[20px] border border-[#e4e6eb] bg-white p-5 transition-colors hover:border-[#c7d2fe] hover:bg-[#fafbff]"
+                  >
+                    <IconTile name={item.icon} className="h-11 w-11" />
+                    <span className="mt-4 block text-[15px] font-semibold leading-5 text-[#0a0a0a]">
+                      {item.title}
+                    </span>
+                    <span className="mt-1.5 block flex-1 text-sm leading-5 text-[#4a4e57]">
+                      {item.hint}
+                    </span>
+                    <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#1e3a8a]">
+                      Open
+                      <Icon name="chevron-right" className="h-4 w-4" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
           ) : null}
 
           {!ready ? (
@@ -322,7 +329,7 @@ export default async function DashboardHome() {
                   style={{ width: `${(steps.filter((step) => step.done).length / steps.length) * 100}%` }}
                 />
               </div>
-              <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+              <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] bg-white px-4">
                 {steps.map((step) => (
                   <li key={step.key}>
                     <Link href={step.href} className="flex items-center gap-3 py-4">
@@ -352,7 +359,7 @@ export default async function DashboardHome() {
           {alerts.length > 0 && (
             <section>
               <h2 className="text-[15px] font-bold">Needs your attention</h2>
-              <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] border border-[#e4e6eb] bg-white px-4">
+              <ul className="mt-3 divide-y divide-[#e4e6eb] rounded-[20px] bg-white px-4">
                 {alerts.map((item) => (
                   <li key={item.id} className="flex items-center gap-3 py-4">
                     <IconTile name={item.icon} className="h-9 w-9 rounded-xl" />
@@ -375,7 +382,7 @@ export default async function DashboardHome() {
                     key={item.id}
                     moduleId={item.id}
                     href={HREF[item.id] ?? '/dashboard'}
-                    className="flex min-w-0 items-center gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-4 text-sm"
+                    className="flex min-w-0 items-center gap-3 rounded-2xl bg-white p-4 text-sm"
                   >
                     <IconTile name={item.icon} />
                     <span className="min-w-0 flex-1 leading-5">{ATTENTION_TEXT[item.id]?.(item.data.count, item.data) ?? item.title}</span>
@@ -387,7 +394,7 @@ export default async function DashboardHome() {
           )}
 
           {suggestions.length > 0 && (
-            <section className="rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
+            <section className="rounded-[24px] bg-white p-5 sm:p-6">
               <h2 className="text-[15px] font-bold">Suggested for you</h2>
               <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {suggestions.map((item) => {
@@ -418,7 +425,7 @@ export default async function DashboardHome() {
                       key={item.id}
                       moduleId={item.id}
                       href={HREF[item.id] ?? '/dashboard'}
-                      className="flex min-w-0 items-start gap-3 rounded-2xl border border-[#e4e6eb] bg-[#fafbfc] p-4"
+                      className="flex min-w-0 items-start gap-3 rounded-2xl bg-[#fafbfc] p-4"
                     >
                       <IconTile name={item.icon} />
                       <span className="min-w-0 flex-1">
@@ -457,7 +464,7 @@ export default async function DashboardHome() {
                       key={item.id}
                       moduleId={item.id}
                       href={HREF[item.id] ?? '/dashboard'}
-                      className="flex min-w-0 flex-col gap-3 rounded-2xl border border-[#e4e6eb] bg-white p-3.5 transition-transform duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none motion-reduce:active:scale-100"
+                      className="flex min-w-0 flex-col gap-3 rounded-2xl bg-white p-3.5 transition-transform duration-150 ease-out active:scale-[0.96] motion-reduce:transition-none motion-reduce:active:scale-100"
                     >
                       <IconTile name={item.icon} />
                       <span className="text-sm font-semibold leading-5">{item.title}</span>

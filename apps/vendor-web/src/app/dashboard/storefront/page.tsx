@@ -19,14 +19,30 @@ export default async function StorefrontPage({
   if (!MANAGER_ROLES.includes(staff.role)) redirect('/dashboard')
 
   const tab = parseStorefrontTab((await searchParams).tab)
+  const copy = {
+    page: {
+      title: 'Business page',
+      body: 'What customers see when they find you — name, area, and photos.',
+    },
+    services: {
+      title: 'Services',
+      body: 'What people can book, how long it takes, and what it costs.',
+    },
+    team: {
+      title: 'Team',
+      body: 'Who works here, their roles, and who can take bookings.',
+    },
+    hours: {
+      title: 'Hours',
+      body: 'When you’re open, and days you’ve blocked off.',
+    },
+  }[tab]
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Manage storefront</h1>
-        <p className="mt-1.5 text-sm leading-6 text-[#4a4e57]">
-          Your business page, services, team, and hours — one place customers book from.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">{copy.title}</h1>
+        <p className="mt-1.5 text-sm leading-6 text-[#4a4e57]">{copy.body}</p>
       </div>
 
       <StorefrontTabs active={tab} />

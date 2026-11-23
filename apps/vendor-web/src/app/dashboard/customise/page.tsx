@@ -33,12 +33,15 @@ export default async function CustomisePage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Customise home</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <Link href="/dashboard/settings" className="text-sm font-semibold text-[#1e3a8a]">
+          ← Settings
+        </Link>
+        <h1 className="mt-1 text-2xl font-bold text-gray-900">Customise home</h1>
+        <p className="mt-1 text-sm text-gray-500">
           Pin what you use most to the top. Hidden items stay available in the menu. Alerts that need your attention
           always show. Changes apply on mobile too.
         </p>
-        <Link href="/dashboard/interests" className="inline-block mt-3 text-sm font-medium text-indigo-600">
+        <Link href="/dashboard/interests" className="mt-3 inline-block text-sm font-medium text-indigo-600">
           Change what you want help with →
         </Link>
       </div>

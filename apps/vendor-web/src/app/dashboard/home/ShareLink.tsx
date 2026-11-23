@@ -31,7 +31,7 @@ export function ShareLink({
   }
 
   return (
-    <div className="min-w-0 rounded-2xl border border-[#e4e6eb] bg-white p-4">
+    <div className="min-w-0 rounded-2xl bg-white p-4">
       <div className="flex items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#e7f6ee] text-[#166534]">
           <Icon name="share" className="h-5 w-5" />

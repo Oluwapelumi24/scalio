@@ -28,11 +28,12 @@ export default async function SampleListingsPage({
   if (!category) notFound()
   const listings = listingsFor(category.name)
   const mode = await designMode()
+  const prelaunch = mode === 'prelaunch'
   const place = where?.trim()
 
   return (
     <>
-      <Navbar site="live" />
+      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
       <main className="bg-white px-6 pb-24 pt-32">
         <div className="mx-auto max-w-6xl">
           <Link href="/#categories" className="text-sm font-semibold text-navy">
@@ -91,7 +92,7 @@ export default async function SampleListingsPage({
           </ul>
         </div>
       </main>
-      <Footer site="live" />
+      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
       <DesignSwitchGate mode={mode} />
     </>
   )

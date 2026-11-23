@@ -20,7 +20,7 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-lg space-y-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-[#0a0a0a]">Settings</h1>
-        <p className="mt-1.5 text-sm text-[#4a4e57]">Your account, password, and where alerts go.</p>
+        <p className="mt-1.5 text-sm text-[#4a4e57]">Your account, payments setup, and home preferences.</p>
       </div>
 
       <section className="rounded-[20px] border border-[#e4e6eb] bg-white p-5">
@@ -49,10 +49,20 @@ export default async function SettingsPage() {
           <span className="text-[#7d818b]">View</span>
         </Link>
         {isManager ? (
-          <Link href="/dashboard/interests" className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-medium hover:bg-[#f5f6f8]">
-            Home interests
-            <span className="text-[#7d818b]">Edit</span>
-          </Link>
+          <>
+            <Link href="/dashboard/payments" className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-medium hover:bg-[#f5f6f8]">
+              Online payments
+              <span className="text-[#7d818b]">Setup</span>
+            </Link>
+            <Link href="/dashboard/interests" className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-medium hover:bg-[#f5f6f8]">
+              Home interests
+              <span className="text-[#7d818b]">Edit</span>
+            </Link>
+            <Link href="/dashboard/customise" className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-medium hover:bg-[#f5f6f8]">
+              Customise home
+              <span className="text-[#7d818b]">Edit</span>
+            </Link>
+          </>
         ) : null}
       </section>
     </div>

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { MANAGER_ROLES } from '@/lib/personalisation'
@@ -33,8 +34,13 @@ export default async function AttendancePage() {
   return (
     <div className="max-w-4xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
-        <p className="text-sm text-gray-500 mt-1">Clock in when you start work and out when you finish. Mobile and web share the same records.</p>
+        {isManager ? (
+          <Link href="/dashboard/storefront?tab=team" className="text-sm font-semibold text-[#1e3a8a]">
+            ← Team
+          </Link>
+        ) : null}
+        <h1 className="mt-1 text-2xl font-bold text-gray-900">Attendance</h1>
+        <p className="mt-1 text-sm text-gray-500">Clock in when you start work and out when you finish. Mobile and web share the same records.</p>
       </div>
 
       <section className="flex items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 px-6 py-5">

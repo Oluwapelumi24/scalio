@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { getToken } from '@/lib/session'
+import { WEBSITE_URL } from '@/lib/site'
 import { logoutAction } from '@/app/actions/auth'
 import type { VendorProfile } from '@/lib/categories'
 import { DashboardChrome } from './DashboardChrome'
@@ -14,7 +15,13 @@ interface StaffPrincipal {
   role: string
 }
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode
+  modal: React.ReactNode
+}) {
   const token = await getToken()
   if (!token) redirect('/login')
 
@@ -43,6 +50,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ) : null
 
   const suiteUnlocked = profile?.approvalStatus === 'approved'
+  const shareUrl = profile?.slug
+    ? `${WEBSITE_URL.replace(/\/$/, '')}/book/${encodeURIComponent(profile.slug)}`
+    : null
 
   return (
     <DashboardChrome
@@ -54,8 +64,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
       banner={banner}
       suiteUnlocked={suiteUnlocked}
       previewUrl={profile?.slug ? '/dashboard/preview-storefront' : null}
+      shareUrl={shareUrl}
+      businessName={profile?.businessName ?? null}
+      shareLive={profile?.approvalStatus === 'approved'}
     >
       {children}
+      {modal}
     </DashboardChrome>
   )
 }

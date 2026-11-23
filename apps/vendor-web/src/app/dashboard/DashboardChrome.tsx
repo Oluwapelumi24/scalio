@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { Suspense, useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BrandLink } from '@/components/BrandLink'
 import { Icon, type IconName } from '@/components/Icon'
+import { ShareBusinessSheet } from './ShareBusinessSheet'
 import { SidebarNav } from './SidebarNav'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -16,7 +17,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 const TABS: { href: string; label: string; icon: IconName; roles: string[]; exact?: boolean }[] = [
   { href: '/dashboard', label: 'Home', icon: 'home', roles: ['owner', 'manager', 'practitioner', 'front_desk'], exact: true },
-  { href: '/dashboard/bookings', label: 'Bookings', icon: 'calendar', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
+  { href: '/dashboard/bookings', label: 'Calendar', icon: 'calendar', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/customers', label: 'Clients', icon: 'users', roles: ['owner', 'manager', 'front_desk'] },
   { href: '/dashboard/inbox', label: 'Inbox', icon: 'message-circle', roles: ['owner', 'manager', 'front_desk'] },
 ]
@@ -34,6 +35,9 @@ export function DashboardChrome({
   banner,
   suiteUnlocked = true,
   previewUrl = null,
+  shareUrl = null,
+  businessName = null,
+  shareLive = false,
   children,
 }: {
   name: string
@@ -45,11 +49,16 @@ export function DashboardChrome({
   /** When false, Marketing / Money / Attendance stay hidden so day-1 stays on setup. */
   suiteUnlocked?: boolean
   previewUrl?: string | null
+  /** Public /book/:slug link customers use to check the business out and book. */
+  shareUrl?: string | null
+  businessName?: string | null
+  shareLive?: boolean
   children: React.ReactNode
 }) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const accountRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
   const tabs = TABS.filter((tab) => tab.roles.includes(role))
@@ -57,6 +66,7 @@ export function DashboardChrome({
   useEffect(() => {
     setMenuOpen(false)
     setAccountOpen(false)
+    setShareOpen(false)
   }, [pathname])
 
   useEffect(() => {
@@ -90,7 +100,9 @@ export function DashboardChrome({
         <div className="px-5 py-5">
           <BrandLink className="h-7 w-auto" />
         </div>
-        <SidebarNav role={role} suiteUnlocked={suiteUnlocked} />
+        <Suspense fallback={<div className="flex-1" />}>
+          <SidebarNav role={role} suiteUnlocked={suiteUnlocked} />
+        </Suspense>
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -137,8 +149,13 @@ export function DashboardChrome({
                 <AccountMenu
                   role={role}
                   previewUrl={previewUrl}
+                  canShare={Boolean(shareUrl)}
                   logout={logout}
                   onNavigate={() => setAccountOpen(false)}
+                  onShare={() => {
+                    setAccountOpen(false)
+                    setShareOpen(true)
+                  }}
                 />
               ) : null}
             </div>
@@ -209,9 +226,21 @@ export function DashboardChrome({
                 <Icon name="x" className="h-5 w-5" />
               </button>
             </div>
-            <SidebarNav role={role} suiteUnlocked={suiteUnlocked} onNavigate={() => setMenuOpen(false)} />
+            <Suspense fallback={<div className="flex-1" />}>
+              <SidebarNav role={role} suiteUnlocked={suiteUnlocked} onNavigate={() => setMenuOpen(false)} />
+            </Suspense>
           </div>
         </div>
+      ) : null}
+
+      {shareUrl && businessName ? (
+        <ShareBusinessSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          url={shareUrl}
+          businessName={businessName}
+          live={shareLive}
+        />
       ) : null}
     </div>
   )
@@ -220,29 +249,39 @@ export function DashboardChrome({
 function AccountMenu({
   role,
   previewUrl,
+  canShare,
   logout,
   onNavigate,
+  onShare,
 }: {
   role: string
   previewUrl: string | null
+  canShare: boolean
   logout: () => Promise<void>
   onNavigate: () => void
+  onShare: () => void
 }) {
   const canManage = role === 'owner' || role === 'manager'
   const item = 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#0a0a0a] hover:bg-[#f5f6f8]'
   return (
     <div role="menu" className="absolute right-0 top-12 z-40 w-64 rounded-2xl border border-[#e4e6eb] bg-white p-1.5 shadow-lg">
       {canManage ? (
-        <Link href="/dashboard/storefront" role="menuitem" onClick={onNavigate} className={item}>
+        <Link href="/dashboard/storefront?tab=page" role="menuitem" onClick={onNavigate} className={item}>
           <Icon name="shopping-bag" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
-          Manage storefront
+          Business page
         </Link>
       ) : null}
       {previewUrl ? (
         <a href={previewUrl} target="_blank" rel="noopener noreferrer" role="menuitem" onClick={onNavigate} className={item}>
           <Icon name="eye" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
-          Preview storefront
+          Preview booking page
         </a>
+      ) : null}
+      {canShare ? (
+        <button type="button" role="menuitem" onClick={onShare} className={`${item} w-full text-left`}>
+          <Icon name="share" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
+          Share business
+        </button>
       ) : null}
       <Link href="/dashboard/settings" role="menuitem" onClick={onNavigate} className={item}>
         <Icon name="sliders" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />

@@ -8,6 +8,7 @@ import { getCustomer } from '@/lib/customer-session'
 import { AvailabilityPicker } from './AvailabilityPicker'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const FALLBACK_ACCENT = '#1e3a8a'
 
 async function loadVendor(slug: string, preview?: string): Promise<PublicVendor | null> {
   try {
@@ -52,52 +53,97 @@ export default async function BookingPage({
   if (!vendor) notFound()
   const user = await getCustomer()
 
-  const brand = vendor.themeColor ?? '#4f46e5'
+  const accent = vendor.themeColor?.trim() || FALLBACK_ACCENT
   const hours = new Map(vendor.businessHours.map((h) => [h.dayOfWeek, h]))
   const paymentModes = [...new Set(vendor.services.map((s) => s.paymentMode))]
+  const today = new Date().getDay()
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div
+      className="min-h-screen bg-[#f7f8fb] text-slate-950"
+      style={{ ['--book-accent' as string]: accent }}
+    >
       {vendor.preview ? (
-        <div role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-950">
-          Preview only — customers can’t open this page until your business is approved.
+        <div
+          role="status"
+          className="border-b border-[#fde8d8] bg-[#fff7ed] px-4 py-2.5 text-center text-[13px] font-medium text-[#9a3412]"
+        >
+          Preview only — customers can’t open this page until you’re approved.
         </div>
       ) : null}
-      <header style={{ backgroundColor: brand }} className="text-white">
-        <div className="mx-auto max-w-3xl px-6 pb-10 pt-8">
-          <Link href="/" className="text-sm font-semibold text-white/80 hover:text-white">Veno</Link>
-          <div className="mt-6 flex items-center gap-4">
+
+      <header className="relative overflow-hidden text-white">
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(155deg, color-mix(in srgb, ${accent} 92%, #0b1638) 0%, ${accent} 48%, color-mix(in srgb, ${accent} 78%, #ffffff) 100%)`,
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl"
+        />
+        <div
+          aria-hidden
+          className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-black/10 blur-3xl"
+        />
+
+        <div className="relative mx-auto max-w-5xl px-5 pb-12 pt-7 sm:px-8 sm:pb-14 sm:pt-8">
+          <Link
+            href="/"
+            className="inline-flex text-[13px] font-semibold tracking-wide text-white/75 transition-colors hover:text-white"
+          >
+            Veno
+          </Link>
+
+          <div className="mt-8 flex items-start gap-4 sm:mt-10 sm:gap-5">
             {vendor.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={vendor.logoUrl} alt="" className="h-16 w-16 rounded-2xl bg-white object-cover" />
+              <img
+                src={vendor.logoUrl}
+                alt=""
+                className="h-[72px] w-[72px] shrink-0 rounded-[22px] bg-white object-cover shadow-[0_8px_24px_rgba(0,0,0,0.18)] outline outline-1 outline-black/10 -outline-offset-1 sm:h-20 sm:w-20"
+              />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl font-bold">
+              <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white/15 text-3xl font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-sm sm:h-20 sm:w-20">
                 {vendor.businessName.charAt(0)}
               </div>
             )}
-            <div>
-              <h1 className="text-2xl font-bold sm:text-3xl">{vendor.businessName}</h1>
-              <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/80">
-                <span>{vendor.category}</span>
-                {vendor.rating != null && (
-                  <span className="flex items-center gap-1">
-                    <Star className="h-3.5 w-3.5 fill-current" aria-hidden /> {vendor.rating.toFixed(1)}
-                    {vendor.reviewCount ? ` (${vendor.reviewCount})` : ''}
+            <div className="min-w-0 pt-0.5">
+              <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-white/70">
+                {vendor.category}
+              </p>
+              <h1 className="mt-1 font-display text-[2rem] font-semibold leading-[1.1] tracking-tight sm:text-4xl">
+                {vendor.businessName}
+              </h1>
+              <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/80">
+                {vendor.rating != null ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-current" aria-hidden />
+                    <span className="font-semibold text-white">{vendor.rating.toFixed(1)}</span>
+                    {vendor.reviewCount ? (
+                      <span className="text-white/65">({vendor.reviewCount})</span>
+                    ) : null}
                   </span>
-                )}
-                {vendor.address && (
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" aria-hidden /> {vendor.address}
+                ) : null}
+                {vendor.address ? (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    {vendor.address}
                   </span>
-                )}
+                ) : null}
               </p>
             </div>
           </div>
-          {vendor.description && <p className="mt-5 max-w-xl text-white/90">{vendor.description}</p>}
+
+          {vendor.description ? (
+            <p className="mt-6 max-w-2xl text-[15px] leading-6 text-white/88">{vendor.description}</p>
+          ) : null}
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-3xl gap-8 px-6 py-8 md:grid-cols-[1fr_220px]">
+      <main className="relative mx-auto grid max-w-5xl gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
         <AvailabilityPicker
           vendorId={vendor.id}
           slug={vendor.slug}
@@ -110,21 +156,39 @@ export default async function BookingPage({
           initialAt={query.at ?? null}
           preview={Boolean(vendor.preview)}
           previewToken={query.preview}
+          accent={accent}
         />
 
-        <aside className="space-y-6">
-          <section>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Opening hours</h2>
+        <aside className="space-y-4 lg:pt-1">
+          <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_1px_0_rgba(15,15,20,0.04),0_8px_24px_rgba(15,15,20,0.04)]">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Opening hours</h2>
             {vendor.businessHours.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">Hours not listed yet.</p>
+              <p className="mt-3 text-sm leading-5 text-slate-500">Hours not listed yet.</p>
             ) : (
-              <dl className="mt-2 space-y-1 text-sm">
+              <dl className="mt-3 space-y-1.5">
                 {DAY_NAMES.map((name, day) => {
                   const h = hours.get(day)
+                  const isToday = day === today
                   return (
-                    <div key={name} className="flex justify-between gap-3">
-                      <dt className="text-slate-600">{name.slice(0, 3)}</dt>
-                      <dd className={h ? 'text-slate-900' : 'text-slate-400'}>
+                    <div
+                      key={name}
+                      className={`flex items-baseline justify-between gap-3 rounded-xl px-2.5 py-1.5 text-sm ${
+                        isToday ? 'bg-[color-mix(in_srgb,var(--book-accent)_10%,white)]' : ''
+                      }`}
+                    >
+                      <dt className={isToday ? 'font-semibold text-slate-950' : 'text-slate-500'}>
+                        {name.slice(0, 3)}
+                        {isToday ? <span className="sr-only"> (today)</span> : null}
+                      </dt>
+                      <dd
+                        className={`tabular-nums ${
+                          h
+                            ? isToday
+                              ? 'font-semibold text-slate-950'
+                              : 'text-slate-800'
+                            : 'text-slate-400'
+                        }`}
+                      >
                         {h ? `${formatClock(h.opensAtMinutes)} – ${formatClock(h.closesAtMinutes)}` : 'Closed'}
                       </dd>
                     </div>
@@ -134,21 +198,26 @@ export default async function BookingPage({
             )}
           </section>
 
-          {paymentModes.length > 0 && (
-            <section>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Payment</h2>
-              <ul className="mt-2 space-y-1 text-sm text-slate-700">
+          {paymentModes.length > 0 ? (
+            <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_1px_0_rgba(15,15,20,0.04),0_8px_24px_rgba(15,15,20,0.04)]">
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Payment</h2>
+              <ul className="mt-3 space-y-2 text-sm leading-5 text-slate-700">
                 {paymentModes.map((mode) => {
                   const example = vendor.services.find((s) => s.paymentMode === mode)!
                   return <li key={mode}>{PAYMENT_LABEL[mode](example)}</li>
                 })}
               </ul>
             </section>
-          )}
+          ) : null}
         </aside>
       </main>
 
-      <footer className="pb-10 text-center text-xs text-slate-400">Powered by Veno</footer>
+      <footer className="pb-10 text-center text-xs text-slate-400">
+        Powered by{' '}
+        <Link href="/" className="font-semibold text-slate-500 hover:text-navy">
+          Veno
+        </Link>
+      </footer>
     </div>
   )
 }

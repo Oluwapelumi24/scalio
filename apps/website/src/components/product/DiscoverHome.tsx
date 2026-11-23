@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, MapPin, Search, SlidersHorizontal, Star, X } from 'lucide-react'
+import { ChevronDown, LogIn, MapPin, Search, SlidersHorizontal, Star, X } from 'lucide-react'
 import {
   INTERESTS,
   POPULAR_AREAS,
@@ -183,7 +183,11 @@ export function DiscoverHome({
               {user.name.slice(0, 2).toUpperCase()}
             </Link>
           ) : (
-            <Link href="/app/sign-in" className="flex items-center rounded-[20px] bg-[#1e3a8a] px-4 text-sm font-semibold text-white hover:bg-[#0b1638] h-12">
+            <Link
+              href="/app/sign-in"
+              className="flex h-12 items-center gap-2 rounded-[20px] bg-[#1e3a8a] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(30,58,138,0.28)] hover:bg-[#0b1638]"
+            >
+              <LogIn className="h-4 w-4" aria-hidden />
               Sign in
             </Link>
           )}

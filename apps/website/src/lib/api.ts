@@ -7,12 +7,35 @@ export class ApiError extends Error {
   }
 }
 
+/** Nest often returns a raw "Internal server error"; customers need a next step. */
+export function friendlyApiMessage(status: number, message: string): string {
+  const raw = message.trim().toLowerCase()
+  if (
+    status >= 500 ||
+    raw === 'internal server error' ||
+    raw.includes('econnrefused') ||
+    raw.includes('fetch failed')
+  ) {
+    return 'The booking service is unavailable right now. Check that the API is running, then refresh.'
+  }
+  if (status === 0 || raw.includes('network')) {
+    return 'Could not reach the booking service. Check your connection and try again.'
+  }
+  return message
+}
+
 export async function apiFetch<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...(init.headers as Record<string, string>) },
-    cache: 'no-store',
-  })
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...init,
+      headers: { 'Content-Type': 'application/json', ...(init.headers as Record<string, string>) },
+      cache: 'no-store',
+    })
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'fetch failed'
+    throw new ApiError(0, friendlyApiMessage(0, detail))
+  }
 
   if (!res.ok) {
     let msg = res.statusText
@@ -23,7 +46,7 @@ export async function apiFetch<T = unknown>(path: string, init: RequestInit = {}
     } catch {
       /* keep statusText */
     }
-    throw new ApiError(res.status, msg)
+    throw new ApiError(res.status, friendlyApiMessage(res.status, msg))
   }
 
   if (res.status === 204) return undefined as T

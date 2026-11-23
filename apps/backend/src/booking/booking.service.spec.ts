@@ -652,6 +652,9 @@ describe('BookingService', () => {
       customerId: 'customer-1',
       paymentMode: 'pay_on_arrival',
       amountDueKobo: 0,
+      amountPaidKobo: 0,
+      totalPriceKobo: 10_000,
+      vendorId: 'vendor-1',
     };
 
     it('starts a Paystack transaction for a confirmed booking and updates its payment mode', async () => {
@@ -689,6 +692,8 @@ describe('BookingService', () => {
         amountKobo: 5000,
         reference: expect.any(String) as string,
         subaccountCode: 'ACCT_vendor1',
+        callbackUrl:
+          'http://localhost:3003/app/bookings/return?booking=booking-1',
       });
       expect(result).toEqual({
         booking: updated,

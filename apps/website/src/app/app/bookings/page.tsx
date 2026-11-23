@@ -5,7 +5,14 @@ import { BookingList } from '@/components/product/BookingList'
 import type { ListedVendor } from '@/lib/product'
 
 interface BookingRow {
-  booking: { id: string; status: string; scheduledAt: string }
+  booking: {
+    id: string
+    status: string
+    scheduledAt: string
+    paymentMode?: 'pay_on_arrival' | 'deposit' | 'full_prepayment'
+    amountDueKobo?: number
+    amountPaidKobo?: number
+  }
   vendor: Pick<ListedVendor, 'id' | 'businessName' | 'logoUrl' | 'category'>
 }
 

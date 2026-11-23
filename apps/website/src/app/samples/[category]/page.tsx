@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { MapPin, Star } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
-import { DesignSwitch } from '@/components/site/DesignSwitch'
+import { DesignSwitchGate } from '@/components/site/DesignSwitchGate'
 import { designMode } from '@/lib/design-preview'
 import { categoryFromSlug, listingsFor } from '@/lib/samples'
 
@@ -92,7 +92,7 @@ export default async function SampleListingsPage({
         </div>
       </main>
       <Footer site="live" />
-      <DesignSwitch mode={mode} />
+      <DesignSwitchGate mode={mode} />
     </>
   )
 }

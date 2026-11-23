@@ -90,9 +90,11 @@ export function BookedPanel({
           >
             {pending ? 'Opening checkout…' : `Pay ${formatNaira(amountForMode(services, mode))}`}
           </button>
-          <Link href="/app/bookings" className="flex h-12 items-center justify-center rounded-full border border-[#c9ced8] text-sm font-semibold">
-            I’ll pay at the appointment
-          </Link>
+          {floor === 'pay_on_arrival' ? (
+            <Link href="/app/bookings" className="flex h-12 items-center justify-center rounded-full border border-[#c9ced8] text-sm font-semibold">
+              I’ll pay at the appointment
+            </Link>
+          ) : null}
         </div>
       )}
     </div>

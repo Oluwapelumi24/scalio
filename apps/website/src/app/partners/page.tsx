@@ -11,7 +11,7 @@ import { SetupSteps } from '@/components/partners/SetupSteps'
 import { FeatureTour } from '@/components/partners/FeatureTour'
 import { PartnerFaq } from '@/components/partners/PartnerFaq'
 import { PartnerFeatures } from '@/components/partners/PartnerFeatures'
-import { DesignSwitch } from '@/components/site/DesignSwitch'
+import { DesignSwitchGate } from '@/components/site/DesignSwitchGate'
 import { designMode } from '@/lib/design-preview'
 
 export const metadata: Metadata = {
@@ -166,7 +166,7 @@ export default async function PartnersPage() {
         <Waitlist purpose={prelaunch ? 'launch' : 'later'} defaultAudience="vendor" />
       </main>
       <Footer site={prelaunch ? 'prelaunch' : 'live'} />
-      <DesignSwitch mode={mode} />
+      <DesignSwitchGate mode={mode} />
     </>
   )
 }

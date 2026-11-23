@@ -9,6 +9,7 @@ import { ModuleLink } from './home/ModuleLink'
 import { ShareLink } from './home/ShareLink'
 import { BookingLinkCard } from './home/BookingLinkCard'
 import { ActivityBento, type BentoClient } from './home/ActivityBento'
+import { TodayStats, type TodayStatsData } from './home/TodayStats'
 import { GreetingArt, IconTile } from './home/visuals'
 import type { InboxConversation } from '@/lib/inbox'
 
@@ -107,7 +108,7 @@ export default async function DashboardHome() {
     if (!(err instanceof ApiError)) throw err
   }
   const canSeePeople = staff.role !== 'practitioner'
-  const [profile, recentClients, recentChats] = await Promise.all([
+  const [profile, recentClients, recentChats, dayStats] = await Promise.all([
     apiFetch<VendorProfile>('/vendor-admin/profile', token).catch(() => null),
     canSeePeople
       ? apiFetch<BentoClient[]>('/vendor-admin/customers', token).then((rows) => rows.slice(0, 5)).catch(() => [] as BentoClient[])
@@ -117,6 +118,7 @@ export default async function DashboardHome() {
           .then((rows) => rows.slice(0, 5))
           .catch(() => [] as InboxConversation[])
       : Promise.resolve([] as InboxConversation[]),
+    apiFetch<TodayStatsData>('/vendor-admin/bookings/summary', token).catch(() => null),
   ])
   const listed = profile ? listingReady(profile) : true
   const approved = profile?.approvalStatus === 'approved'
@@ -124,14 +126,17 @@ export default async function DashboardHome() {
   const bookings = home?.bookings
   const ready = !!bookings && bookings.setup.services && bookings.setup.hours && listed
   const upcomingCount = bookings?.upcoming.length ?? 0
+  const expectedToday = dayStats?.bookings ?? 0
   // Approval status lives in the layout banner — keep the greeting to the job in front of them.
   const summary = !bookings
     ? ''
     : !ready
       ? 'Add a service and your opening hours to finish setup.'
-      : upcomingCount === 0
-        ? 'No bookings coming up yet.'
-        : `You have ${upcomingCount} ${upcomingCount === 1 ? 'booking' : 'bookings'} coming up.`
+      : expectedToday > 0
+        ? `${expectedToday} ${expectedToday === 1 ? 'guest' : 'guests'} expected today.`
+        : upcomingCount === 0
+          ? 'No bookings coming up yet.'
+          : `You have ${upcomingCount} ${upcomingCount === 1 ? 'booking' : 'bookings'} coming up.`
   const alerts = home?.layers.attention.filter((item) => item.id in BOOKING_ALERTS) ?? []
   const otherAttention = home?.layers.attention.filter((item) => !(item.id in BOOKING_ALERTS)) ?? []
   const steps = bookings
@@ -219,9 +224,21 @@ export default async function DashboardHome() {
               >
                 Finish setup
               </Link>
+            ) : ready && !approved && profile?.approvalStatus !== 'rejected' ? (
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/dashboard/bookings/new"
+                  className="inline-flex h-10 items-center rounded-full bg-[#1e3a8a] px-4 text-sm font-semibold text-white"
+                >
+                  Book a walk-in
+                </Link>
+                <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
+                  Edit business page
+                </Link>
+              </div>
             ) : null}
           </div>
-          <GreetingArt tone={greetingTone} className="hidden h-28 w-40 sm:block" />
+          <GreetingArt tone={greetingTone} className="hidden h-24 w-36 sm:block" />
         </div>
       </section>
 
@@ -233,75 +250,65 @@ export default async function DashboardHome() {
       ) : (
         <>
         <div className="mt-3 space-y-3">
-          {ready && approved ? (
-            <BookingLinkCard url={bookings.link} total={bookings.total} />
-          ) : ready ? (
-            <div className="grid gap-3 lg:grid-cols-2 lg:items-stretch">
-              <section className="flex h-full flex-col rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
-                <div className="flex items-start gap-4">
-                  <IconTile
-                    name={profile?.approvalStatus === 'rejected' ? 'edit-3' : 'shield'}
-                    className="h-11 w-11"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-semibold leading-6">
-                      {profile?.approvalStatus === 'rejected' ? 'Update your business page' : 'Your booking page is ready'}
-                    </h2>
-                    <p className="mt-1.5 text-sm leading-6 text-[#4a4e57]">
-                      {profile?.approvalStatus === 'rejected'
-                        ? 'Fix what’s noted in the banner, then we’ll look again.'
-                        : 'Your public booking link stays private until approval. You can still book walk-ins while you wait.'}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
-                  {profile?.approvalStatus !== 'rejected' ? (
-                    <Link
-                      href="/dashboard/bookings/new"
-                      className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
-                    >
-                      Book a walk-in
-                    </Link>
-                  ) : (
-                    <Link
-                      href="/dashboard/storefront?tab=page"
-                      className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
-                    >
-                      Edit business page
-                    </Link>
-                  )}
-                  {profile?.approvalStatus !== 'rejected' ? (
-                    <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
-                      Edit business page
-                    </Link>
-                  ) : null}
-                </div>
-              </section>
-
-              {waitingActions.length > 0 ? (
-                <section className="flex h-full flex-col rounded-[24px] border border-[#e4e6eb] bg-white p-5 sm:p-6">
-                  <h2 className="text-[15px] font-bold">While you wait</h2>
-                  <p className="mt-1 text-[13px] leading-5 text-[#4a4e57]">
-                    Small polish now means a stronger first impression when you’re live.
-                  </p>
-                  <ul className="mt-4 divide-y divide-[#f0f1f4]">
-                    {waitingActions.map((item) => (
-                      <li key={item.href}>
-                        <Link href={item.href} className="flex items-center gap-3 py-3">
-                          <IconTile name={item.icon} className="h-9 w-9 rounded-xl" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-semibold">{item.title}</span>
-                            <span className="block text-[13px] leading-5 text-[#4a4e57]">{item.hint}</span>
-                          </span>
-                          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+          {ready && !approved ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-[#e4e6eb] bg-white px-4 py-3 text-sm">
+              <span
+                className={`inline-flex h-2 w-2 shrink-0 rounded-full ${profile?.approvalStatus === 'rejected' ? 'bg-[#b91c1c]' : 'bg-[#166534]'}`}
+                aria-hidden
+              />
+              <p className="min-w-0 flex-1 text-[#4a4e57]">
+                {profile?.approvalStatus === 'rejected' ? (
+                  <>
+                    <span className="font-semibold text-[#0a0a0a]">Update your business page. </span>
+                    Fix what’s noted in the banner, then we’ll look again.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold text-[#0a0a0a]">Booking page ready — awaiting approval. </span>
+                    Your public link stays private; walk-ins still work.
+                  </>
+                )}
+              </p>
+              {profile?.approvalStatus === 'rejected' ? (
+                <Link href="/dashboard/storefront?tab=page" className="shrink-0 font-semibold text-[#1e3a8a]">
+                  Edit page
+                </Link>
               ) : null}
             </div>
-          ) : (
+          ) : null}
+
+          {ready ? (
+            <TodayStats
+              data={{
+                bookings: dayStats?.bookings ?? 0,
+                upcoming: dayStats?.upcoming ?? upcomingCount,
+                awaitingPayment: dayStats?.awaitingPayment ?? 0,
+                salesKobo: dayStats?.salesKobo ?? null,
+              }}
+            />
+          ) : null}
+
+          {ready && approved ? <BookingLinkCard url={bookings.link} total={bookings.total} /> : null}
+
+          {waitingActions.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {waitingActions.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex min-w-[11.5rem] shrink-0 items-center gap-2.5 rounded-2xl border border-[#e4e6eb] bg-white px-3.5 py-3"
+                >
+                  <IconTile name={item.icon} className="h-8 w-8 rounded-lg" />
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-semibold leading-4">{item.title}</span>
+                    <span className="mt-0.5 block text-[11px] leading-4 text-[#7d818b]">{item.hint}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+
+          {!ready ? (
             <section className="min-w-0">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="text-[15px] font-bold">Start taking bookings</h2>
@@ -340,7 +347,7 @@ export default async function DashboardHome() {
                 ))}
               </ul>
             </section>
-          )}
+          ) : null}
 
           {alerts.length > 0 && (
             <section>

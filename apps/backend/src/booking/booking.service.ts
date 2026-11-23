@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, gte, inArray, lt, sql, sum } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
@@ -54,7 +55,15 @@ export class BookingService {
     private readonly push: PushService,
     @Optional() private readonly feedback?: FeedbackService,
     @Optional() private readonly vendorNotifications?: VendorNotificationsService,
+    @Optional() private readonly config?: ConfigService,
   ) {}
+
+  /** Origin of apps/website — derived from PUBLIC_BOOKING_URL (`…/book`). */
+  private customerWebOrigin(): string {
+    const bookingUrl =
+      this.config?.get<string>('PUBLIC_BOOKING_URL') ?? 'http://localhost:3003/book';
+    return bookingUrl.replace(/\/book\/?$/, '');
+  }
 
   /**
    * Acquires the Redis lock for this slot, then creates the booking straight
@@ -276,10 +285,16 @@ export class BookingService {
     if (!row) {
       throw new NotFoundException(`Booking ${bookingId} not found`);
     }
-    if (row.booking.status !== 'confirmed') {
+    if (
+      row.booking.status !== 'confirmed' &&
+      row.booking.status !== 'pending_payment'
+    ) {
       throw new ConflictException(
         `Booking ${bookingId} is not awaiting payment`,
       );
+    }
+    if (row.booking.amountPaidKobo >= amountDueKobo && amountDueKobo > 0) {
+      throw new ConflictException('This booking is already paid.');
     }
     // The amount comes from the client, so it's checked against the booking's price.
     const price = row.booking.totalPriceKobo;
@@ -306,6 +321,7 @@ export class BookingService {
       amountKobo: amountDueKobo,
       reference,
       subaccountCode,
+      callbackUrl: `${this.customerWebOrigin()}/app/bookings/return?booking=${bookingId}`,
     });
 
     const [updated] = await this.db

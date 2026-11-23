@@ -132,7 +132,7 @@ export function SidebarNav({
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-visible">
       {create.length > 0 ? (
-        <div ref={createRef} className="relative z-30 shrink-0 px-3 pb-1 pt-2">
+        <div ref={createRef} className="relative z-30 shrink-0 px-5 pb-1 pt-2">
           <button
             type="button"
             onClick={() => setCreateOpen((open) => !open)}
@@ -168,7 +168,7 @@ export function SidebarNav({
         </div>
       ) : null}
 
-      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-2" aria-label="Business">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-5 py-2" aria-label="Business">
         <div className="space-y-0.5">
           {primary.map((item) => (
             <Row key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
@@ -204,17 +204,15 @@ export function SidebarNav({
         ) : null}
       </nav>
 
-      <div className="shrink-0 border-t border-[#e4e6eb] p-3">
+      <div className="shrink-0 border-t border-[#e4e6eb] px-5 py-3">
         <Link
           href="/dashboard/help"
           onClick={onNavigate}
-          className="flex items-start gap-3 rounded-2xl bg-[#f5f6f8] px-3 py-3 hover:bg-[#eef0f4]"
+          className="flex flex-col items-center rounded-2xl bg-[#e8edfa] px-4 py-5 text-center hover:bg-[#dce4f7]"
         >
-          <Icon name="help-circle" className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#1e3a8a]" />
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold text-[#0a0a0a]">Help and support</span>
-            <span className="mt-0.5 block text-[12px] leading-4 text-[#7d818b]">We’re here if you get stuck</span>
-          </span>
+          <Icon name="help-circle" className="h-6 w-6 text-[#1e3a8a]" />
+          <span className="mt-2.5 text-sm font-semibold text-[#0a0a0a]">Help and support</span>
+          <span className="mt-1 text-[12px] leading-4 text-[#4a4e57]">We’re here if you get stuck</span>
         </Link>
       </div>
     </div>

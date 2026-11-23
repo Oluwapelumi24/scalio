@@ -9,7 +9,7 @@ import { FeatureOrbs } from '@/components/home/Sections'
 import { Faq } from '@/components/Faq'
 import { Waitlist } from '@/components/Waitlist'
 import { Footer } from '@/components/Footer'
-import { DesignSwitch } from '@/components/site/DesignSwitch'
+import { DesignSwitchGate } from '@/components/site/DesignSwitchGate'
 import { CATEGORIES, SITE_URL } from '@/lib/constants'
 import { designMode } from '@/lib/design-preview'
 
@@ -66,7 +66,7 @@ export default async function Home() {
         <Waitlist purpose={prelaunch ? 'launch' : 'later'} />
       </main>
       <Footer site={prelaunch ? 'prelaunch' : 'live'} />
-      <DesignSwitch mode={mode} />
+      <DesignSwitchGate mode={mode} />
     </>
   )
 }

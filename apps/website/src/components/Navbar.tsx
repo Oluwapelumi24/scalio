@@ -15,7 +15,6 @@ const LINKS = [
 ]
 
 const PRELAUNCH_LINKS = [
-  { label: 'Book', href: '/app' },
   { label: 'Users', href: '/#customers' },
   { label: 'Partners', href: '/partners' },
   { label: 'FAQ', href: '/#faq' },

@@ -158,84 +158,35 @@ export function EmptyClients({ className }: { className?: string } = {}) {
 
 type GreetingTone = 'setup' | 'review' | 'quiet' | 'busy'
 
-/** Wide illustration for the home greeting card. */
-export function GreetingArt({ tone, className = 'h-28 w-40' }: { tone: GreetingTone; className?: string }) {
-  if (tone === 'setup') {
-    return (
-      <svg viewBox="0 0 160 112" className={`shrink-0 ${className}`} aria-hidden>
-        <circle cx="128" cy="28" r="36" fill="#c7d2fe" opacity="0.55" />
-        <circle cx="28" cy="88" r="22" fill="#fde8d8" opacity="0.9" />
-        <rect x="38" y="28" width="72" height="56" rx="14" fill="#ffffff" />
-        <rect x="50" y="40" width="28" height="4" rx="2" fill="#93a4d6" />
-        <rect x="50" y="50" width="40" height="4" rx="2" fill="#c7d2fe" />
-        <rect x="50" y="60" width="22" height="4" rx="2" fill="#c7d2fe" />
-        <circle cx="108" cy="72" r="18" fill="#1e3a8a" />
-        <path d="M102 72h12M108 66v12" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" />
-      </svg>
-    )
-  }
-
-  if (tone === 'review') {
-    return (
-      <svg viewBox="0 0 160 112" className={`shrink-0 ${className}`} aria-hidden>
-        <circle cx="132" cy="30" r="34" fill="#bbf7d0" opacity="0.7" />
-        <circle cx="24" cy="82" r="20" fill="#fde8d8" opacity="0.85" />
-        <path
-          d="M48 70c0-18 14-32 32-32s32 14 32 32v8H48v-8z"
-          fill="#ffffff"
-        />
-        <path d="M64 46h32v36H64z" fill="#e7f6ee" />
-        <circle cx="80" cy="40" r="10" fill="#166534" />
-        <path
-          d="M75 40l3.2 3.2L86 35.4"
-          fill="none"
-          stroke="#ffffff"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <rect x="108" y="52" width="28" height="34" rx="8" fill="#ffffff" />
-        <circle cx="122" cy="64" r="5" fill="#fde8d8" />
-        <rect x="114" y="74" width="16" height="3" rx="1.5" fill="#c7d2fe" />
-      </svg>
-    )
-  }
-
-  if (tone === 'busy') {
-    return (
-      <svg viewBox="0 0 160 112" className={`shrink-0 ${className}`} aria-hidden>
-        <circle cx="130" cy="26" r="34" fill="#c7d2fe" opacity="0.6" />
-        <rect x="28" y="24" width="88" height="68" rx="16" fill="#ffffff" />
-        <path d="M28 42h88" stroke="#e8edfa" strokeWidth="2" />
-        <rect x="40" y="30" width="8" height="10" rx="2" fill="#1e3a8a" />
-        <rect x="60" y="30" width="8" height="10" rx="2" fill="#1e3a8a" />
-        <rect x="80" y="30" width="8" height="10" rx="2" fill="#1e3a8a" />
-        <circle cx="48" cy="58" r="10" fill="#e8edfa" />
-        <circle cx="48" cy="58" r="3.5" fill="#1e3a8a" />
-        <rect x="64" y="52" width="36" height="4" rx="2" fill="#0a0a0a" />
-        <rect x="64" y="62" width="24" height="3" rx="1.5" fill="#93a4d6" />
-        <circle cx="48" cy="80" r="10" fill="#fde8d8" />
-        <circle cx="48" cy="80" r="3.5" fill="#9a3412" />
-        <rect x="64" y="74" width="32" height="4" rx="2" fill="#0a0a0a" />
-        <rect x="64" y="84" width="20" height="3" rx="1.5" fill="#93a4d6" />
-        <circle cx="132" cy="78" r="16" fill="#1e3a8a" />
-        <path d="M132 70v8l5 3" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    )
-  }
-
+/** Day-board illustration for the home greeting — same language as booking empty states. */
+export function GreetingArt({ tone, className = 'h-24 w-36' }: { tone: GreetingTone; className?: string }) {
+  const filled = tone === 'busy'
   return (
-    <svg viewBox="0 0 160 112" className={`shrink-0 ${className}`} aria-hidden>
-      <circle cx="128" cy="28" r="36" fill="#c7d2fe" opacity="0.5" />
-      <circle cx="26" cy="86" r="20" fill="#fce7f3" opacity="0.9" />
-      <rect x="42" y="22" width="76" height="64" rx="16" fill="#ffffff" />
-      <path d="M42 40h76" stroke="#e8edfa" strokeWidth="2" />
-      <rect x="54" y="28" width="8" height="10" rx="2" fill="#1e3a8a" />
-      <rect x="78" y="28" width="8" height="10" rx="2" fill="#1e3a8a" />
-      <rect x="56" y="52" width="18" height="14" rx="4" fill="#e8edfa" />
-      <rect x="80" y="52" width="18" height="14" rx="4" fill="#fde8d8" />
-      <circle cx="122" cy="78" r="18" fill="#1e3a8a" />
-      <path d="M122 70v8l5 3" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 144 96" className={`shrink-0 ${className}`} aria-hidden>
+      <rect x="16" y="14" width="96" height="72" rx="16" fill="#ffffff" />
+      <path d="M16 34h96" stroke="#dbe3f7" strokeWidth="2" />
+      <rect x="32" y="20" width="8" height="12" rx="2" fill="#1e3a8a" />
+      <rect x="56" y="20" width="8" height="12" rx="2" fill="#1e3a8a" />
+      <rect x="80" y="20" width="8" height="12" rx="2" fill="#1e3a8a" />
+      {filled ? (
+        <>
+          <rect x="28" y="44" width="72" height="12" rx="6" fill="#e8edfa" />
+          <rect x="28" y="62" width="56" height="12" rx="6" fill="#fde8d8" />
+        </>
+      ) : (
+        <>
+          <rect x="28" y="44" width="72" height="10" rx="5" fill="#eef1f8" />
+          <rect x="28" y="60" width="48" height="10" rx="5" fill="#eef1f8" />
+        </>
+      )}
+      <circle cx="118" cy="70" r="18" fill={tone === 'setup' ? '#1e3a8a' : tone === 'review' ? '#166534' : '#1e3a8a'} />
+      {tone === 'setup' ? (
+        <path d="M112 70h12M118 64v12" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" />
+      ) : tone === 'review' ? (
+        <path d="M112 70l4 4 8-8" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M118 62v8l5 3" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      )}
     </svg>
   )
 }

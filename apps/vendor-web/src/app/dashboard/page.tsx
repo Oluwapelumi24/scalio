@@ -203,13 +203,25 @@ export default async function DashboardHome() {
                       ? 'Fix what’s noted in the banner, then we’ll look again.'
                       : 'Your public booking link stays private until approval. Keep polishing your business page while you wait.'}
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-                    <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
-                      {profile?.approvalStatus === 'rejected' ? 'Edit business page' : 'Review business page'}
-                    </Link>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
                     {profile?.approvalStatus !== 'rejected' ? (
-                      <Link href="/dashboard/bookings/new" className="text-sm font-semibold text-[#1e3a8a]">
+                      <Link
+                        href="/dashboard/bookings/new"
+                        className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
+                      >
                         Book a walk-in
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/dashboard/storefront?tab=page"
+                        className="inline-flex h-11 items-center rounded-full bg-[#1e3a8a] px-5 text-sm font-semibold text-white"
+                      >
+                        Edit business page
+                      </Link>
+                    )}
+                    {profile?.approvalStatus !== 'rejected' ? (
+                      <Link href="/dashboard/storefront?tab=page" className="text-sm font-semibold text-[#1e3a8a]">
+                        Edit business page
                       </Link>
                     ) : null}
                   </div>

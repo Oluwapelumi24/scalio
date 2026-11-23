@@ -1,6 +1,7 @@
 import { expireSession, getSession } from './session';
 
-export const BASE = 'http://localhost:3000';
+/** Production builds set EXPO_PUBLIC_API_URL via EAS. Local default is the Nest API. */
+export const BASE = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
 // ─── Shared types ────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@ import { OpenDashboardButton } from '@/components/partners/OpenDashboardButton'
 import { SetupBoard, type SetupHour, type SetupService } from '@/components/partners/SetupBoard'
 import { ApiError, apiFetch } from '@/lib/api'
 import { businessToken } from '@/lib/business-session'
-import { dashboardPortalLinked } from '@/lib/vendor-portal'
+import { dashboardLoginUrl, dashboardPortalLinked } from '@/lib/vendor-portal'
 
 export const metadata: Metadata = {
   title: 'Your business',
@@ -23,15 +23,13 @@ interface Profile {
 }
 
 /**
- * Fallback only when the seller portal URL is not configured.
- * When the portal is linked, always hand off — never trap people on this page.
+ * Legacy fallback only. When the seller portal is linked, always hand off.
+ * When setup is already complete, do not re-show the checklist — point at the dashboard.
  */
 export default async function BusinessPage() {
   const token = await businessToken()
   if (!token) redirect('/login')
 
-  // One seller product: if the dashboard exists, go there. Do not retell setup here.
-  // redirect() throws on success; a returned error means handoff failed — fall through.
   if (dashboardPortalLinked()) {
     await openDashboardAction()
   }
@@ -56,6 +54,42 @@ export default async function BusinessPage() {
   const firstName = me.name.trim().split(/\s+/)[0] ?? ''
   const setupComplete = services.length > 0 && hours.length > 0
 
+  // P2: checklist is only for unfinished setup without a linked portal.
+  if (setupComplete) {
+    return (
+      <Shell>
+        <PortalMissing
+          firstName={firstName}
+          businessName={profile.businessName}
+          approvalStatus={profile.approvalStatus}
+        />
+      </Shell>
+    )
+  }
+
+  return (
+    <Shell>
+      <SetupBoard
+        firstName={firstName}
+        businessName={profile.businessName}
+        category={profile.category}
+        area={profile.address}
+        approvalStatus={profile.approvalStatus}
+        reviewNote={profile.reviewNote}
+        services={services}
+        hours={hours}
+      />
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Prefer the full dashboard?{' '}
+        <Link href={dashboardLoginUrl()} className="font-semibold text-navy">
+          Open seller sign-in
+        </Link>
+      </p>
+    </Shell>
+  )
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-[#f6f7f9]">
       <header className="border-b border-slate-200 bg-white">
@@ -70,26 +104,7 @@ export default async function BusinessPage() {
           </form>
         </div>
       </header>
-      <div className="mx-auto max-w-3xl px-6 py-10">
-        {setupComplete ? (
-          <PortalMissing
-            firstName={firstName}
-            businessName={profile.businessName}
-            approvalStatus={profile.approvalStatus}
-          />
-        ) : (
-          <SetupBoard
-            firstName={firstName}
-            businessName={profile.businessName}
-            category={profile.category}
-            area={profile.address}
-            approvalStatus={profile.approvalStatus}
-            reviewNote={profile.reviewNote}
-            services={services}
-            hours={hours}
-          />
-        )}
-      </div>
+      <div className="mx-auto max-w-3xl px-6 py-10">{children}</div>
     </main>
   )
 }
@@ -121,7 +136,8 @@ function PortalMissing({
       </div>
       <p className="mt-4 max-w-xl text-sm leading-6 text-slate-500">
         If this button fails, set <span className="font-mono text-slate-700">VENDOR_WEB_URL</span> on
-        the website (Vercel) to your Railway vendor-web HTTPS address, then redeploy.
+        the website (Vercel) to your Railway vendor-web HTTPS address, then redeploy. See{' '}
+        <span className="font-mono">GO_LIVE_ENV.md</span>.
       </p>
     </div>
   )

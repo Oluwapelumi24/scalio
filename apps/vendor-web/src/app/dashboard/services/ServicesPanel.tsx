@@ -31,7 +31,7 @@ export async function ServicesPanel() {
   const services = items.filter((i) => i.serviceType === 'service')
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-3xl space-y-8">
       <section>
         <div className="mb-3">
           <h2 className="text-lg font-bold text-gray-900">Packages</h2>

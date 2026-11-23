@@ -8,14 +8,11 @@ import { Icon } from '@/components/Icon'
 import { ModuleLink } from './home/ModuleLink'
 import { ShareLink } from './home/ShareLink'
 import { BookingLinkCard } from './home/BookingLinkCard'
-import { ActivityEmptyCards } from './home/ActivityEmptyCards'
+import { ActivityBento, type BentoClient } from './home/ActivityBento'
 import { IconTile } from './home/visuals'
+import type { InboxConversation } from '@/lib/inbox'
 
 interface StaffPrincipal { role: string; name: string }
-
-function formatWhen(iso: string) {
-  return new Date(iso).toLocaleString('en-NG', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
-}
 
 // Where each module leads. Modules without an entry are informational.
 const HREF: Record<string, string> = {
@@ -109,7 +106,18 @@ export default async function DashboardHome() {
   } catch (err) {
     if (!(err instanceof ApiError)) throw err
   }
-  const profile = await apiFetch<VendorProfile>('/vendor-admin/profile', token).catch(() => null)
+  const canSeePeople = staff.role !== 'practitioner'
+  const [profile, recentClients, recentChats] = await Promise.all([
+    apiFetch<VendorProfile>('/vendor-admin/profile', token).catch(() => null),
+    canSeePeople
+      ? apiFetch<BentoClient[]>('/vendor-admin/customers', token).then((rows) => rows.slice(0, 5)).catch(() => [] as BentoClient[])
+      : Promise.resolve([] as BentoClient[]),
+    canSeePeople
+      ? apiFetch<InboxConversation[]>('/vendor-admin/inbox/conversations?filter=all', token)
+          .then((rows) => rows.slice(0, 5))
+          .catch(() => [] as InboxConversation[])
+      : Promise.resolve([] as InboxConversation[]),
+  ])
   const listed = profile ? listingReady(profile) : true
   const approved = profile?.approvalStatus === 'approved'
 
@@ -155,7 +163,7 @@ export default async function DashboardHome() {
 
   return (
     <div className="mx-auto min-w-0 max-w-6xl">
-      <section className="rounded-[24px] bg-[#e8edfa] px-5 py-5 sm:px-6 sm:py-6">
+      <section className="rounded-[24px] bg-[#e8edfa] px-5 py-4 sm:px-6">
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-xl font-bold tracking-tight leading-7">
             Hey, {staff.name.split(' ')[0] || 'there'}
@@ -176,8 +184,8 @@ export default async function DashboardHome() {
         </div>
       ) : (
         <>
-        <div className="mt-6 grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
-          <div className="min-w-0 space-y-6">
+        <div className="mt-3 grid min-w-0 items-start gap-3 lg:grid-cols-12">
+          <div className="min-w-0 space-y-3 lg:col-span-8">
             {ready && approved ? (
               <BookingLinkCard url={bookings.link} total={bookings.total} />
             ) : ready ? (
@@ -265,44 +273,9 @@ export default async function DashboardHome() {
               </section>
             )}
 
-            <section className="min-w-0">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-[15px] font-bold">
-                  {bookings.upcoming.length === 0 ? 'Around your business' : 'Up next'}
-                </h2>
-                {bookings.upcoming.length > 0 ? (
-                  <Link href="/dashboard/bookings" className="shrink-0 text-[13px] font-semibold text-[#1e3a8a]">
-                    See all
-                  </Link>
-                ) : null}
-              </div>
-              {bookings.upcoming.length === 0 ? (
-                <ActivityEmptyCards ready={ready} approved={approved} role={staff.role} />
-              ) : (
-                <ul className="mt-3 divide-y divide-[#e4e6eb] overflow-hidden rounded-[20px] border border-[#e4e6eb] bg-white px-5">
-                  {bookings.upcoming.map((booking) => (
-                    <li key={booking.id}>
-                      <Link href="/dashboard/bookings" className="flex items-center gap-3.5 py-4">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#e8edfa] text-sm font-semibold text-[#1e3a8a]">
-                          {(booking.customerName ?? 'C').charAt(0).toUpperCase()}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold">{booking.customerName ?? 'Customer'}</span>
-                          <span className="text-[13px] text-[#4a4e57]">
-                            {formatWhen(booking.scheduledAt)}
-                            {booking.status === 'pending_payment' ? ' · awaiting payment' : ''}
-                          </span>
-                        </span>
-                        <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
           </div>
 
-          <aside className="min-w-0 space-y-6">
+          <aside className="min-w-0 space-y-3 lg:col-span-4">
             {otherAttention.length > 0 && (
               <section>
                 <h2 className="text-[15px] font-bold">Other updates</h2>
@@ -370,6 +343,17 @@ export default async function DashboardHome() {
               </section>
             )}
           </aside>
+
+          <div className="lg:col-span-12">
+            <ActivityBento
+              role={staff.role}
+              ready={ready}
+              approved={approved}
+              bookings={bookings.upcoming.slice(0, 5)}
+              chats={recentChats}
+              clients={recentClients}
+            />
+          </div>
         </div>
 
         {quickActions.length > 0 && (

@@ -32,7 +32,7 @@ export async function HoursPanel() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="grid max-w-5xl items-start gap-4 lg:grid-cols-2">
       <div className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="mb-1 text-sm font-semibold text-gray-900">Business hours</h2>
         <p className="mb-4 text-xs text-gray-500">

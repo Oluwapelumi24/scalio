@@ -46,7 +46,7 @@ export function BlackoutDatesForm({ initialBlackouts }: { initialBlackouts: Blac
 
       {removeError && <p className="text-sm text-red-600 mb-3">{removeError}</p>}
 
-      <form action={formAction} className="flex items-end gap-3">
+      <form action={formAction} className="flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Date *</label>
           <input

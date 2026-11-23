@@ -33,6 +33,7 @@ export function DashboardChrome({
   logout,
   banner,
   suiteUnlocked = true,
+  previewUrl = null,
   children,
 }: {
   name: string
@@ -43,6 +44,7 @@ export function DashboardChrome({
   banner?: React.ReactNode
   /** When false, Marketing / Money / Attendance stay hidden so day-1 stays on setup. */
   suiteUnlocked?: boolean
+  previewUrl?: string | null
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -62,8 +64,15 @@ export function DashboardChrome({
     const onPointer = (event: PointerEvent) => {
       if (!accountRef.current?.contains(event.target as Node)) setAccountOpen(false)
     }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setAccountOpen(false)
+    }
     window.addEventListener('pointerdown', onPointer)
-    return () => window.removeEventListener('pointerdown', onPointer)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('pointerdown', onPointer)
+      window.removeEventListener('keydown', onKey)
+    }
   }, [accountOpen])
 
   useEffect(() => {
@@ -82,7 +91,6 @@ export function DashboardChrome({
           <BrandLink className="h-7 w-auto" />
         </div>
         <SidebarNav role={role} suiteUnlocked={suiteUnlocked} />
-        <Account name={name} role={role} initials={initials} logout={logout} />
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -107,23 +115,27 @@ export function DashboardChrome({
             <div className="relative" ref={accountRef}>
               <button
                 type="button"
-                className="keep-height flex h-10 w-10 items-center justify-center rounded-full bg-[#1e3a8a] text-[11px] font-bold text-white"
+                className="flex h-10 max-w-[14rem] items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-[#f5f6f8] sm:pr-3"
                 aria-expanded={accountOpen}
-                aria-label={`Your profile, ${name}`}
+                aria-haspopup="menu"
+                aria-label={`${name}, ${ROLE_LABELS[role] ?? role}`}
                 onClick={() => setAccountOpen((open) => !open)}
               >
-                {initials}
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1e3a8a] text-[11px] font-bold text-white">
+                  {initials}
+                </span>
+                <span className="min-w-0 text-left">
+                  <span className="block truncate text-sm font-semibold leading-4">{name}</span>
+                  <span className="block truncate text-[11px] leading-4 text-[#7d818b]">{ROLE_LABELS[role] ?? role}</span>
+                </span>
               </button>
               {accountOpen ? (
-                <div className="absolute right-0 top-12 z-40 w-56 rounded-2xl border border-[#e4e6eb] bg-white p-3 shadow-lg">
-                  <p className="truncate text-sm font-semibold">{name}</p>
-                  <p className="text-xs text-[#7d818b]">{ROLE_LABELS[role] ?? role}</p>
-                  <form action={logout} className="mt-3">
-                    <button type="submit" className="keep-height h-11 w-full rounded-full text-sm font-semibold text-[#4a4e57]">
-                      Sign out
-                    </button>
-                  </form>
-                </div>
+                <AccountMenu
+                  role={role}
+                  previewUrl={previewUrl}
+                  logout={logout}
+                  onNavigate={() => setAccountOpen(false)}
+                />
               ) : null}
             </div>
           </div>
@@ -194,7 +206,6 @@ export function DashboardChrome({
               </button>
             </div>
             <SidebarNav role={role} suiteUnlocked={suiteUnlocked} onNavigate={() => setMenuOpen(false)} />
-            <Account name={name} role={role} initials={initials} logout={logout} />
           </div>
         </div>
       ) : null}
@@ -202,33 +213,40 @@ export function DashboardChrome({
   )
 }
 
-function Account({
-  name,
+function AccountMenu({
   role,
-  initials,
+  previewUrl,
   logout,
+  onNavigate,
 }: {
-  name: string
   role: string
-  initials: string
+  previewUrl: string | null
   logout: () => Promise<void>
+  onNavigate: () => void
 }) {
+  const canManage = role === 'owner' || role === 'manager'
+  const item = 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#0a0a0a] hover:bg-[#f5f6f8]'
   return (
-    <div className="border-t border-[#e4e6eb] px-4 pb-4 pt-5">
-      <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e3a8a] text-[11px] font-bold text-white">
-          {initials}
-        </span>
-        <span className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-5">{name}</p>
-          <p className="mt-0.5 text-xs leading-4 text-[#7d818b]">{ROLE_LABELS[role] ?? role}</p>
-        </span>
-      </div>
-      <form action={logout} className="mt-3">
-        <button
-          type="submit"
-          className="keep-height h-10 w-full rounded-full text-left text-sm font-semibold text-[#4a4e57] hover:bg-[#f5f6f8] px-3"
-        >
+    <div role="menu" className="absolute right-0 top-12 z-40 w-64 rounded-2xl border border-[#e4e6eb] bg-white p-1.5 shadow-lg">
+      {canManage ? (
+        <Link href="/dashboard/storefront" role="menuitem" onClick={onNavigate} className={item}>
+          <Icon name="shopping-bag" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
+          Manage storefront
+        </Link>
+      ) : null}
+      {previewUrl ? (
+        <a href={previewUrl} target="_blank" rel="noopener noreferrer" role="menuitem" onClick={onNavigate} className={item}>
+          <Icon name="eye" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
+          Preview storefront
+        </a>
+      ) : null}
+      <Link href="/dashboard/settings" role="menuitem" onClick={onNavigate} className={item}>
+        <Icon name="sliders" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
+        Settings
+      </Link>
+      <div className="my-1 border-t border-[#e4e6eb]" />
+      <form action={logout}>
+        <button type="submit" role="menuitem" className={`${item} w-full text-left`}>
           Sign out
         </button>
       </form>

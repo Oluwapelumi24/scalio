@@ -23,9 +23,19 @@ Until custom domains exist, use the Railway `*.up.railway.app` URLs in env vars.
 | `VENDOR_WEB_URL` | Seller dashboard origin — **required** or login lands on `/business` forever |
 | `NEXT_PUBLIC_VENDOR_WEB_URL` | Same URL for navbar / partners CTAs |
 
+## Railway monorepo rule (read this)
+
+One GitHub repo → many Railway services. **Each service must have its own build/start** (Config-as-code path, Dockerfile via `RAILWAY_DOCKERFILE_PATH`, or manual Build/Start). If a service has no override, Railway falls back to root `railway.json` (the **backend**) — that is why admin-web was starting Nest and dying.
+
+- **backend** → root `railway.json` (or `apps/backend/railway.json`)
+- **vendor-web** → `apps/vendor-web/railway.json`
+- **admin-web** → `RAILWAY_DOCKERFILE_PATH=apps/admin-web/Dockerfile` (Config-as-code will not stick on new services)
+
+Never move root `railway.json` without updating the backend service path first — production API will crash (`@veno/shared-types/dist` missing).
+
 ## Backend (Railway)
 
-Config: `apps/backend/railway.json`. Refuses to boot in production if required vars are missing (see `production-config.ts`).
+Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses to boot in production if required vars are missing (see `production-config.ts`). The build **must** compile `@veno/shared-types` before Nest.
 
 | Variable | Purpose |
 |---|---|

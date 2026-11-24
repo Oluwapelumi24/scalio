@@ -6,12 +6,48 @@ jest.mock('bcryptjs', () => ({
   hash: jest.fn(async () => 'hashed'),
 }));
 
+describe('AuthService.signIn', () => {
+  it('rejects a deleted user even when the password would match', async () => {
+    const db = {
+      select: jest.fn().mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([
+            { id: 'u1', email: 'a@b.com', passwordHash: 'hashed', deletedAt: new Date() },
+          ]),
+        }),
+      }),
+    };
+    const jwt = { sign: jest.fn() };
+    const svc = new AuthService(db as never, jwt as never, {} as never, {} as never, {} as never);
+    await expect(svc.signIn('a@b.com', 'secret')).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(jwt.sign).not.toHaveBeenCalled();
+  });
+
+  it('issues a session for an active user', async () => {
+    const db = {
+      select: jest.fn().mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([
+            { id: 'u1', name: 'Ada', email: 'a@b.com', passwordHash: 'hashed', deletedAt: null },
+          ]),
+        }),
+      }),
+    };
+    const jwt = { sign: jest.fn().mockReturnValue('tok') };
+    const svc = new AuthService(db as never, jwt as never, {} as never, {} as never, {} as never);
+    await expect(svc.signIn('a@b.com', 'secret')).resolves.toEqual({
+      accessToken: 'tok',
+      user: { id: 'u1', name: 'Ada', email: 'a@b.com' },
+    });
+  });
+});
+
 describe('AuthService.deleteAccount', () => {
   it('rejects a wrong password', async () => {
     const db = {
       select: jest.fn().mockReturnValue({
         from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([{ id: 'u1', passwordHash: 'hashed' }]),
+          where: jest.fn().mockResolvedValue([{ id: 'u1', passwordHash: 'hashed', deletedAt: null }]),
         }),
       }),
     };
@@ -19,14 +55,25 @@ describe('AuthService.deleteAccount', () => {
     await expect(svc.deleteAccount('u1', 'wrong')).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('cancels future bookings and anonymises the user', async () => {
-    const updateWhere = jest.fn().mockResolvedValue([]);
+  it('cancels future bookings, unlinks customers, and anonymises in a transaction', async () => {
+    const userUpdateWhere = jest.fn().mockResolvedValue([]);
+    const customerUpdateWhere = jest.fn().mockResolvedValue([]);
+    const tx = {
+      update: jest
+        .fn()
+        .mockReturnValueOnce({
+          set: jest.fn().mockReturnValue({ where: customerUpdateWhere }),
+        })
+        .mockReturnValueOnce({
+          set: jest.fn().mockReturnValue({ where: userUpdateWhere }),
+        }),
+    };
     const db = {
       select: jest
         .fn()
         .mockReturnValueOnce({
           from: jest.fn().mockReturnValue({
-            where: jest.fn().mockResolvedValue([{ id: 'u1', passwordHash: 'hashed' }]),
+            where: jest.fn().mockResolvedValue([{ id: 'u1', passwordHash: 'hashed', deletedAt: null }]),
           }),
         })
         .mockReturnValueOnce({
@@ -36,9 +83,7 @@ describe('AuthService.deleteAccount', () => {
             }),
           }),
         }),
-      update: jest.fn().mockReturnValue({
-        set: jest.fn().mockReturnValue({ where: updateWhere }),
-      }),
+      transaction: jest.fn(async (fn: (t: typeof tx) => Promise<void>) => fn(tx)),
     };
     const bookings = { cancelByCustomer: jest.fn().mockResolvedValue({}) };
     const svc = new AuthService(db as never, {} as never, {} as never, {} as never, bookings as never);
@@ -47,7 +92,9 @@ describe('AuthService.deleteAccount', () => {
 
     expect(bookings.cancelByCustomer).toHaveBeenCalledWith('b1', 'Account deleted');
     expect(bookings.cancelByCustomer).toHaveBeenCalledWith('b2', 'Account deleted');
-    expect(updateWhere).toHaveBeenCalled();
+    expect(db.transaction).toHaveBeenCalled();
+    expect(customerUpdateWhere).toHaveBeenCalled();
+    expect(userUpdateWhere).toHaveBeenCalled();
   });
 });
 

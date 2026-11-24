@@ -1,3 +1,5 @@
+import { venoProxyHeaders } from './proxy-headers'
+
 const BASE = (process.env.API_URL ?? 'http://127.0.0.1:3000').replace(/\/$/, '')
 
 export class ApiError extends Error {
@@ -29,7 +31,11 @@ export async function apiFetch<T = unknown>(path: string, init: RequestInit = {}
   try {
     res = await fetch(`${BASE}${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...(init.headers as Record<string, string>) },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await venoProxyHeaders()),
+        ...(init.headers as Record<string, string>),
+      },
       cache: 'no-store',
     })
   } catch (err) {

@@ -33,7 +33,14 @@ function makeRedis(store: Map<string, string> = new Map()) {
       for (const k of keys) store.delete(k);
       return keys.length;
     }),
-    eval: jest.fn(async (_script: string, _n: number, key: string, triesKey: string, code: string) => {
+    eval: jest.fn(async (script: string, n: number, key: string, triesKeyOrTtl?: string, code?: string) => {
+      if (n === 1 && script.includes('INCR') && script.includes('EXPIRE')) {
+        const next = Number(store.get(key) ?? '0') + 1;
+        store.set(key, String(next));
+        if (next === 1 && triesKeyOrTtl) ttls.set(key, Number(triesKeyOrTtl));
+        return next;
+      }
+      const triesKey = triesKeyOrTtl!;
       const v = store.get(key);
       if (!v) return false;
       const sep = v.indexOf(':');
@@ -104,7 +111,7 @@ describe('VendorPasswordResetService — issueCode', () => {
 
   it('silently returns null after the hourly issue cap', async () => {
     const redis = makeRedis();
-    redis.incr.mockResolvedValue(MAX_CODES_PER_HOUR + 1);
+    redis.eval.mockResolvedValue(MAX_CODES_PER_HOUR + 1);
     const svc = new VendorPasswordResetService(redis as never, config({}) as never);
 
     await expect(svc.issueCode('a@b.com', 'staff-1')).resolves.toBeNull();

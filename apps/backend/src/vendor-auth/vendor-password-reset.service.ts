@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type Redis from 'ioredis';
+import { INCR_WITH_EXPIRE_SCRIPT } from '../common/redis-incr-expire';
 import { sixDigitCode } from '../common/secure-code';
 import { REDIS } from '../redis/redis.module';
 
@@ -63,10 +64,9 @@ export class VendorPasswordResetService {
   async issueCode(email: string, staffId: string): Promise<string | null> {
     const key = this.buildKey(email);
     const issuedKey = `${key}:issued`;
-    const issued = await this.redis.incr(issuedKey);
-    if (issued === 1) {
-      await this.redis.expire(issuedKey, ISSUE_WINDOW_SECONDS);
-    }
+    const issued = Number(
+      await this.redis.eval(INCR_WITH_EXPIRE_SCRIPT, 1, issuedKey, String(ISSUE_WINDOW_SECONDS)),
+    );
     if (issued > MAX_CODES_PER_HOUR) {
       return null;
     }

@@ -82,7 +82,12 @@ export class AuthService {
 
   async signIn(email: string, password: string): Promise<UserSession> {
     const [row] = await this.db.select().from(users).where(eq(users.email, email));
-    if (!row?.passwordHash || !(await compare(password, row.passwordHash))) {
+    if (
+      !row ||
+      row.deletedAt ||
+      !row.passwordHash ||
+      !(await compare(password, row.passwordHash))
+    ) {
       throw new UnauthorizedException('Incorrect email or password.');
     }
     return this.issueSession(row);
@@ -142,12 +147,18 @@ export class AuthService {
 
   /**
    * Requires the current password. Anonymises the user (tombstone email, cleared
-   * PII / push token) and cancels future active bookings via the state machine.
-   * Historical bookings and ledger rows are kept for vendors.
+   * PII / push token), sets deleted_at, unlinks customers.user_id, and cancels
+   * future active bookings via the state machine. Historical bookings and
+   * ledger rows are kept for vendors.
    */
   async deleteAccount(userId: string, password: string): Promise<void> {
     const [row] = await this.db.select().from(users).where(eq(users.id, userId));
-    if (!row?.passwordHash || !(await compare(password, row.passwordHash))) {
+    if (
+      !row ||
+      row.deletedAt ||
+      !row.passwordHash ||
+      !(await compare(password, row.passwordHash))
+    ) {
       throw new UnauthorizedException('Incorrect password.');
     }
 
@@ -167,16 +178,24 @@ export class AuthService {
       await this.bookings.cancelByCustomer(booking.id, 'Account deleted');
     }
 
-    await this.db
-      .update(users)
-      .set({
-        name: 'Deleted user',
-        email: `deleted+${userId}@tombstone.invalid`,
-        phone: null,
-        passwordHash: null,
-        expoPushToken: null,
-      })
-      .where(eq(users.id, userId));
+    await this.db.transaction(async (tx) => {
+      // Unlink the platform identity from each vendor CRM row. Do NOT clear
+      // vendor-side name/phone/email — pending policy decision on whether
+      // vendors may keep their own client records after a consumer deletes.
+      // TODO(policy): decide whether to scrub customers.name/phone/email on delete.
+      await tx.update(customers).set({ userId: null }).where(eq(customers.userId, userId));
+      await tx
+        .update(users)
+        .set({
+          name: 'Deleted user',
+          email: `deleted+${userId}@tombstone.invalid`,
+          phone: null,
+          passwordHash: null,
+          expoPushToken: null,
+          deletedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+    });
   }
 
   private issueSession(row: InferSelectModel<typeof users>): UserSession {

@@ -1,6 +1,6 @@
-import { applyDecorators, SetMetadata } from '@nestjs/common';
+import { applyDecorators, SetMetadata, type ExecutionContext } from '@nestjs/common';
 import { hours, minutes, Throttle, type ThrottlerOptions } from '@nestjs/throttler';
-import type { ExecutionContext } from '@nestjs/common';
+import { resolveClientIp } from './client-ip';
 
 /** Metadata listing which named auth throttlers apply to a route. */
 export const APPLY_THROTTLERS = 'veno_apply_throttlers';
@@ -54,11 +54,10 @@ export function AuthStrictIpThrottle() {
   );
 }
 
-/** Tracker keyed on the email in the JSON body (falls back to IP if missing). */
+/** Tracker keyed on the email in the JSON body (falls back to client IP if missing). */
 export async function emailTracker(req: Record<string, unknown>): Promise<string> {
   const body = req.body as { email?: unknown } | undefined;
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   if (email) return `email:${email}`;
-  const ip = typeof req.ip === 'string' ? req.ip : 'unknown';
-  return `ip:${ip}`;
+  return `ip:${resolveClientIp(req)}`;
 }

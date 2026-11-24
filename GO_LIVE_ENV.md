@@ -20,6 +20,7 @@ Until custom domains exist, use the Railway `*.up.railway.app` URLs in env vars.
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin (no trailing slash) |
+| `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend (server actions forward client IP) |
 | `VENDOR_WEB_URL` | Seller dashboard origin — **required** or login lands on `/business` forever |
 | `NEXT_PUBLIC_VENDOR_WEB_URL` | Same URL for navbar / partners CTAs |
 
@@ -42,6 +43,7 @@ Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses t
 | `DATABASE_URL` | Postgres |
 | `REDIS_URL` | Redis |
 | `USER_JWT_SECRET` / `VENDOR_JWT_SECRET` / `ADMIN_JWT_SECRET` | ≥32 chars, not `dev-*` |
+| `INTERNAL_PROXY_SECRET` | ≥32 chars; same value on backend + all three Next apps so server actions can forward the real client IP for rate limits |
 | `PII_ENCRYPTION_KEY` | Bank account encryption |
 | `MEDIA_URL_SECRET` | Signed media URLs |
 | `RESEND_API_KEY` | Signup / reset email |
@@ -52,6 +54,8 @@ Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses t
 | `ADMIN_WEB_URL` | `https://admin.venohq.com` (admin invite /accept-invite links) |
 | `CORS_ORIGINS` | Comma-separated browser origins (e.g. `https://app.venohq.com,https://admin.venohq.com,https://www.venohq.com`) |
 
+**Redis is required for API availability.** Rate-limit counters and password-reset issue caps live in Redis. If Redis is down, every throttled API route fails — treat Redis outage as an API outage in the runbook.
+
 ## Vendor-web (Railway)
 
 Config: `apps/vendor-web/railway.json`. Set service root / config-as-code to that file.
@@ -59,6 +63,7 @@ Config: `apps/vendor-web/railway.json`. Set service root / config-as-code to tha
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin |
+| `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend |
 
 ## Admin-web (Railway) — P0 (required to approve listings)
 
@@ -78,6 +83,7 @@ New services cannot opt into Config-as-code. Use the Dockerfile instead. Without
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin |
+| `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend |
 | `RAILWAY_DOCKERFILE_PATH` | `apps/admin-web/Dockerfile` |
 
 Approve/reject emails the business `ownerEmail` when `RESEND_API_KEY` is set on the backend. Rejected owners re-enter the queue when they update their business profile.

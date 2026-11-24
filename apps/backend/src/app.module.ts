@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { hours, minutes, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { hours, minutes, ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import type Redis from 'ioredis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { emailTracker, skipUnlessApplied } from './common/throttling/apply-throttlers';
+import { VenoThrottlerGuard } from './common/throttling/veno-throttler.guard';
 import { DbModule } from './db/db.module';
 import { RedisModule, REDIS } from './redis/redis.module';
 import { MailModule } from './mail/mail.module';
@@ -109,7 +110,7 @@ import { InboxModule } from './inbox/inbox.module';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: VenoThrottlerGuard },
   ],
 })
 export class AppModule {}

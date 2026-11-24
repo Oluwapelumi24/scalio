@@ -47,7 +47,7 @@ export function DeleteAccountScreen({ navigation }: Props) {
         <PageHeader
           onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
           title="Delete account"
-          description="This removes your personal details and cancels upcoming bookings. Vendors keep past booking records."
+          description="This removes your login and personal details from Veno, cancels upcoming bookings, and unlinks your account from each business's client list. Businesses may still keep their own copy of your name, phone, and email from past visits."
         />
         <View style={{ gap: 20 }}>
           <Text style={styles.warning}>

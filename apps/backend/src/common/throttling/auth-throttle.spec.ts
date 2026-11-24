@@ -1,9 +1,11 @@
 import { Controller, INestApplication, Post } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { ThrottlerGuard, ThrottlerModule, minutes } from '@nestjs/throttler';
+import { ThrottlerModule, minutes } from '@nestjs/throttler';
 import request from 'supertest';
 import { LoginThrottle, emailTracker, skipUnlessApplied } from './apply-throttlers';
+import { VENO_CLIENT_IP_HEADER, VENO_PROXY_SECRET_HEADER, resolveClientIp } from './client-ip';
+import { VenoThrottlerGuard } from './veno-throttler.guard';
 
 @Controller('test-auth')
 class TestAuthController {
@@ -21,7 +23,10 @@ class TestAuthController {
 
 /** In-memory throttler storage for tests (no Redis). */
 class MemoryThrottlerStorage {
-  private readonly hits = new Map<string, { totalHits: number; expiresAt: number; isBlocked: boolean; blockExpiresAt: number }>();
+  private readonly hits = new Map<
+    string,
+    { totalHits: number; expiresAt: number; isBlocked: boolean; blockExpiresAt: number }
+  >();
 
   async increment(
     key: string,
@@ -58,10 +63,47 @@ class MemoryThrottlerStorage {
   }
 }
 
+describe('resolveClientIp', () => {
+  const secret = 's'.repeat(32);
+
+  beforeEach(() => {
+    process.env.INTERNAL_PROXY_SECRET = secret;
+  });
+
+  afterEach(() => {
+    delete process.env.INTERNAL_PROXY_SECRET;
+  });
+
+  it('uses x-veno-client-ip when the proxy secret matches', () => {
+    expect(
+      resolveClientIp({
+        ip: '10.0.0.1',
+        headers: {
+          [VENO_PROXY_SECRET_HEADER]: secret,
+          [VENO_CLIENT_IP_HEADER]: '203.0.113.9',
+        },
+      }),
+    ).toBe('203.0.113.9');
+  });
+
+  it('ignores a forged x-veno-client-ip without the secret', () => {
+    expect(
+      resolveClientIp({
+        ip: '10.0.0.1',
+        headers: {
+          [VENO_CLIENT_IP_HEADER]: '203.0.113.9',
+        },
+      }),
+    ).toBe('10.0.0.1');
+  });
+});
+
 describe('auth throttling', () => {
   let app: INestApplication;
+  const secret = 't'.repeat(32);
 
   beforeAll(async () => {
+    process.env.INTERNAL_PROXY_SECRET = secret;
     const moduleRef = await Test.createTestingModule({
       imports: [
         ThrottlerModule.forRoot({
@@ -85,7 +127,7 @@ describe('auth throttling', () => {
         }),
       ],
       controllers: [TestAuthController],
-      providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+      providers: [{ provide: APP_GUARD, useClass: VenoThrottlerGuard }],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -93,6 +135,7 @@ describe('auth throttling', () => {
   });
 
   afterAll(async () => {
+    delete process.env.INTERNAL_PROXY_SECRET;
     await app.close();
   });
 
@@ -102,6 +145,33 @@ describe('auth throttling', () => {
       await request(server).post('/test-auth/login').send({ email: 'hit@test.com' }).expect(201);
     }
     await request(server).post('/test-auth/login').send({ email: 'hit@test.com' }).expect(429);
+  });
+
+  it('keeps separate IP buckets for different forwarded client IPs behind one proxy', async () => {
+    const server = app.getHttpServer();
+    const proxyHeaders = (clientIp: string) => ({
+      [VENO_PROXY_SECRET_HEADER]: secret,
+      [VENO_CLIENT_IP_HEADER]: clientIp,
+    });
+
+    for (let i = 0; i < 10; i++) {
+      await request(server)
+        .post('/test-auth/login')
+        .set(proxyHeaders('198.51.100.1'))
+        .send({ email: `a${i}@test.com` })
+        .expect(201);
+    }
+    await request(server)
+      .post('/test-auth/login')
+      .set(proxyHeaders('198.51.100.1'))
+      .send({ email: 'overflow@test.com' })
+      .expect(429);
+
+    await request(server)
+      .post('/test-auth/login')
+      .set(proxyHeaders('198.51.100.2'))
+      .send({ email: 'other@test.com' })
+      .expect(201);
   });
 
   it('does not apply login throttles to undecorated routes', async () => {

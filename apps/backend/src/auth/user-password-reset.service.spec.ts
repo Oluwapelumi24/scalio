@@ -8,11 +8,7 @@ jest.mock('../common/secure-code', () => ({
 function makeRedis(store: Map<string, string> = new Map()) {
   return {
     store,
-    incr: jest.fn(async (key: string) => {
-      const next = Number(store.get(key) ?? '0') + 1;
-      store.set(key, String(next));
-      return next;
-    }),
+    incr: jest.fn(),
     expire: jest.fn(async () => 1),
     set: jest.fn(async (key: string, value: string) => {
       store.set(key, value);
@@ -21,6 +17,14 @@ function makeRedis(store: Map<string, string> = new Map()) {
     del: jest.fn(async (...keys: string[]) => {
       for (const k of keys) store.delete(k);
       return keys.length;
+    }),
+    eval: jest.fn(async (script: string, n: number, key: string) => {
+      if (n === 1 && script.includes('INCR')) {
+        const next = Number(store.get(key) ?? '0') + 1;
+        store.set(key, String(next));
+        return next;
+      }
+      return false;
     }),
   };
 }
@@ -41,7 +45,7 @@ describe('UserPasswordResetService', () => {
 
   it('returns null after the hourly issue cap', async () => {
     const redis = makeRedis();
-    redis.incr.mockResolvedValue(MAX_CODES_PER_HOUR + 1);
+    redis.eval.mockResolvedValue(MAX_CODES_PER_HOUR + 1);
     const svc = new UserPasswordResetService(redis as never);
     await expect(svc.issueCode('a@b.com', 'user-1')).resolves.toBeNull();
     expect(redis.set).not.toHaveBeenCalled();

@@ -8,6 +8,7 @@ const complete: Record<string, string> = Object.fromEntries(
     if (name === 'VENDOR_WEB_URL') return [name, 'https://app.venohq.com'];
     if (name === 'ADMIN_WEB_URL') return [name, 'https://admin.venohq.com'];
     if (name === 'RESEND_API_KEY') return [name, 're_test_key'];
+    if (name === 'PAYSTACK_SECRET_KEY') return [name, 'sk_test_placeholder'];
     if (name === 'DATABASE_URL') return [name, 'postgresql://localhost/veno'];
     if (name === 'REDIS_URL') return [name, 'redis://localhost:6379'];
     return [name, secret];

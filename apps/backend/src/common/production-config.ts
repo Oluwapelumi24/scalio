@@ -18,6 +18,8 @@ export const REQUIRED_IN_PRODUCTION = [
   'ADMIN_WEB_URL',
   // Shared secret so Next server actions can forward the real client IP for rate limits.
   'INTERNAL_PROXY_SECRET',
+  // Online bookings / webhooks — without this, Paystack charges cannot be verified.
+  'PAYSTACK_SECRET_KEY',
 ] as const;
 
 /** Returns what's wrong with the environment; empty when it's fine to start. */

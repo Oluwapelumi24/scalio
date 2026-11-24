@@ -1,3 +1,4 @@
+import './instrument';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -5,6 +6,7 @@ import helmet from 'helmet';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { corsOriginsFromEnv } from './common/cors';
+import { AllExceptionsFilter } from './common/http-exception.filter';
 import { productionConfigProblems } from './common/production-config';
 
 async function bootstrap() {
@@ -28,6 +30,7 @@ async function bootstrap() {
     credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.useGlobalFilters(new AllExceptionsFilter());
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

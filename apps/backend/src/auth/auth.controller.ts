@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import type { InferSelectModel } from 'drizzle-orm';
+import { LoginThrottle } from '../common/throttling/apply-throttlers';
 import type { users } from '../db/schema';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
@@ -19,6 +20,7 @@ export class AuthController {
   }
 
   @Post('signin')
+  @LoginThrottle()
   signIn(@Body() dto: SignInDto) {
     return this.authService.signIn(dto.email, dto.password);
   }

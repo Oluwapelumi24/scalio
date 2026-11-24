@@ -104,6 +104,8 @@ export class VendorAuthService {
 
     const normalised = email.trim().toLowerCase();
     const code = await this.passwordReset.issueCode(normalised, row.id);
+    // Cap exceeded — still 204, no email, no enumeration signal.
+    if (!code) return;
     if (process.env.NODE_ENV !== 'production') {
       this.logger.log(`Password reset code for ${normalised} is ${code}`);
     }

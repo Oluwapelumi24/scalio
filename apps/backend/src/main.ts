@@ -15,6 +15,8 @@ async function bootstrap() {
   // rawBody is required to verify the Paystack webhook signature, which is
   // computed over the exact request bytes (see PaystackService.verifyWebhookSignature).
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  // Railway terminates TLS at the proxy; trust one hop so req.ip is the client.
+  app.set('trust proxy', 1);
   // Content studio photos arrive as base64 JSON (up to ~5 MB); everything else stays small.
   app.useBodyParser('json', { limit: '6mb' });
   app.useStaticAssets(join(process.cwd(), 'public'));

@@ -1,11 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type Redis from 'ioredis';
+import { sixDigitCode } from '../common/secure-code';
 import { REDIS } from '../redis/redis.module';
 
 const RESET_CODE_TTL_SECONDS = 15 * 60;
 /** Wrong guesses allowed before the code is thrown away (a 6-digit code can't be brute-forced in 5). */
 export const MAX_WRONG_CODE_ATTEMPTS = 5;
+/** Max codes issued per email inside the rolling window (silent no-op beyond this). */
+export const MAX_CODES_PER_HOUR = 5;
+const ISSUE_WINDOW_SECONDS = 60 * 60;
 
 // Atomic check: on a match, delete the code and return the staff id. On a miss,
 // count the attempt and throw the code away once the limit is reached — so one
@@ -50,11 +54,26 @@ export class VendorPasswordResetService {
     return `vendor-pw-reset:${email.toLowerCase()}`;
   }
 
-  /** Mints a 6-digit reset code bound to an email, valid for 15 minutes. */
-  async issueCode(email: string, staffId: string): Promise<string> {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+  /**
+   * Mints a 6-digit reset code bound to an email, valid for 15 minutes.
+   * Keeps the wrong-guess counter across re-issues within the TTL window.
+   * Returns null when the per-email hourly issue cap is exceeded (caller must
+   * still respond 204 — no enumeration).
+   */
+  async issueCode(email: string, staffId: string): Promise<string | null> {
     const key = this.buildKey(email);
-    await this.redis.multi().set(key, `${staffId}:${code}`, 'EX', RESET_CODE_TTL_SECONDS).del(`${key}:tries`).exec();
+    const issuedKey = `${key}:issued`;
+    const issued = await this.redis.incr(issuedKey);
+    if (issued === 1) {
+      await this.redis.expire(issuedKey, ISSUE_WINDOW_SECONDS);
+    }
+    if (issued > MAX_CODES_PER_HOUR) {
+      return null;
+    }
+
+    const code = sixDigitCode();
+    // Do not delete `:tries` — re-issuing must not reset the brute-force budget.
+    await this.redis.set(key, `${staffId}:${code}`, 'EX', RESET_CODE_TTL_SECONDS);
     return code;
   }
 
@@ -68,7 +87,15 @@ export class VendorPasswordResetService {
   /** Validates and consumes the code. Returns staffId on success, null on invalid/expired. */
   async consumeCode(email: string, code: string): Promise<string | null> {
     const key = this.buildKey(email);
-    const result = await this.redis.eval(CONSUME_CODE_SCRIPT, 2, key, `${key}:tries`, code, String(RESET_CODE_TTL_SECONDS), String(MAX_WRONG_CODE_ATTEMPTS));
+    const result = await this.redis.eval(
+      CONSUME_CODE_SCRIPT,
+      2,
+      key,
+      `${key}:tries`,
+      code,
+      String(RESET_CODE_TTL_SECONDS),
+      String(MAX_WRONG_CODE_ATTEMPTS),
+    );
     return typeof result === 'string' ? result : null;
   }
 }

@@ -64,6 +64,7 @@ export class AdminAuthService {
     const [row] = await this.db.select({ id: admins.id }).from(admins).where(eq(admins.email, email));
     if (!row) return;
     const code = await this.passwordReset.issueCode(email, row.id);
+    if (!code) return;
     await this.mail.sendPasswordResetEmail(email, code).catch(() => {});
   }
 

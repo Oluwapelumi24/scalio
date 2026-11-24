@@ -1,4 +1,9 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import {
+  AuthEmailThrottle,
+  AuthStrictIpThrottle,
+  LoginThrottle,
+} from '../common/throttling/apply-throttlers';
 import { AdminAuthService } from './admin-auth.service';
 import { AdminAuthGuard } from './admin-auth.guard';
 import { CurrentAdmin } from './current-admin.decorator';
@@ -15,27 +20,32 @@ export class AdminAuthController {
 
   @Post('invite')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @AuthEmailThrottle()
   async requestInvite(@Body() dto: RequestAdminInviteDto) {
     await this.adminAuth.issueInvite(dto.email);
   }
 
   @Post('accept-invite')
+  @AuthStrictIpThrottle()
   acceptInvite(@Body() dto: AcceptAdminInviteDto) {
     return this.adminAuth.acceptInvite(dto.token, dto.password);
   }
 
   @Post('login')
+  @LoginThrottle()
   login(@Body() dto: AdminLoginDto) {
     return this.adminAuth.login(dto.email, dto.password);
   }
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @AuthEmailThrottle()
   async forgotPassword(@Body() dto: ForgotAdminPasswordDto) {
     await this.adminAuth.requestPasswordReset(dto.email);
   }
 
   @Post('reset-password')
+  @AuthStrictIpThrottle()
   resetPassword(@Body() dto: ResetAdminPasswordDto) {
     return this.adminAuth.resetPassword(dto.email, dto.code, dto.password);
   }

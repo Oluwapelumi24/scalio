@@ -3,7 +3,15 @@
 import { useState } from 'react'
 import { recordModuleUsage } from '@/app/actions/personalisation'
 
-export function BookingLinkCard({ url, total }: { url: string; total: number }) {
+export function BookingLinkCard({
+  url,
+  total,
+  className = '',
+}: {
+  url: string
+  total: number
+  className?: string
+}) {
   const [copied, setCopied] = useState(false)
   const visible = url.replace(/^https?:\/\//, '')
   const message = `Book an appointment with us on Veno: ${url}`
@@ -20,7 +28,10 @@ export function BookingLinkCard({ url, total }: { url: string; total: number }) 
   }
 
   return (
-    <section id="booking-link" className="rounded-[24px] bg-[#1e3a8a] p-6 text-white">
+    <section
+      id="booking-link"
+      className={`flex h-full flex-col rounded-[24px] bg-[#1e3a8a] p-6 text-white ${className}`}
+    >
       <p className="text-lg font-semibold">{total === 0 ? 'Get your first booking' : 'Get more bookings'}</p>
       <p className="mt-2 max-w-md text-sm leading-6 text-white/80">
         Customers book and pay through your link. Share it on WhatsApp, Instagram or in your bio.
@@ -33,15 +44,17 @@ export function BookingLinkCard({ url, total }: { url: string; total: number }) 
         <span className="truncate">{visible}</span>
         <span className="shrink-0 font-semibold">{copied ? 'Copied' : 'Copy'}</span>
       </button>
-      <a
-        href={`https://wa.me/?text=${encodeURIComponent(message)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => void recordModuleUsage('share_booking_link')}
-        className="mt-3 inline-flex items-center rounded-[20px] bg-white px-5 text-sm font-semibold text-[#1e3a8a] h-12"
-      >
-        Share booking link
-      </a>
+      <div className="mt-auto pt-3">
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => void recordModuleUsage('share_booking_link')}
+          className="inline-flex h-12 items-center rounded-[20px] bg-white px-5 text-sm font-semibold text-[#1e3a8a]"
+        >
+          Share booking link
+        </a>
+      </div>
     </section>
   )
 }

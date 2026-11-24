@@ -154,10 +154,12 @@ export default async function DashboardHome() {
     : []
   const activated = ready && approved
   // After go-live only — payments / ads tips feel wrong while the listing is still in review.
+  // Drop share_link_first — BookingLinkCard already covers "Get your first booking".
   const suggestions = activated
     ? (home?.layers.recommendation ?? [])
+        .filter((item) => item.id !== 'share_link_first')
         .filter((item) => item.status !== 'coming_soon' || activated)
-        .slice(0, 3)
+        .slice(0, 2)
     : []
   const waitingActions =
     ready && !approved && profile?.approvalStatus !== 'rejected'
@@ -182,8 +184,9 @@ export default async function DashboardHome() {
           },
         ]
       : []
+  // BookingLinkCard already owns share when live — don't repeat it under Quick actions.
   const quickActions = activated
-    ? (home?.layers.quick_action ?? []).filter((item) => item.id !== 'share_booking_link' || approved)
+    ? (home?.layers.quick_action ?? []).filter((item) => item.id !== 'share_booking_link')
     : []
 
   const greetingTone = !ready
@@ -282,7 +285,81 @@ export default async function DashboardHome() {
             />
           ) : null}
 
-          {ready && approved ? <BookingLinkCard url={bookings.link} total={bookings.total} /> : null}
+          {(ready && approved) || suggestions.length > 0 ? (
+            <section
+              className={
+                ready && approved && suggestions.length > 0
+                  ? 'grid items-stretch gap-3 md:grid-cols-2'
+                  : undefined
+              }
+            >
+              {ready && approved ? (
+                <BookingLinkCard url={bookings.link} total={bookings.total} />
+              ) : null}
+              {suggestions.length > 0 ? (
+                <div
+                  className={
+                    ready && approved
+                      ? 'flex h-full min-h-0 flex-col gap-3'
+                      : 'rounded-[24px] bg-white p-5 sm:p-6'
+                  }
+                >
+                  {ready && approved ? null : (
+                    <h2 className="mb-4 text-base font-bold tracking-tight text-[#0a0a0a]">Suggested for you</h2>
+                  )}
+                  <div
+                    className={
+                      ready && approved
+                        ? 'flex h-full min-h-0 flex-col gap-3'
+                        : 'grid gap-2 sm:grid-cols-2'
+                    }
+                  >
+                    {suggestions.map((item) => {
+                      if (item.status === 'coming_soon') {
+                        return (
+                          <div
+                            key={item.id}
+                            className={
+                              ready && approved
+                                ? 'flex min-h-0 flex-1 items-start gap-3 rounded-[20px] border border-dashed border-[#c9ced8] bg-white p-5'
+                                : 'flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-[#fafbfc] p-4'
+                            }
+                          >
+                            <IconTile name={item.icon} />
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold">{item.title}</span>
+                              <span className="mt-0.5 block text-[13px] leading-5 text-[#7d818b]">Coming soon.</span>
+                            </span>
+                          </div>
+                        )
+                      }
+                      return (
+                        <ModuleLink
+                          key={item.id}
+                          moduleId={item.id}
+                          href={HREF[item.id] ?? '/dashboard'}
+                          className={
+                            ready && approved
+                              ? 'flex min-h-0 flex-1 items-start gap-3 rounded-[20px] bg-white p-5'
+                              : 'flex min-w-0 items-start gap-3 rounded-2xl bg-[#fafbfc] p-4'
+                          }
+                        >
+                          <IconTile name={item.icon} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold">{item.title}</span>
+                            <span className="mt-0.5 block text-[13px] leading-5 text-[#4a4e57]">
+                              {RECOMMENDATION_TEXT[item.id]?.(item.data) ?? ''}
+                            </span>
+                          </span>
+                          <Icon name="chevron-right" className="mt-1 h-4 w-4 shrink-0 text-[#c9ced8]" />
+                        </ModuleLink>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           {waitingActions.length > 0 ? (
             <section>
@@ -390,53 +467,6 @@ export default async function DashboardHome() {
                     <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-[#c9ced8]" />
                   </ModuleLink>
                 ))}
-              </div>
-            </section>
-          )}
-
-          {suggestions.length > 0 && (
-            <section className="rounded-[24px] bg-white p-5 sm:p-6">
-              <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">Suggested for you</h2>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {suggestions.map((item) => {
-                  if (item.status === 'coming_soon') {
-                    return (
-                      <div key={item.id} className="flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-[#fafbfc] p-4">
-                        <IconTile name={item.icon} />
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold">{item.title}</span>
-                          <span className="mt-0.5 block text-[13px] leading-5 text-[#7d818b]">Coming soon.</span>
-                        </span>
-                      </div>
-                    )
-                  }
-                  if (item.id === 'share_link_first') {
-                    return (
-                      <ShareLink
-                        key={item.id}
-                        moduleId={item.id}
-                        url={item.data.url}
-                        title={item.title}
-                        body={RECOMMENDATION_TEXT[item.id]?.(item.data)}
-                      />
-                    )
-                  }
-                  return (
-                    <ModuleLink
-                      key={item.id}
-                      moduleId={item.id}
-                      href={HREF[item.id] ?? '/dashboard'}
-                      className="flex min-w-0 items-start gap-3 rounded-2xl bg-[#fafbfc] p-4"
-                    >
-                      <IconTile name={item.icon} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold">{item.title}</span>
-                        <span className="mt-0.5 block text-[13px] leading-5 text-[#4a4e57]">{RECOMMENDATION_TEXT[item.id]?.(item.data) ?? ''}</span>
-                      </span>
-                      <Icon name="chevron-right" className="mt-1 h-4 w-4 shrink-0 text-[#c9ced8]" />
-                    </ModuleLink>
-                  )
-                })}
               </div>
             </section>
           )}

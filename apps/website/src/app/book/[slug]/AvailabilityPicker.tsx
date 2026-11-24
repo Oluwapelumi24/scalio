@@ -62,7 +62,8 @@ export function AvailabilityPicker({
   const chosen = services.filter((s) => selected.includes(s.id))
   const total = chosen.reduce((sum, s) => sum + s.priceKobo, 0)
   const duration = chosen.reduce((sum, s) => sum + s.durationMinutes, 0)
-  const step = selected.length === 0 ? 1 : 2
+  const hasServices = selected.length > 0
+  const step = hasServices ? 2 : 1
 
   function check(nextDate = date, nextSelected = selected) {
     if (nextSelected.length === 0) {
@@ -149,37 +150,37 @@ export function AvailabilityPicker({
   }
 
   return (
-    <div className="space-y-8" style={{ ['--book-accent' as string]: accent }}>
+    <div className="space-y-7" style={{ ['--book-accent' as string]: accent }}>
       <section>
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
-            <span className="mr-2 text-[13px] font-bold tabular-nums text-[color:var(--book-accent)]">1</span>
+          <h2 className="text-lg font-bold tracking-tight text-[#0a0a0a] sm:text-xl">
+            <span className="mr-2 text-[12px] font-bold tabular-nums text-[color:var(--book-accent)]">1</span>
             Choose services
           </h2>
           {chosen.length > 0 ? (
-            <p className="text-[13px] font-medium text-slate-500">
+            <p className="text-[13px] font-medium text-[#7d818b]">
               {chosen.length} selected · {formatDuration(duration)}
             </p>
           ) : null}
         </div>
 
         {services.length === 0 ? (
-          <p className="mt-4 rounded-[20px] bg-white px-5 py-6 text-sm leading-6 text-slate-500 shadow-[0_1px_0_rgba(15,15,20,0.04)]">
+          <p className="mt-4 rounded-[20px] bg-white px-5 py-6 text-sm leading-6 text-[#7d818b]">
             {businessName} hasn’t listed any services yet.
           </p>
         ) : (
-          <ul className="mt-4 overflow-hidden rounded-[24px] bg-white shadow-[0_1px_0_rgba(15,15,20,0.04),0_8px_24px_rgba(15,15,20,0.04)]">
+          <ul className="mt-4 overflow-hidden rounded-[20px] bg-white">
             {services.map((s, index) => {
               const on = selected.includes(s.id)
               return (
-                <li key={s.id} className={index > 0 ? 'border-t border-slate-100' : ''}>
+                <li key={s.id} className={index > 0 ? 'border-t border-[#f0f1f4]' : ''}>
                   <button
                     type="button"
                     role="checkbox"
                     aria-checked={on}
                     onClick={() => toggle(s.id)}
-                    className={`flex w-full items-center gap-4 px-5 py-4 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 ${
-                      on ? 'bg-[color-mix(in_srgb,var(--book-accent)_8%,white)]' : 'hover:bg-slate-50'
+                    className={`flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.99] motion-reduce:transition-none motion-reduce:active:scale-100 sm:gap-4 sm:px-5 sm:py-4 ${
+                      on ? 'bg-[color-mix(in_srgb,var(--book-accent)_8%,white)]' : 'hover:bg-[#fafbfc]'
                     }`}
                   >
                     <span
@@ -187,16 +188,18 @@ export function AvailabilityPicker({
                       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 text-[10px] font-bold transition-colors duration-150 ${
                         on
                           ? 'border-[color:var(--book-accent)] bg-[color:var(--book-accent)] text-white'
-                          : 'border-slate-300 bg-white'
+                          : 'border-[#c9ced8] bg-white'
                       }`}
                     >
                       {on ? '✓' : ''}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-semibold text-slate-950">{s.name}</span>
-                      <span className="mt-0.5 block text-[13px] text-slate-500">{formatDuration(s.durationMinutes)}</span>
+                      <span className="block text-[15px] font-semibold text-[#0a0a0a]">{s.name}</span>
+                      <span className="mt-0.5 block text-[13px] text-[#7d818b]">
+                        {formatDuration(s.durationMinutes)}
+                      </span>
                     </span>
-                    <span className="shrink-0 text-[15px] font-semibold tabular-nums text-slate-950">
+                    <span className="shrink-0 text-[15px] font-semibold tabular-nums text-[#0a0a0a]">
                       {formatNaira(s.priceKobo)}
                     </span>
                   </button>
@@ -207,30 +210,34 @@ export function AvailabilityPicker({
         )}
       </section>
 
-      <section className={selected.length === 0 ? 'opacity-55' : undefined}>
-        <h2 className="font-display text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl">
-          <span className="mr-2 text-[13px] font-bold tabular-nums text-[color:var(--book-accent)]">2</span>
+      <section aria-disabled={!hasServices}>
+        <h2 className="text-lg font-bold tracking-tight text-[#0a0a0a] sm:text-xl">
+          <span className="mr-2 text-[12px] font-bold tabular-nums text-[color:var(--book-accent)]">2</span>
           Pick a time
         </h2>
-        <p className="mt-1.5 text-sm text-slate-500">
-          {selected.length === 0
-            ? 'Select a service above to see open times.'
+        <p className="mt-1 text-sm leading-5 text-[#7d818b]">
+          {!hasServices
+            ? 'Select a service above to unlock open times.'
             : 'Times match the services you chose.'}
         </p>
 
-        <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          className={`-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+            !hasServices ? 'pointer-events-none opacity-40' : ''
+          }`}
+        >
           {days.map((d) => {
             const on = date === d.value
             return (
               <button
                 key={d.value}
                 type="button"
-                disabled={selected.length === 0}
+                disabled={!hasServices}
                 onClick={() => pickDate(d.value)}
-                className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed ${
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed ${
                   on
-                    ? 'border-transparent text-white'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 disabled:hover:border-slate-200'
+                    ? 'text-white'
+                    : 'bg-white text-[#4a4e57] hover:bg-[#eef0f4] disabled:hover:bg-white'
                 }`}
                 style={on ? { backgroundColor: accent } : undefined}
               >
@@ -240,54 +247,52 @@ export function AvailabilityPicker({
           })}
         </div>
 
-        <div className="mt-3 min-h-[120px] rounded-[24px] bg-white px-5 py-5 shadow-[0_1px_0_rgba(15,15,20,0.04),0_8px_24px_rgba(15,15,20,0.04)]">
-          {selected.length === 0 ? (
-            <p className="text-sm leading-6 text-slate-500">
-              Choose at least one service, then we’ll show times that fit.
-            </p>
-          ) : isPending ? (
-            <p className="text-sm text-slate-500">Checking open times…</p>
-          ) : error ? (
-            <p className="text-sm text-red-600">{error}</p>
-          ) : slots === null ? (
-            <p className="text-sm leading-6 text-slate-500">Pick a day above to see open times.</p>
-          ) : slots.length === 0 ? (
-            <p className="text-sm leading-6 text-slate-500">No open times on this day. Try another day.</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {slots.map((iso) => {
-                const on = iso === slot
-                return (
-                  <button
-                    key={iso}
-                    type="button"
-                    onClick={() => setSlot(iso)}
-                    className={`rounded-xl border px-3.5 py-2 text-sm font-semibold tabular-nums transition-colors duration-150 active:scale-[0.96] motion-reduce:active:scale-100 ${
-                      on
-                        ? 'border-transparent text-white'
-                        : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300'
-                    }`}
-                    style={on ? { backgroundColor: accent } : undefined}
-                  >
-                    {timeFmt.format(new Date(iso))}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        {!hasServices ? null : (
+          <div className="mt-3 rounded-[20px] bg-white px-4 py-4 sm:px-5 sm:py-5">
+            {isPending ? (
+              <p className="text-sm text-[#7d818b]">Checking open times…</p>
+            ) : error ? (
+              <p className="text-sm text-[#b91c1c]">{error}</p>
+            ) : slots === null ? (
+              <p className="text-sm leading-6 text-[#7d818b]">Pick a day above to see open times.</p>
+            ) : slots.length === 0 ? (
+              <p className="text-sm leading-6 text-[#7d818b]">No open times on this day. Try another day.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {slots.map((iso) => {
+                  const on = iso === slot
+                  return (
+                    <button
+                      key={iso}
+                      type="button"
+                      onClick={() => setSlot(iso)}
+                      className={`rounded-xl px-3.5 py-2 text-sm font-semibold tabular-nums transition-colors duration-150 active:scale-[0.96] motion-reduce:active:scale-100 ${
+                        on
+                          ? 'text-white'
+                          : 'bg-[#f5f6f8] text-[#0a0a0a] hover:bg-[#eef0f4]'
+                      }`}
+                      style={on ? { backgroundColor: accent } : undefined}
+                    >
+                      {timeFmt.format(new Date(iso))}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {chosen.length > 0 ? (
         <div
-          className="sticky bottom-4 z-10 overflow-hidden rounded-[24px] p-5 text-white shadow-[0_12px_40px_rgba(15,15,20,0.18)] sm:static sm:shadow-[0_8px_28px_rgba(15,15,20,0.12)]"
+          className="sticky bottom-3 z-10 overflow-hidden rounded-[20px] p-4 text-white sm:static sm:bottom-auto sm:p-5"
           style={{
             background: `linear-gradient(160deg, color-mix(in srgb, ${accent} 88%, #0b1638), ${accent})`,
           }}
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[13px] font-medium text-white/70">Your visit</p>
+              <p className="text-[12px] font-medium text-white/70">Your visit</p>
               <p className="mt-1 text-lg font-semibold tracking-tight">
                 {formatNaira(total)}
                 <span className="font-medium text-white/75"> · {formatDuration(duration)}</span>
@@ -321,9 +326,11 @@ export function AvailabilityPicker({
                 inputMode="tel"
                 autoComplete="tel"
                 placeholder="0803 000 0000"
-                className="mt-1.5 h-12 w-full rounded-xl border border-white/25 bg-white px-4 text-sm text-slate-900 outline-none focus:border-white"
+                className="mt-1.5 h-12 w-full rounded-xl border border-white/25 bg-white px-4 text-sm text-[#0a0a0a] outline-none focus:border-white"
               />
-              <span className="mt-1 block text-xs text-white/70">So {businessName} can reach you about this visit.</span>
+              <span className="mt-1 block text-xs text-white/70">
+                So {businessName} can reach you about this visit.
+              </span>
             </label>
           ) : null}
 
@@ -337,12 +344,14 @@ export function AvailabilityPicker({
                 type="button"
                 onClick={confirm}
                 disabled={!slot || isPending}
-                className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-slate-950 transition-transform duration-150 ease-out active:scale-[0.96] disabled:opacity-50 motion-reduce:active:scale-100"
+                className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-[#0a0a0a] transition-transform duration-150 ease-out active:scale-[0.96] disabled:opacity-50 motion-reduce:active:scale-100"
               >
                 {isPending ? 'Booking…' : signedIn ? 'Book this time' : 'Sign in to book'}
               </button>
               {!signedIn ? (
-                <p className="mt-3 text-sm text-white/70">Create a free account to hold this time. Your selection stays.</p>
+                <p className="mt-3 text-sm text-white/70">
+                  Create a free account to hold this time. Your selection stays.
+                </p>
               ) : null}
             </>
           )}

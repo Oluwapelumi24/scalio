@@ -327,7 +327,7 @@ export function getTeamShifts(): Promise<TeamShiftStatus[]> {
   return req('GET', '/vendor-admin/attendance/team');
 }
 
-/** Omit `staffId` to clock yourself in; owners and managers may name someone else. */
+/** Practitioners/front desk omit `staffId` to clock themselves; owners/managers must name a team member. */
 export function clockIn(staffId?: string): Promise<unknown> {
   return req('POST', '/vendor-admin/attendance/clock-in', staffId ? { staffId } : {});
 }

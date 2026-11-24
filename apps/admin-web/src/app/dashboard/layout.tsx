@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { getToken } from '@/lib/session'
 import { logoutAction } from '@/app/actions/auth'
+import { AccountMenu } from './AccountMenu'
 import { SidebarNav } from './SidebarNav'
 
 interface AdminPrincipal {
@@ -21,6 +22,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/login')
   }
 
+  const pending = await apiFetch<{ id: string }[]>('/super-admin/vendors/pending', token).catch(() => null)
+
   return (
     <div className="flex h-screen bg-gray-50">
       <aside className="w-56 flex-shrink-0 bg-slate-900 flex flex-col">
@@ -29,22 +32,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <p className="text-slate-400 text-xs mt-0.5">Admin Portal</p>
         </div>
 
-        <SidebarNav />
-
-        <div className="px-4 py-4 border-t border-slate-700">
-          <p className="text-white text-sm font-medium truncate">{admin.name}</p>
-          <p className="text-slate-400 text-xs mt-0.5">Operations Manager</p>
-          <form action={logoutAction} className="mt-3">
-            <button type="submit" className="text-xs text-slate-400 hover:text-white transition-colors">
-              Sign out
-            </button>
-          </form>
-        </div>
+        <SidebarNav pendingReviews={pending?.length ?? 0} />
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">{children}</div>
-      </main>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="flex h-16 shrink-0 items-center justify-end border-b border-gray-200 bg-white px-8">
+          <AccountMenu name={admin.name} email={admin.email} logout={logoutAction} />
+        </header>
+        <main className="min-h-0 flex-1 overflow-y-auto">
+          <div className="p-8">{children}</div>
+        </main>
+      </div>
     </div>
   )
 }

@@ -95,19 +95,27 @@ const navItems = [
   },
 ]
 
-export function SidebarNav() {
+export function SidebarNav({ pendingReviews = 0 }: { pendingReviews?: number }) {
   const pathname = usePathname()
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">
       {navItems.map(({ href, label, icon, exact }) => {
         const active = exact ? pathname === href : pathname.startsWith(href)
+        const waiting = href === '/dashboard/vendors/reviews' ? pendingReviews : 0
         return (
           <Link key={href} href={href}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               active ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'
             }`}>
             <span className="shrink-0">{icon}</span>
-            {label}
+            <span className="min-w-0 flex-1">{label}</span>
+            {waiting > 0 ? (
+              <span className={`inline-flex min-w-5 justify-center rounded-full px-1.5 text-[11px] font-semibold ${
+                active ? 'bg-white text-indigo-700' : 'bg-amber-400 text-slate-900'
+              }`}>
+                {waiting > 99 ? '99+' : waiting}
+              </span>
+            ) : null}
           </Link>
         )
       })}

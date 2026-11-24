@@ -1,7 +1,8 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, gte, isNull, lt } from 'drizzle-orm';
+import { ConflictException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { and, asc, desc, eq, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
 import { attendanceRecords, staff, vendors } from '../db/schema';
+import { CLOCKABLE_ROLES, isClockableRole } from './access';
 import { resolvePeriod } from './period';
 import { StaffScheduleService } from './staff-schedule.service';
 
@@ -22,7 +23,7 @@ export class AttendanceService {
   }
 
   async clockIn(vendorId: string, staffId: string, recordedById: string, now = new Date()) {
-    await this.schedules.assertStaff(vendorId, staffId);
+    await this.assertClockable(vendorId, staffId);
     try {
       const [row] = await this.db
         .insert(attendanceRecords)
@@ -36,7 +37,7 @@ export class AttendanceService {
   }
 
   async clockOut(vendorId: string, staffId: string, now = new Date()) {
-    await this.schedules.assertStaff(vendorId, staffId);
+    await this.assertClockable(vendorId, staffId);
     const [row] = await this.db
       .update(attendanceRecords)
       .set({ clockOutAt: now })
@@ -46,13 +47,13 @@ export class AttendanceService {
     return row;
   }
 
-  /** Everyone in the business and whether they're on shift right now. */
+  /** Practitioners and front desk only — owners/managers oversee, they don't appear here. */
   async team(vendorId: string) {
     const [members, open] = await Promise.all([
       this.db
         .select({ id: staff.id, name: staff.name, role: staff.role })
         .from(staff)
-        .where(eq(staff.vendorId, vendorId))
+        .where(and(eq(staff.vendorId, vendorId), inArray(staff.role, [...CLOCKABLE_ROLES])))
         .orderBy(asc(staff.name)),
       this.db
         .select({ staffId: attendanceRecords.staffId, clockInAt: attendanceRecords.clockInAt })
@@ -72,6 +73,7 @@ export class AttendanceService {
       lt(attendanceRecords.clockInAt, range.end),
     ];
     if (staffId) conditions.push(eq(attendanceRecords.staffId, staffId));
+    else conditions.push(inArray(staff.role, [...CLOCKABLE_ROLES]));
 
     return this.db
       .select({
@@ -86,5 +88,13 @@ export class AttendanceService {
       .innerJoin(staff, eq(attendanceRecords.staffId, staff.id))
       .where(and(...conditions))
       .orderBy(desc(attendanceRecords.clockInAt));
+  }
+
+  private async assertClockable(vendorId: string, staffId: string) {
+    const member = await this.schedules.assertStaff(vendorId, staffId);
+    if (!isClockableRole(member.role)) {
+      throw new ForbiddenException('Owners and managers do not clock in.');
+    }
+    return member;
   }
 }

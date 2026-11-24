@@ -60,7 +60,7 @@ export default async function BookingPage({
 
   return (
     <div
-      className="min-h-screen bg-[#f7f8fb] text-slate-950"
+      className="min-h-screen bg-[#f7f8fa] text-[#0a0a0a]"
       style={{ ['--book-accent' as string]: accent }}
     >
       {vendor.preview ? (
@@ -89,7 +89,7 @@ export default async function BookingPage({
           className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-black/10 blur-3xl"
         />
 
-        <div className="relative mx-auto max-w-5xl px-5 pb-12 pt-7 sm:px-8 sm:pb-14 sm:pt-8">
+        <div className="relative mx-auto max-w-5xl px-5 pb-10 pt-6 sm:px-8 sm:pb-12 sm:pt-8">
           <Link
             href="/"
             className="inline-flex text-[13px] font-semibold tracking-wide text-white/75 transition-colors hover:text-white"
@@ -97,27 +97,27 @@ export default async function BookingPage({
             Veno
           </Link>
 
-          <div className="mt-8 flex items-start gap-4 sm:mt-10 sm:gap-5">
+          <div className="mt-7 flex items-start gap-4 sm:mt-9 sm:gap-5">
             {vendor.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={vendor.logoUrl}
                 alt=""
-                className="h-[72px] w-[72px] shrink-0 rounded-[22px] bg-white object-cover shadow-[0_8px_24px_rgba(0,0,0,0.18)] outline outline-1 outline-black/10 -outline-offset-1 sm:h-20 sm:w-20"
+                className="h-[72px] w-[72px] shrink-0 rounded-[20px] bg-white object-cover outline outline-1 outline-black/10 -outline-offset-1 sm:h-20 sm:w-20"
               />
             ) : (
-              <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] bg-white/15 text-3xl font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-sm sm:h-20 sm:w-20">
+              <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[20px] bg-white/15 text-3xl font-semibold backdrop-blur-sm sm:h-20 sm:w-20">
                 {vendor.businessName.charAt(0)}
               </div>
             )}
             <div className="min-w-0 pt-0.5">
-              <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-white/70">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/70">
                 {vendor.category}
               </p>
-              <h1 className="mt-1 font-display text-[2rem] font-semibold leading-[1.1] tracking-tight sm:text-4xl">
+              <h1 className="mt-1 font-display text-[1.85rem] font-semibold leading-[1.1] tracking-tight sm:text-4xl">
                 {vendor.businessName}
               </h1>
-              <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/80">
+              <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/80">
                 {vendor.rating != null ? (
                   <span className="inline-flex items-center gap-1">
                     <Star className="h-3.5 w-3.5 fill-current" aria-hidden />
@@ -138,12 +138,12 @@ export default async function BookingPage({
           </div>
 
           {vendor.description ? (
-            <p className="mt-6 max-w-2xl text-[15px] leading-6 text-white/88">{vendor.description}</p>
+            <p className="mt-5 max-w-2xl text-[15px] leading-6 text-white/85">{vendor.description}</p>
           ) : null}
         </div>
       </header>
 
-      <main className="relative mx-auto grid max-w-5xl gap-8 px-5 py-8 sm:px-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
+      <main className="relative mx-auto grid max-w-5xl gap-8 px-5 py-7 sm:px-8 sm:py-9 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-12">
         <AvailabilityPicker
           vendorId={vendor.id}
           slug={vendor.slug}
@@ -159,13 +159,15 @@ export default async function BookingPage({
           accent={accent}
         />
 
-        <aside className="space-y-4 lg:pt-1">
-          <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_1px_0_rgba(15,15,20,0.04),0_8px_24px_rgba(15,15,20,0.04)]">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Opening hours</h2>
+        <aside className="space-y-6 lg:pt-1">
+          <section>
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7d818b]">
+              Opening hours
+            </h2>
             {vendor.businessHours.length === 0 ? (
-              <p className="mt-3 text-sm leading-5 text-slate-500">Hours not listed yet.</p>
+              <p className="mt-3 text-sm leading-5 text-[#7d818b]">Hours not listed yet.</p>
             ) : (
-              <dl className="mt-3 space-y-1.5">
+              <dl className="mt-3 space-y-0.5">
                 {DAY_NAMES.map((name, day) => {
                   const h = hours.get(day)
                   const isToday = day === today
@@ -173,10 +175,10 @@ export default async function BookingPage({
                     <div
                       key={name}
                       className={`flex items-baseline justify-between gap-3 rounded-xl px-2.5 py-1.5 text-sm ${
-                        isToday ? 'bg-[color-mix(in_srgb,var(--book-accent)_10%,white)]' : ''
+                        isToday ? 'bg-white' : ''
                       }`}
                     >
-                      <dt className={isToday ? 'font-semibold text-slate-950' : 'text-slate-500'}>
+                      <dt className={isToday ? 'font-semibold text-[#0a0a0a]' : 'text-[#7d818b]'}>
                         {name.slice(0, 3)}
                         {isToday ? <span className="sr-only"> (today)</span> : null}
                       </dt>
@@ -184,9 +186,9 @@ export default async function BookingPage({
                         className={`tabular-nums ${
                           h
                             ? isToday
-                              ? 'font-semibold text-slate-950'
-                              : 'text-slate-800'
-                            : 'text-slate-400'
+                              ? 'font-semibold text-[#0a0a0a]'
+                              : 'text-[#4a4e57]'
+                            : 'text-[#7d818b]'
                         }`}
                       >
                         {h ? `${formatClock(h.opensAtMinutes)} – ${formatClock(h.closesAtMinutes)}` : 'Closed'}
@@ -199,9 +201,11 @@ export default async function BookingPage({
           </section>
 
           {paymentModes.length > 0 ? (
-            <section className="rounded-[24px] bg-white px-5 py-5 shadow-[0_1px_0_rgba(15,15,20,0.04),0_8px_24px_rgba(15,15,20,0.04)]">
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Payment</h2>
-              <ul className="mt-3 space-y-2 text-sm leading-5 text-slate-700">
+            <section>
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7d818b]">
+                Payment
+              </h2>
+              <ul className="mt-3 space-y-1.5 text-sm leading-5 text-[#4a4e57]">
                 {paymentModes.map((mode) => {
                   const example = vendor.services.find((s) => s.paymentMode === mode)!
                   return <li key={mode}>{PAYMENT_LABEL[mode](example)}</li>
@@ -212,9 +216,9 @@ export default async function BookingPage({
         </aside>
       </main>
 
-      <footer className="pb-10 text-center text-xs text-slate-400">
+      <footer className="pb-10 text-center text-xs text-[#7d818b]">
         Powered by{' '}
-        <Link href="/" className="font-semibold text-slate-500 hover:text-navy">
+        <Link href="/" className="font-semibold text-[#4a4e57] hover:text-[#0a0a0a]">
           Veno
         </Link>
       </footer>

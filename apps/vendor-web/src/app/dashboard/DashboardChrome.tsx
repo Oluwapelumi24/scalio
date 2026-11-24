@@ -2,9 +2,10 @@
 
 import { Suspense, useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { BrandLink } from '@/components/BrandLink'
 import { Icon, type IconName } from '@/components/Icon'
+import { BUSINESS_NAV, businessNavActive } from './businessNav'
 import { NotificationsBell } from './notifications/NotificationsBell'
 import { ShareBusinessSheet } from './ShareBusinessSheet'
 import { ROLE_LABELS } from '@/lib/roles'
@@ -56,24 +57,33 @@ export function DashboardChrome({
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [businessOpen, setBusinessOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const accountRef = useRef<HTMLDivElement>(null)
+  const businessRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
   const tabs = TABS.filter((tab) => tab.roles.includes(role))
+  const businessItems = BUSINESS_NAV.filter((item) => item.roles.includes(role))
 
   useEffect(() => {
     setMenuOpen(false)
     setAccountOpen(false)
+    setBusinessOpen(false)
     setShareOpen(false)
   }, [pathname])
 
   useEffect(() => {
-    if (!accountOpen) return
+    if (!accountOpen && !businessOpen) return
     const onPointer = (event: PointerEvent) => {
-      if (!accountRef.current?.contains(event.target as Node)) setAccountOpen(false)
+      const target = event.target as Node
+      if (accountOpen && !accountRef.current?.contains(target)) setAccountOpen(false)
+      if (businessOpen && !businessRef.current?.contains(target)) setBusinessOpen(false)
     }
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setAccountOpen(false)
+      if (event.key === 'Escape') {
+        setAccountOpen(false)
+        setBusinessOpen(false)
+      }
     }
     window.addEventListener('pointerdown', onPointer)
     window.addEventListener('keydown', onKey)
@@ -81,7 +91,7 @@ export function DashboardChrome({
       window.removeEventListener('pointerdown', onPointer)
       window.removeEventListener('keydown', onKey)
     }
-  }, [accountOpen])
+  }, [accountOpen, businessOpen])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -109,6 +119,35 @@ export function DashboardChrome({
             <BrandLink className="h-6 w-auto" />
           </span>
           <div className="flex items-center gap-2">
+            {businessItems.length > 0 ? (
+              <div className="relative" ref={businessRef}>
+                <button
+                  type="button"
+                  className="flex h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-[#0a0a0a] hover:bg-[#f5f6f8]"
+                  aria-expanded={businessOpen}
+                  aria-haspopup="menu"
+                  onClick={() => {
+                    setAccountOpen(false)
+                    setBusinessOpen((open) => !open)
+                  }}
+                >
+                  <Icon name="shopping-bag" className="h-4 w-4 text-[#7d818b]" />
+                  <span className="hidden sm:inline">Business</span>
+                  <Icon
+                    name="chevron-down"
+                    className={`h-4 w-4 text-[#7d818b] transition-transform duration-150 ${businessOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {businessOpen ? (
+                  <Suspense fallback={null}>
+                    <BusinessMenu
+                      items={businessItems}
+                      onNavigate={() => setBusinessOpen(false)}
+                    />
+                  </Suspense>
+                ) : null}
+              </div>
+            ) : null}
             <NotificationsBell unread={unread} />
             <div className="relative" ref={accountRef}>
               <button
@@ -117,7 +156,10 @@ export function DashboardChrome({
                 aria-expanded={accountOpen}
                 aria-haspopup="menu"
                 aria-label={`${name}, ${ROLE_LABELS[role] ?? role}`}
-                onClick={() => setAccountOpen((open) => !open)}
+                onClick={() => {
+                  setBusinessOpen(false)
+                  setAccountOpen((open) => !open)
+                }}
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1e3a8a] text-[11px] font-bold text-white">
                   {initials}
@@ -133,7 +175,6 @@ export function DashboardChrome({
               </button>
               {accountOpen ? (
                 <AccountMenu
-                  role={role}
                   previewUrl={previewUrl}
                   canShare={Boolean(shareUrl)}
                   logout={logout}
@@ -234,31 +275,61 @@ export function DashboardChrome({
   )
 }
 
+function BusinessMenu({
+  items,
+  onNavigate,
+}: {
+  items: typeof BUSINESS_NAV
+  onNavigate: () => void
+}) {
+  const pathname = usePathname()
+  const searchTab = useSearchParams().get('tab')
+  const itemClass = 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-[#f5f6f8]'
+  return (
+    <div
+      role="menu"
+      aria-label="Business"
+      className="absolute right-0 top-12 z-40 w-56 rounded-2xl border border-[#e4e6eb] bg-white p-1.5 shadow-lg"
+    >
+      {items.map((entry) => {
+        const on = businessNavActive(pathname, searchTab, entry.storefrontTab)
+        return (
+          <Link
+            key={entry.href}
+            href={entry.href}
+            role="menuitem"
+            aria-current={on ? 'page' : undefined}
+            onClick={onNavigate}
+            className={`${itemClass} ${on ? 'bg-[#e8edfa] text-[#1e3a8a]' : 'text-[#0a0a0a]'}`}
+          >
+            <Icon
+              name={entry.icon}
+              className={`h-[18px] w-[18px] shrink-0 ${on ? 'text-[#1e3a8a]' : 'text-[#7d818b]'}`}
+            />
+            {entry.label}
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
 function AccountMenu({
-  role,
   previewUrl,
   canShare,
   logout,
   onNavigate,
   onShare,
 }: {
-  role: string
   previewUrl: string | null
   canShare: boolean
   logout: () => Promise<void>
   onNavigate: () => void
   onShare: () => void
 }) {
-  const canManage = role === 'owner' || role === 'manager'
   const item = 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#0a0a0a] hover:bg-[#f5f6f8]'
   return (
     <div role="menu" className="absolute right-0 top-12 z-40 w-64 rounded-2xl border border-[#e4e6eb] bg-white p-1.5 shadow-lg">
-      {canManage ? (
-        <Link href="/dashboard/storefront?tab=page" role="menuitem" onClick={onNavigate} className={item}>
-          <Icon name="shopping-bag" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />
-          Business page
-        </Link>
-      ) : null}
       {previewUrl ? (
         <a href={previewUrl} target="_blank" rel="noopener noreferrer" role="menuitem" onClick={onNavigate} className={item}>
           <Icon name="eye" className="h-[18px] w-[18px] shrink-0 text-[#7d818b]" />

@@ -1,6 +1,7 @@
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { ApproveRejectButtons } from './ApproveRejectButtons'
+import { ScrollToRequest } from './ScrollToRequest'
 
 interface PendingVendor {
   id: string
@@ -44,8 +45,9 @@ export default async function VendorReviewsPage() {
         </div>
       ) : (
         <div className="space-y-5">
+          <ScrollToRequest />
           {pending.map((vendor) => (
-            <div key={vendor.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div id={vendor.id} key={vendor.id} className="scroll-mt-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
               {/* Header bar */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-3">

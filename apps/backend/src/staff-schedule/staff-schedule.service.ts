@@ -33,7 +33,7 @@ export class StaffScheduleService {
   /** 404s for staff outside this business, so other businesses' staff can't be probed. */
   async assertStaff(vendorId: string, staffId: string) {
     const [member] = await this.db
-      .select({ id: staff.id, name: staff.name })
+      .select({ id: staff.id, name: staff.name, role: staff.role })
       .from(staff)
       .where(and(eq(staff.id, staffId), eq(staff.vendorId, vendorId)));
     if (!member) throw new NotFoundException('Staff member not found');

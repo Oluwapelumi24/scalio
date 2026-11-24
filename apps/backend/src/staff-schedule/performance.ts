@@ -169,7 +169,9 @@ export function computePerformance(input: {
     const own = input.bookings.filter((b) => b.staffId === member.id);
     let attendance: StaffPerformance['attendance'] = null;
 
-    if (since) {
+    // Owners and managers oversee; attendance is only for people who clock in.
+    const clocksIn = member.role === 'practitioner' || member.role === 'front_desk';
+    if (since && clocksIn) {
       const shifts = input.shifts.filter((s) => s.staffId === member.id);
       const workedMinutes = Math.round(
         shifts.reduce((sum, s) => {

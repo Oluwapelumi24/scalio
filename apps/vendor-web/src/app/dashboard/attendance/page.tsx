@@ -24,54 +24,69 @@ export default async function AttendancePage() {
   const isManager = MANAGER_ROLES.includes(me.role)
 
   const [mine, team, shifts] = await Promise.all([
-    apiFetch<{ clockedIn: boolean; since: string | null }>('/vendor-admin/attendance/me', token),
+    isManager
+      ? Promise.resolve(null)
+      : apiFetch<{ clockedIn: boolean; since: string | null }>('/vendor-admin/attendance/me', token),
     isManager ? apiFetch<TeamShiftStatus[]>('/vendor-admin/attendance/team', token) : Promise.resolve([]),
     apiFetch<ShiftRecord[]>(`/vendor-admin/attendance?from=${isoDaysAgo(6)}&to=${isoDaysAgo(0)}`, token),
   ])
-  const others = team.filter((t) => t.id !== me.staffId)
 
   return (
     <div className="max-w-4xl space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
-        <p className="mt-1 text-sm text-gray-500">Clock in when you start work and out when you finish. Mobile and web share the same records.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {isManager
+            ? 'See who’s on shift and clock the team in or out if they forget. Owners and managers don’t clock in.'
+            : 'Clock in when you start work and out when you finish. Mobile and web share the same records.'}
+        </p>
       </div>
 
-      <section className="flex items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 px-6 py-5">
-        <div className="flex items-center gap-3">
-          <span className={`h-2.5 w-2.5 rounded-full ${mine.clockedIn ? 'bg-emerald-500' : 'bg-gray-300'}`} aria-hidden />
-          <p className="font-medium text-gray-900">
-            {mine.clockedIn && mine.since ? `You're clocked in since ${fmtTime(mine.since)}` : "You're not clocked in"}
-          </p>
-        </div>
-        <ClockButton clockedIn={mine.clockedIn} large />
-      </section>
+      {!isManager && mine ? (
+        <section className="flex items-center justify-between gap-4 rounded-[20px] bg-white px-6 py-5">
+          <div className="flex items-center gap-3">
+            <span className={`h-2.5 w-2.5 rounded-full ${mine.clockedIn ? 'bg-emerald-500' : 'bg-gray-300'}`} aria-hidden />
+            <p className="font-medium text-gray-900">
+              {mine.clockedIn && mine.since ? `You're clocked in since ${fmtTime(mine.since)}` : "You're not clocked in"}
+            </p>
+          </div>
+          <ClockButton clockedIn={mine.clockedIn} large />
+        </section>
+      ) : null}
 
-      {isManager && others.length > 0 && (
+      {isManager ? (
         <section>
           <h2 className="text-base font-semibold text-gray-900">Your team now</h2>
-          <p className="text-sm text-gray-500 mb-3">You can clock someone in or out if they forget.</p>
-          <ul className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-            {others.map((m) => (
-              <li key={m.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                <span className="flex items-center gap-3">
-                  <span className={`h-2 w-2 rounded-full ${m.clockedIn ? 'bg-emerald-500' : 'bg-gray-300'}`} aria-hidden />
-                  <span className="font-medium text-gray-900">{m.name}</span>
-                  <span className="text-gray-500">{m.clockedIn && m.since ? `since ${fmtTime(m.since)}` : 'not clocked in'}</span>
-                </span>
-                <ClockButton clockedIn={m.clockedIn} staffId={m.id} />
-              </li>
-            ))}
-          </ul>
+          <p className="mb-3 text-sm text-gray-500">Practitioners and front desk — clock them in or out if they forget.</p>
+          {team.length === 0 ? (
+            <p className="rounded-[20px] bg-white px-5 py-6 text-sm text-gray-500">
+              No practitioners or front desk staff yet. Add them under Team.
+            </p>
+          ) : (
+            <ul className="divide-y divide-gray-100 rounded-[20px] bg-white">
+              {team.map((m) => (
+                <li key={m.id} className="flex items-center justify-between px-5 py-3 text-sm">
+                  <span className="flex items-center gap-3">
+                    <span className={`h-2 w-2 rounded-full ${m.clockedIn ? 'bg-emerald-500' : 'bg-gray-300'}`} aria-hidden />
+                    <span className="font-medium text-gray-900">{m.name}</span>
+                    <span className="text-gray-500">
+                      {m.clockedIn && m.since ? `since ${fmtTime(m.since)}` : 'not clocked in'}
+                    </span>
+                  </span>
+                  <ClockButton clockedIn={m.clockedIn} staffId={m.id} />
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
-      )}
+      ) : null}
 
       <section>
-        <h2 className="text-base font-semibold text-gray-900 mb-3">Last 7 days</h2>
+        <h2 className="mb-3 text-base font-semibold text-gray-900">Last 7 days</h2>
         {shifts.length === 0 ? (
           <p className="text-sm text-gray-500">No shifts recorded yet.</p>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="overflow-hidden rounded-[20px] bg-white">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                 <tr>
@@ -91,7 +106,9 @@ export default async function AttendancePage() {
                     </td>
                     <td className="px-4 py-2 text-gray-600">{fmtDay(s.clockInAt)}</td>
                     <td className="px-4 py-2 text-gray-600">{fmtTime(s.clockInAt)}</td>
-                    <td className="px-4 py-2 text-gray-600">{s.clockOutAt ? fmtTime(s.clockOutAt) : <span className="text-emerald-600">On shift</span>}</td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {s.clockOutAt ? fmtTime(s.clockOutAt) : <span className="text-emerald-600">On shift</span>}
+                    </td>
                     <td className="px-4 py-2 text-gray-600">{duration(s.clockInAt, s.clockOutAt)}</td>
                   </tr>
                 ))}

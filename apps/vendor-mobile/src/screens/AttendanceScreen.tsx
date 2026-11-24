@@ -28,16 +28,20 @@ export function AttendanceScreen({ navigation }: Props) {
 
   const load = useCallback(async () => {
     try {
-      const [mine, everyone] = await Promise.all([getMyShift(), isManager ? getTeamShifts() : Promise.resolve([])]);
-      setMe(mine);
-      setTeam(everyone.filter((m) => m.id !== session?.staffId));
+      if (isManager) {
+        setMe(null);
+        setTeam(await getTeamShifts());
+      } else {
+        setMe(await getMyShift());
+        setTeam([]);
+      }
     } catch (err) {
       Alert.alert('Could not load attendance', err instanceof Error ? err.message : 'Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isManager, session?.staffId]);
+  }, [isManager]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
@@ -61,7 +65,11 @@ export function AttendanceScreen({ navigation }: Props) {
           <Feather name="arrow-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>Attendance</Text>
-        <Text style={styles.subtitle}>Clock in when you start work and out when you finish.</Text>
+        <Text style={styles.subtitle}>
+          {isManager
+            ? 'See who’s on shift. Owners and managers don’t clock in.'
+            : 'Clock in when you start work and out when you finish.'}
+        </Text>
       </SafeAreaView>
 
       {loading ? (
@@ -71,56 +79,62 @@ export function AttendanceScreen({ navigation }: Props) {
           contentContainerStyle={styles.content}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
         >
-          <View style={styles.meCard}>
-            <View style={[styles.dot, { backgroundColor: me?.clockedIn ? colors.success : colors.disabled }]} />
-            <Text style={styles.meStatus}>{me?.clockedIn ? `You're clocked in ${since(me.since)}` : "You're not clocked in"}</Text>
-            <Pressable
-              style={[styles.bigBtn, me?.clockedIn && styles.bigBtnOut, busy === 'me' && { opacity: 0.6 }]}
-              onPress={() => toggle(undefined, !!me?.clockedIn)}
-              disabled={busy !== null}
-              accessibilityRole="button"
-            >
-              {busy === 'me' ? (
-                <ActivityIndicator color={colors.white} />
-              ) : (
-                <>
-                  <Feather name={me?.clockedIn ? 'log-out' : 'log-in'} size={18} color={colors.white} />
-                  <Text style={styles.bigBtnLabel}>{me?.clockedIn ? 'Clock out' : 'Clock in'}</Text>
-                </>
-              )}
-            </Pressable>
-          </View>
+          {!isManager ? (
+            <View style={styles.meCard}>
+              <View style={[styles.dot, { backgroundColor: me?.clockedIn ? colors.success : colors.disabled }]} />
+              <Text style={styles.meStatus}>{me?.clockedIn ? `You're clocked in ${since(me.since)}` : "You're not clocked in"}</Text>
+              <Pressable
+                style={[styles.bigBtn, me?.clockedIn && styles.bigBtnOut, busy === 'me' && { opacity: 0.6 }]}
+                onPress={() => toggle(undefined, !!me?.clockedIn)}
+                disabled={busy !== null}
+                accessibilityRole="button"
+              >
+                {busy === 'me' ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <>
+                    <Feather name={me?.clockedIn ? 'log-out' : 'log-in'} size={18} color={colors.white} />
+                    <Text style={styles.bigBtnLabel}>{me?.clockedIn ? 'Clock out' : 'Clock in'}</Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+          ) : null}
 
-          {isManager && team.length > 0 && (
+          {isManager ? (
             <>
-              <Text style={styles.sectionTitle}>Your team today</Text>
-              <Text style={styles.hint}>You can clock someone in or out if they forget.</Text>
-              <View style={styles.card}>
-                {team.map((m, i) => (
-                  <View key={m.id} style={[styles.row, i > 0 && styles.divider]}>
-                    <View style={[styles.dot, { backgroundColor: m.clockedIn ? colors.success : colors.disabled }]} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.name}>{m.name}</Text>
-                      <Text style={styles.meta}>{m.clockedIn ? `Clocked in ${since(m.since)}` : 'Not clocked in'}</Text>
+              <Text style={[styles.sectionTitle, { marginTop: 0 }]}>Your team today</Text>
+              <Text style={styles.hint}>Practitioners and front desk — clock them in or out if they forget.</Text>
+              {team.length === 0 ? (
+                <Text style={styles.meta}>No practitioners or front desk staff yet. Add them under Team.</Text>
+              ) : (
+                <View style={styles.card}>
+                  {team.map((m, i) => (
+                    <View key={m.id} style={[styles.row, i > 0 && styles.divider]}>
+                      <View style={[styles.dot, { backgroundColor: m.clockedIn ? colors.success : colors.disabled }]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.name}>{m.name}</Text>
+                        <Text style={styles.meta}>{m.clockedIn ? `Clocked in ${since(m.since)}` : 'Not clocked in'}</Text>
+                      </View>
+                      <Pressable
+                        onPress={() => toggle(m.id, m.clockedIn)}
+                        disabled={busy !== null}
+                        style={styles.smallBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${m.clockedIn ? 'Clock out' : 'Clock in'} ${m.name}`}
+                      >
+                        {busy === m.id ? (
+                          <ActivityIndicator size="small" color={colors.accent} />
+                        ) : (
+                          <Text style={styles.smallBtnLabel}>{m.clockedIn ? 'Clock out' : 'Clock in'}</Text>
+                        )}
+                      </Pressable>
                     </View>
-                    <Pressable
-                      onPress={() => toggle(m.id, m.clockedIn)}
-                      disabled={busy !== null}
-                      style={styles.smallBtn}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${m.clockedIn ? 'Clock out' : 'Clock in'} ${m.name}`}
-                    >
-                      {busy === m.id ? (
-                        <ActivityIndicator size="small" color={colors.accent} />
-                      ) : (
-                        <Text style={styles.smallBtnLabel}>{m.clockedIn ? 'Clock out' : 'Clock in'}</Text>
-                      )}
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
+                  ))}
+                </View>
+              )}
             </>
-          )}
+          ) : null}
         </ScrollView>
       )}
     </View>

@@ -32,15 +32,6 @@ interface Group {
 
 const GROUPS: Group[] = [
   {
-    title: 'Business',
-    items: [
-      { href: '/dashboard/storefront?tab=page', label: 'Business page', icon: 'shopping-bag', roles: ['owner', 'manager'], storefrontTab: 'page' },
-      { href: '/dashboard/storefront?tab=services', label: 'Services', icon: 'package', roles: ['owner', 'manager'], storefrontTab: 'services' },
-      { href: '/dashboard/storefront?tab=team', label: 'Team', icon: 'users', roles: ['owner', 'manager'], storefrontTab: 'team' },
-      { href: '/dashboard/storefront?tab=hours', label: 'Hours', icon: 'clock', roles: ['owner', 'manager'], storefrontTab: 'hours' },
-    ],
-  },
-  {
     title: 'Marketing',
     requiresSuite: true,
     items: [
@@ -193,7 +184,7 @@ export function SidebarNav({
         </div>
       ) : null}
 
-      <nav className="min-h-0 flex-1 overflow-y-auto px-5 py-2" aria-label="Business">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-5 py-2" aria-label="Dashboard">
         <div className="space-y-0.5">
           {primary.map((item) => (
             <Row key={item.href} item={item} pathname={pathname} searchTab={searchTab} onNavigate={onNavigate} />

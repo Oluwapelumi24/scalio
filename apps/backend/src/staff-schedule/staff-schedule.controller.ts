@@ -48,7 +48,7 @@ export class StaffScheduleController {
   }
 }
 
-// Anyone clocks themselves in and out; owners and managers can do it for others.
+// Practitioners and front desk clock themselves; owners/managers only clock the team.
 @Controller('vendor-admin/attendance')
 @UseGuards(VendorAuthGuard, RolesGuard)
 export class AttendanceController {

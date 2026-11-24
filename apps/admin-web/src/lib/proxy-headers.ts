@@ -1,3 +1,4 @@
+import { resolveForwardedClientIp } from '@veno/shared-types'
 import { headers } from 'next/headers'
 
 /**
@@ -10,13 +11,13 @@ export async function venoProxyHeaders(): Promise<Record<string, string>> {
 
   try {
     const incoming = await headers()
-    const forwarded =
-      incoming.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      incoming.get('x-real-ip')?.trim() ||
-      ''
-    if (!forwarded) return {}
+    const clientIp = resolveForwardedClientIp({
+      xRealIp: incoming.get('x-real-ip'),
+      xForwardedFor: incoming.get('x-forwarded-for'),
+    })
+    if (!clientIp) return {}
     return {
-      'x-veno-client-ip': forwarded,
+      'x-veno-client-ip': clientIp,
       'x-veno-proxy-secret': secret,
     }
   } catch {

@@ -107,3 +107,18 @@ npx eas build --platform all --profile preview
 3. Open `{VENDOR_WEB_URL}/login` and sign in  
 4. From `www.venohq.com/login` you redirect to the dashboard origin when `VENDOR_WEB_URL` is set  
 5. Open `{ADMIN_URL}/login` and approve a pending vendor  
+6. **Per-IP login throttle (proxy IP must not collapse all users):** from one machine, forge a leftmost `X-Forwarded-For` and hit vendor login through the Next app (server action / login form posts to the API via `apiFetch`, which prefers `x-real-ip` / rightmost XFF). Eleven requests from the same machine must hit the per-IP login bucket — the **11th must return 429**. A forged leftmost XFF alone must **not** get you a fresh bucket.
+
+```bash
+# Against the public vendor-web origin (or website /login handoff). Adjust path/body to match the live login action.
+# Expect: first 10 succeed or return auth errors (401/400); 11th is 429 from the API throttle.
+for i in $(seq 1 11); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$VENDOR_WEB_URL/login" \
+    -H 'content-type: application/x-www-form-urlencoded' \
+    -H 'X-Forwarded-For: 203.0.113.99' \
+    --data 'email=throttle-smoke@example.com&password=wrong')
+  echo "$i $code"
+done
+# Confirm the 11th line is 429 (or the upstream API 429 surfaced by the action).
+```
+

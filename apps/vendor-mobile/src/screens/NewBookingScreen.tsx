@@ -1,3 +1,4 @@
+import { bookingHoldsSlot } from '@veno/shared-types';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -136,7 +137,7 @@ export function NewBookingScreen({ navigation, route }: Props) {
     const nowMin = minutesOf(new Date());
     const length = Math.max(duration, step);
     const busy = dayBookings
-      .filter((b) => ['confirmed', 'pending_payment'].includes(b.status))
+      .filter((b) => bookingHoldsSlot(b.status))
       .filter((b) => staffId !== 'any' && b.staff?.id === staffId)
       .map((b) => {
         const s = minutesOf(new Date(b.scheduledAt));

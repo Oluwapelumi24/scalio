@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -150,7 +151,7 @@ export function BusinessPageScreen({ navigation }: Props) {
       });
       setProfile(saved);
       setLogoUrl(saved.logoUrl);
-      const approved = saved.approvalStatus === 'approved';
+      const approved = listingIsPublic(saved.approvalStatus);
       Alert.alert(
         'Saved',
         approved

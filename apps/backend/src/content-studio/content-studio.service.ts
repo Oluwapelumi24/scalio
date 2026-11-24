@@ -1,3 +1,4 @@
+import { postCanPlan, postCanUnplan, type PostStatus } from '@veno/shared-types';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, gte, inArray, lte, or, sql, type SQL } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
@@ -247,7 +248,7 @@ export class ContentStudioService {
   /** Puts the post on the content calendar. Posted posts stay in history and can't be re-planned. */
   async plan(vendorId: string, id: string, plannedFor: string) {
     const current = await this.own(vendorId, id);
-    if (current.status === 'posted') throw new BadRequestException('This post has already gone out.');
+    if (!postCanPlan(current.status as PostStatus)) throw new BadRequestException('This post has already gone out.');
     if (!current.caption.trim()) throw new BadRequestException('Add a caption before planning the post.');
     const [row] = await this.db
       .update(contentPosts)
@@ -259,7 +260,7 @@ export class ContentStudioService {
 
   async unplan(vendorId: string, id: string) {
     const current = await this.own(vendorId, id);
-    if (current.status !== 'planned') return this.present(current);
+    if (!postCanUnplan(current.status)) return this.present(current);
     await this.publisher.cancelQueuedForPost(id);
     const [row] = await this.db
       .update(contentPosts)

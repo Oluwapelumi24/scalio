@@ -1,11 +1,13 @@
+import type { AdCampaignStatus } from '@veno/shared-types'
+
+export type { AdCampaignStatus }
+
 // Ads Manager campaign types, shared by the web pages and server actions.
 // Mirrors the backend's /vendor-admin/ads endpoints.
 
 export type AdObjective = 'awareness' | 'traffic' | 'engagement' | 'leads' | 'app_promotion' | 'sales';
 export type AdDestination = 'whatsapp' | 'messenger' | 'instagram_direct' | 'website' | 'app';
 export type AdPaymentRoute = 'veno' | 'own_meta';
-export type AdCampaignStatus = 'awaiting_payment' | 'launching' | 'in_review' | 'active' | 'paused' | 'completed' | 'rejected' | 'failed' | 'cancelled';
-
 export interface AdLocation { key: string; type: 'city' | 'region' | 'country'; name: string; radiusKm?: number }
 export interface AdTargeting {
   locations: AdLocation[];

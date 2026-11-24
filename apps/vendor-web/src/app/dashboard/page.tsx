@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { apiFetch, ApiError } from '@/lib/api'
@@ -121,7 +122,7 @@ export default async function DashboardHome() {
     apiFetch<TodayStatsData>('/vendor-admin/bookings/summary', token).catch(() => null),
   ])
   const listed = profile ? listingReady(profile) : true
-  const approved = profile?.approvalStatus === 'approved'
+  const approved = listingIsPublic(profile?.approvalStatus)
 
   const bookings = home?.bookings
   const ready = !!bookings && bookings.setup.services && bookings.setup.hours && listed

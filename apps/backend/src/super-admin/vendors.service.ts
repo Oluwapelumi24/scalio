@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { desc, eq } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
 import { vendors } from '../db/schema';
+import { LISTING, move, type ListingStatus } from '@veno/shared-types';
 import { MailService } from '../mail/mail.service';
 import type { CreateVendorDto } from './dto/create-vendor.dto';
 import type { UpdateVendorDto } from './dto/update-vendor.dto';
@@ -75,7 +76,8 @@ export class SuperAdminVendorsService {
 
   async approve(vendorId: string, adminId: string) {
     const current = await this.getById(vendorId);
-    if (current.approvalStatus !== 'pending_review' && current.approvalStatus !== 'rejected') {
+    const next = move(LISTING, current.approvalStatus as ListingStatus, 'APPROVE');
+    if (!next) {
       throw new ConflictException(
         `Only pending or rejected listings can be approved (currently ${current.approvalStatus}).`,
       );
@@ -83,7 +85,7 @@ export class SuperAdminVendorsService {
     const [updated] = await this.db
       .update(vendors)
       .set({
-        approvalStatus: 'approved',
+        approvalStatus: next,
         reviewNote: null,
         reviewedAt: new Date(),
         reviewedById: adminId,
@@ -98,7 +100,8 @@ export class SuperAdminVendorsService {
 
   async reject(vendorId: string, adminId: string, note?: string) {
     const current = await this.getById(vendorId);
-    if (current.approvalStatus !== 'pending_review' && current.approvalStatus !== 'approved') {
+    const next = move(LISTING, current.approvalStatus as ListingStatus, 'REJECT');
+    if (!next) {
       throw new ConflictException(
         `Only pending or live listings can be rejected (currently ${current.approvalStatus}).`,
       );
@@ -106,7 +109,7 @@ export class SuperAdminVendorsService {
     const [updated] = await this.db
       .update(vendors)
       .set({
-        approvalStatus: 'rejected',
+        approvalStatus: next,
         reviewNote: note ?? null,
         reviewedAt: new Date(),
         reviewedById: adminId,

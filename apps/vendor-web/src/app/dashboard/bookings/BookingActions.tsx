@@ -1,5 +1,6 @@
 'use client'
 
+import { bookingHoldsSlot } from '@veno/shared-types'
 import { useState, useTransition } from 'react'
 import { cancelBooking, completeBooking, noShowBooking } from '@/app/actions/bookings'
 import { feedbackShare } from '@/app/actions/insights'
@@ -50,7 +51,7 @@ export function BookingActions({ bookingId, status }: Props) {
     )
   }
 
-  if (status !== 'confirmed' && status !== 'pending_payment') return null
+  if (!bookingHoldsSlot(status)) return null
 
   return (
     <div className="flex items-center gap-2">

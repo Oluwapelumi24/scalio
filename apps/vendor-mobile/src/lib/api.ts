@@ -1,11 +1,13 @@
+import type { AdCampaignStatus, BookingStatus, PostStatus, PublicationStatus } from '@veno/shared-types';
 import { expireSession, getSession } from './session';
+
+export type { AdCampaignStatus, BookingStatus, PostStatus, PublicationStatus };
 
 /** Production builds set EXPO_PUBLIC_API_URL via EAS. Local default is the Nest API. */
 export const BASE = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
 // ─── Shared types ────────────────────────────────────────────────────────────
 
-export type BookingStatus = 'pending_payment' | 'confirmed' | 'completed' | 'cancelled_by_customer' | 'cancelled_by_vendor' | 'no_show';
 export type PaymentMode = 'pay_on_arrival' | 'deposit' | 'full_prepayment';
 
 export interface VendorBooking {
@@ -708,7 +710,6 @@ export function statusLabel(s: BookingStatus): string {
 // Veno; the backend says so per platform in `manualReason`.
 
 export type ContentPlatform = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp';
-export type PostStatus = 'draft' | 'planned' | 'posted';
 
 export interface PlatformSpec {
   id: ContentPlatform;
@@ -723,7 +724,6 @@ export interface PlatformSpec {
   canConnect: boolean;
 }
 
-export type PublicationStatus = 'queued' | 'publishing' | 'published' | 'failed' | 'cancelled';
 export interface Publication {
   id: string;
   platform: 'facebook' | 'instagram';
@@ -990,8 +990,6 @@ export function draftInboxFaq(): Promise<{ faq: FaqEntry[] }> {
 export type AdObjective = 'awareness' | 'traffic' | 'engagement' | 'leads' | 'app_promotion' | 'sales';
 export type AdDestination = 'whatsapp' | 'messenger' | 'instagram_direct' | 'website' | 'app';
 export type AdPaymentRoute = 'veno' | 'own_meta';
-export type AdCampaignStatus = 'awaiting_payment' | 'launching' | 'in_review' | 'active' | 'paused' | 'completed' | 'rejected' | 'failed' | 'cancelled';
-
 export interface AdLocation { key: string; type: 'city' | 'region' | 'country'; name: string; radiusKm?: number }
 export interface AdTargeting {
   locations: AdLocation[];

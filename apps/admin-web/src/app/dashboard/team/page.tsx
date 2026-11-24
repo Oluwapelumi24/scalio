@@ -1,3 +1,4 @@
+import { STAFF_ACCOUNT_LABEL } from '@veno/shared-types'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { InviteAdminForm } from './InviteAdminForm'
@@ -47,10 +48,9 @@ export default async function TeamPage() {
                 <td className="px-4 py-3 font-medium text-gray-900">{m.name}</td>
                 <td className="px-4 py-3 text-gray-600">{m.email}</td>
                 <td className="px-4 py-3">
-                  {m.active
-                    ? <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
-                    : <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Invite pending</span>
-                  }
+                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${m.active ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {m.active ? STAFF_ACCOUNT_LABEL.active : STAFF_ACCOUNT_LABEL.invite_pending}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-gray-500 text-xs">
                   {m.lastLoginAt

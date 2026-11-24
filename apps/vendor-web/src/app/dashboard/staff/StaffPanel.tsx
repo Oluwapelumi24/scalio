@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
+import { STAFF_ACCOUNT_LABEL, staffAccount } from '@veno/shared-types'
 import { ROLE_LABELS } from '@/lib/roles'
 import { CreateStaffForm } from './StaffForm'
 import { DeleteStaffButton } from './DeleteStaffButton'
@@ -61,19 +62,7 @@ export async function StaffPanel() {
                   <td className="px-4 py-3 text-gray-600">{s.email ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{ROLE_LABELS[s.role] ?? s.role}</td>
                   <td className="px-4 py-3">
-                    {s.email ? (
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                          s.hasActivatedAccount
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-amber-100 text-amber-700'
-                        }`}
-                      >
-                        {s.hasActivatedAccount ? 'Active' : 'Invite pending'}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-400">No portal access</span>
-                    )}
+                    <StaffAccountBadge member={s} />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
@@ -101,5 +90,20 @@ export async function StaffPanel() {
         </div>
       </div>
     </div>
+  )
+}
+
+function StaffAccountBadge({ member }: { member: StaffMember }) {
+  const account = staffAccount(member)
+  const label = STAFF_ACCOUNT_LABEL[account]
+  if (account === 'no_portal') return <span className="text-xs text-gray-400">{label}</span>
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+        account === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+      }`}
+    >
+      {label}
+    </span>
   )
 }

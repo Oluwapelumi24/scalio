@@ -1,5 +1,6 @@
 'use client'
 
+import { BOOKING_CANCELLED, BOOKING_HOLDS_SLOT } from '@veno/shared-types'
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -27,9 +28,9 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]['key']
 
-const UPCOMING = new Set(['pending_payment', 'confirmed'])
+const UPCOMING = new Set<string>(BOOKING_HOLDS_SLOT)
 const COMPLETED = new Set(['completed'])
-const CANCELLED = new Set(['cancelled_by_customer', 'cancelled_by_vendor', 'no_show'])
+const CANCELLED = new Set<string>([...BOOKING_CANCELLED, 'no_show'])
 
 const STATUS: Record<string, string> = {
   pending_payment: 'Pending payment',

@@ -1,3 +1,4 @@
+import { bookingHoldsSlot } from '@veno/shared-types';
 import { useState } from 'react';
 import { Alert, Linking, Modal, Pressable, Share, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -45,7 +46,8 @@ export function BookingDetailScreen({ route, navigation }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
 
-  const canAct = ['pending_payment', 'confirmed'].includes(booking.status);
+  const canAct = bookingHoldsSlot(booking.status);
+  const canFinish = booking.status === 'confirmed';
   const start = new Date(booking.scheduledAt);
   const end = new Date(start.getTime() + booking.durationMinutes * 60_000);
 
@@ -100,7 +102,7 @@ export function BookingDetailScreen({ route, navigation }: Props) {
   return (
     <Page
       footer={
-        canAct ? (
+        canFinish ? (
           <StickyFooter>
             <Button label="Mark complete" icon="check" onPress={() => act('complete')} loading={busy === 'complete'} disabled={!!busy} style={{ flex: 1 }} />
           </StickyFooter>
@@ -170,10 +172,12 @@ export function BookingDetailScreen({ route, navigation }: Props) {
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.grabber} />
           <Text style={styles.sheetTitle}>{booking.customer?.name ?? 'Booking'}</Text>
-          <Pressable style={styles.sheetRow} onPress={() => act('no-show')} accessibilityRole="button">
-            <Feather name="user-x" size={22} color={colors.text} />
-            <Text style={styles.sheetLabel}>Mark as no-show</Text>
-          </Pressable>
+          {canFinish ? (
+            <Pressable style={styles.sheetRow} onPress={() => act('no-show')} accessibilityRole="button">
+              <Feather name="user-x" size={22} color={colors.text} />
+              <Text style={styles.sheetLabel}>Mark as no-show</Text>
+            </Pressable>
+          ) : null}
           <Pressable style={styles.sheetRow} onPress={() => act('cancel')} accessibilityRole="button">
             <Feather name="x-circle" size={22} color={colors.error} />
             <Text style={[styles.sheetLabel, { color: colors.error }]}>Cancel booking</Text>

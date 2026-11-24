@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { getHome, type HomeResponse } from './api';
@@ -39,7 +40,7 @@ function toState(h: HomeResponse): SetupState | null {
     ...h.bookings,
     listed,
     ready: h.bookings.setup.services && h.bookings.setup.hours && listed,
-    approved: h.business.approvalStatus === 'approved',
+    approved: listingIsPublic(h.business.approvalStatus),
     approvalStatus: h.business.approvalStatus,
   };
 }

@@ -1,3 +1,4 @@
+import { BOOKING_HOLDS_SLOT } from '@veno/shared-types';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { and, asc, count, eq, gt, inArray, sql, type SQL } from 'drizzle-orm';
@@ -70,7 +71,7 @@ export class HomeDataService {
           sql`${bookings.status} = 'confirmed' and ${bookings.scheduledAt} > ${now} and ${bookings.scheduledAt} <= ${inAnHour}`,
         ),
         unassignedToday: countWhere(
-          sql`${isToday} and ${bookings.staffId} is null and ${bookings.status} in ('pending_payment', 'confirmed')`,
+          sql`${isToday} and ${bookings.staffId} is null and ${bookings.status} in (${sql.join(BOOKING_HOLDS_SLOT.map((status) => sql`${status}`), sql`, `)})`,
         ),
       })
       .from(bookings)
@@ -88,7 +89,7 @@ export class HomeDataService {
       .where(
         and(
           ...bookingScope,
-          inArray(bookings.status, ['pending_payment', 'confirmed']),
+          inArray(bookings.status, [...BOOKING_HOLDS_SLOT]),
           gt(bookings.scheduledAt, now),
         ),
       )
@@ -121,7 +122,7 @@ export class HomeDataService {
       .where(
         and(
           ...bookingScope,
-          inArray(bookings.status, ['pending_payment', 'confirmed']),
+          inArray(bookings.status, [...BOOKING_HOLDS_SLOT]),
           gt(bookings.scheduledAt, now),
           sql`${bookings.scheduledAt} <= ${inTwoWeeks}`,
         ),

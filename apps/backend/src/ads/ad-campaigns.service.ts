@@ -1,3 +1,4 @@
+import { AD_LIVE, adCanCancel, adCanCheckout, adCanExtend, adCanRetry, adIsLaunching } from '@veno/shared-types';
 import { BadGatewayException, BadRequestException, ConflictException, Inject, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -23,7 +24,7 @@ import { MetaAdsApi, type InterestOption, type LocationOption } from './meta-ads
 type Campaign = typeof adCampaigns.$inferSelect;
 export type CheckoutFrom = 'web' | 'mobile';
 
-const LIVE_STATUSES: AdCampaignStatus[] = ['in_review', 'active', 'paused'];
+const LIVE_STATUSES: AdCampaignStatus[] = [...AD_LIVE];
 
 /** Campaigns: draft → pay → launch on Meta → follow Meta's review and spend (ADS_MANAGER_PLAN.md §2b–§4). */
 @Injectable()
@@ -187,8 +188,8 @@ export class AdCampaignsService {
   async checkout(vendorId: string, staffId: string, campaignId: string, from: CheckoutFrom, extendDays?: number) {
     const c = await this.find(vendorId, campaignId);
     const extend = extendDays !== undefined;
-    if (!extend && c.status !== 'awaiting_payment') throw new ConflictException('This ad is already paid for.');
-    if (extend && ![...LIVE_STATUSES, 'completed'].includes(c.status)) throw new ConflictException('Only ads that have launched can be extended.');
+    if (!extend && !adCanCheckout(c.status)) throw new ConflictException('This ad is already paid for.');
+    if (extend && !adCanExtend(c.status)) throw new ConflictException('Only ads that have launched can be extended.');
     if (c.route === 'veno' && !extend) await this.ensurePageAccess(vendorId);
 
     const days = extend ? extendDays : runDays(c.startAt, c.endAt);
@@ -254,7 +255,7 @@ export class AdCampaignsService {
    */
   async launch(campaignId: string) {
     let [c] = await this.db.select().from(adCampaigns).where(eq(adCampaigns.id, campaignId));
-    if (!c || !['launching', 'failed'].includes(c.status)) return;
+    if (!c || !adIsLaunching(c.status)) return;
     try {
       const run = await this.runner(c);
       const save = async (fields: Partial<Campaign>) => {
@@ -294,7 +295,7 @@ export class AdCampaignsService {
 
   async retryLaunch(vendorId: string, campaignId: string) {
     const c = await this.find(vendorId, campaignId);
-    if (c.status !== 'failed') throw new ConflictException('Only ads that failed to launch can be retried.');
+    if (!adCanRetry(c.status)) throw new ConflictException('Only ads that failed to launch can be retried.');
     await this.launch(campaignId);
     return this.view(await this.find(vendorId, campaignId));
   }
@@ -305,7 +306,7 @@ export class AdCampaignsService {
    */
   async cancel(vendorId: string, campaignId: string) {
     const c = await this.find(vendorId, campaignId);
-    if (!['awaiting_payment', 'failed'].includes(c.status)) throw new ConflictException('Live ads can’t be cancelled here yet — they stop on their end date.');
+    if (!adCanCancel(c.status)) throw new ConflictException('Live ads can’t be cancelled here yet — they stop on their end date.');
     if (c.metaCampaignId) await this.api.update(c.metaCampaignId, (await this.runner(c)).token, { status: 'PAUSED' }).catch(() => undefined);
     if (c.status === 'failed' && c.route === 'veno' && c.paidSpendKobo > 0) {
       await this.db.insert(adCreditEntries).values({

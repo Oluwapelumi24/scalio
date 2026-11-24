@@ -1,5 +1,6 @@
 'use client'
 
+import { listingIsPublic } from '@veno/shared-types'
 import { useActionState } from 'react'
 import {
   addServiceAction,
@@ -211,7 +212,7 @@ function clock(minutes: number) {
 }
 
 function approvalCopy(status: string, note: string | null) {
-  if (status === 'approved') return 'Your business page is approved. Customers can find you and book the services you added.'
+  if (listingIsPublic(status)) return 'Your business page is approved. Customers can find you and book the services you added.'
   if (status === 'rejected') return note || 'Your business page wasn’t approved. Update the details and we’ll look again.'
   return 'We’ll review your business page shortly. You can keep setting up while you wait — customers book you after it’s approved.'
 }

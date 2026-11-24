@@ -19,6 +19,7 @@ import {
   BookingEvent,
   BookingStatus,
   InvalidBookingTransitionError,
+  isActiveStatus,
 } from './booking-state-machine';
 
 export interface CreatePendingBookingInput {
@@ -285,10 +286,7 @@ export class BookingService {
     if (!row) {
       throw new NotFoundException(`Booking ${bookingId} not found`);
     }
-    if (
-      row.booking.status !== 'confirmed' &&
-      row.booking.status !== 'pending_payment'
-    ) {
+    if (!isActiveStatus(row.booking.status)) {
       throw new ConflictException(
         `Booking ${bookingId} is not awaiting payment`,
       );
@@ -577,10 +575,8 @@ export class BookingService {
       throw err;
     }
 
-    const wasActive =
-      current.status === 'pending_payment' || current.status === 'confirmed';
-    const isStillActive =
-      nextStatus === 'pending_payment' || nextStatus === 'confirmed';
+    const wasActive = isActiveStatus(current.status);
+    const isStillActive = isActiveStatus(nextStatus);
 
     const [updated] = await this.db
       .update(bookings)

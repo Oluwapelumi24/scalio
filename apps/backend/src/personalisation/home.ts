@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types';
 import type { ModuleUsage } from '../db/schema';
 import { MODULES, type HomeLayer, type ModuleDef } from './catalog';
 import { rankModules } from './ranking';
@@ -135,7 +136,7 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
         s.serviceCount === 0 ||
         !s.hasBusinessHours ||
         !s.listingReady ||
-        s.approvalStatus !== 'approved'
+        !listingIsPublic(s.approvalStatus)
       ) {
         return null;
       }
@@ -146,11 +147,11 @@ function moduleData(def: ModuleDef, s: HomeSnapshot, prefs: HomePreferences): Re
       return s.hasBusinessHours ? null : {};
     case 'share_link_first':
       // Never push share while the listing isn't public yet.
-      return s.totalBookings === 0 && s.approvalStatus === 'approved' ? { url: s.bookingLink } : null;
+      return s.totalBookings === 0 && listingIsPublic(s.approvalStatus) ? { url: s.bookingLink } : null;
     case 'try_ads':
-      return s.approvalStatus === 'approved' ? {} : null;
+      return listingIsPublic(s.approvalStatus) ? {} : null;
     case 'open_inbox':
-      return s.approvalStatus === 'approved' ? {} : null;
+      return listingIsPublic(s.approvalStatus) ? {} : null;
     case 'unhappy_customers':
       return s.unhappyToCall > 0 ? { count: s.unhappyToCall } : null;
     case 'customer_rating':

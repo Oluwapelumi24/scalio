@@ -1,3 +1,4 @@
+import { signupCodeResult } from '@veno/shared-types';
 import { BadRequestException, ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
 import { randomBytes, randomInt } from 'crypto';
 import { sql } from 'drizzle-orm';
@@ -85,11 +86,11 @@ export class VendorSignupCodeService {
       String(CODE_TTL_SECONDS),
       String(MAX_WRONG_ATTEMPTS),
     );
-    const outcome = Number(result);
-    if (outcome === -1) {
+    const outcome = signupCodeResult(Number(result));
+    if (outcome === 'expired') {
       throw new BadRequestException('That code has expired. Request a new one.');
     }
-    if (outcome !== 1) {
+    if (outcome === 'wrong') {
       throw new BadRequestException('That code is wrong. Use the latest email we sent.');
     }
 

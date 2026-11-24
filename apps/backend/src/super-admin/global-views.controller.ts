@@ -1,3 +1,4 @@
+import { staffAccount } from '@veno/shared-types';
 import {
   Body, Controller, Delete, Get, HttpCode, HttpStatus,
   Inject, Param, ParseUUIDPipe, Post, Query, UseGuards,
@@ -208,7 +209,10 @@ export class SuperAdminGlobalViewController {
       .from(admins)
       .orderBy(desc(admins.createdAt));
 
-    return rows.map(({ passwordHash, ...r }) => ({ ...r, active: passwordHash !== null }));
+    return rows.map(({ passwordHash, ...r }) => ({
+      ...r,
+      active: staffAccount({ email: r.email, passwordHash }) === 'active',
+    }));
   }
 
   @Delete('team/:id')

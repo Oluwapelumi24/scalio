@@ -23,7 +23,8 @@ const STATUS_TINT: Record<string, string> = {
   pending_payment: 'border-amber-300 bg-amber-50 text-amber-950',
   confirmed: 'border-[#c7d2fe] bg-[#e8edfa] text-[#1e3a8a]',
   completed: 'border-[#bbf7d0] bg-[#e7f6ee] text-[#166534]',
-  cancelled: 'border-gray-200 bg-gray-50 text-gray-500 line-through',
+  cancelled_by_customer: 'border-gray-200 bg-gray-50 text-gray-500 line-through',
+  cancelled_by_vendor: 'border-gray-200 bg-gray-50 text-gray-500 line-through',
   no_show: 'border-gray-200 bg-gray-50 text-gray-500',
 }
 
@@ -175,7 +176,7 @@ export function DayCalendar({
                 return (
                   <div
                     key={booking.id}
-                    className={`absolute inset-x-1 overflow-hidden rounded-lg border px-2 py-1 text-left shadow-sm ${STATUS_TINT[booking.status] ?? STATUS_TINT.confirmed}`}
+                    className={`absolute inset-x-1 overflow-hidden rounded-lg border px-2 py-1 text-left shadow-sm ${STATUS_TINT[booking.status] ?? 'border-gray-200 bg-gray-50 text-gray-500'}`}
                     style={{ top: Math.max(top, 0), height }}
                     title={`${booking.customer?.name ?? 'Walk-in'} · ${serviceLabel(booking)}`}
                   >

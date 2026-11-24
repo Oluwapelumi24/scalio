@@ -1,3 +1,4 @@
+import { bookingIsCancelled } from '@veno/shared-types'
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
@@ -39,8 +40,18 @@ const STATUS_BADGE: Record<string, string> = {
   pending_payment: 'bg-amber-100 text-amber-700',
   confirmed: 'bg-green-100 text-green-700',
   completed: 'bg-blue-100 text-blue-700',
-  cancelled: 'bg-red-100 text-red-700',
+  cancelled_by_customer: 'bg-red-100 text-red-700',
+  cancelled_by_vendor: 'bg-red-100 text-red-700',
   no_show: 'bg-gray-100 text-gray-600',
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  pending_payment: 'Pending payment',
+  confirmed: 'Confirmed',
+  completed: 'Completed',
+  cancelled_by_customer: 'Cancelled by customer',
+  cancelled_by_vendor: 'Cancelled by you',
+  no_show: 'No show',
 }
 
 function formatDate(iso: string) {
@@ -82,6 +93,7 @@ export default async function BookingsPage({
 }) {
   const params = await searchParams
   const status = params.status ?? ''
+  const cancelledTab = status === 'cancelled'
   const view = params.view === 'list' ? 'list' : 'calendar'
   const date = /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? '') ? params.date! : todayIso()
   const token = await requireToken()
@@ -93,14 +105,15 @@ export default async function BookingsPage({
 
   let bookings: Booking[] = []
   try {
-    const url = status ? `/vendor-admin/bookings?status=${status}` : '/vendor-admin/bookings'
+    const url = status && !cancelledTab ? `/vendor-admin/bookings?status=${status}` : '/vendor-admin/bookings'
     bookings = await apiFetch<Booking[]>(url, token)
+    if (cancelledTab) bookings = bookings.filter((b) => bookingIsCancelled(b.status))
   } catch {
     /* show empty state */
   }
 
   const dayBookings = bookings.filter(
-    (b) => sameDay(b.scheduledAt, date) && b.status !== 'cancelled',
+    (b) => sameDay(b.scheduledAt, date) && !bookingIsCancelled(b.status),
   )
 
   const stats = [
@@ -250,7 +263,7 @@ export default async function BookingsPage({
                         <span
                           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[b.status] ?? 'bg-gray-100 text-gray-600'}`}
                         >
-                          {b.status.replace('_', ' ')}
+                          {STATUS_LABEL[b.status] ?? b.status.replaceAll('_', ' ')}
                         </span>
                       </td>
                       <td className="px-4 py-3">

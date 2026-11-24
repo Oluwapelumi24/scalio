@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types'
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
@@ -22,7 +23,7 @@ export default async function InterestsPage({
     !!home?.bookings.setup.services &&
     !!home?.bookings.setup.hours &&
     listingReady(profile)
-  if (profile?.approvalStatus !== 'approved' || !setupReady) redirect('/dashboard')
+  if (!listingIsPublic(profile?.approvalStatus) || !setupReady) redirect('/dashboard')
 
   const { welcome } = await searchParams
   const [groups, prefs] = await Promise.all([

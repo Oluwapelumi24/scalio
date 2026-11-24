@@ -18,7 +18,7 @@ const STATUS_BADGE: Record<string, string> = {
   no_show: 'bg-gray-100 text-gray-600',
 }
 
-const STATUS_TABS = ['', 'confirmed', 'pending_payment', 'completed', 'cancelled_by_vendor', 'no_show']
+const STATUS_TABS = ['', 'confirmed', 'pending_payment', 'completed', 'cancelled_by_customer', 'cancelled_by_vendor', 'no_show']
 
 function statusLabel(s: string) {
   return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())

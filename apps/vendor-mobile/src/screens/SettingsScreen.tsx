@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types';
 import { useCallback, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -40,7 +41,7 @@ export function SettingsScreen({ navigation }: Props) {
             home.business.listingReady &&
             home.bookings.setup.services &&
             home.bookings.setup.hours;
-          setSuiteUnlocked(home.business.approvalStatus === 'approved' && ready);
+          setSuiteUnlocked(listingIsPublic(home.business.approvalStatus) && ready);
         })
         .catch(() => {
           if (live) setSuiteUnlocked(false);

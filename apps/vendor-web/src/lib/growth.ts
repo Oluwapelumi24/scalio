@@ -1,9 +1,11 @@
+import type { PostStatus, PublicationStatus } from '@veno/shared-types'
+
+export type { PostStatus, PublicationStatus }
+
 // Types for the Phase 4 growth API: content studio and leads. Posting to
 // Instagram/Facebook/TikTok is manual until those platforms approve Veno.
 
 export type ContentPlatform = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp'
-export type PostStatus = 'draft' | 'planned' | 'posted'
-
 export interface PlatformSpec {
   id: ContentPlatform
   name: string
@@ -17,7 +19,6 @@ export interface PlatformSpec {
   canConnect: boolean
 }
 
-export type PublicationStatus = 'queued' | 'publishing' | 'published' | 'failed' | 'cancelled'
 export interface Publication { id: string; platform: 'facebook' | 'instagram'; status: PublicationStatus; runAt: string; attempts: number; permalink: string | null; error: string | null; publishedAt: string | null }
 
 export interface SocialConnections {

@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types'
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { getToken } from '@/lib/session'
@@ -20,7 +21,7 @@ export async function GET() {
   }
 
   const base = WEBSITE_URL.replace(/\/$/, '')
-  if (preview.approvalStatus === 'approved') {
+  if (listingIsPublic(preview.approvalStatus)) {
     redirect(`${base}/book/${encodeURIComponent(preview.slug)}`)
   }
   redirect(

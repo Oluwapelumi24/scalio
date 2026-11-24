@@ -1,3 +1,4 @@
+import { LISTING, move, type ListingStatus } from '@veno/shared-types';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
@@ -55,16 +56,16 @@ export class VendorProfileService {
       .where(eq(vendors.id, vendorId));
     if (!current) throw new NotFoundException('Business not found');
 
-    // Rejected listings re-enter the admin queue when the owner updates the page.
-    const requeue =
-      current.approvalStatus === 'rejected'
-        ? {
-            approvalStatus: 'pending_review' as const,
-            reviewNote: null,
-            reviewedAt: null,
-            reviewedById: null,
-          }
-        : {};
+    // A sent-back listing re-enters the queue. A pending or live page keeps its status.
+    const revised = move(LISTING, current.approvalStatus as ListingStatus, 'OWNER_REVISED');
+    const requeue = revised
+      ? {
+          approvalStatus: revised,
+          reviewNote: null,
+          reviewedAt: null,
+          reviewedById: null,
+        }
+      : {};
 
     const [updated] = await this.db
       .update(vendors)

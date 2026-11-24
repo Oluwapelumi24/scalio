@@ -1,3 +1,4 @@
+import { leadCanEdit, type LeadStatus } from '@veno/shared-types';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
@@ -115,7 +116,7 @@ export class LeadsService {
 
   async update(me: VendorPrincipal, id: string, dto: UpdateLeadDto) {
     const { row } = await this.own(me, id);
-    if (row.status === 'won') throw new BadRequestException('This lead is already a customer.');
+    if (!leadCanEdit(row.status as LeadStatus)) throw new BadRequestException('This lead is already a customer.');
     const set: Partial<typeof leads.$inferInsert> = { updatedAt: new Date() };
     if (dto.name !== undefined) set.name = dto.name.trim();
     if (dto.phone !== undefined) set.phone = dto.phone?.trim() || null;

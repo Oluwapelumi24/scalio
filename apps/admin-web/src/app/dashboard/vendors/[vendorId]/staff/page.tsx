@@ -1,3 +1,4 @@
+import { STAFF_ACCOUNT_LABEL, staffAccount } from '@veno/shared-types'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { VendorTabs } from '../VendorTabs'
@@ -41,12 +42,7 @@ export default async function VendorStaffPage({ params }: { params: Promise<{ ve
                 <td className="px-4 py-3 text-gray-600">{s.email ?? '—'}</td>
                 <td className="px-4 py-3 text-gray-600">{ROLE_LABELS[s.role] ?? s.role}</td>
                 <td className="px-4 py-3">
-                  {s.hasActivatedAccount
-                    ? <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Active</span>
-                    : s.email
-                      ? <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Invite pending</span>
-                      : <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">No access</span>
-                  }
+                  <StaffAccountBadge member={s} />
                 </td>
                 <td className="px-4 py-3 text-right">
                   <StaffActions vendorId={vendorId} staffId={s.id} name={s.name} />
@@ -63,4 +59,14 @@ export default async function VendorStaffPage({ params }: { params: Promise<{ ve
       </div>
     </div>
   )
+}
+
+function StaffAccountBadge({ member }: { member: StaffMember }) {
+  const account = staffAccount(member)
+  const tone = account === 'active'
+    ? 'bg-green-100 text-green-700'
+    : account === 'invite_pending'
+      ? 'bg-amber-100 text-amber-700'
+      : 'bg-gray-100 text-gray-600'
+  return <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${tone}`}>{STAFF_ACCOUNT_LABEL[account]}</span>
 }

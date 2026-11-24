@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types'
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { getToken } from '@/lib/session'
@@ -49,7 +50,7 @@ export default async function DashboardLayout({
       </ReviewBanner>
     ) : null
 
-  const suiteUnlocked = profile?.approvalStatus === 'approved'
+  const suiteUnlocked = listingIsPublic(profile?.approvalStatus)
   const shareUrl = profile?.slug
     ? `${WEBSITE_URL.replace(/\/$/, '')}/book/${encodeURIComponent(profile.slug)}`
     : null
@@ -66,7 +67,7 @@ export default async function DashboardLayout({
       previewUrl={profile?.slug ? '/dashboard/preview-storefront' : null}
       shareUrl={shareUrl}
       businessName={profile?.businessName ?? null}
-      shareLive={profile?.approvalStatus === 'approved'}
+      shareLive={listingIsPublic(profile?.approvalStatus)}
       modal={modal}
     >
       {children}

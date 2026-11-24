@@ -1,3 +1,4 @@
+import { bookingIsCancelled } from '@veno/shared-types';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, SectionList, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -10,14 +11,15 @@ import { GUTTER, makeStyles, useTheme, type Colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Bookings'>;
 
-type Filter = BookingStatus | 'all';
+type Filter = BookingStatus | 'all' | 'cancelled';
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'confirmed', label: 'Confirmed' },
   { key: 'pending_payment', label: 'Waiting for payment' },
   { key: 'completed', label: 'Completed' },
-  { key: 'cancelled_by_vendor', label: 'Cancelled' },
+  { key: 'cancelled', label: 'Cancelled' },
+  { key: 'no_show', label: 'No-show' },
 ];
 
 const STATUS_COLOR = (colors: Colors): Record<BookingStatus, string> => ({
@@ -51,8 +53,9 @@ export function BookingsScreen({ navigation }: Props) {
 
   const load = useCallback(async () => {
     try {
-      const data = await listBookings(filter === 'all' ? undefined : filter);
-      setBookings(data.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()));
+      const data = await listBookings(filter === 'all' || filter === 'cancelled' ? undefined : filter);
+      const rows = filter === 'cancelled' ? data.filter((b) => bookingIsCancelled(b.status)) : data;
+      setBookings(rows.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()));
     } catch {
       setBookings([]);
     } finally {

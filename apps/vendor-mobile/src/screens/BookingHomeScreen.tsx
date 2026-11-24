@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Share, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -90,7 +91,7 @@ export function BookingHomeScreen({ navigation }: Props) {
   const otherUpdates = (home?.layers.attention.length ?? 0) - alerts.length;
 
   const listed = home?.business.listingReady ?? true;
-  const approved = home?.business.approvalStatus === 'approved';
+  const approved = listingIsPublic(home?.business.approvalStatus);
   const rejected = home?.business.approvalStatus === 'rejected';
 
   // Only what stops customers booking. Payments are optional, and only managers can set them up.

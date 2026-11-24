@@ -1,3 +1,4 @@
+import { PUBLICATION_QUEUED, PUBLICATION_STILL_GOING, postCanPlan, publicationCanRetry, publicationInFlight } from '@veno/shared-types';
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { and, eq, inArray, sql } from 'drizzle-orm';
@@ -62,8 +63,9 @@ export class PublisherService {
         throw new BadRequestException('Instagram only takes JPEG photos from Veno. Choose the photo again, or take a new one.');
       }
       const prev = existing.find((e) => e.platform === p);
-      if (prev?.status === 'published') throw new BadRequestException(`This post is already on ${p === 'facebook' ? 'Facebook' : 'Instagram'}.`);
-      if (prev?.status === 'publishing') throw new BadRequestException(`This post is being published to ${p === 'facebook' ? 'Facebook' : 'Instagram'} right now.`);
+      const block = prev ? publicationInFlight(prev.status) : null;
+      if (block === 'published') throw new BadRequestException(`This post is already on ${p === 'facebook' ? 'Facebook' : 'Instagram'}.`);
+      if (block === 'publishing') throw new BadRequestException(`This post is being published to ${p === 'facebook' ? 'Facebook' : 'Instagram'} right now.`);
     }
 
     const runAt = at ?? now;
@@ -74,11 +76,11 @@ export class PublisherService {
           .values({ postId, vendorId, platform: p, runAt, requestedById: staffId })
           .onConflictDoUpdate({
             target: [contentPublications.postId, contentPublications.platform],
-            set: { status: 'queued', runAt, attempts: 0, error: null, containerId: null, containerCreatedAt: null, requestedById: staffId, updatedAt: now },
+            set: { status: PUBLICATION_QUEUED, runAt, attempts: 0, error: null, containerId: null, containerCreatedAt: null, requestedById: staffId, updatedAt: now },
           });
       }
       // A scheduled publish puts the post on the calendar.
-      if (at && post.status !== 'posted') {
+      if (at && postCanPlan(post.status)) {
         await tx.update(contentPosts).set({ status: 'planned', plannedFor: at, platforms: [...new Set([...post.platforms, ...platforms])], updatedAt: now }).where(eq(contentPosts.id, postId));
       }
     });
@@ -90,7 +92,7 @@ export class PublisherService {
     const [row] = await this.db
       .update(contentPublications)
       .set({ status: 'cancelled', updatedAt: new Date() })
-      .where(and(eq(contentPublications.id, publicationId), eq(contentPublications.vendorId, vendorId), eq(contentPublications.status, 'queued')))
+      .where(and(eq(contentPublications.id, publicationId), eq(contentPublications.vendorId, vendorId), eq(contentPublications.status, PUBLICATION_QUEUED)))
       .returning({ id: contentPublications.id });
     if (!row) throw new BadRequestException('Only posts waiting to go out can be cancelled.');
   }
@@ -100,7 +102,7 @@ export class PublisherService {
     await this.db
       .update(contentPublications)
       .set({ status: 'cancelled', updatedAt: new Date() })
-      .where(and(eq(contentPublications.postId, postId), eq(contentPublications.status, 'queued')));
+      .where(and(eq(contentPublications.postId, postId), eq(contentPublications.status, PUBLICATION_QUEUED)));
   }
 
   async retry(vendorId: string, staffId: string, publicationId: string) {
@@ -109,7 +111,7 @@ export class PublisherService {
       .from(contentPublications)
       .where(and(eq(contentPublications.id, publicationId), eq(contentPublications.vendorId, vendorId)));
     if (!row) throw new NotFoundException('Not found');
-    if (row.status !== 'failed' && row.status !== 'cancelled') throw new BadRequestException('Only failed or cancelled posts can be tried again.');
+    if (!publicationCanRetry(row.status)) throw new BadRequestException('Only failed or cancelled posts can be tried again.');
     return this.request(vendorId, staffId, row.postId, [row.platform], null);
   }
 
@@ -131,7 +133,7 @@ export class PublisherService {
     const due = this.db
       .select({ id: contentPublications.id })
       .from(contentPublications)
-      .where(and(eq(contentPublications.status, 'queued'), sql`${contentPublications.runAt} <= ${now}`))
+      .where(and(eq(contentPublications.status, PUBLICATION_QUEUED), sql`${contentPublications.runAt} <= ${now}`))
       .orderBy(contentPublications.runAt)
       .limit(BATCH)
       .for('update', { skipLocked: true });
@@ -213,7 +215,7 @@ export class PublisherService {
     const [pending] = await this.db
       .select({ n: sql<number>`count(*)`.mapWith(Number) })
       .from(contentPublications)
-      .where(and(eq(contentPublications.postId, postId), inArray(contentPublications.status, ['queued', 'publishing'])));
+      .where(and(eq(contentPublications.postId, postId), inArray(contentPublications.status, [...PUBLICATION_STILL_GOING])));
     await this.db
       .update(contentPosts)
       .set({

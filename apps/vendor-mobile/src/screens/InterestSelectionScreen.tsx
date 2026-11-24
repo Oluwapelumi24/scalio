@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -62,7 +63,7 @@ export function InterestSelectionScreen({ navigation, route }: Props) {
       if (!fromSettings) {
         const home = await getHome();
         const suiteUnlocked =
-          home.business.approvalStatus === 'approved' &&
+          listingIsPublic(home.business.approvalStatus) &&
           home.business.listingReady &&
           home.bookings.setup.services &&
           home.bookings.setup.hours;

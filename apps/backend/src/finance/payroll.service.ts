@@ -1,3 +1,4 @@
+import { PAYOUT_OPEN, PAYROLL_RUN_OPEN } from '@veno/shared-types';
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { decryptPii, encryptPii, last4 } from '../common/crypto';
@@ -205,7 +206,7 @@ export class PayrollService {
     const [p] = await this.db
       .update(salaryPayouts)
       .set({ status: 'paid', paidAt: new Date(), reference: reference ?? null, recordedById: actorStaffId })
-      .where(and(eq(salaryPayouts.id, payoutId), eq(salaryPayouts.vendorId, vendorId), eq(salaryPayouts.status, 'pending')))
+      .where(and(eq(salaryPayouts.id, payoutId), eq(salaryPayouts.vendorId, vendorId), eq(salaryPayouts.status, PAYOUT_OPEN)))
       .returning();
     const payout = p ?? (await this.payout(vendorId, payoutId));
     if (p) {
@@ -223,7 +224,7 @@ export class PayrollService {
     const [p] = await this.db
       .update(salaryPayouts)
       .set({ status: 'skipped', recordedById: actorStaffId })
-      .where(and(eq(salaryPayouts.id, payoutId), eq(salaryPayouts.vendorId, vendorId), eq(salaryPayouts.status, 'pending')))
+      .where(and(eq(salaryPayouts.id, payoutId), eq(salaryPayouts.vendorId, vendorId), eq(salaryPayouts.status, PAYOUT_OPEN)))
       .returning();
     const payout = p ?? (await this.payout(vendorId, payoutId));
     if (p) {
@@ -243,9 +244,9 @@ export class PayrollService {
     const [left] = await this.db
       .select({ n: sql<number>`count(*)`.mapWith(Number) })
       .from(salaryPayouts)
-      .where(and(eq(salaryPayouts.runId, runId), eq(salaryPayouts.status, 'pending')));
+      .where(and(eq(salaryPayouts.runId, runId), eq(salaryPayouts.status, PAYOUT_OPEN)));
     if ((left?.n ?? 0) === 0) {
-      await this.db.update(salaryRuns).set({ status: 'completed', completedAt: new Date() }).where(and(eq(salaryRuns.id, runId), eq(salaryRuns.status, 'open')));
+      await this.db.update(salaryRuns).set({ status: 'completed', completedAt: new Date() }).where(and(eq(salaryRuns.id, runId), eq(salaryRuns.status, PAYROLL_RUN_OPEN)));
     }
   }
 }

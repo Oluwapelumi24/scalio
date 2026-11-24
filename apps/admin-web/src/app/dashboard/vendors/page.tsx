@@ -1,3 +1,4 @@
+import { LISTING_LABEL, type ListingStatus } from '@veno/shared-types'
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
@@ -12,10 +13,10 @@ interface Vendor {
   createdAt: string
 }
 
-const STATUS_BADGE: Record<Vendor['approvalStatus'], { label: string; className: string }> = {
-  pending_review: { label: 'Pending', className: 'bg-amber-100 text-amber-700' },
-  approved:       { label: 'Approved', className: 'bg-emerald-100 text-emerald-700' },
-  rejected:       { label: 'Rejected', className: 'bg-red-100 text-red-700' },
+const STATUS_BADGE: Record<ListingStatus, { label: string; className: string }> = {
+  pending_review: { label: LISTING_LABEL.super_admin.pending_review, className: 'bg-amber-100 text-amber-700' },
+  approved: { label: LISTING_LABEL.super_admin.approved, className: 'bg-emerald-100 text-emerald-700' },
+  rejected: { label: LISTING_LABEL.super_admin.rejected, className: 'bg-red-100 text-red-700' },
 }
 
 export default async function VendorsPage() {

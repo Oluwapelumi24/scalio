@@ -1,3 +1,4 @@
+import { BOOKING_CANCELLED, BOOKING_HOLDS_SLOT } from '@veno/shared-types';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -13,9 +14,9 @@ import { GUTTER, makeStyles, spacing, useTheme, type Colors } from '../theme';
 type Props = MainTabScreenProps<'Appointments'>;
 type Tab = 'upcoming' | 'completed' | 'cancelled';
 
-const UPCOMING_STATUSES = new Set(['pending_payment', 'confirmed']);
+const UPCOMING_STATUSES = new Set<string>(BOOKING_HOLDS_SLOT);
 const COMPLETED_STATUSES = new Set(['completed']);
-const CANCELLED_STATUSES = new Set(['cancelled_by_customer', 'cancelled_by_vendor', 'no_show']);
+const CANCELLED_STATUSES = new Set<string>([...BOOKING_CANCELLED, 'no_show']);
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pending payment',

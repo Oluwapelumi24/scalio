@@ -1,3 +1,4 @@
+import { bookingHoldsSlot } from '@veno/shared-types';
 import type { StaffDay } from '../vendor/availability';
 
 /**
@@ -130,7 +131,7 @@ function stats(name: string, staffId: string | null, role: string | null, rows: 
     noShows: rows.filter((b) => b.status === 'no_show').length,
     cancelledByBusiness: rows.filter((b) => b.status === 'cancelled_by_vendor').length,
     cancelledByCustomer: rows.filter((b) => b.status === 'cancelled_by_customer').length,
-    upcoming: rows.filter((b) => (b.status === 'confirmed' || b.status === 'pending_payment') && b.scheduledAt > now).length,
+    upcoming: rows.filter((b) => bookingHoldsSlot(b.status) && b.scheduledAt > now).length,
     salesKobo,
     averageSaleKobo: done.length ? Math.round(salesKobo / done.length) : null,
     completionRate: denominator ? done.length / denominator : null,

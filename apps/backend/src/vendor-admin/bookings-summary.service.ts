@@ -1,3 +1,4 @@
+import { BOOKING_HOLDS_SLOT } from '@veno/shared-types';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq, sql, type SQL } from 'drizzle-orm';
 import { businessDayBounds } from '../common/business-day';
@@ -33,7 +34,7 @@ export class BookingsSummaryService {
     const [row] = await this.db
       .select({
         bookings: sql<number>`count(*) filter (where ${isToday} and ${bookings.status} in ('pending_payment', 'confirmed', 'completed'))`.mapWith(Number),
-        upcoming: sql<number>`count(*) filter (where ${bookings.scheduledAt} > ${now} and ${bookings.status} in ('pending_payment', 'confirmed'))`.mapWith(Number),
+        upcoming: sql<number>`count(*) filter (where ${bookings.scheduledAt} > ${now} and ${bookings.status} in (${sql.join(BOOKING_HOLDS_SLOT.map((status) => sql`${status}`), sql`, `)}))`.mapWith(Number),
         awaitingPayment: sql<number>`count(*) filter (where ${bookings.status} = 'pending_payment')`.mapWith(Number),
         sales: sql<number>`coalesce(sum(${bookings.totalPriceKobo}) filter (where ${isToday} and ${bookings.status} = 'completed'), 0)`.mapWith(Number),
       })

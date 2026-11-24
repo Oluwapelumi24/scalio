@@ -1,3 +1,4 @@
+import { bookingIsCancelled } from '@veno/shared-types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -93,7 +94,7 @@ function startOfWeek(d: Date) {
   return x;
 }
 
-const isCancelled = (s: BookingStatus) => s === 'cancelled_by_customer' || s === 'cancelled_by_vendor';
+const isCancelled = bookingIsCancelled;
 const minutesOf = (d: Date) => d.getHours() * 60 + d.getMinutes();
 
 /**

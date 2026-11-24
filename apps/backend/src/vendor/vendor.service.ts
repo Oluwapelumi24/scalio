@@ -1,3 +1,4 @@
+import { BOOKING_HOLDS_SLOT, LISTING_PUBLIC } from '@veno/shared-types';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module';
@@ -7,7 +8,6 @@ import {
   bookings,
   businessHours,
   blackoutDates,
-  ACTIVE_BOOKING_STATUSES,
 } from '../db/schema';
 import {
   computeAvailableSlotOffsets,
@@ -37,7 +37,7 @@ export class VendorService {
   // TODO: paginate + support search/category/location filters once the
   // vendor directory grows beyond what a single page can hold.
   async list() {
-    return this.db.select().from(vendors).where(eq(vendors.approvalStatus, 'approved'));
+    return this.db.select().from(vendors).where(eq(vendors.approvalStatus, LISTING_PUBLIC));
   }
 
   async getById(vendorId: string) {
@@ -56,7 +56,7 @@ export class VendorService {
     const [vendor] = await this.db
       .select()
       .from(vendors)
-      .where(and(eq(vendors.id, vendorId), eq(vendors.approvalStatus, 'approved')));
+      .where(and(eq(vendors.id, vendorId), eq(vendors.approvalStatus, LISTING_PUBLIC)));
     if (!vendor) {
       throw new NotFoundException(`Vendor ${vendorId} not found`);
     }
@@ -94,7 +94,7 @@ export class VendorService {
       .where(
         preview
           ? eq(vendors.slug, slug)
-          : and(eq(vendors.slug, slug), eq(vendors.approvalStatus, 'approved')),
+          : and(eq(vendors.slug, slug), eq(vendors.approvalStatus, LISTING_PUBLIC)),
       );
     if (!vendor) {
       throw new NotFoundException('This business is not on Veno, or is not taking bookings yet');
@@ -185,7 +185,7 @@ export class VendorService {
         and(
           eq(bookings.vendorId, vendorId),
           query.staffId ? eq(bookings.staffId, query.staffId) : undefined,
-          inArray(bookings.status, ACTIVE_BOOKING_STATUSES),
+          inArray(bookings.status, [...BOOKING_HOLDS_SLOT]),
         ),
       );
 

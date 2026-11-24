@@ -1,3 +1,4 @@
+import { listingIsPublic } from '@veno/shared-types'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
@@ -17,7 +18,7 @@ export default async function CustomisePage() {
     !!homePreview?.bookings.setup.services &&
     !!homePreview?.bookings.setup.hours &&
     listingReady(profile)
-  if (profile?.approvalStatus !== 'approved' || !setupReady) redirect('/dashboard')
+  if (!listingIsPublic(profile?.approvalStatus) || !setupReady) redirect('/dashboard')
 
   const [home, prefs] = await Promise.all([
     homePreview ? Promise.resolve(homePreview) : apiFetch<HomeResponse>('/vendor-admin/home', token),

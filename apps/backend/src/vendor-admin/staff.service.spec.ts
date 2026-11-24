@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { VendorStaffService } from './staff.service';
 
 function selectResult(rows: unknown[]) {
@@ -82,6 +82,67 @@ describe('VendorStaffService', () => {
     it('creates the staff record and issues an invite when an email is given', async () => {
       const db = makeDb();
       const vendorAuth = makeVendorAuth();
+      const inserted = insertResult([{ ...staffRow, passwordHash: null }]);
+      db.insert.mockReturnValueOnce(inserted);
+      db.select.mockReturnValueOnce(selectResult([]));
+      const service = new VendorStaffService(db as any, vendorAuth as any);
+      const result = await service.create('vendor-1', {
+        name: 'Ada Lovelace',
+        email: 'Ada@example.com',
+        role: 'practitioner',
+      });
+
+      expect(result.id).toBe('staff-1');
+      expect(result.inviteSent).toBe(true);
+      expect(inserted.values).toHaveBeenCalledWith(expect.objectContaining({ email: 'ada@example.com' }));
+      expect(vendorAuth.issueInvite).toHaveBeenCalledWith('ada@example.com');
+    });
+
+    it('rejects an email that already has a Veno login', async () => {
+      const db = makeDb();
+      const vendorAuth = makeVendorAuth();
+      db.select.mockReturnValueOnce(selectResult([{ id: 'staff-9' }]));
+
+      const service = new VendorStaffService(db as any, vendorAuth as any);
+
+      await expect(
+        service.create('vendor-1', {
+          name: 'Ada Lovelace',
+          email: 'ada@example.com',
+          role: 'practitioner',
+        }),
+      ).rejects.toThrow(ConflictException);
+      expect(db.insert).not.toHaveBeenCalled();
+      expect(vendorAuth.issueInvite).not.toHaveBeenCalled();
+    });
+
+    it('turns a unique-email race into the same message', async () => {
+      const db = makeDb();
+      const vendorAuth = makeVendorAuth();
+      db.select.mockReturnValueOnce(selectResult([]));
+      const duplicate = Object.assign(new Error('duplicate key'), { code: '23505' });
+      db.insert.mockReturnValueOnce({
+        values: jest.fn(() => ({
+          returning: jest.fn(() => Promise.reject(duplicate)),
+        })),
+      });
+
+      const service = new VendorStaffService(db as any, vendorAuth as any);
+
+      await expect(
+        service.create('vendor-1', {
+          name: 'Ada Lovelace',
+          email: 'ada@example.com',
+          role: 'practitioner',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('keeps the staff member when the invite email fails', async () => {
+      const db = makeDb();
+      const vendorAuth = makeVendorAuth();
+      vendorAuth.issueInvite.mockRejectedValue(new Error('redis down'));
+      db.select.mockReturnValueOnce(selectResult([]));
       db.insert.mockReturnValueOnce(
         insertResult([{ ...staffRow, passwordHash: null }]),
       );
@@ -94,7 +155,7 @@ describe('VendorStaffService', () => {
       });
 
       expect(result.id).toBe('staff-1');
-      expect(vendorAuth.issueInvite).toHaveBeenCalledWith('ada@example.com');
+      expect(result.inviteSent).toBe(false);
     });
 
     it('skips the invite when no email is given', async () => {

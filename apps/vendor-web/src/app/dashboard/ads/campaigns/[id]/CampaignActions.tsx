@@ -3,11 +3,13 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { cancelAdCampaign, checkoutAdCampaign, extendAdCampaign, retryAdCampaign } from '@/app/actions/ads'
+import { useAskConfirm } from '@/components/askConfirm'
 import { naira, type AdCampaignDetail } from '@/lib/ads'
 
 /** What the vendor can do with an ad right now, plus plain-language notices. */
 export function CampaignActions({ campaign: c, canManage, justPaid, initialError }: { campaign: AdCampaignDetail; canManage: boolean; justPaid: boolean; initialError: string | null }) {
   const router = useRouter()
+  const { askConfirm, dialog } = useAskConfirm()
   const [isPending, start] = useTransition()
   const [error, setError] = useState<string | null>(initialError)
 
@@ -60,7 +62,9 @@ export function CampaignActions({ campaign: c, canManage, justPaid, initialError
               return (
                 <button key={d} type="button" disabled={isPending} onClick={() => {
                   const msg = q.route === 'veno' ? `Run ${d} more days for ${naira(q.dueNowKobo)} (spend + VAT + Veno fee)?` : `Run ${d} more days? You pay Veno’s fee of ${naira(q.dueNowKobo)}; Meta charges your card for the extra spend.`
-                  if (confirm(msg)) act(() => extendAdCampaign(c.id, d))
+                  void (async () => {
+                    if (await askConfirm(msg, 'Continue')) act(() => extendAdCampaign(c.id, d))
+                  })()
                 }} className="rounded-lg border-2 border-indigo-700 py-2 text-center hover:bg-indigo-50 disabled:opacity-50">
                   <span className="block text-sm font-semibold text-indigo-700">+{d} days</span>
                   <span className="block text-xs text-gray-500">{naira(q.dueNowKobo)}</span>
@@ -73,10 +77,14 @@ export function CampaignActions({ campaign: c, canManage, justPaid, initialError
 
       {canManage && ['awaiting_payment', 'failed'].includes(c.status) && (
         <button type="button" disabled={isPending} className="text-sm font-medium text-red-600 hover:text-red-800" onClick={() => {
-          if (confirm(c.status === 'failed' && c.route === 'veno' ? 'Cancel this ad? What you paid for ad spend comes back as ad credit.' : 'Cancel this ad?')) act(() => cancelAdCampaign(c.id))
+          const msg = c.status === 'failed' && c.route === 'veno' ? 'Cancel this ad? What you paid for ad spend comes back as ad credit.' : 'Cancel this ad?'
+          void (async () => {
+            if (await askConfirm(msg, 'Cancel ad')) act(() => cancelAdCampaign(c.id))
+          })()
         }}>Cancel this ad</button>
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {dialog}
     </div>
   )
 }

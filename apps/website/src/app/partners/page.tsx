@@ -32,7 +32,7 @@ const NOTIFICATIONS = [
 const ROLES = [
   { Icon: Crown, role: 'Owner', sees: 'Everything: takings, payroll, ads, settings and every calendar.' },
   { Icon: ClipboardList, role: 'Manager', sees: 'Runs the day: services, hours, team and every booking.' },
-  { Icon: Scissors, role: 'Practitioner', sees: 'Their own appointments, clients and ratings. Nothing else.' },
+  { Icon: Scissors, role: 'Takes appointments', sees: 'Their own appointments, clients and ratings. Nothing else.' },
   { Icon: Inbox, role: 'Front desk', sees: 'Books walk-ins and answers the inbox, without seeing your money.' },
 ]
 

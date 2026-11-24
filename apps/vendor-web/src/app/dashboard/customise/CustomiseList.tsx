@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { resetHomeLayout, setHiddenModules, setPinnedModules } from '@/app/actions/personalisation'
+import { useAskConfirm } from '@/components/askConfirm'
 import type { HomeLayer } from '@/lib/personalisation'
 
 export interface CustomiseRow { id: string; layer: HomeLayer; title: string }
@@ -23,6 +24,7 @@ export function CustomiseList({
 }) {
   const [pinned, setPinned] = useState(initialPinned)
   const [hidden, setHidden] = useState(initialHidden)
+  const { askConfirm, dialog } = useAskConfirm()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -48,13 +50,15 @@ export function CustomiseList({
   }
 
   const reset = () => {
-    if (!confirm('Reset your home screen? Pins, hidden items and learned order will be cleared. Your interests stay.')) return
-    setPinned([])
-    setHidden([])
-    startTransition(async () => {
-      const r = await resetHomeLayout()
-      if (r) setError(r.error)
-    })
+    void (async () => {
+      if (!(await askConfirm('Reset your home screen? Pins, hidden items and learned order will be cleared. Your interests stay.', 'Reset'))) return
+      setPinned([])
+      setHidden([])
+      startTransition(async () => {
+        const r = await resetHomeLayout()
+        if (r) setError(r.error)
+      })
+    })()
   }
 
   return (
@@ -101,6 +105,7 @@ export function CustomiseList({
       <button type="button" onClick={reset} disabled={isPending} className="text-sm font-medium text-red-600 hover:text-red-800">
         Reset home screen
       </button>
+      {dialog}
     </div>
   )
 }

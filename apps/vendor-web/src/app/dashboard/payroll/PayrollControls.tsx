@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { markPaid, saveSchedule, saveStaffPay, skipPayout, startPayroll, transferList } from '@/app/actions/finance'
 import { naira, type Bank, type SalaryRun, type TeamPay } from '@/lib/finance'
+import { useAskConfirm } from '@/components/askConfirm'
 import { AccountForm } from '../payments/AccountForm'
 
 export function StartButton({ label, disabled }: { label: string; disabled: boolean }) {
@@ -24,6 +25,7 @@ export function StartButton({ label, disabled }: { label: string; disabled: bool
 }
 
 export function RunTable({ run }: { run: SalaryRun }) {
+  const { askConfirm, dialog } = useAskConfirm()
   const [reveal, setReveal] = useState<SalaryRun | null>(null)
   const [refs, setRefs] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
@@ -65,7 +67,12 @@ export function RunTable({ run }: { run: SalaryRun }) {
                         <button
                           type="button"
                           disabled={isPending}
-                          onClick={() => { if (confirm(`Only mark this paid after sending ${naira(p.amountKobo)} to ${p.staffName} from your bank.`)) act(() => markPaid(p.id, refs[p.id])) }}
+                          onClick={() => {
+                            void (async () => {
+                              if (!(await askConfirm(`Only mark this paid after sending ${naira(p.amountKobo)} to ${p.staffName} from your bank.`, 'Mark paid'))) return
+                              act(() => markPaid(p.id, refs[p.id]))
+                            })()
+                          }}
                           className="rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold text-white"
                         >
                           Mark paid
@@ -93,6 +100,7 @@ export function RunTable({ run }: { run: SalaryRun }) {
         </button>
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {dialog}
     </div>
   )
 }

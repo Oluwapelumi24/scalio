@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { ApiError, apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 
-export type StaffActionState = { error: string } | null
+export type StaffActionState = { error: string } | { warning: string } | null
 
 export async function createStaff(_prev: StaffActionState, formData: FormData): Promise<StaffActionState> {
   const token = await requireToken()
@@ -16,11 +16,14 @@ export async function createStaff(_prev: StaffActionState, formData: FormData): 
   if (!name || !role) return { error: 'Name and role are required.' }
 
   try {
-    await apiFetch('/vendor-admin/staff', token, {
+    const created = await apiFetch<{ inviteSent?: boolean }>('/vendor-admin/staff', token, {
       method: 'POST',
       body: JSON.stringify({ name, role, email, phone }),
     })
     revalidatePath('/dashboard/storefront')
+    if (email && created?.inviteSent === false) {
+      return { warning: 'Added to the team, but the invite email didn’t send. They show as invite pending.' }
+    }
     return null
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message }

@@ -74,7 +74,7 @@ const NOTIFICATIONS = [
 const ROLES = [
   { role: 'Owner', sees: 'Everything: takings, payroll, ads, settings and every calendar.' },
   { role: 'Manager', sees: 'Runs the day: services, hours, team and every booking.' },
-  { role: 'Practitioner', sees: 'Stylists, therapists, tailors, trainers: their own appointments, clients and ratings. Nothing else.' },
+  { role: 'Takes appointments', sees: 'Stylists, therapists, tailors, trainers: their own appointments, clients and ratings. Nothing else.' },
   { role: 'Front desk', sees: 'Books walk-ins and answers the inbox, without seeing your money.' },
 ]
 

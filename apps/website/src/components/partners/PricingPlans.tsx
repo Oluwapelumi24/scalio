@@ -28,7 +28,7 @@ const PLANS = [
     popular: true,
     points: [
       'Everything in Starter',
-      'Logins for owner, manager, practitioner and front desk',
+      'Logins for owner, manager, people who take appointments, and front desk',
       'One calendar for the whole team',
       'Inbox for WhatsApp and Instagram',
       'Client notes and visit history',

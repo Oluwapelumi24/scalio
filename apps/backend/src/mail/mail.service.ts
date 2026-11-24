@@ -18,21 +18,23 @@ export class MailService {
   }
 
   async sendVendorInviteEmail(to: string, businessName: string, acceptUrl: string): Promise<void> {
-    await this.resend.emails.send({
+    const { error } = await this.resend.emails.send({
       from: this.fromAddress(),
       to,
       subject: `You've been invited to manage ${businessName} on Veno`,
       text: `You've been added as a team member for ${businessName} on Veno. Set your password to finish setting up your account: ${acceptUrl}\n\nThis link expires in 7 days.`,
     });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
   }
 
   async sendAdminInviteEmail(to: string, acceptUrl: string): Promise<void> {
-    await this.resend.emails.send({
+    const { error } = await this.resend.emails.send({
       from: this.fromAddress(),
       to,
       subject: "You've been invited to the Veno admin portal",
       text: `You've been added as an operations manager on Veno. Set your password to activate your account: ${acceptUrl}\n\nThis link expires in 7 days.`,
     });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
   }
 
   async sendSignupCodeEmail(to: string, code: string): Promise<void> {

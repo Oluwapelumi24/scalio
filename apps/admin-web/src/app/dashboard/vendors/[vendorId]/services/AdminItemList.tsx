@@ -1,7 +1,8 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { deleteServiceAction } from '@/app/actions/vendor-services'
+import { useAskConfirm } from '@/components/askConfirm'
 import type { ServiceItem } from './page'
 
 function formatPrice(kobo: number) {
@@ -14,15 +15,34 @@ function fmtPayment(mode: string, pct: number | null) {
 }
 
 function DeleteBtn({ vendorId, id }: { vendorId: string; id: string }) {
+  const { askConfirm, dialog } = useAskConfirm()
   const [pending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   return (
-    <button
-      disabled={pending}
-      onClick={() => { if (!confirm('Delete this item?')) return; startTransition(async () => { await deleteServiceAction(vendorId, id) }) }}
-      className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-40 transition-colors shrink-0"
-    >
-      {pending ? '…' : 'Remove'}
-    </button>
+    <span className="flex shrink-0 flex-col items-end">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          void (async () => {
+            if (!(await askConfirm('Remove this item?', 'Remove'))) return
+            setError(null)
+            startTransition(async () => {
+              try {
+                await deleteServiceAction(vendorId, id)
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Could not remove this item.')
+              }
+            })
+          })()
+        }}
+        className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-40 transition-colors shrink-0"
+      >
+        {pending ? '…' : 'Remove'}
+      </button>
+      {error ? <span className="mt-1 max-w-40 text-right text-xs text-red-600">{error}</span> : null}
+      {dialog}
+    </span>
   )
 }
 

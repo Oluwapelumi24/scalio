@@ -1,11 +1,14 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { createStaff } from '@/app/actions/staff'
 import { SelectMenu } from '@/components/SelectMenu'
+import { STAFF_ROLES } from '@/lib/roles'
 
 export function CreateStaffForm() {
   const [state, formAction, pending] = useActionState(createStaff, null)
+  const [role, setRole] = useState('')
+  const hint = STAFF_ROLES.find((option) => option.value === role)?.hint
 
   return (
     <form action={formAction} className="grid grid-cols-2 gap-3 items-end">
@@ -24,15 +27,13 @@ export function CreateStaffForm() {
         <SelectMenu
           name="role"
           required
+          value={role}
+          onChange={setRole}
           placeholder="Select role…"
           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-          options={[
-            { value: 'owner', label: 'Owner' },
-            { value: 'manager', label: 'Manager' },
-            { value: 'practitioner', label: 'Practitioner' },
-            { value: 'front_desk', label: 'Front Desk' },
-          ]}
+          options={STAFF_ROLES.map((option) => ({ value: option.value, label: option.label }))}
         />
+        {hint ? <p className="mt-1.5 text-xs leading-5 text-[#7d818b]">{hint}</p> : null}
       </div>
 
       <div>
@@ -65,7 +66,8 @@ export function CreateStaffForm() {
         >
           {pending ? 'Adding…' : 'Add staff member'}
         </button>
-        {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+        {state && 'error' in state ? <p className="text-sm text-red-600">{state.error}</p> : null}
+        {state && 'warning' in state ? <p className="text-sm text-amber-700">{state.warning}</p> : null}
       </div>
     </form>
   )

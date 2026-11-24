@@ -14,7 +14,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 const ROLE: Record<string, string> = {
   owner: 'Owner',
   manager: 'Manager',
-  practitioner: 'Practitioner',
+  practitioner: 'Takes appointments',
   front_desk: 'Front desk',
 };
 

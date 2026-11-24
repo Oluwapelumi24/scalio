@@ -9,7 +9,7 @@ interface StaffMember {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  owner: 'Owner', manager: 'Manager', practitioner: 'Practitioner', front_desk: 'Front Desk',
+  owner: 'Owner', manager: 'Manager', practitioner: 'Takes appointments', front_desk: 'Front desk',
 }
 
 export default async function VendorStaffPage({ params }: { params: Promise<{ vendorId: string }> }) {

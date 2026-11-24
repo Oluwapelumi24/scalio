@@ -30,7 +30,7 @@ function RoleBadge({ role }: { role: string }) {
   const bg = ROLE_COLOR(colors)[role] ?? colors.textSecondary;
   return (
     <View style={[styles.roleBadge, { backgroundColor: bg }]}>
-      <Text style={styles.roleLabel}>{role}</Text>
+      <Text style={styles.roleLabel}>{role === 'practitioner' ? 'Takes appointments' : role === 'front_desk' ? 'Front desk' : role}</Text>
     </View>
   );
 }

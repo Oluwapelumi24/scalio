@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
+import { ROLE_LABELS } from '@/lib/roles'
 import { CreateStaffForm } from './StaffForm'
 import { DeleteStaffButton } from './DeleteStaffButton'
 
@@ -11,13 +12,6 @@ interface StaffMember {
   phone: string | null
   role: string
   hasActivatedAccount: boolean
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: 'Owner',
-  manager: 'Manager',
-  practitioner: 'Practitioner',
-  front_desk: 'Front Desk',
 }
 
 export async function StaffPanel() {

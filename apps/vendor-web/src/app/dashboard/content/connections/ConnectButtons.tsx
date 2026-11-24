@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { disconnectMeta, metaConnectUrl } from '@/app/actions/growth'
+import { useAskConfirm } from '@/components/askConfirm'
 
 export function ConnectButtons({ label, connected }: { label: string; connected: boolean }) {
+  const { askConfirm, dialog } = useAskConfirm()
   const [isPending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -30,9 +32,10 @@ export function ConnectButtons({ label, connected }: { label: string; connected:
           type="button"
           disabled={isPending}
           onClick={() => {
-            if (confirm('Disconnect Facebook and Instagram? Scheduled posts to them won’t go out. Posts already published stay up.')) {
+            void (async () => {
+              if (!(await askConfirm('Disconnect Facebook and Instagram? Scheduled posts to them won’t go out. Posts already published stay up.', 'Disconnect'))) return
               start(async () => { const r = await disconnectMeta(); if (r.error) setError(r.error) })
-            }
+            })()
           }}
           className="block text-sm font-medium text-red-600 hover:text-red-800"
         >
@@ -40,6 +43,7 @@ export function ConnectButtons({ label, connected }: { label: string; connected:
         </button>
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {dialog}
     </div>
   )
 }

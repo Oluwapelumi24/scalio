@@ -123,7 +123,7 @@ export function StaffFormScreen({ route, navigation }: Props) {
                   onPress={() => setRole(r)}
                 >
                   <Text style={[styles.rolePillLabel, role === r && styles.rolePillLabelActive]}>
-                    {r === 'front_desk' ? 'Front desk' : r.charAt(0).toUpperCase() + r.slice(1)}
+                    {r === 'front_desk' ? 'Front desk' : r === 'practitioner' ? 'Takes appointments' : r.charAt(0).toUpperCase() + r.slice(1)}
                   </Text>
                 </Pressable>
               ))}

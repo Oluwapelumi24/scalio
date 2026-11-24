@@ -7,14 +7,8 @@ import { BrandLink } from '@/components/BrandLink'
 import { Icon, type IconName } from '@/components/Icon'
 import { NotificationsBell } from './notifications/NotificationsBell'
 import { ShareBusinessSheet } from './ShareBusinessSheet'
+import { ROLE_LABELS } from '@/lib/roles'
 import { SidebarNav } from './SidebarNav'
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: 'Owner',
-  manager: 'Manager',
-  practitioner: 'Practitioner',
-  front_desk: 'Front Desk',
-}
 
 const TABS: { href: string; label: string; icon: IconName; roles: string[]; exact?: boolean }[] = [
   { href: '/dashboard', label: 'Home', icon: 'home', roles: ['owner', 'manager', 'practitioner', 'front_desk'], exact: true },

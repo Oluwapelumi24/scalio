@@ -2,14 +2,8 @@ import Link from 'next/link'
 import { apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 import { MANAGER_ROLES } from '@/lib/personalisation'
+import { ROLE_LABELS } from '@/lib/roles'
 import { PasswordForm } from './PasswordForm'
-
-const ROLE_LABELS: Record<string, string> = {
-  owner: 'Owner',
-  manager: 'Manager',
-  practitioner: 'Practitioner',
-  front_desk: 'Front Desk',
-}
 
 export default async function SettingsPage() {
   const token = await requireToken()

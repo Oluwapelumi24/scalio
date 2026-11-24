@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: 'Can my staff have their own logins?',
-    a: 'Yes. Every team member signs in with their own account, and their role decides what they see. Owners and managers see everything, practitioners (stylists, therapists, tailors, trainers) see their own appointments, and front desk runs the day without seeing your takings.',
+    a: 'Yes. Every team member signs in with their own account, and their role decides what they see. Owners and managers see everything, people who take appointments (stylists, therapists, tailors, trainers) see their own appointments, and front desk runs the day without seeing your takings.',
   },
   {
     q: 'How do payments work?',

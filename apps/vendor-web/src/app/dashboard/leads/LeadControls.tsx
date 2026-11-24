@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { convertLead, createLead, deleteLead, updateLead } from '@/app/actions/growth'
+import { useAskConfirm } from '@/components/askConfirm'
 import { SelectMenu } from '@/components/SelectMenu'
 import { LEAD_SOURCE_LABELS, type Lead, type LeadSource } from '@/lib/growth'
 
@@ -77,6 +78,7 @@ export function AddLeadForm({ staff }: { staff: Staff[] }) {
 
 export function LeadActions({ lead, canDelete }: { lead: Lead; canDelete: boolean }) {
   const router = useRouter()
+  const { askConfirm, dialog } = useAskConfirm()
   const { isPending, error, run } = useAction()
   const open = lead.status === 'new' || lead.status === 'contacted'
   const btn = 'rounded-lg border border-slate-900 px-3 py-1.5 text-sm font-semibold text-slate-900 disabled:opacity-40'
@@ -104,7 +106,10 @@ export function LeadActions({ lead, canDelete }: { lead: Lead; canDelete: boolea
             <button type="button" disabled={isPending} className={btn} onClick={() => run(() => updateLead(lead.id, { status: 'lost', followUpAt: null }))}>Not interested</button>
             <button type="button" disabled={isPending} className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-40"
               onClick={() => {
-                if (confirm(`Add ${lead.name} as a customer? If they're already a customer with the same phone or email, we'll link to that record instead.`)) run(() => convertLead(lead.id))
+                void (async () => {
+                  if (!(await askConfirm(`Add ${lead.name} as a customer? If they're already a customer with the same phone or email, we'll link to that record instead.`, 'Add as a customer'))) return
+                  run(() => convertLead(lead.id))
+                })()
               }}>
               They booked — add as a customer
             </button>
@@ -116,11 +121,17 @@ export function LeadActions({ lead, canDelete }: { lead: Lead; canDelete: boolea
       )}
       {canDelete && (
         <button type="button" disabled={isPending} className="block text-sm font-medium text-red-600 hover:text-red-800"
-          onClick={() => { if (confirm('Delete this lead? This can’t be undone.')) run(() => deleteLead(lead.id), () => router.push('/dashboard/leads')) }}>
+          onClick={() => {
+            void (async () => {
+              if (!(await askConfirm('Delete this lead? This can’t be undone.', 'Delete'))) return
+              run(() => deleteLead(lead.id), () => router.push('/dashboard/leads'))
+            })()
+          }}>
           Delete lead
         </button>
       )}
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {dialog}
     </section>
   )
 }

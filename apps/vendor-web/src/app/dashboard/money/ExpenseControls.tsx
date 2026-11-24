@@ -2,6 +2,7 @@
 
 import { useActionState, useTransition } from 'react'
 import { addExpense, voidExpense } from '@/app/actions/finance'
+import { useAskConfirm } from '@/components/askConfirm'
 import { SelectMenu } from '@/components/SelectMenu'
 
 export function ExpenseForm({ categories, today }: { categories: string[]; today: string }) {
@@ -38,15 +39,24 @@ export function ExpenseForm({ categories, today }: { categories: string[]; today
 }
 
 export function VoidButton({ id, label }: { id: string; label: string }) {
+  const { askConfirm, dialog } = useAskConfirm()
   const [isPending, startTransition] = useTransition()
   return (
-    <button
-      type="button"
-      disabled={isPending}
-      onClick={() => { if (confirm(`Remove ${label}?`)) startTransition(async () => { await voidExpense(id) }) }}
-      className="text-xs font-medium text-red-600 hover:text-red-800"
-    >
-      Remove
-    </button>
+    <>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => {
+          void (async () => {
+            if (!(await askConfirm(`Remove ${label}?`, 'Remove'))) return
+            startTransition(async () => { await voidExpense(id) })
+          })()
+        }}
+        className="text-xs font-medium text-red-600 hover:text-red-800"
+      >
+        Remove
+      </button>
+      {dialog}
+    </>
   )
 }

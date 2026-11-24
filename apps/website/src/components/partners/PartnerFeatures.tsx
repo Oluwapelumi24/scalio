@@ -39,7 +39,7 @@ const FEATURES = [
   },
   {
     title: 'Staff and roles',
-    body: 'A login for owner, manager, practitioner and front desk. Each person only sees what their job needs.',
+    body: 'A login for owner, manager, people who take appointments, and front desk. Each person only sees what their job needs.',
     plan: 'Professional',
     Icon: Users,
     tint: 'bg-[#e0f2fe]',

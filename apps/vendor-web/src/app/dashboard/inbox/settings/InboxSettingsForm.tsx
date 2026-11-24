@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { draftInboxFaq, updateInboxSettings } from '@/app/actions/inbox'
 import { AI_MODE_LABELS, CHANNEL_LABELS, hasPlaceholder, type AiReplyMode, type FaqEntry, type InboxChannel, type InboxSettings } from '@/lib/inbox'
+import { useAskConfirm } from '@/components/askConfirm'
 import { ChannelIcon } from '../InboxClient'
 
 const MODES: AiReplyMode[] = ['off', 'suggest', 'reply']
@@ -14,6 +15,7 @@ export function InboxSettingsForm({ settings: initial }: { settings: InboxSettin
   const [dirty, setDirty] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const { askConfirm, dialog } = useAskConfirm()
   const [isPending, start] = useTransition()
 
   function setMode(channel: InboxChannel, mode: AiReplyMode) {
@@ -41,13 +43,15 @@ export function InboxSettingsForm({ settings: initial }: { settings: InboxSettin
   }
 
   function draft() {
-    if (faq.length && !window.confirm('Replace your FAQ with a fresh AI draft? Nothing is saved until you click Save.')) return
-    setError(null)
-    start(async () => {
-      const r = await draftInboxFaq()
-      if (r.error || !r.data) setError(r.error ?? 'Could not draft an FAQ.')
-      else { setFaq(r.data.faq); setDirty(true); setSaved(false) }
-    })
+    void (async () => {
+      if (faq.length && !(await askConfirm('Replace your FAQ with a fresh AI draft? Nothing is saved until you click Save.', 'Replace'))) return
+      setError(null)
+      start(async () => {
+        const r = await draftInboxFaq()
+        if (r.error || !r.data) setError(r.error ?? 'Could not draft an FAQ.')
+        else { setFaq(r.data.faq); setDirty(true); setSaved(false) }
+      })
+    })()
   }
 
   const placeholders = faq.filter((f) => hasPlaceholder(f.answer)).length
@@ -117,6 +121,7 @@ export function InboxSettingsForm({ settings: initial }: { settings: InboxSettin
           {saved && !dirty && <span className="text-sm text-emerald-700">Saved</span>}
         </div>
       </section>
+      {dialog}
     </div>
   )
 }

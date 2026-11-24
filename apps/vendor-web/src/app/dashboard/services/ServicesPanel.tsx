@@ -38,6 +38,7 @@ export async function ServicesPanel() {
         <div className="mt-5">
           <ItemList
             items={packages}
+            noun="package"
             emptyLabel="No packages yet."
             emptyHint="Add one below so customers have a booking type to pick."
           />
@@ -53,6 +54,7 @@ export async function ServicesPanel() {
         <div className="mt-5">
           <ItemList
             items={services}
+            noun="service"
             emptyLabel="No services yet."
             emptyHint="Add at least one service so customers can book you."
           />

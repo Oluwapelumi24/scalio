@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { cancelPublication, deletePost, getPostAction, markPosted, planPost, publishPost, retryPublication, savePost, unplanPost, uploadMedia, writeCaption } from '@/app/actions/growth'
+import { useAskConfirm } from '@/components/askConfirm'
 import { mediaUrl, type ContentPlatform, type ContentPost, type PostFields, type Publication, type StudioInfo } from '@/lib/growth'
 
 const MAX_EDGE = 1600
@@ -28,6 +29,7 @@ const chip = (on: boolean) =>
 
 export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: ContentPost | null }) {
   const router = useRouter()
+  const { askConfirm, dialog } = useAskConfirm()
   const fileRef = useRef<HTMLInputElement>(null)
   const [post, setPost] = useState<ContentPost | null>(initial)
   const [dirty, setDirty] = useState(false)
@@ -91,13 +93,15 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
     : null
 
   const generate = () => {
-    if (caption.trim() && !confirm('Replace your caption? AI will write a new caption, call to action and hashtags.')) return
-    void run('ai', async () => {
-      const r = await writeCaption({ brief: brief.trim() || undefined, tone, platforms, mediaId: mediaId ?? undefined })
-      if (r.error || !r.data) throw new Error(r.error ?? 'Could not write a caption.')
-      setCaption(r.data.caption); setCta(r.data.callToAction); setTags(tagsText(r.data.hashtags))
-      setAiGenerated(true); setDirty(true); setAiUsed((n) => n + 1)
-    })
+    void (async () => {
+      if (caption.trim() && !(await askConfirm('Replace your caption? AI will write a new caption, call to action and hashtags.', 'Replace'))) return
+      void run('ai', async () => {
+        const r = await writeCaption({ brief: brief.trim() || undefined, tone, platforms, mediaId: mediaId ?? undefined })
+        if (r.error || !r.data) throw new Error(r.error ?? 'Could not write a caption.')
+        setCaption(r.data.caption); setCta(r.data.callToAction); setTags(tagsText(r.data.hashtags))
+        setAiGenerated(true); setDirty(true); setAiUsed((n) => n + 1)
+      })
+    })()
   }
 
   const copy = (platform: ContentPlatform) => run('save', async () => {
@@ -169,12 +173,14 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
   })
 
   const remove = () => {
-    if (!confirm('Delete this post? The caption and photo will be removed from Veno.')) return
-    void run('save', async () => {
-      const r = await deletePost(post!.id)
-      if (r.error) throw new Error(r.error)
-      router.push('/dashboard/content')
-    })
+    void (async () => {
+      if (!(await askConfirm('Delete this post? The caption and photo will be removed from Veno.', 'Delete'))) return
+      void run('save', async () => {
+        const r = await deletePost(post!.id)
+        if (r.error) throw new Error(r.error)
+        router.push('/dashboard/content')
+      })
+    })()
   }
 
   const label = 'block text-sm font-medium text-gray-700'
@@ -368,6 +374,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
           <button type="button" onClick={remove} disabled={busy !== null} className="text-sm font-medium text-red-600 hover:text-red-800">Delete post</button>
         )}
       </aside>
+      {dialog}
     </div>
   )
 }

@@ -24,7 +24,7 @@ export function AddStaffForm({ vendorId }: { vendorId: string }) {
           options={[
             { value: 'owner', label: 'Owner' },
             { value: 'manager', label: 'Manager' },
-            { value: 'practitioner', label: 'Practitioner' },
+            { value: 'practitioner', label: 'Takes appointments' },
             { value: 'front_desk', label: 'Front Desk' },
           ]}
         />

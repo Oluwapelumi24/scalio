@@ -63,22 +63,125 @@ These almost certainly landed via `db:push` against some environments. Productio
 - Journal entries idx 17–22 have **no** matching snapshots, so `drizzle-kit generate` against the live `out` folder cannot reliably diff from tip.
 - Duplicate / mis-tagged files mean `drizzle-kit migrate` cannot be trusted on this history as-is.
 
-## Proposed repair (preferred)
+## Production cutover (corrected)
 
-1. **Verify production DDL** against `src/db/schema` (or against `repair/0000_baseline_current_schema.sql`). Especially check the four “push-only” columns above and that `approval_status` exists.
-2. If prod is missing columns/tables, apply the missing `ALTER`/`CREATE` statements **manually** (or from the baseline file’s relevant sections) until prod matches the baseline. Prefer additive ALTERs over dropping data.
-3. **Cut over migration history** (do not delete history without an archive):
-   - Move current `drizzle/*.sql` + `drizzle/meta/*` → `drizzle/archive/pre-baseline-YYYYMMDD/` (keep for forensics).
-   - Install the baseline from `drizzle/repair/`:
-     - `0000_baseline_current_schema.sql` → `drizzle/0000_baseline_current_schema.sql`
-     - `0000_snapshot.json` → `drizzle/meta/0000_snapshot.json`
-     - `_journal.baseline.json` → `drizzle/meta/_journal.json` (edit the tag/filename if you rename).
-4. On production, run `drizzle/repair/mark-baseline-applied.sql` (clears `__drizzle_migrations`), then run `npm run db:migrate --workspace=apps/backend` once so Drizzle inserts the correct content hash for the baseline. Use a staging clone first.
-5. Only after that, add the migrate step to Railway (see below). **Do not** add it in this PR.
+**Never** run `db:migrate` against production (or any DB that already has tables) while `drizzle.__drizzle_migrations` is empty and the baseline `.sql` is present — that executes every `CREATE TABLE` in the baseline. Mark the baseline applied first, without running its SQL.
+
+Drizzle’s node-postgres path records history in **`drizzle.__drizzle_migrations`** (schema `drizzle`), not `public.__drizzle_migrations`. The old repair script edited the wrong table.
+
+### How the migrator decides what to run
+
+Cited from installed `drizzle-orm@0.45.x`:
+
+1. **Hash** — `node_modules/drizzle-orm/migrator.js` `readMigrationFiles` (≈ lines 15–23): reads the `.sql` file as a string and sets `hash = sha256(file contents).hex`.
+2. **`created_at` / folder millis** — same function sets `folderMillis = journalEntry.when` from `meta/_journal.json`.
+3. **Apply gate** — `node_modules/drizzle-orm/pg-core/dialect.js` `migrate()` (≈ lines 45–68): creates schema `drizzle` + table `__drizzle_migrations`; loads the latest row by `created_at desc`; for each migration, runs SQL + inserts a row **only if** there is no prior row **or** `Number(last.created_at) < migration.folderMillis`.
+
+So the seeded row must use the **exact file hash** and **`created_at = baseline journal when`**. A wall-clock `created_at` that is lower than `when` makes Drizzle re-run the baseline.
+
+### Drift to expect (and fix before marking)
+
+The baseline sets `vendors.approval_status` default to **`pending_review`**. Orphan migration `0008_vendor_approval_status.sql` used default **`approved`**. That is exactly the kind of drift this audit is for — reconcile with a hand-written `ALTER` before cutover if prod still has the old default (and decide whether existing rows need updating).
+
+### Procedure
+
+#### 1. Backup first
+
+```bash
+pg_dump -Fc -f "veno-prod-$(date -u +%Y%m%dT%H%M%SZ).dump" "$DATABASE_URL"
+```
+
+Keep the dump until migrate has been proven on staging and prod cutover is done.
+
+#### 2. Verify prod DDL against the baseline (do not mark yet)
+
+Restore the baseline into a **fresh local** database, then compare schema-only dumps:
+
+```bash
+# Fresh empty local DB (example names — use a disposable DB, never prod)
+createdb veno_baseline_check
+psql "$LOCAL_BASELINE_URL" -v ON_ERROR_STOP=1 -f apps/backend/drizzle/repair/0000_baseline_current_schema.sql
+
+# Schema-only dumps (no data)
+pg_dump --schema-only --no-owner --no-acl "$PROD_DATABASE_URL" > /tmp/prod-schema.sql
+pg_dump --schema-only --no-owner --no-acl "$LOCAL_BASELINE_URL" > /tmp/baseline-schema.sql
+
+diff -u /tmp/prod-schema.sql /tmp/baseline-schema.sql | less
+```
+
+**Acceptable diffs** (document and ignore):
+
+- Ownership / grants / tablespace noise if you omitted `--no-owner --no-acl` by mistake
+- Extension version comments
+- Irrelevant search_path noise
+
+**Must reconcile before continuing** (hand-written SQL; prefer additive `ALTER`/`CREATE`):
+
+- Missing tables or columns that exist in the baseline
+- Wrong column types / nullability / defaults (especially `approval_status` default)
+- Missing unique constraints / FKs the app relies on
+- Extra prod-only objects: keep them unless they conflict; do not drop data to “match”
+
+Apply reconcile SQL to **prod** (after backup) until a re-diff is clean for the must-fix list. Staging clone first.
+
+#### 3. Install baseline files in the repo (history archive)
+
+Do not delete history without an archive:
+
+```bash
+mkdir -p apps/backend/drizzle/archive/pre-baseline-$(date -u +%Y%m%d)
+# move current drizzle/*.sql + drizzle/meta/* into that archive (keep forensics)
+cp apps/backend/drizzle/repair/0000_baseline_current_schema.sql apps/backend/drizzle/
+cp apps/backend/drizzle/repair/0000_snapshot.json apps/backend/drizzle/meta/
+cp apps/backend/drizzle/repair/_journal.baseline.json apps/backend/drizzle/meta/_journal.json
+```
+
+Commit that cutover on a controlled branch after local proof (step 5).
+
+#### 4. Mark applied WITHOUT running the baseline SQL
+
+```bash
+# Dry-run: prints SQL with computed hash + journal when
+node apps/backend/scripts/db-mark-baseline.mjs
+
+# Apply only with an explicit backup acknowledgement
+DATABASE_URL=… node apps/backend/scripts/db-mark-baseline.mjs --apply --i-have-a-backup
+```
+
+The script creates `drizzle` schema + `drizzle.__drizzle_migrations`, deletes prior rows in **that** table, and inserts one row. It does **not** execute the baseline `CREATE` statements.
+
+`repair/mark-baseline-applied.sql` is a human-readable template of the same idea; prefer the Node script so hash/`when` cannot drift.
+
+#### 5. Prove locally before touching prod
+
+```bash
+# Fresh DB → apply baseline DDL via psql (this IS running CREATE TABLE — local only)
+createdb veno_cutover_proof
+psql "$PROOF_URL" -v ON_ERROR_STOP=1 -f apps/backend/drizzle/0000_baseline_current_schema.sql
+
+# Mark applied (same as prod step 4)
+DATABASE_URL="$PROOF_URL" node apps/backend/scripts/db-mark-baseline.mjs --apply --i-have-a-backup
+
+# Must report nothing left to run (no CREATE TABLE attempts)
+DATABASE_URL="$PROOF_URL" npm run db:migrate --workspace=apps/backend
+
+# Add a dummy migration, migrate again — only the dummy must run
+# (generate or hand-write 0001_*.sql + journal entry, then db:migrate)
+```
+
+Only after this proof: repeat backup → verify → mark on a staging clone of prod, then on prod.
+
+#### 6. Railway migrate hook (after cutover)
+
+Do **not** add this in this PR. After baseline is marked on prod:
+
+```json
+"preDeployCommand": "npm run db:migrate --workspace=apps/backend"
+```
 
 ### Why not replay 0000–0022 on prod?
 
-Broken numbering, orphan approval migration, missing push-only columns, and incomplete snapshots make a clean replay unsafe. A baseline that matches the TypeScript schema is the lowest-risk path once prod DDL is verified.
+Broken numbering, orphan approval migration, missing push-only columns, and incomplete snapshots make a clean replay unsafe. A baseline that matches the TypeScript schema is the lowest-risk path once prod DDL is verified and history is marked applied without re-executing DDL.
 
 ## Scripts added
 
@@ -87,18 +190,9 @@ Broken numbering, orphan approval migration, missing push-only columns, and inco
 | `db:generate` | `drizzle-kit generate` |
 | `db:migrate` | `node scripts/db-migrate.mjs` (drizzle-orm migrator + `pg`) |
 | `db:push:local-only` | Guarded `drizzle-kit push` — refuses `NODE_ENV=production` or non-localhost `DATABASE_URL` |
+| `scripts/db-mark-baseline.mjs` | Computes baseline sha256 + journal `when`; prints mark-applied SQL (dry-run); `--apply --i-have-a-backup` writes `drizzle.__drizzle_migrations` only |
 
 Old `db:push` is removed from package.json (replaced by the guarded name).
-
-## Railway `preDeployCommand` (add **after** human cutover)
-
-Do **not** add this yet. After baseline is marked applied on prod:
-
-```json
-"preDeployCommand": "npm run db:migrate --workspace=apps/backend"
-```
-
-Place it under `deploy` in both root `railway.json` and `apps/backend/railway.json` (whichever Railway uses for the API service). Keep `healthcheckPath` / start command unchanged until the observability PR.
 
 ## Scratch generate note
 

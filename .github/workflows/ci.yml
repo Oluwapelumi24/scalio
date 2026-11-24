@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  API_URL: http://localhost:3000
+  NEXT_PUBLIC_WEBSITE_URL: http://localhost:3003
+  NEXT_PUBLIC_VENDOR_WEB_URL: http://localhost:3001
+  VENDOR_WEB_URL: http://localhost:3001
+
+jobs:
+  shared-types:
+    name: shared-types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=@veno/shared-types
+
+  backend:
+    name: backend
+    needs: shared-types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=@veno/shared-types
+      - name: Typecheck
+        working-directory: apps/backend
+        run: npx tsc --noEmit
+      - name: Unit tests
+        working-directory: apps/backend
+        run: npx jest
+
+  backend-lint:
+    name: backend lint (non-blocking)
+    needs: shared-types
+    runs-on: ubuntu-latest
+    # Prettier / eslint debt is large (thousands of findings). Report only;
+    # do not fail the PR until the codebase is cleaned up separately.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=@veno/shared-types
+      - name: ESLint (no --fix)
+        working-directory: apps/backend
+        run: npx eslint "{src,apps,libs,test}/**/*.ts"
+
+  web:
+    name: web (${{ matrix.app }})
+    needs: shared-types
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - vendor-web
+          - admin-web
+          - website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=@veno/shared-types
+      - name: Typecheck
+        working-directory: apps/${{ matrix.app }}
+        run: npx tsc --noEmit
+      - name: Next build
+        working-directory: apps/${{ matrix.app }}
+        run: npx next build
+        env:
+          API_URL: ${{ env.API_URL }}
+          NEXT_PUBLIC_WEBSITE_URL: ${{ env.NEXT_PUBLIC_WEBSITE_URL }}
+          NEXT_PUBLIC_VENDOR_WEB_URL: ${{ env.NEXT_PUBLIC_VENDOR_WEB_URL }}
+          VENDOR_WEB_URL: ${{ env.VENDOR_WEB_URL }}
+
+  mobile:
+    name: mobile (${{ matrix.app }})
+    needs: shared-types
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - mobile
+          - vendor-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=@veno/shared-types
+      - name: Typecheck
+        working-directory: apps/${{ matrix.app }}
+        run: npx tsc --noEmit

@@ -13,6 +13,8 @@ interface Customer {
   notes: string | null
 }
 
+const DELETED_CUSTOMER_NAME = 'Deleted customer'
+
 function formatDate(iso: string | null) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -62,22 +64,51 @@ export default async function CustomersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {customers.map((c) => (
-                <tr key={c.id} className="transition-colors hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{c.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.email ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.phone ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{formatDate(c.lastVisitAt)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/dashboard/customers/${c.id}`}
-                      className="text-xs font-medium text-[#1e3a8a] hover:underline"
-                    >
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {customers.map((c) => {
+                const deleted = c.name === DELETED_CUSTOMER_NAME
+                return (
+                  <tr
+                    key={c.id}
+                    className={`transition-colors hover:bg-gray-50 ${deleted ? 'text-gray-400' : ''}`}
+                    title={deleted ? 'This customer deleted their Veno account.' : undefined}
+                  >
+                    <td className={`px-4 py-3 font-medium ${deleted ? 'text-gray-400' : 'text-gray-900'}`}>
+                      <span className={deleted ? 'cursor-help underline decoration-dotted decoration-gray-300' : undefined}>
+                        {c.name}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {deleted || !c.email ? (
+                        <span className="text-gray-400">—</span>
+                      ) : (
+                        <a href={`mailto:${c.email}`} className="text-[#1e3a8a] hover:underline">
+                          {c.email}
+                        </a>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {deleted || !c.phone ? (
+                        <span className="text-gray-400">—</span>
+                      ) : (
+                        <a href={`tel:${c.phone}`} className="text-[#1e3a8a] hover:underline">
+                          {c.phone}
+                        </a>
+                      )}
+                    </td>
+                    <td className={`px-4 py-3 ${deleted ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {formatDate(c.lastVisitAt)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/dashboard/customers/${c.id}`}
+                        className="text-xs font-medium text-[#1e3a8a] hover:underline"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

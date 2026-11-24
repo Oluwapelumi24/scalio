@@ -10,12 +10,21 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
-import { and, eq, gt, inArray, sql, type InferSelectModel } from 'drizzle-orm';
+import { and, eq, gt, inArray, or, sql, type InferSelectModel } from 'drizzle-orm';
 import { BookingService } from '../booking/booking.service';
 import { DB, type Database } from '../db/db.module';
-import { ACTIVE_BOOKING_STATUSES, bookings, customers, users } from '../db/schema';
+import {
+  ACTIVE_BOOKING_STATUSES,
+  bookings,
+  conversations,
+  customers,
+  leads,
+  users,
+} from '../db/schema';
 import { MailService } from '../mail/mail.service';
 import { UserPasswordResetService } from './user-password-reset.service';
+
+const DELETED_CUSTOMER_NAME = 'Deleted customer';
 
 const PASSWORD_HASH_ROUNDS = 10;
 
@@ -146,10 +155,9 @@ export class AuthService {
   }
 
   /**
-   * Requires the current password. Anonymises the user (tombstone email, cleared
-   * PII / push token), sets deleted_at, unlinks customers.user_id, and cancels
-   * future active bookings via the state machine. Historical bookings and
-   * ledger rows are kept for vendors.
+   * Requires the current password. Cancels upcoming bookings, anonymises the
+   * user and every linked vendor CRM / lead / inbox name copy, then emails
+   * confirmation. Historical bookings and ledger amounts are kept for vendors.
    */
   async deleteAccount(userId: string, password: string): Promise<void> {
     const [row] = await this.db.select().from(users).where(eq(users.id, userId));
@@ -161,6 +169,9 @@ export class AuthService {
     ) {
       throw new UnauthorizedException('Incorrect password.');
     }
+
+    const capturedEmail = row.email;
+    const capturedName = row.name;
 
     const future = await this.db
       .select({ id: bookings.id })
@@ -179,11 +190,54 @@ export class AuthService {
     }
 
     await this.db.transaction(async (tx) => {
-      // Unlink the platform identity from each vendor CRM row. Do NOT clear
-      // vendor-side name/phone/email — pending policy decision on whether
-      // vendors may keep their own client records after a consumer deletes.
-      // TODO(policy): decide whether to scrub customers.name/phone/email on delete.
-      await tx.update(customers).set({ userId: null }).where(eq(customers.userId, userId));
+      const linked = await tx
+        .select({ id: customers.id })
+        .from(customers)
+        .where(eq(customers.userId, userId));
+      const customerIds = linked.map((c) => c.id);
+
+      await tx
+        .update(customers)
+        .set({
+          name: DELETED_CUSTOMER_NAME,
+          phone: null,
+          email: null,
+          notes: null,
+          userId: null,
+        })
+        .where(eq(customers.userId, userId));
+
+      // Leads copy name/phone/email; wipe when linked to this user's CRM rows
+      // or when they already store the same email.
+      const leadMatch =
+        customerIds.length > 0
+          ? or(
+              inArray(leads.customerId, customerIds),
+              sql`lower(${leads.email}) = ${capturedEmail.trim().toLowerCase()}`,
+            )
+          : sql`lower(${leads.email}) = ${capturedEmail.trim().toLowerCase()}`;
+
+      const matchedLeads = await tx.select({ id: leads.id }).from(leads).where(leadMatch);
+      if (matchedLeads.length > 0) {
+        const leadIds = matchedLeads.map((l) => l.id);
+        await tx
+          .update(leads)
+          .set({
+            name: DELETED_CUSTOMER_NAME,
+            phone: null,
+            email: null,
+            note: null,
+            updatedAt: new Date(),
+          })
+          .where(inArray(leads.id, leadIds));
+        // Inbox conversations may show a Meta/WhatsApp display name; clear when
+        // tied to a lead we just scrubbed.
+        await tx
+          .update(conversations)
+          .set({ customerName: DELETED_CUSTOMER_NAME, updatedAt: new Date() })
+          .where(inArray(conversations.leadId, leadIds));
+      }
+
       await tx
         .update(users)
         .set({
@@ -195,6 +249,12 @@ export class AuthService {
           deletedAt: new Date(),
         })
         .where(eq(users.id, userId));
+    });
+
+    await this.mail.sendAccountDeletedEmail(capturedEmail, capturedName).catch((err: unknown) => {
+      this.logger.warn(
+        `Account-deleted email to ${capturedEmail} failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     });
   }
 

@@ -51,50 +51,155 @@ describe('AuthService.deleteAccount', () => {
         }),
       }),
     };
-    const svc = new AuthService(db as never, {} as never, {} as never, {} as never, {} as never);
+    const mail = { sendAccountDeletedEmail: jest.fn() };
+    const svc = new AuthService(db as never, {} as never, {} as never, mail as never, {} as never);
     await expect(svc.deleteAccount('u1', 'wrong')).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(mail.sendAccountDeletedEmail).not.toHaveBeenCalled();
   });
 
-  it('cancels future bookings, unlinks customers, and anonymises in a transaction', async () => {
-    const userUpdateWhere = jest.fn().mockResolvedValue([]);
-    const customerUpdateWhere = jest.fn().mockResolvedValue([]);
+  it('anonymises linked customers across two vendors and emails once', async () => {
+    const customerSets: Array<Record<string, unknown>> = [];
+    const leadSets: Array<Record<string, unknown>> = [];
+    const conversationSets: Array<Record<string, unknown>> = [];
+    const userSets: Array<Record<string, unknown>> = [];
+    let updateCall = 0;
+
     const tx = {
-      update: jest
+      select: jest
         .fn()
         .mockReturnValueOnce({
-          set: jest.fn().mockReturnValue({ where: customerUpdateWhere }),
+          from: jest.fn().mockReturnValue({
+            // Two CRM rows — one per vendor — for this user only.
+            where: jest.fn().mockResolvedValue([{ id: 'c-v1' }, { id: 'c-v2' }]),
+          }),
         })
         .mockReturnValueOnce({
-          set: jest.fn().mockReturnValue({ where: userUpdateWhere }),
+          from: jest.fn().mockReturnValue({
+            where: jest.fn().mockResolvedValue([{ id: 'lead-1' }]),
+          }),
         }),
+      update: jest.fn(() => {
+        const call = updateCall++;
+        return {
+          set: (values: Record<string, unknown>) => ({
+            where: async () => {
+              if (call === 0) customerSets.push(values);
+              else if (call === 1) leadSets.push(values);
+              else if (call === 2) conversationSets.push(values);
+              else userSets.push(values);
+              return [];
+            },
+          }),
+        };
+      }),
     };
+
     const db = {
       select: jest
         .fn()
         .mockReturnValueOnce({
           from: jest.fn().mockReturnValue({
-            where: jest.fn().mockResolvedValue([{ id: 'u1', passwordHash: 'hashed', deletedAt: null }]),
+            where: jest.fn().mockResolvedValue([
+              {
+                id: 'u1',
+                name: 'Ada Lovelace',
+                email: 'ada@example.com',
+                passwordHash: 'hashed',
+                deletedAt: null,
+              },
+            ]),
           }),
         })
         .mockReturnValueOnce({
           from: jest.fn().mockReturnValue({
             innerJoin: jest.fn().mockReturnValue({
-              where: jest.fn().mockResolvedValue([{ id: 'b1' }, { id: 'b2' }]),
+              where: jest.fn().mockResolvedValue([{ id: 'b1' }]),
             }),
           }),
         }),
       transaction: jest.fn(async (fn: (t: typeof tx) => Promise<void>) => fn(tx)),
     };
     const bookings = { cancelByCustomer: jest.fn().mockResolvedValue({}) };
-    const svc = new AuthService(db as never, {} as never, {} as never, {} as never, bookings as never);
+    const mail = { sendAccountDeletedEmail: jest.fn().mockResolvedValue(undefined) };
+    const svc = new AuthService(db as never, {} as never, {} as never, mail as never, bookings as never);
 
     await svc.deleteAccount('u1', 'secret');
 
     expect(bookings.cancelByCustomer).toHaveBeenCalledWith('b1', 'Account deleted');
-    expect(bookings.cancelByCustomer).toHaveBeenCalledWith('b2', 'Account deleted');
+    expect(customerSets[0]).toEqual({
+      name: 'Deleted customer',
+      phone: null,
+      email: null,
+      notes: null,
+      userId: null,
+    });
+    // Scoped by userId in the service — other vendors' walk-ins / clients are not selected.
+    expect(tx.select).toHaveBeenCalled();
+    expect(leadSets[0]).toMatchObject({
+      name: 'Deleted customer',
+      phone: null,
+      email: null,
+      note: null,
+    });
+    expect(conversationSets[0]).toMatchObject({ customerName: 'Deleted customer' });
+    expect(userSets[0]).toMatchObject({
+      name: 'Deleted user',
+      email: 'deleted+u1@tombstone.invalid',
+      passwordHash: null,
+    });
+    // Bookings / ledger tables are never updated here — totals stay as-is.
+    expect(tx.update).toHaveBeenCalledTimes(4);
+    expect(mail.sendAccountDeletedEmail).toHaveBeenCalledTimes(1);
+    expect(mail.sendAccountDeletedEmail).toHaveBeenCalledWith('ada@example.com', 'Ada Lovelace');
+  });
+
+  it('still deletes when the confirmation email fails', async () => {
+    const tx = {
+      select: jest
+        .fn()
+        .mockReturnValueOnce({
+          from: jest.fn().mockReturnValue({
+            where: jest.fn().mockResolvedValue([{ id: 'c1' }]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: jest.fn().mockReturnValue({
+            where: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      update: jest.fn().mockReturnValue({
+        set: jest.fn().mockReturnValue({ where: jest.fn().mockResolvedValue([]) }),
+      }),
+    };
+    const db = {
+      select: jest
+        .fn()
+        .mockReturnValueOnce({
+          from: jest.fn().mockReturnValue({
+            where: jest.fn().mockResolvedValue([
+              { id: 'u1', name: 'Ada', email: 'ada@example.com', passwordHash: 'hashed', deletedAt: null },
+            ]),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: jest.fn().mockReturnValue({
+            innerJoin: jest.fn().mockReturnValue({
+              where: jest.fn().mockResolvedValue([]),
+            }),
+          }),
+        }),
+      transaction: jest.fn(async (fn: (t: typeof tx) => Promise<void>) => fn(tx)),
+    };
+    const mail = {
+      sendAccountDeletedEmail: jest.fn().mockRejectedValue(new Error('resend down')),
+    };
+    const svc = new AuthService(db as never, {} as never, {} as never, mail as never, {
+      cancelByCustomer: jest.fn(),
+    } as never);
+
+    await expect(svc.deleteAccount('u1', 'secret')).resolves.toBeUndefined();
     expect(db.transaction).toHaveBeenCalled();
-    expect(customerUpdateWhere).toHaveBeenCalled();
-    expect(userUpdateWhere).toHaveBeenCalled();
+    expect(mail.sendAccountDeletedEmail).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -47,12 +47,14 @@ export function DeleteAccountScreen({ navigation }: Props) {
         <PageHeader
           onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
           title="Delete account"
-          description="This removes your login and personal details from Veno, cancels upcoming bookings, and unlinks your account from each business's client list. Businesses may still keep their own copy of your name, phone, and email from past visits."
         />
         <View style={{ gap: 20 }}>
-          <Text style={styles.warning}>
-            Type your password to confirm. This cannot be undone.
+          <Text style={styles.summary}>
+            This permanently deletes your Veno account. Your name, email and phone number will also be
+            removed from the businesses you've booked with. Upcoming bookings will be cancelled. Businesses
+            keep an anonymous record of past visits and payments for their accounts. This can't be undone.
           </Text>
+          <Text style={styles.warning}>Type your password to confirm.</Text>
           <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry />
           <Button
             label={confirmed ? 'Confirmed — ready to delete' : 'I understand, continue'}
@@ -66,5 +68,6 @@ export function DeleteAccountScreen({ navigation }: Props) {
 }
 
 const useStyles = makeStyles((colors) => ({
+  summary: { color: colors.textPrimary, fontSize: 15, lineHeight: 22 },
   warning: { color: colors.textSecondary, fontSize: 15, lineHeight: 22 },
 }));

@@ -58,6 +58,33 @@ export class MailService {
     if (error) throw new Error(`${error.name}: ${error.message}`);
   }
 
+  /** Confirms a consumer account deletion after it has already committed. */
+  async sendAccountDeletedEmail(to: string, name: string): Promise<void> {
+    const greeting = name.trim() ? `Hi ${name.trim()},` : 'Hi,';
+    const { error } = await this.resend.emails.send({
+      from: this.fromAddress(),
+      to,
+      subject: 'Your Veno account has been deleted',
+      text: `${greeting}
+
+Your Veno account has been permanently deleted.
+
+What we removed:
+- Your login and profile (name, email, phone)
+- Your name, email, phone and notes from every business's client list on Veno
+- Any matching lead contact details linked to those visits
+
+What businesses still keep (anonymous):
+- Past bookings, amounts paid and ledger rows so their accounts and revenue reports stay accurate
+- Upcoming bookings you had were cancelled when you deleted
+
+If you have questions, write to support@venohq.com.
+
+— Veno`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+  }
+
   /** Asks a customer to rate a visit. Throws if Resend rejects it, so the caller can log why. */
   async sendFeedbackRequestEmail(to: string, customerName: string, businessName: string, link: string): Promise<void> {
     const { error } = await this.resend.emails.send({

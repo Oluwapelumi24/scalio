@@ -420,6 +420,10 @@ export interface TeamPay {
   name: string;
   role: string;
   monthlySalaryKobo: number | null;
+  commissionBps: number | null;
+  salesKobo: number;
+  commissionKobo: number;
+  estimatedKobo: number;
   bankName: string | null;
   accountLast4: string | null;
   accountName: string | null;
@@ -430,6 +434,10 @@ export interface SalaryPayout {
   id: string;
   staffName: string;
   amountKobo: number;
+  salaryKobo: number;
+  commissionKobo: number;
+  salesKobo: number;
+  commissionBps: number;
   bankName: string;
   accountLast4: string;
   accountName: string;
@@ -452,7 +460,7 @@ export interface PayrollOverview {
   schedule: PayrollSchedule | null;
   window: SalaryWindow;
   team: TeamPay[];
-  totals: { monthlyKobo: number; people: number };
+  totals: { monthlyKobo: number; salaryKobo: number; commissionKobo: number; people: number };
   canStart: boolean;
   blockedReason: string | null;
   currentRun: SalaryRun | null;
@@ -466,7 +474,10 @@ export function setPayrollSchedule(data: { payDay: number; paused?: boolean }): 
   return req('PUT', '/vendor-admin/payroll/schedule', data);
 }
 
-export function setStaffPay(staffId: string, data: { monthlySalaryKobo?: number; bankCode?: string; accountNumber?: string }): Promise<PayrollOverview> {
+export function setStaffPay(
+  staffId: string,
+  data: { monthlySalaryKobo?: number; commissionBps?: number; bankCode?: string; accountNumber?: string },
+): Promise<PayrollOverview> {
   return req('PUT', `/vendor-admin/payroll/staff/${staffId}`, data);
 }
 

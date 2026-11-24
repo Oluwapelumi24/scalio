@@ -286,7 +286,7 @@ export function BookDesk({
                 inputMode="tel"
                 autoComplete="tel"
                 placeholder="0803 000 0000"
-                className="mt-1.5 h-12 w-full rounded-2xl border border-[#e4e6eb] px-4 text-sm outline-none focus:border-[#1e3a8a]"
+                className="mt-1.5 h-12 w-full rounded-2xl border border-[#e4e6eb] bg-white px-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1e3a8a]"
               />
               <span className="mt-1 block text-xs text-[#7d818b]">So the business can reach you about this visit.</span>
             </label>

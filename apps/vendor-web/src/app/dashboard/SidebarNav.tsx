@@ -35,7 +35,6 @@ const GROUPS: Group[] = [
     title: 'Marketing',
     requiresSuite: true,
     items: [
-      { href: '/dashboard/content', label: 'Content studio', icon: 'image', roles: ['owner', 'manager', 'front_desk'] },
       { href: '/dashboard/ads', label: 'Ads', icon: 'target', roles: ['owner', 'manager', 'front_desk'] },
       { href: '/dashboard/leads', label: 'Leads', icon: 'phone', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
       { href: '/dashboard/feedback', label: 'Feedback', icon: 'star', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
@@ -57,7 +56,6 @@ const CREATE: (Item & { requiresSuite?: boolean })[] = [
   { href: '/dashboard/bookings/new', label: 'New booking', icon: 'calendar', roles: ['owner', 'manager', 'practitioner', 'front_desk'] },
   { href: '/dashboard/storefront?tab=services', label: 'Add a service', icon: 'plus', roles: ['owner', 'manager'] },
   { href: '/dashboard/storefront?tab=hours', label: 'Block a day off', icon: 'clock', roles: ['owner', 'manager'] },
-  { href: '/dashboard/content/new', label: 'New post', icon: 'edit', roles: ['owner', 'manager', 'front_desk'], requiresSuite: true },
 ]
 
 function active(pathname: string, searchTab: string | null, item: Item) {

@@ -142,15 +142,15 @@ function ServiceForm() {
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <label className="block sm:col-span-3">
           <span className="text-xs font-semibold text-slate-700">Name</span>
-          <input name="name" required placeholder="Deep tissue massage" className="mt-1 h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm outline-none focus:border-navy" />
+          <input name="name" required placeholder="Deep tissue massage" className="mt-1 h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:border-navy" />
         </label>
         <label className="block">
           <span className="text-xs font-semibold text-slate-700">Minutes</span>
-          <input name="duration" type="number" min={15} step={15} defaultValue={60} required className="mt-1 h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm outline-none focus:border-navy" />
+          <input name="duration" type="number" min={15} step={15} defaultValue={60} required className="mt-1 h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:border-navy" />
         </label>
         <label className="block sm:col-span-2">
           <span className="text-xs font-semibold text-slate-700">Price (₦)</span>
-          <input name="price" inputMode="numeric" required placeholder="15000" className="mt-1 h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm outline-none focus:border-navy" />
+          <input name="price" inputMode="numeric" required placeholder="15000" className="mt-1 h-11 w-full rounded-2xl border border-slate-200 px-3 text-sm bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:border-navy" />
         </label>
       </div>
       {state.error ? <p className="mt-3 text-sm text-red-700">{state.error}</p> : null}

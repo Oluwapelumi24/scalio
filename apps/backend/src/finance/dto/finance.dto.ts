@@ -28,6 +28,10 @@ export class StaffPayDto {
   @IsOptional() @IsInt() @Min(0) @Max(100_000_000_00)
   monthlySalaryKobo?: number;
 
+  /** Commission on completed sales, basis points (0–10000). 4000 = 40%. */
+  @IsOptional() @IsInt() @Min(0) @Max(10_000)
+  commissionBps?: number;
+
   @IsOptional() @IsString() @Matches(/^\d{3,6}$/)
   bankCode?: string;
 

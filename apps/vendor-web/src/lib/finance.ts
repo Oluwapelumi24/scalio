@@ -4,14 +4,42 @@
 export interface Bank { name: string; code: string }
 export interface PayoutAccount { bankName: string; accountLast4: string; accountName: string; onlinePaymentsEnabled: boolean; verifiedAt: string }
 export interface SalaryWindow { state: 'not_set_up' | 'paused' | 'open' | 'closed'; period: string | null; payDate: string | null; opensOn: string | null; closesOn: string | null; reason: string }
-export interface TeamPay { staffId: string; name: string; role: string; monthlySalaryKobo: number | null; bankName: string | null; accountLast4: string | null; accountName: string | null; verifiedAt: string | null }
-export interface SalaryPayout { id: string; staffName: string; amountKobo: number; bankName: string; accountLast4: string; accountName: string; accountNumber?: string; status: 'pending' | 'paid' | 'skipped'; reference: string | null; paidAt: string | null }
+export interface TeamPay {
+  staffId: string
+  name: string
+  role: string
+  monthlySalaryKobo: number | null
+  commissionBps: number | null
+  salesKobo: number
+  commissionKobo: number
+  estimatedKobo: number
+  bankName: string | null
+  accountLast4: string | null
+  accountName: string | null
+  verifiedAt: string | null
+}
+export interface SalaryPayout {
+  id: string
+  staffName: string
+  amountKobo: number
+  salaryKobo: number
+  commissionKobo: number
+  salesKobo: number
+  commissionBps: number
+  bankName: string
+  accountLast4: string
+  accountName: string
+  accountNumber?: string
+  status: 'pending' | 'paid' | 'skipped'
+  reference: string | null
+  paidAt: string | null
+}
 export interface SalaryRun { id: string; period: string; status: 'open' | 'completed'; totalKobo: number; paidKobo: number; payouts: SalaryPayout[] }
 export interface PayrollOverview {
   schedule: { payDay: number; opensDaysBefore: number; closesDaysAfter: number; paused: boolean } | null
   window: SalaryWindow
   team: TeamPay[]
-  totals: { monthlyKobo: number; people: number }
+  totals: { monthlyKobo: number; salaryKobo: number; commissionKobo: number; people: number }
   canStart: boolean
   blockedReason: string | null
   currentRun: SalaryRun | null
@@ -25,4 +53,9 @@ export const naira = (kobo: number) => `₦${(kobo / 100 || 0).toLocaleString('e
 export function periodLabel(period: string) {
   const [y, m] = period.split('-').map(Number)
   return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+}
+
+export function commissionPercent(bps: number | null | undefined) {
+  if (!bps) return ''
+  return String(bps / 100)
 }

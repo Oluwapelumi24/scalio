@@ -50,7 +50,7 @@ export function ScheduleEditor({ staffId, initial, canEdit }: { staffId: string;
       setMessage(result ? { ok: false, text: result.error } : { ok: true, text: 'Saved. New bookings will follow these hours.' })
     })
 
-  const input = 'rounded-md border border-gray-300 px-2 py-1 text-sm disabled:bg-gray-50'
+  const input = 'rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 disabled:bg-gray-50'
 
   return (
     <div className="rounded-[20px] bg-white">

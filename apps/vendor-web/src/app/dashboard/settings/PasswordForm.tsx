@@ -30,7 +30,7 @@ export function PasswordForm({ email }: { email: string }) {
               minLength={6}
               maxLength={6}
               pattern="[0-9]{6}"
-              className="w-full rounded-xl border border-[#e4e6eb] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[#e4e6eb] px-3 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400"
               placeholder="000000"
             />
           </div>
@@ -45,7 +45,7 @@ export function PasswordForm({ email }: { email: string }) {
               required
               minLength={8}
               autoComplete="new-password"
-              className="w-full rounded-xl border border-[#e4e6eb] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[#e4e6eb] px-3 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400"
             />
           </div>
           <div>
@@ -59,7 +59,7 @@ export function PasswordForm({ email }: { email: string }) {
               required
               minLength={8}
               autoComplete="new-password"
-              className="w-full rounded-xl border border-[#e4e6eb] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[#e4e6eb] px-3 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400"
             />
           </div>
           {reset && 'error' in reset ? <p className="text-sm text-red-600">{reset.error}</p> : null}

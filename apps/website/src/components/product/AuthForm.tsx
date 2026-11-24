@@ -75,7 +75,7 @@ function Field({
       <input
         required
         {...props}
-        className="mt-1.5 h-[52px] w-full rounded-2xl border border-[#e4e6eb] bg-[#f5f6f8] px-4 text-sm outline-none focus:border-[#1e3a8a] focus:bg-white"
+        className="mt-1.5 h-[52px] w-full rounded-2xl border border-[#e4e6eb] bg-[#f5f6f8] px-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1e3a8a] focus:bg-white"
       />
       {hint ? <span className="mt-1 block text-xs text-[#7d818b]">{hint}</span> : null}
     </label>

@@ -26,7 +26,9 @@ export default async function PayrollPage() {
     <div className="max-w-5xl space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Payroll</h1>
-        <p className="text-sm text-gray-500 mt-1">Pay your team from your bank, then record it here. Mobile and web share the same payroll.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Set salaries and commissions, pay from your bank, then record it here. Commission uses completed bookings in the payroll month.
+        </p>
       </div>
 
       <div className={`rounded-xl border px-5 py-4 ${allPaid ? BANNER.open : BANNER[o.window.state]}`}>
@@ -50,8 +52,18 @@ export default async function PayrollPage() {
           <>
             <StartButton
               disabled={!o.canStart}
-              label={o.window.state === 'open' && o.window.period ? `Start ${periodLabel(o.window.period)} payroll · ${naira(o.totals.monthlyKobo)}` : 'Start payroll'}
+              label={
+                o.window.state === 'open' && o.window.period
+                  ? `Start ${periodLabel(o.window.period)} payroll · ${naira(o.totals.monthlyKobo)}`
+                  : 'Start payroll'
+              }
             />
+            {o.window.state === 'open' && o.totals.people > 0 ? (
+              <p className="text-xs text-gray-500">
+                {naira(o.totals.salaryKobo)} salary
+                {o.totals.commissionKobo > 0 ? ` · ${naira(o.totals.commissionKobo)} commission` : ''}
+              </p>
+            ) : null}
             {o.blockedReason && o.window.state === 'open' && <p className="text-sm text-amber-700">{o.blockedReason}</p>}
           </>
         )}
@@ -59,10 +71,14 @@ export default async function PayrollPage() {
 
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-gray-900">Team pay</h2>
-        <ul className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-          {o.team.map((m) => <TeamRow key={m.staffId} member={m} banks={banks} />)}
+        <ul className="divide-y divide-gray-100 rounded-[20px] bg-white">
+          {o.team.map((m) => (
+            <TeamRow key={m.staffId} member={m} banks={banks} />
+          ))}
         </ul>
-        <p className="text-xs text-gray-500">Account numbers are encrypted and only shown in full when you&apos;re paying.</p>
+        <p className="text-xs text-gray-500">
+          Commission is a percent of each person&apos;s completed bookings this month. Account numbers are encrypted and only shown in full when you&apos;re paying.
+        </p>
       </section>
 
       <section className="space-y-3">

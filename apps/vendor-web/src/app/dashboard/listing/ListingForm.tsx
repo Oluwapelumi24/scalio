@@ -198,7 +198,7 @@ export function ListingForm({
           maxLength={600}
           rows={4}
           placeholder="What should a customer know before they book?"
-          className="mt-1.5 w-full rounded-2xl border border-[#e4e6eb] px-4 py-3 text-sm"
+          className="mt-1.5 w-full rounded-2xl border border-[#e4e6eb] bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400"
         />
       </label>
       {state?.error ? <p className="text-sm text-[#dc2626]">{state.error}</p> : null}

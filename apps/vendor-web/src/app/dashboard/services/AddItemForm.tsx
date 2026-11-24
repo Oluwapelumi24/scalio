@@ -60,25 +60,25 @@ export function AddItemForm({ serviceType, placeholder }: { serviceType: 'packag
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSave()}
             placeholder={placeholder}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Duration (min)</label>
           <input value={duration} onChange={(e) => setDuration(e.target.value)} type="number" min={0} placeholder="30"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Price (₦)</label>
           <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" min={0} placeholder="5000"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Payment mode</label>
           <SelectMenu
             value={paymentMode}
             onChange={setPaymentMode}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
             options={[
               { value: 'pay_on_arrival', label: 'Pay on arrival' },
               { value: 'deposit', label: 'Deposit' },
@@ -90,7 +90,7 @@ export function AddItemForm({ serviceType, placeholder }: { serviceType: 'packag
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Deposit %</label>
             <input value={depositPct} onChange={(e) => setDepositPct(e.target.value)} type="number" min={1} max={100} placeholder="30"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
           </div>
         )}
       </div>

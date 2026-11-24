@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { markPaid, saveSchedule, saveStaffPay, skipPayout, startPayroll, transferList } from '@/app/actions/finance'
-import { naira, type Bank, type SalaryRun, type TeamPay } from '@/lib/finance'
+import { commissionPercent, naira, type Bank, type SalaryRun, type TeamPay } from '@/lib/finance'
 import { useAskConfirm } from '@/components/askConfirm'
 import { AccountForm } from '../payments/AccountForm'
 
@@ -24,6 +24,15 @@ export function StartButton({ label, disabled }: { label: string; disabled: bool
   )
 }
 
+function payoutBreakdown(p: SalaryRun['payouts'][number]) {
+  const parts: string[] = []
+  if (p.salaryKobo > 0) parts.push(`Salary ${naira(p.salaryKobo)}`)
+  if (p.commissionKobo > 0) {
+    parts.push(`Commission ${naira(p.commissionKobo)}${p.commissionBps ? ` (${p.commissionBps / 100}% of ${naira(p.salesKobo)})` : ''}`)
+  }
+  return parts.join(' · ')
+}
+
 export function RunTable({ run }: { run: SalaryRun }) {
   const { askConfirm, dialog } = useAskConfirm()
   const [reveal, setReveal] = useState<SalaryRun | null>(null)
@@ -34,7 +43,7 @@ export function RunTable({ run }: { run: SalaryRun }) {
 
   return (
     <div className="space-y-3">
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="overflow-hidden rounded-[20px] bg-white">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
             <tr>
@@ -47,9 +56,13 @@ export function RunTable({ run }: { run: SalaryRun }) {
           <tbody className="divide-y divide-gray-100 text-gray-900">
             {run.payouts.map((p) => {
               const full = reveal?.payouts.find((x) => x.id === p.id)?.accountNumber
+              const detail = payoutBreakdown(p)
               return (
                 <tr key={p.id}>
-                  <td className="px-4 py-3 font-medium">{p.staffName}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{p.staffName}</p>
+                    {detail ? <p className="mt-0.5 text-xs text-gray-500">{detail}</p> : null}
+                  </td>
                   <td className="px-4 py-3 text-gray-600 select-all">{p.bankName} · {full ?? `•••• ${p.accountLast4}`} · {p.accountName}</td>
                   <td className="px-4 py-3 text-right tabular-nums font-semibold">{naira(p.amountKobo)}</td>
                   <td className="px-4 py-3 text-right">
@@ -60,7 +73,7 @@ export function RunTable({ run }: { run: SalaryRun }) {
                           onChange={(e) => setRefs({ ...refs, [p.id]: e.target.value })}
                           placeholder="Bank ref (optional)"
                           maxLength={80}
-                          className="w-36 rounded-md border border-gray-300 px-2 py-1 text-xs"
+                          className="w-36 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 placeholder:text-gray-400"
                           aria-label={`Transfer reference for ${p.staffName}`}
                         />
                         <button type="button" disabled={isPending} onClick={() => act(() => skipPayout(p.id))} className="text-xs font-medium text-gray-500 hover:text-gray-800">Skip</button>
@@ -107,30 +120,76 @@ export function RunTable({ run }: { run: SalaryRun }) {
 
 export function TeamRow({ member, banks }: { member: TeamPay; banks: Bank[] }) {
   const [salary, setSalary] = useState(member.monthlySalaryKobo ? String(member.monthlySalaryKobo / 100) : '')
+  const [commission, setCommission] = useState(commissionPercent(member.commissionBps))
   const [editingAccount, setEditingAccount] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [isPending, startTransition] = useTransition()
-  const saveSalary = () =>
+
+  const hasPay = (member.monthlySalaryKobo ?? 0) > 0 || (member.commissionBps ?? 0) > 0
+  const savePay = () =>
     startTransition(async () => {
-      const n = Number(salary.replace(/,/g, ''))
-      if (!Number.isFinite(n) || n < 0) { setMsg({ ok: false, text: 'Enter the salary in naira.' }); return }
-      const r = await saveStaffPay(member.staffId, { monthlySalaryKobo: Math.round(n * 100) })
+      const salaryNaira = Number(salary.replace(/,/g, ''))
+      const pct = Number(commission.replace(/,/g, ''))
+      if (!Number.isFinite(salaryNaira) || salaryNaira < 0) {
+        setMsg({ ok: false, text: 'Enter the salary in naira.' })
+        return
+      }
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        setMsg({ ok: false, text: 'Commission must be between 0 and 100%.' })
+        return
+      }
+      const r = await saveStaffPay(member.staffId, {
+        monthlySalaryKobo: Math.round(salaryNaira * 100),
+        commissionBps: Math.round(pct * 100),
+      })
       setMsg(r.error ? { ok: false, text: r.error } : { ok: true, text: 'Saved' })
     })
+
   return (
-    <li className="px-5 py-4 space-y-3">
-      <div className="flex flex-wrap items-center gap-4">
+    <li className="space-y-3 px-5 py-4">
+      <div className="flex flex-wrap items-start gap-4">
         <div className="min-w-40 flex-1">
           <p className="font-medium text-gray-900">{member.name}</p>
-          <p className={`text-sm ${!member.verifiedAt && (member.monthlySalaryKobo ?? 0) > 0 ? 'text-amber-700' : 'text-gray-500'}`}>
-            {member.verifiedAt ? `${member.bankName} · •••• ${member.accountLast4} · ${member.accountName}` : (member.monthlySalaryKobo ?? 0) > 0 ? 'Add a bank account' : 'No salary set'}
+          <p className={`text-sm ${!member.verifiedAt && hasPay ? 'text-amber-700' : 'text-gray-500'}`}>
+            {member.verifiedAt
+              ? `${member.bankName} · •••• ${member.accountLast4} · ${member.accountName}`
+              : hasPay
+                ? 'Add a bank account'
+                : 'No pay terms set'}
           </p>
+          {member.estimatedKobo > 0 ? (
+            <p className="mt-1 text-xs text-gray-500">
+              This period ≈ {naira(member.estimatedKobo)}
+              {member.commissionKobo > 0
+                ? ` · commission ${naira(member.commissionKobo)} on ${naira(member.salesKobo)} completed`
+                : ''}
+            </p>
+          ) : null}
         </div>
         <label className="text-sm text-gray-600">
           ₦ / month
-          <input value={salary} onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" className="ml-2 w-32 rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-900" aria-label={`Monthly salary for ${member.name}`} />
+          <input
+            value={salary}
+            onChange={(e) => setSalary(e.target.value.replace(/[^\d.]/g, ''))}
+            inputMode="decimal"
+            className="ml-2 w-28 rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-900"
+            aria-label={`Monthly salary for ${member.name}`}
+          />
         </label>
-        <button type="button" onClick={saveSalary} disabled={isPending} className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-800">Save</button>
+        <label className="text-sm text-gray-600">
+          Commission %
+          <input
+            value={commission}
+            onChange={(e) => setCommission(e.target.value.replace(/[^\d.]/g, ''))}
+            inputMode="decimal"
+            placeholder="0"
+            className="ml-2 w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-900"
+            aria-label={`Commission percent for ${member.name}`}
+          />
+        </label>
+        <button type="button" onClick={savePay} disabled={isPending} className="rounded-md border border-gray-300 px-3 py-1 text-sm font-medium text-gray-800">
+          Save
+        </button>
         <button type="button" onClick={() => setEditingAccount((v) => !v)} className="text-sm font-medium text-indigo-600">
           {editingAccount ? 'Cancel' : member.verifiedAt ? 'Change account' : 'Add account'}
         </button>
@@ -152,7 +211,7 @@ export function ScheduleForm({ payDay, paused, hasSchedule }: { payDay: number; 
     <div className="flex flex-wrap items-center gap-4">
       <label className="text-sm text-gray-700">
         Every month on day
-        <input type="number" min={1} max={28} value={day} onChange={(e) => setDay(Math.min(28, Math.max(1, Number(e.target.value) || 1)))} className="ml-2 w-16 rounded-md border border-gray-300 px-2 py-1 text-sm" />
+        <input type="number" min={1} max={28} value={day} onChange={(e) => setDay(Math.min(28, Math.max(1, Number(e.target.value) || 1)))} className="ml-2 w-16 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900" />
       </label>
       {hasSchedule && (
         <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -168,7 +227,7 @@ export function ScheduleForm({ payDay, paused, hasSchedule }: { payDay: number; 
         {hasSchedule ? 'Save' : 'Set pay day'}
       </button>
       {msg && <span className={`text-sm ${msg.ok ? 'text-emerald-700' : 'text-red-600'}`}>{msg.text}</span>}
-      <p className="w-full text-xs text-gray-500">Payroll opens 3 days before pay day and closes 5 days after.</p>
+      <p className="w-full text-xs text-gray-500">Payroll opens 3 days before pay day and closes 5 days after. Commission uses completed bookings in that month.</p>
     </div>
   )
 }

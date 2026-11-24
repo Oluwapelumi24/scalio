@@ -205,7 +205,7 @@ export function DiscoverHome({
                 onChange={(event) => setLocationQuery(event.target.value)}
                 placeholder="Neighbourhood, street or city"
                 aria-label="Search for a location"
-                className="w-full bg-transparent text-sm outline-none"
+                className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && locationQuery.trim()) chooseLocation(locationQuery.trim())
                 }}
@@ -240,7 +240,7 @@ export function DiscoverHome({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search businesses and services"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-[#7d818b]"
+            className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-[#7d818b]"
           />
           {query ? (
             <button type="button" onClick={() => setQuery('')} aria-label="Clear search">

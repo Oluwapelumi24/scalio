@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { ApiError, apiFetch } from '@/lib/api'
 import { requireToken } from '@/lib/session'
 
-type ActionState = { error: string } | null
+type ActionState = { error?: string; ok?: boolean } | null
 
 export async function inviteAdminAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const name = formData.get('name') as string
@@ -22,7 +22,7 @@ export async function inviteAdminAction(_prev: ActionState, formData: FormData):
     throw err
   }
   revalidatePath('/dashboard/team')
-  return null
+  return { ok: true }
 }
 
 export async function removeAdminAction(adminId: string): Promise<void> {

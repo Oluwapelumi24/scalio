@@ -12,17 +12,48 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Admin portal is light-only — OS dark mode must not lighten typed text in white fields. */
+html {
+  color-scheme: light;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']),
+textarea,
+select {
+  color: #111827;
+  -webkit-text-fill-color: #111827;
+  caret-color: #111827;
+  background-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+  -webkit-text-fill-color: #9ca3af;
+}
+
+/* Chrome autofill can force light text on white fields (esp. with OS dark mode). */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111827;
+  caret-color: #111827;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  transition: background-color 99999s ease-in-out 0s;
+}
+
+/* Custom menus are buttons — same dark-text guarantee as native fields. */
+button.select-trigger {
+  color: #111827;
 }
 
 /* Native menus ignore horizontal padding and park the arrow on the text. */

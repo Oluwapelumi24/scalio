@@ -6,6 +6,7 @@ const complete: Record<string, string> = Object.fromEntries(
     if (name === 'PUBLIC_API_URL') return [name, 'https://api.venohq.com'];
     if (name === 'PUBLIC_BOOKING_URL') return [name, 'https://www.venohq.com/book'];
     if (name === 'VENDOR_WEB_URL') return [name, 'https://app.venohq.com'];
+    if (name === 'ADMIN_WEB_URL') return [name, 'https://admin.venohq.com'];
     if (name === 'RESEND_API_KEY') return [name, 're_test_key'];
     if (name === 'DATABASE_URL') return [name, 'postgresql://localhost/veno'];
     if (name === 'REDIS_URL') return [name, 'redis://localhost:6379'];

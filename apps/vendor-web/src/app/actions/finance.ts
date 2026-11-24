@@ -31,7 +31,10 @@ export async function saveSchedule(payDay: number, paused: boolean) {
   return call('/vendor-admin/payroll/schedule', { method: 'PUT', body: JSON.stringify({ payDay, paused }) }, ['/dashboard/payroll', '/dashboard'])
 }
 
-export async function saveStaffPay(staffId: string, data: { monthlySalaryKobo?: number; bankCode?: string; accountNumber?: string }) {
+export async function saveStaffPay(
+  staffId: string,
+  data: { monthlySalaryKobo?: number; commissionBps?: number; bankCode?: string; accountNumber?: string },
+) {
   return call(`/vendor-admin/payroll/staff/${staffId}`, { method: 'PUT', body: JSON.stringify(data) }, ['/dashboard/payroll'])
 }
 

@@ -8,8 +8,8 @@ import { SelectMenu } from '@/components/SelectMenu'
 import { LEAD_SOURCE_LABELS, type Lead, type LeadSource } from '@/lib/growth'
 
 const SOURCES = Object.keys(LEAD_SOURCE_LABELS) as LeadSource[]
-const input = 'mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm'
-const menu = 'mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm'
+const input = 'mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 placeholder:text-gray-400'
+const menu = 'mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900'
 
 /** 10am, `days` from today, in the viewer's time zone. */
 const at10 = (days: number) => {

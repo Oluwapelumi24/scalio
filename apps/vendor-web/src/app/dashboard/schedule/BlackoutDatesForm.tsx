@@ -53,14 +53,14 @@ export function BlackoutDatesForm({ initialBlackouts }: { initialBlackouts: Blac
             name="date"
             type="date"
             required
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Reason</label>
           <input
             name="reason"
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-48"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-48"
             placeholder="e.g. Public holiday"
           />
         </div>

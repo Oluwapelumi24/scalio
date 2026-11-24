@@ -14,6 +14,8 @@ export const REQUIRED_IN_PRODUCTION = [
   'PUBLIC_API_URL',
   'PUBLIC_BOOKING_URL',
   'VENDOR_WEB_URL',
+  // Admin invite emails build /accept-invite links from this origin.
+  'ADMIN_WEB_URL',
 ] as const;
 
 /** Returns what's wrong with the environment; empty when it's fine to start. */
@@ -39,6 +41,10 @@ export function productionConfigProblems(env: NodeJS.ProcessEnv): string[] {
   const vendorWeb = env.VENDOR_WEB_URL?.trim();
   if (vendorWeb && !/^https:\/\//i.test(vendorWeb)) {
     problems.push('VENDOR_WEB_URL must be an https:// origin in production');
+  }
+  const adminWeb = env.ADMIN_WEB_URL?.trim();
+  if (adminWeb && !/^https:\/\//i.test(adminWeb)) {
+    problems.push('ADMIN_WEB_URL must be an https:// origin in production');
   }
 
   return problems;

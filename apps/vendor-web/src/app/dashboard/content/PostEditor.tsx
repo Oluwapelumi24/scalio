@@ -184,7 +184,7 @@ export function PostEditor({ studio, initial }: { studio: StudioInfo; initial: C
   }
 
   const label = 'block text-sm font-medium text-gray-700'
-  const input = 'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
+  const input = 'mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400'
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">

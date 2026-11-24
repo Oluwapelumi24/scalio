@@ -60,7 +60,7 @@ export default async function PaymentsPage({
       {/* Stat cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {statCards.map(({ label, value, sub, color }) => (
-          <div key={label} className="bg-white rounded-2xl border border-gray-200 p-5">
+          <div key={label} className="bg-white rounded-2xl border border-gray-200 p-5 ">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
             <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
             <p className="text-xs text-gray-400 mt-1">{sub}</p>
@@ -76,7 +76,7 @@ export default async function PaymentsPage({
             <SelectMenu
               name="mode"
               defaultValue={mode ?? ''}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
               options={[
                 { value: '', label: 'All modes' },
                 { value: 'pay_on_arrival', label: 'Pay on arrival' },
@@ -88,12 +88,12 @@ export default async function PaymentsPage({
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
             <input type="date" name="from" defaultValue={from ?? ''}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
             <input type="date" name="to" defaultValue={to ?? ''}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
           </div>
           <button type="submit"
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">

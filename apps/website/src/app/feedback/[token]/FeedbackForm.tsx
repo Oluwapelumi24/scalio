@@ -64,7 +64,7 @@ export function FeedbackForm({ token, businessName, brand }: { token: string; bu
           onChange={(e) => setComment(e.target.value)}
           maxLength={1000}
           rows={3}
-          className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400"
         />
       </label>
 

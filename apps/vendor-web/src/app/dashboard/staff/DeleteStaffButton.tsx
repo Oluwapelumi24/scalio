@@ -16,7 +16,14 @@ export function DeleteStaffButton({ staffId }: { staffId: string }) {
         disabled={isPending}
         onClick={() => {
           void (async () => {
-            if (!(await askConfirm('Remove this staff member?', 'Remove'))) return
+            if (
+              !(await askConfirm('Remove this team member?', {
+                body: 'They lose access immediately. Past bookings and payroll records stay on file.',
+                confirmLabel: 'Remove',
+                danger: true,
+              }))
+            )
+              return
             setError(null)
             startTransition(async () => {
               const result = await deleteStaff(staffId)

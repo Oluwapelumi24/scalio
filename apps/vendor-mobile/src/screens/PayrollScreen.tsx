@@ -77,7 +77,7 @@ export function PayrollScreen({ navigation }: Props) {
           <Feather name="arrow-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>Payroll</Text>
-        <Text style={styles.subtitle}>Pay your team from your bank, then record it here</Text>
+        <Text style={styles.subtitle}>Salaries and commissions — pay from your bank, then record it here</Text>
       </SafeAreaView>
 
       {loading || !data || !w ? (
@@ -109,10 +109,18 @@ export function PayrollScreen({ navigation }: Props) {
               <View style={styles.progress}><View style={[styles.progressFill, { width: `${r.totalKobo ? (r.paidKobo / r.totalKobo) * 100 : 0}%` }]} /></View>
               {r.payouts.map((p) => {
                 const full = transfer?.payouts.find((t) => t.id === p.id)?.accountNumber;
+                const parts: string[] = [];
+                if (p.salaryKobo > 0) parts.push(`Salary ${naira(p.salaryKobo)}`);
+                if (p.commissionKobo > 0) {
+                  parts.push(
+                    `Commission ${naira(p.commissionKobo)}${p.commissionBps ? ` (${p.commissionBps / 100}%)` : ''}`,
+                  );
+                }
                 return (
                   <View key={p.id} style={styles.payout}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.name}>{p.staffName}</Text>
+                      {parts.length > 0 ? <Text style={styles.meta}>{parts.join(' · ')}</Text> : null}
                       <Text style={styles.meta} selectable>
                         {p.bankName} · {full ?? `•••• ${p.accountLast4}`} · {p.accountName}
                       </Text>
@@ -166,23 +174,39 @@ export function PayrollScreen({ navigation }: Props) {
           {/* Team pay */}
           <Text style={styles.section}>Team pay</Text>
           <View style={styles.card}>
-            {data.team.map((m, i) => (
-              <Pressable
-                key={m.staffId}
-                style={[styles.member, i > 0 && styles.divider]}
-                onPress={() => navigation.navigate('StaffPay', { staffId: m.staffId, name: m.name, pay: m })}
-                accessibilityRole="button"
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{m.name}</Text>
-                  <Text style={[styles.meta, !m.verifiedAt && (m.monthlySalaryKobo ?? 0) > 0 && { color: colors.warning }]}>
-                    {m.verifiedAt ? `${m.bankName} · •••• ${m.accountLast4}` : (m.monthlySalaryKobo ?? 0) > 0 ? 'Add a bank account' : 'No salary set'}
-                  </Text>
-                </View>
-                <Text style={styles.amount}>{m.monthlySalaryKobo ? naira(m.monthlySalaryKobo) : '—'}</Text>
-                <Feather name="chevron-right" size={16} color={colors.textMuted} />
-              </Pressable>
-            ))}
+            {data.team.map((m, i) => {
+              const hasPay = (m.monthlySalaryKobo ?? 0) > 0 || (m.commissionBps ?? 0) > 0;
+              const terms: string[] = [];
+              if (m.monthlySalaryKobo) terms.push(naira(m.monthlySalaryKobo));
+              if (m.commissionBps) terms.push(`${m.commissionBps / 100}%`);
+              return (
+                <Pressable
+                  key={m.staffId}
+                  style={[styles.member, i > 0 && styles.divider]}
+                  onPress={() => navigation.navigate('StaffPay', { staffId: m.staffId, name: m.name, pay: m })}
+                  accessibilityRole="button"
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.name}>{m.name}</Text>
+                    <Text style={[styles.meta, !m.verifiedAt && hasPay && { color: colors.warning }]}>
+                      {m.verifiedAt
+                        ? `${m.bankName} · •••• ${m.accountLast4}`
+                        : hasPay
+                          ? 'Add a bank account'
+                          : 'No pay terms set'}
+                    </Text>
+                    {m.estimatedKobo > 0 ? (
+                      <Text style={styles.meta}>
+                        This period ≈ {naira(m.estimatedKobo)}
+                        {m.commissionKobo > 0 ? ` · commission ${naira(m.commissionKobo)}` : ''}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.amount}>{terms.length ? terms.join(' + ') : '—'}</Text>
+                  <Feather name="chevron-right" size={16} color={colors.textMuted} />
+                </Pressable>
+              );
+            })}
           </View>
 
           {/* Schedule */}

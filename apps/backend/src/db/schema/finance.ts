@@ -19,11 +19,13 @@ export const vendorPayoutAccounts = pgTable('vendor_payout_accounts', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
-/** A staff member's salary and the account the owner pays it into. */
+/** A staff member's pay terms and the account the owner pays into. */
 export const staffPay = pgTable('staff_pay', {
   staffId: uuid('staff_id').primaryKey().references(() => staff.id, { onDelete: 'cascade' }),
   vendorId: uuid('vendor_id').notNull().references(() => vendors.id, { onDelete: 'cascade' }),
   monthlySalaryKobo: integer('monthly_salary_kobo'),
+  /** Share of completed booking sales, in basis points (4000 = 40%). Null/0 = salary only. */
+  commissionBps: integer('commission_bps'),
   bankCode: text('bank_code'),
   bankName: text('bank_name'),
   accountNumberEnc: text('account_number_enc'),
@@ -72,6 +74,14 @@ export const salaryPayouts = pgTable(
     staffId: uuid('staff_id').references(() => staff.id, { onDelete: 'set null' }),
     staffName: text('staff_name').notNull(),
     amountKobo: integer('amount_kobo').notNull(),
+    /** Fixed salary portion frozen at run start. */
+    salaryKobo: integer('salary_kobo').notNull().default(0),
+    /** Commission portion frozen at run start. */
+    commissionKobo: integer('commission_kobo').notNull().default(0),
+    /** Completed booking sales the commission was taken from (kobo). */
+    salesKobo: integer('sales_kobo').notNull().default(0),
+    /** Commission rate frozen at run start (basis points). */
+    commissionBps: integer('commission_bps').notNull().default(0),
     bankName: text('bank_name').notNull(),
     accountNumberEnc: text('account_number_enc').notNull(),
     accountLast4: text('account_last4').notNull(),

@@ -19,7 +19,42 @@ body {
 }
 
 html {
+  color-scheme: light;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Keep typed text dark on white fields even if a parent inherits a light color. */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']),
+textarea,
+select {
+  color: #111827;
+  -webkit-text-fill-color: #111827;
+  caret-color: #111827;
+  background-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+  -webkit-text-fill-color: #9ca3af;
+}
+
+/* Chrome autofill can force light text on white fields (esp. with OS dark mode). */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111827;
+  caret-color: #111827;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  transition: background-color 99999s ease-in-out 0s;
+}
+
+/* Custom menus are buttons — same dark-text guarantee as native fields. */
+button.select-trigger {
+  color: #111827;
 }
 
 button,

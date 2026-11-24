@@ -154,10 +154,17 @@ export default async function DashboardHome() {
     : []
   const activated = ready && approved
   // After go-live only — payments / ads tips feel wrong while the listing is still in review.
-  // Drop share_link_first — BookingLinkCard already covers "Get your first booking".
+  // Drop share (BookingLinkCard owns it) and content-studio tips (module hidden from nav).
+  const HIDDEN_SUGGESTIONS = new Set([
+    'share_link_first',
+    'first_post',
+    'create_post',
+    'posts_planned_today',
+    'quiet_day_offer',
+  ])
   const suggestions = activated
     ? (home?.layers.recommendation ?? [])
-        .filter((item) => item.id !== 'share_link_first')
+        .filter((item) => !HIDDEN_SUGGESTIONS.has(item.id))
         .filter((item) => item.status !== 'coming_soon' || activated)
         .slice(0, 2)
     : []
@@ -184,9 +191,11 @@ export default async function DashboardHome() {
           },
         ]
       : []
-  // BookingLinkCard already owns share when live — don't repeat it under Quick actions.
+  // BookingLinkCard owns share; content studio is off the home surface.
   const quickActions = activated
-    ? (home?.layers.quick_action ?? []).filter((item) => item.id !== 'share_booking_link')
+    ? (home?.layers.quick_action ?? []).filter(
+        (item) => item.id !== 'share_booking_link' && item.id !== 'create_post',
+      )
     : []
 
   const greetingTone = !ready
@@ -289,7 +298,7 @@ export default async function DashboardHome() {
             <section
               className={
                 ready && approved && suggestions.length > 0
-                  ? 'grid items-stretch gap-3 md:grid-cols-2'
+                  ? 'grid items-start gap-3 md:grid-cols-2'
                   : undefined
               }
             >
@@ -297,33 +306,15 @@ export default async function DashboardHome() {
                 <BookingLinkCard url={bookings.link} total={bookings.total} />
               ) : null}
               {suggestions.length > 0 ? (
-                <div
-                  className={
-                    ready && approved
-                      ? 'flex h-full min-h-0 flex-col gap-3'
-                      : 'rounded-[24px] bg-white p-5 sm:p-6'
-                  }
-                >
-                  {ready && approved ? null : (
-                    <h2 className="mb-4 text-base font-bold tracking-tight text-[#0a0a0a]">Suggested for you</h2>
-                  )}
-                  <div
-                    className={
-                      ready && approved
-                        ? 'flex h-full min-h-0 flex-col gap-3'
-                        : 'grid gap-2 sm:grid-cols-2'
-                    }
-                  >
+                <div className="flex min-w-0 flex-col gap-3">
+                  <h2 className="text-base font-bold tracking-tight text-[#0a0a0a]">Suggested for you</h2>
+                  <div className="flex flex-col gap-3">
                     {suggestions.map((item) => {
                       if (item.status === 'coming_soon') {
                         return (
                           <div
                             key={item.id}
-                            className={
-                              ready && approved
-                                ? 'flex min-h-0 flex-1 items-start gap-3 rounded-[20px] border border-dashed border-[#c9ced8] bg-white p-5'
-                                : 'flex min-w-0 items-start gap-3 rounded-2xl border border-dashed border-[#c9ced8] bg-[#fafbfc] p-4'
-                            }
+                            className="flex items-start gap-3 rounded-[20px] border border-dashed border-[#c9ced8] bg-white p-4"
                           >
                             <IconTile name={item.icon} />
                             <span className="min-w-0">
@@ -338,11 +329,7 @@ export default async function DashboardHome() {
                           key={item.id}
                           moduleId={item.id}
                           href={HREF[item.id] ?? '/dashboard'}
-                          className={
-                            ready && approved
-                              ? 'flex min-h-0 flex-1 items-start gap-3 rounded-[20px] bg-white p-5'
-                              : 'flex min-w-0 items-start gap-3 rounded-2xl bg-[#fafbfc] p-4'
-                          }
+                          className="flex items-start gap-3 rounded-[20px] bg-white p-4"
                         >
                           <IconTile name={item.icon} />
                           <span className="min-w-0 flex-1">

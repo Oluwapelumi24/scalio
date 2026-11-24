@@ -146,7 +146,7 @@ export function SelectMenu({
                   setActive(0)
                 }}
                 placeholder="Search"
-                className="h-10 w-full rounded-xl border border-[#e4e6eb] bg-[#f7f8fa] px-3 text-sm outline-none focus:border-[#1e3a8a] focus:bg-white"
+                className="h-10 w-full rounded-xl border border-[#e4e6eb] bg-[#f7f8fa] px-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1e3a8a] focus:bg-white"
               />
             </div>
           ) : null}
@@ -212,9 +212,9 @@ export function SelectMenu({
           setOpen((was) => !was)
         }}
         onKeyDown={onButtonKey}
-        className={`keep-height select-trigger flex w-full items-center justify-between gap-3 text-left disabled:opacity-60 ${className}`}
+        className={`keep-height select-trigger flex w-full items-center justify-between gap-3 text-left text-gray-900 disabled:opacity-60 ${className}`}
       >
-        <span className={selected ? 'truncate' : 'truncate text-gray-400'}>{selected?.label ?? placeholder}</span>
+        <span className={selected ? 'truncate text-gray-900' : 'truncate text-gray-400'}>{selected?.label ?? placeholder}</span>
         <Chevron open={open} />
       </button>
       {menu}

@@ -61,7 +61,7 @@ export function NewBookingForm({
             autoComplete="name"
             autoFocus={modal}
             placeholder="e.g. Chioma"
-            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm outline-none focus:border-[#1e3a8a]"
+            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1e3a8a]"
           />
         </div>
         <div>
@@ -71,7 +71,7 @@ export function NewBookingForm({
             type="tel"
             autoComplete="tel"
             placeholder="+234…"
-            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm outline-none focus:border-[#1e3a8a]"
+            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1e3a8a]"
           />
         </div>
         <div>
@@ -81,7 +81,7 @@ export function NewBookingForm({
             type="email"
             autoComplete="email"
             placeholder="Optional"
-            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm outline-none focus:border-[#1e3a8a]"
+            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1e3a8a]"
           />
         </div>
         <div className="sm:col-span-2">
@@ -90,7 +90,7 @@ export function NewBookingForm({
             name="serviceId"
             required
             placeholder="Pick a service…"
-            className="h-11 w-full rounded-xl border border-[#e4e6eb] bg-white px-3 text-sm"
+            className="h-11 w-full rounded-xl border border-[#e4e6eb] bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400"
             options={services.map((s) => ({ value: s.id, label: s.name }))}
           />
         </div>
@@ -100,7 +100,7 @@ export function NewBookingForm({
             <SelectMenu
               name="staffId"
               placeholder="Anyone"
-              className="h-11 w-full rounded-xl border border-[#e4e6eb] bg-white px-3 text-sm"
+              className="h-11 w-full rounded-xl border border-[#e4e6eb] bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400"
               options={[{ value: '', label: 'Anyone' }, ...staff.map((s) => ({ value: s.id, label: s.name }))]}
             />
           </div>
@@ -114,7 +114,7 @@ export function NewBookingForm({
             type="datetime-local"
             required
             defaultValue={defaultDateTimeLocal()}
-            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm outline-none focus:border-[#1e3a8a]"
+            className="h-11 w-full rounded-xl border border-[#e4e6eb] px-3 text-sm bg-white text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#1e3a8a]"
           />
         </div>
       </div>

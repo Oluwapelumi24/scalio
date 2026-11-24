@@ -17,7 +17,7 @@ export function CreateStaffForm() {
         <input
           name="name"
           required
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           placeholder="Full name"
         />
       </div>
@@ -30,7 +30,7 @@ export function CreateStaffForm() {
           value={role}
           onChange={setRole}
           placeholder="Select role…"
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
           options={STAFF_ROLES.map((option) => ({ value: option.value, label: option.label }))}
         />
         {hint ? <p className="mt-1.5 text-xs leading-5 text-[#7d818b]">{hint}</p> : null}
@@ -43,7 +43,7 @@ export function CreateStaffForm() {
         <input
           name="email"
           type="email"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           placeholder="staff@example.com"
         />
       </div>
@@ -53,7 +53,7 @@ export function CreateStaffForm() {
         <input
           name="phone"
           type="tel"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           placeholder="+234…"
         />
       </div>

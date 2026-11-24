@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,12 +10,13 @@ import { radius, spacing, typography, useTheme, makeStyles } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StaffPay'>;
 
-/** One person's monthly salary and the account it's paid into (checked with the bank first). */
+/** One person's salary, commission, and the account they're paid into. */
 export function StaffPayScreen({ navigation, route }: Props) {
   const { colors } = useTheme();
   const styles = useStyles();
   const { staffId, name, pay } = route.params;
   const [salary, setSalary] = useState(pay.monthlySalaryKobo ? String(pay.monthlySalaryKobo / 100) : '');
+  const [commission, setCommission] = useState(pay.commissionBps ? String(pay.commissionBps / 100) : '');
   const [bank, setBank] = useState<Bank | null>(null);
   const [number, setNumber] = useState('');
   const [checkedName, setCheckedName] = useState<string | null>(null);
@@ -35,12 +36,18 @@ export function StaffPayScreen({ navigation, route }: Props) {
 
   async function save() {
     const amount = Math.round(Number(salary.replace(/,/g, '')) * 100);
+    const pct = Number(commission.replace(/,/g, ''));
     if (salary && (!Number.isFinite(amount) || amount < 0)) { setError('Enter the monthly salary in naira.'); return; }
+    if (commission && (!Number.isFinite(pct) || pct < 0 || pct > 100)) {
+      setError('Commission must be between 0 and 100%.');
+      return;
+    }
     if (changingAccount && !checkedName) { setError('Check the account before saving.'); return; }
     setBusy(true);
     try {
       await setStaffPay(staffId, {
-        ...(salary ? { monthlySalaryKobo: amount } : {}),
+        ...(salary !== '' ? { monthlySalaryKobo: amount } : {}),
+        ...(commission !== '' ? { commissionBps: Math.round(pct * 100) } : {}),
         ...(changingAccount && bank ? { bankCode: bank.code, accountNumber: number } : {}),
       });
       navigation.goBack();
@@ -56,13 +63,31 @@ export function StaffPayScreen({ navigation, route }: Props) {
           <Feather name="arrow-left" size={20} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>{name}</Text>
-        <Text style={styles.subtitle}>Salary and bank account</Text>
+        <Text style={styles.subtitle}>Salary, commission, and bank account</Text>
       </SafeAreaView>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={[styles.card, { gap: spacing.sm }]}>
           <Text style={styles.label}>Monthly salary (₦)</Text>
           <TextInput style={styles.input} value={salary} onChangeText={(t) => setSalary(t.replace(/[^\d.]/g, ''))} keyboardType="decimal-pad" placeholder="e.g. 120000" placeholderTextColor={colors.textMuted} />
           {salary ? <Text style={styles.meta}>{naira(Math.round(Number(salary) * 100) || 0)} a month</Text> : null}
+        </View>
+
+        <View style={[styles.card, { gap: spacing.sm }]}>
+          <Text style={styles.label}>Commission (%)</Text>
+          <TextInput
+            style={styles.input}
+            value={commission}
+            onChangeText={(t) => setCommission(t.replace(/[^\d.]/g, ''))}
+            keyboardType="decimal-pad"
+            placeholder="e.g. 40"
+            placeholderTextColor={colors.textMuted}
+          />
+          <Text style={styles.meta}>Percent of this person's completed bookings in the payroll month.</Text>
+          {pay.commissionKobo > 0 ? (
+            <Text style={styles.meta}>
+              This period ≈ {naira(pay.commissionKobo)} on {naira(pay.salesKobo)} completed
+            </Text>
+          ) : null}
         </View>
 
         <View style={[styles.card, { gap: spacing.sm }]}>
@@ -98,7 +123,7 @@ export function StaffPayScreen({ navigation, route }: Props) {
 
 const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md,},
+  header: { backgroundColor: colors.background, paddingHorizontal: 24, paddingBottom: spacing.md },
   back: { width: 44, height: 44, justifyContent: 'center', marginTop: spacing.md },
   title: { fontSize: 22, letterSpacing: -0.6, lineHeight: 28, fontWeight: '700', color: colors.text },
   subtitle: { fontSize: 14, lineHeight: 19, color: colors.textSecondary, marginTop: 2 },

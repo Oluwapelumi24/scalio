@@ -76,7 +76,7 @@ export function ApproveRejectButtons({ vendorId, vendorName: _vendorName, manage
           name="note"
           placeholder="Reason for rejection (optional — emailed to the owner)"
           rows={2}
-          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
+          className="w-full text-xs bg-white text-gray-900 placeholder:text-gray-400 border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
         />
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
         <div className="flex gap-2">

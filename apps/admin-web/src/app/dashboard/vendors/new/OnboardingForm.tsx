@@ -94,7 +94,7 @@ export function OnboardingForm() {
               <input
                 value={fields.businessName}
                 onChange={(e) => set('businessName', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="e.g. Glam Nails Studio"
               />
             </div>
@@ -105,7 +105,7 @@ export function OnboardingForm() {
                 <input
                   value={fields.slug}
                   onChange={(e) => set('slug', e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm font-mono focus:outline-none"
+                  className="flex-1 bg-white px-3 py-2 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none"
                   placeholder="glam-nails"
                 />
               </div>
@@ -125,7 +125,7 @@ export function OnboardingForm() {
               <input
                 value={fields.address}
                 onChange={(e) => set('address', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="e.g. 15 Bode Thomas St, Surulere, Lagos"
               />
             </div>
@@ -135,7 +135,7 @@ export function OnboardingForm() {
                 value={fields.description}
                 onChange={(e) => set('description', e.target.value)}
                 rows={3}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                 placeholder="What makes this business special? What services do they specialise in?"
               />
             </div>
@@ -163,7 +163,7 @@ export function OnboardingForm() {
               <input
                 value={fields.ownerName}
                 onChange={(e) => set('ownerName', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="e.g. Amaka Okafor"
               />
             </div>
@@ -173,7 +173,7 @@ export function OnboardingForm() {
                 type="email"
                 value={fields.ownerEmail}
                 onChange={(e) => set('ownerEmail', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 placeholder="amaka@glamnails.ng"
               />
             </div>
@@ -189,7 +189,7 @@ export function OnboardingForm() {
                 <input
                   value={fields.themeColor}
                   onChange={(e) => set('themeColor', e.target.value)}
-                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   placeholder="#6366f1"
                 />
               </div>

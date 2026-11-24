@@ -13,6 +13,8 @@ export type RootStackParamList = {
   // (return the user to where they were instead).
   SignUp: { mode?: 'onboarding' } | undefined;
   SignIn: { mode?: 'onboarding' } | undefined;
+  ForgotPassword: undefined;
+  DeleteAccount: undefined;
   VendorProfile: { vendor: Vendor };
   ServiceSelection: { vendor: Vendor };
   ScheduleAppointment: { vendor: Vendor; services: Service[] };

@@ -50,6 +50,7 @@ Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses t
 | `PUBLIC_BOOKING_URL` | `https://www.venohq.com/book` |
 | `VENDOR_WEB_URL` | `https://…` dashboard origin (invite links) |
 | `ADMIN_WEB_URL` | `https://admin.venohq.com` (admin invite /accept-invite links) |
+| `CORS_ORIGINS` | Comma-separated browser origins (e.g. `https://app.venohq.com,https://admin.venohq.com,https://www.venohq.com`) |
 
 ## Vendor-web (Railway)
 

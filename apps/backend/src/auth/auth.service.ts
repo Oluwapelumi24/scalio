@@ -1,9 +1,21 @@
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+  forwardRef,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
-import { eq, type InferSelectModel } from 'drizzle-orm';
+import { and, eq, gt, inArray, sql, type InferSelectModel } from 'drizzle-orm';
+import { BookingService } from '../booking/booking.service';
 import { DB, type Database } from '../db/db.module';
-import { users } from '../db/schema';
+import { ACTIVE_BOOKING_STATUSES, bookings, customers, users } from '../db/schema';
+import { MailService } from '../mail/mail.service';
+import { UserPasswordResetService } from './user-password-reset.service';
 
 const PASSWORD_HASH_ROUNDS = 10;
 
@@ -25,9 +37,14 @@ export interface UserSession {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly jwt: JwtService,
+    private readonly passwordReset: UserPasswordResetService,
+    private readonly mail: MailService,
+    @Inject(forwardRef(() => BookingService)) private readonly bookings: BookingService,
   ) {}
 
   async signUp(name: string, email: string, password: string, phone?: string): Promise<UserSession> {
@@ -87,6 +104,79 @@ export class AuthService {
     if (!updated) {
       throw new NotFoundException(`User ${userId} not found`);
     }
+  }
+
+  /** Always resolves — never reveals whether the email is known. */
+  async requestPasswordReset(email: string): Promise<void> {
+    const normalised = email.trim().toLowerCase();
+    const [row] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(sql`lower(${users.email}) = ${normalised}`);
+    if (!row) return;
+
+    const code = await this.passwordReset.issueCode(normalised, row.id);
+    if (!code) return;
+    if (process.env.NODE_ENV !== 'production') {
+      this.logger.log(`Password reset code for ${normalised} is ${code}`);
+    }
+    await this.mail.sendPasswordResetEmail(email, code).catch((err: unknown) => {
+      this.logger.warn(`Password reset email to ${email} failed: ${err instanceof Error ? err.message : String(err)}`);
+    });
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<UserSession> {
+    const normalised = email.trim().toLowerCase();
+    const userId = await this.passwordReset.consumeCode(normalised, code);
+    if (!userId) throw new UnauthorizedException('Invalid or expired reset code.');
+
+    const passwordHash = await hash(newPassword, PASSWORD_HASH_ROUNDS);
+    const [updated] = await this.db
+      .update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!updated) throw new UnauthorizedException('Invalid or expired reset code.');
+    return this.issueSession(updated);
+  }
+
+  /**
+   * Requires the current password. Anonymises the user (tombstone email, cleared
+   * PII / push token) and cancels future active bookings via the state machine.
+   * Historical bookings and ledger rows are kept for vendors.
+   */
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const [row] = await this.db.select().from(users).where(eq(users.id, userId));
+    if (!row?.passwordHash || !(await compare(password, row.passwordHash))) {
+      throw new UnauthorizedException('Incorrect password.');
+    }
+
+    const future = await this.db
+      .select({ id: bookings.id })
+      .from(bookings)
+      .innerJoin(customers, eq(bookings.customerId, customers.id))
+      .where(
+        and(
+          eq(customers.userId, userId),
+          inArray(bookings.status, [...ACTIVE_BOOKING_STATUSES]),
+          gt(bookings.scheduledAt, new Date()),
+        ),
+      );
+
+    for (const booking of future) {
+      await this.bookings.cancelByCustomer(booking.id, 'Account deleted');
+    }
+
+    await this.db
+      .update(users)
+      .set({
+        name: 'Deleted user',
+        email: `deleted+${userId}@tombstone.invalid`,
+        phone: null,
+        passwordHash: null,
+        expoPushToken: null,
+      })
+      .where(eq(users.id, userId));
   }
 
   private issueSession(row: InferSelectModel<typeof users>): UserSession {

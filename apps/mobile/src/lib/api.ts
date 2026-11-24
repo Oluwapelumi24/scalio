@@ -57,6 +57,27 @@ export function signIn(email: string, password: string): Promise<AuthSession> {
   });
 }
 
+export function forgotPassword(email: string): Promise<void> {
+  return request<void>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(email: string, code: string, password: string): Promise<AuthSession> {
+  return request<AuthSession>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, password }),
+  });
+}
+
+export function deleteAccount(password: string): Promise<void> {
+  return request<void>('/auth/me', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
+}
+
 /** Validates a stored session token on app launch; throws if it's expired or the account is gone. */
 export function getMe(accessToken: string): Promise<AppUser> {
   return request<AppUser>('/auth/me', {

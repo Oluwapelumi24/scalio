@@ -25,7 +25,7 @@ Until custom domains exist, use the Railway `*.up.railway.app` URLs in env vars.
 
 ## Backend (Railway)
 
-Uses root `railway.json`. Refuses to boot in production if required vars are missing (see `production-config.ts`).
+Config: `apps/backend/railway.json`. Refuses to boot in production if required vars are missing (see `production-config.ts`).
 
 | Variable | Purpose |
 |---|---|
@@ -50,12 +50,14 @@ Config: `apps/vendor-web/railway.json`. Set service root / config-as-code to tha
 
 ## Admin-web (Railway) — P0 (required to approve listings)
 
-Config: `apps/admin-web/railway.json`. Without this service, registered businesses stay `pending_review` and never appear on `/vendors`.
+New services cannot opt into Config-as-code. Use the Dockerfile instead. Without this service, registered businesses stay `pending_review` and never appear on `/vendors`.
 
 1. Railway → **New service** → same GitHub repo as backend  
-2. Settings → **Config-as-code** path: `apps/admin-web/railway.json`  
-3. Variables: `API_URL` = backend public HTTPS origin (no trailing slash)  
-4. Deploy until `https://<admin-service>/login` returns 200  
+2. **Do not** rely on Config-as-code (path will not stick)  
+3. Variables:
+   - `API_URL` = backend public HTTPS origin (no trailing slash)
+   - `RAILWAY_DOCKERFILE_PATH` = `apps/admin-web/Dockerfile`
+4. Deploy until Build logs show `Using detected Dockerfile` and `/login` returns 200  
 5. Create the first admin (uses production `DATABASE_URL` from the backend service):  
    `DATABASE_URL=… npm run create-admin --workspace=apps/backend -- you@email "Your Name"`  
 6. Sign in → **Reviews** → Approve  
@@ -64,6 +66,7 @@ Config: `apps/admin-web/railway.json`. Without this service, registered business
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin |
+| `RAILWAY_DOCKERFILE_PATH` | `apps/admin-web/Dockerfile` |
 
 Approve/reject emails the business `ownerEmail` when `RESEND_API_KEY` is set on the backend. Rejected owners re-enter the queue when they update their business profile.
 

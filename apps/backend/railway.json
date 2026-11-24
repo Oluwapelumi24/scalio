@@ -8,7 +8,7 @@
       "/packages/**",
       "/package.json",
       "/package-lock.json",
-      "/railway.json"
+      "/apps/backend/railway.json"
     ]
   },
   "deploy": {

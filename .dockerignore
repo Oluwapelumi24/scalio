@@ -1,0 +1,13 @@
+**/node_modules
+**/.next
+**/dist
+**/.git
+**/.env*
+**/coverage
+**/*.md
+apps/mobile
+apps/vendor-mobile
+apps/website
+apps/backend/dist
+**/.DS_Store
+**/tsconfig.tsbuildinfo

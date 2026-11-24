@@ -12,7 +12,7 @@
     ]
   },
   "deploy": {
-    "startCommand": "sh -c 'cd apps/admin-web && npx next start --hostname 0.0.0.0 --port ${PORT:-3002}'",
+    "startCommand": "sh -c 'cd apps/admin-web && npm run start'",
     "healthcheckPath": "/login",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",

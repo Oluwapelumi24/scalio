@@ -27,4 +27,4 @@ DELETE FROM drizzle.__drizzle_migrations;
 --   created_at = the baseline entry's `when` from meta/_journal.json (NOT wall-clock now)
 -- If created_at is lower than the journal `when`, migrate() will re-run the baseline.
 INSERT INTO drizzle.__drizzle_migrations (hash, created_at)
-VALUES ('REPLACE_WITH_SHA256_FROM_db-mark-baseline.mjs', 1795537826593);
+VALUES ('REPLACE_WITH_SHA256_FROM_db-mark-baseline.mjs', 1795540174586);

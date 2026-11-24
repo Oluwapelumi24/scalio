@@ -9,7 +9,7 @@
 | Duplicate prefixes | Two `0007_*` files; two `0009_*` files |
 | Orphan SQL (not in journal) | `0007_vendor_address_rating.sql`, `0008_vendor_approval_status.sql` |
 | Journal ↔ filename mismatch | Journal tag `0008_vendor_registration_number` maps to file `0009_vendor_registration_number.sql` |
-| Snapshots lag journal | `meta/*_snapshot.json` stops at `0016`; journal continues through `0022_staff_commission` |
+| Snapshots lag journal | `meta/*_snapshot.json` stops at `0016`; journal continues through `0023_users_deleted_at` (PR 6) |
 | Schema only via `db:push` | Several columns exist in `src/db/schema` but in **no** migration SQL (see below) |
 | No migrate path | Only `db:push` existed; prod likely diverged via push |
 
@@ -42,6 +42,7 @@
 | `0020_vendor_notifications.sql` | Yes (no snapshot) | vendor_notifications; staff.notifications_read_at | Yes |
 | `0021_slot_interval.sql` | Yes (no snapshot) | `vendors.slot_interval_minutes` | Yes |
 | `0022_staff_commission.sql` | Yes (no snapshot) | commission columns on staff_pay / salary_payouts | Yes |
+| `0023_users_deleted_at.sql` | Yes (no snapshot; from PR 6) | `users.deleted_at` | Yes |
 
 ## Schema present in TypeScript but **not** covered by any migration SQL
 
@@ -60,10 +61,12 @@ These almost certainly landed via `db:push` against some environments. Productio
 ## Snapshot / journal health
 
 - Snapshots: `meta/0000_snapshot.json` … `meta/0016_snapshot.json` only.
-- Journal entries idx 17–22 have **no** matching snapshots, so `drizzle-kit generate` against the live `out` folder cannot reliably diff from tip.
+- Journal entries idx 17–23 have **no** matching snapshots, so `drizzle-kit generate` against the live `out` folder cannot reliably diff from tip.
 - Duplicate / mis-tagged files mean `drizzle-kit migrate` cannot be trusted on this history as-is.
 
 ## Production cutover (corrected)
+
+**Prerequisite (PR 6):** prod must already have **`0023` (`users.deleted_at`) applied manually before cutover.** The regenerated baseline includes `users.deleted_at`; marking the baseline applied does not run DDL, so if prod is missing that column the app will break after deploy even though migrate looks clean. Apply `drizzle/0023_users_deleted_at.sql` (or equivalent `ALTER TABLE "users" ADD COLUMN "deleted_at" timestamptz`) on prod first, then continue.
 
 **Never** run `db:migrate` against production (or any DB that already has tables) while `drizzle.__drizzle_migrations` is empty and the baseline `.sql` is present — that executes every `CREATE TABLE` in the baseline. Mark the baseline applied first, without running its SQL.
 
@@ -196,11 +199,15 @@ Old `db:push` is removed from package.json (replaced by the guarded name).
 
 ## Scratch generate note
 
-Command used (config was temporary and deleted):
+Regenerated after rebasing onto PR 6 (schema includes `users.deleted_at`). Config was temporary and deleted:
 
 ```bash
-npx drizzle-kit generate --config=drizzle.scratch.config.ts
-# out → /tmp/veno-drizzle-scratch (39 tables → 0000_*.sql)
+npx drizzle-kit generate --config=drizzle.scratch.config.ts --name baseline_current_schema
+# out → /tmp/veno-drizzle-scratch (39 tables; users 8 columns incl. deleted_at → 0000_baseline_current_schema.sql)
 ```
 
-Copied artifacts: `drizzle/repair/0000_baseline_current_schema.sql`, `0000_snapshot.json`, `_journal.baseline.json`.
+Copied artifacts: `drizzle/repair/0000_baseline_current_schema.sql`, `0000_snapshot.json`, `_journal.baseline.json` (`when` = `1795540174586`).
+
+Dry-run mark hash (sha256 of the baseline `.sql` as `db-mark-baseline.mjs` prints it):
+
+`1b419d5024d85c5f3255d027ad0025b27c9404bb0a905e50475ca465b159d66d`

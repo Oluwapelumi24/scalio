@@ -59,6 +59,7 @@ CREATE TABLE "users" (
 	"password_hash" text,
 	"expo_push_token" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint

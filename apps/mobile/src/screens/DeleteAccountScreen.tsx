@@ -68,6 +68,6 @@ export function DeleteAccountScreen({ navigation }: Props) {
 }
 
 const useStyles = makeStyles((colors) => ({
-  summary: { color: colors.textPrimary, fontSize: 15, lineHeight: 22 },
+  summary: { color: colors.text, fontSize: 15, lineHeight: 22 },
   warning: { color: colors.textSecondary, fontSize: 15, lineHeight: 22 },
 }));

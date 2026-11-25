@@ -18,7 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node ./scripts/db-migrate.mjs",
+    "db:push:local-only": "node ./scripts/db-push-local-only.mjs",
     "create-admin": "node dist/src/scripts/create-admin.js"
   },
   "dependencies": {

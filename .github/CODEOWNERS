@@ -1,7 +1,0 @@
-# Placeholder team — replace `@veno/core` with the real GitHub team once created.
-apps/backend/src/auth/** @veno/core
-apps/backend/src/vendor-auth/** @veno/core
-apps/backend/src/super-admin-auth/** @veno/core
-apps/backend/src/payments/** @veno/core
-apps/backend/src/finance/** @veno/core
-apps/backend/drizzle/** @veno/core

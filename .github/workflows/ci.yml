@@ -29,6 +29,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build --workspace=@veno/shared-types
+      - name: shared-types tests
+        run: npm test --workspace=@veno/shared-types --if-present
 
   backend:
     name: backend
@@ -42,6 +44,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build --workspace=@veno/shared-types
+      - name: shared-types tests
+        run: npm test --workspace=@veno/shared-types --if-present
       - name: Typecheck
         working-directory: apps/backend
         run: npx tsc --noEmit
@@ -64,6 +68,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build --workspace=@veno/shared-types
+      - name: shared-types tests
+        run: npm test --workspace=@veno/shared-types --if-present
       - name: ESLint (no --fix)
         working-directory: apps/backend
         run: npx eslint "{src,apps,libs,test}/**/*.ts"
@@ -87,6 +93,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build --workspace=@veno/shared-types
+      - name: shared-types tests
+        run: npm test --workspace=@veno/shared-types --if-present
       - name: Typecheck
         working-directory: apps/${{ matrix.app }}
         run: npx tsc --noEmit
@@ -117,6 +125,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build --workspace=@veno/shared-types
+      - name: shared-types tests
+        run: npm test --workspace=@veno/shared-types --if-present
       - name: Typecheck
         working-directory: apps/${{ matrix.app }}
         run: npx tsc --noEmit

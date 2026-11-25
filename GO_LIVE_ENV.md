@@ -53,8 +53,12 @@ Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses t
 | `VENDOR_WEB_URL` | `https://…` dashboard origin (invite links) |
 | `ADMIN_WEB_URL` | `https://admin.venohq.com` (admin invite /accept-invite links) |
 | `CORS_ORIGINS` | Comma-separated browser origins (e.g. `https://app.venohq.com,https://admin.venohq.com,https://www.venohq.com`) |
+| `PAYSTACK_SECRET_KEY` | Required in production (charges + webhook verify) |
+| `SENTRY_DSN` | Optional; omit to boot without Sentry |
 
 **Redis is required for API availability.** Rate-limit counters and password-reset issue caps live in Redis. If Redis is down, every throttled API route fails — treat Redis outage as an API outage in the runbook.
+
+Health check path: **`GET /health`** (200 when Postgres + Redis respond within 2s each; otherwise 503). Point Railway healthchecks and uptime monitors here.
 
 ## Vendor-web (Railway)
 
@@ -64,6 +68,7 @@ Config: `apps/vendor-web/railway.json`. Set service root / config-as-code to tha
 |---|---|
 | `API_URL` | Backend origin |
 | `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend |
+| `NEXT_PUBLIC_SENTRY_DSN` | Optional browser/server Sentry (omit to skip) |
 
 ## Admin-web (Railway) — P0 (required to approve listings)
 
@@ -85,8 +90,11 @@ New services cannot opt into Config-as-code. Use the Dockerfile instead. Without
 | `API_URL` | Backend origin |
 | `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend |
 | `RAILWAY_DOCKERFILE_PATH` | `apps/admin-web/Dockerfile` |
+| `NEXT_PUBLIC_SENTRY_DSN` | Optional Sentry (omit to skip) |
 
 Approve/reject emails the business `ownerEmail` when `RESEND_API_KEY` is set on the backend. Rejected owners re-enter the queue when they update their business profile.
+
+Website (Vercel) also accepts optional `NEXT_PUBLIC_SENTRY_DSN`.
 
 ## Vendor-mobile (EAS) — P1
 
@@ -102,7 +110,7 @@ npx eas build --platform all --profile preview
 
 ## Smoke test after each deploy
 
-1. `GET {API_URL}/` returns 200  
+1. `GET {API_URL}/health` returns 200 `{status:'ok',...}`  
 2. `GET {API_URL}/vendors` returns JSON (not Railway timeout HTML)  
 3. Open `{VENDOR_WEB_URL}/login` and sign in  
 4. From `www.venohq.com/login` you redirect to the dashboard origin when `VENDOR_WEB_URL` is set  

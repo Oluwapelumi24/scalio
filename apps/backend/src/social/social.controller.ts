@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, ForbiddenException, Get, Header, Headers, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query, Req, UseGuards, type RawBodyRequest } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { IsDateString, IsIn, IsOptional, IsArray, ArrayMinSize, ArrayMaxSize } from 'class-validator';
 import { randomBytes } from 'node:crypto';
@@ -77,6 +78,7 @@ export class SocialController {
 }
 
 /** Public endpoints Meta calls. No Veno sign-in: each one is verified another way. */
+@SkipThrottle()
 @Controller('social/meta')
 export class MetaCallbackController {
   constructor(

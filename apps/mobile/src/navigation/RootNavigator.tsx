@@ -9,6 +9,8 @@ import { LocationSetupScreen } from '../screens/LocationSetupScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import { SignUpScreen } from '../screens/SignUpScreen';
 import { SignInScreen } from '../screens/SignInScreen';
+import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
+import { DeleteAccountScreen } from '../screens/DeleteAccountScreen';
 import { VendorProfileScreen } from '../screens/VendorProfileScreen';
 import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
 import { ScheduleAppointmentScreen } from '../screens/ScheduleAppointmentScreen';
@@ -84,6 +86,8 @@ export function RootNavigator() {
         <Stack.Screen name="Main" component={MainTabNavigator} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
         <Stack.Screen name="SignIn" component={SignInScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
         <Stack.Screen name="VendorProfile" component={VendorProfileScreen} />
         <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
         <Stack.Screen name="ScheduleAppointment" component={ScheduleAppointmentScreen} />

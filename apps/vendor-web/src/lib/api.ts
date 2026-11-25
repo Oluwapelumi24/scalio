@@ -1,3 +1,5 @@
+import { venoProxyHeaders } from './proxy-headers'
+
 const BASE = (process.env.API_URL ?? 'http://127.0.0.1:3000').replace(/\/$/, '')
 
 export class ApiError extends Error {
@@ -14,6 +16,7 @@ export async function apiFetch<T = unknown>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...(await venoProxyHeaders()),
     ...(init.headers as Record<string, string>),
   }
   if (token) headers['Authorization'] = `Bearer ${token}`

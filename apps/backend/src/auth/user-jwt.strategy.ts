@@ -24,7 +24,7 @@ export class UserJwtStrategy extends PassportStrategy(Strategy, 'user-jwt') {
   /** Re-resolves the user on every request so a deleted account loses access immediately, not just at token expiry. */
   async validate(payload: UserJwtPayload) {
     const user = await this.auth.findById(payload.sub);
-    if (!user) {
+    if (!user || user.deletedAt || !user.passwordHash) {
       throw new UnauthorizedException('Your session is no longer valid — please sign in again.');
     }
     return user;

@@ -20,6 +20,7 @@ Until custom domains exist, use the Railway `*.up.railway.app` URLs in env vars.
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin (no trailing slash) |
+| `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend (server actions forward client IP) |
 | `VENDOR_WEB_URL` | Seller dashboard origin — **required** or login lands on `/business` forever |
 | `NEXT_PUBLIC_VENDOR_WEB_URL` | Same URL for navbar / partners CTAs |
 
@@ -42,6 +43,7 @@ Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses t
 | `DATABASE_URL` | Postgres |
 | `REDIS_URL` | Redis |
 | `USER_JWT_SECRET` / `VENDOR_JWT_SECRET` / `ADMIN_JWT_SECRET` | ≥32 chars, not `dev-*` |
+| `INTERNAL_PROXY_SECRET` | ≥32 chars; same value on backend + all three Next apps so server actions can forward the real client IP for rate limits |
 | `PII_ENCRYPTION_KEY` | Bank account encryption |
 | `MEDIA_URL_SECRET` | Signed media URLs |
 | `RESEND_API_KEY` | Signup / reset email |
@@ -50,6 +52,9 @@ Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses t
 | `PUBLIC_BOOKING_URL` | `https://www.venohq.com/book` |
 | `VENDOR_WEB_URL` | `https://…` dashboard origin (invite links) |
 | `ADMIN_WEB_URL` | `https://admin.venohq.com` (admin invite /accept-invite links) |
+| `CORS_ORIGINS` | Comma-separated browser origins (e.g. `https://app.venohq.com,https://admin.venohq.com,https://www.venohq.com`) |
+
+**Redis is required for API availability.** Rate-limit counters and password-reset issue caps live in Redis. If Redis is down, every throttled API route fails — treat Redis outage as an API outage in the runbook.
 
 ## Vendor-web (Railway)
 
@@ -58,6 +63,7 @@ Config: `apps/vendor-web/railway.json`. Set service root / config-as-code to tha
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin |
+| `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend |
 
 ## Admin-web (Railway) — P0 (required to approve listings)
 
@@ -77,6 +83,7 @@ New services cannot opt into Config-as-code. Use the Dockerfile instead. Without
 | Variable | Purpose |
 |---|---|
 | `API_URL` | Backend origin |
+| `INTERNAL_PROXY_SECRET` | Same ≥32-char secret as the backend |
 | `RAILWAY_DOCKERFILE_PATH` | `apps/admin-web/Dockerfile` |
 
 Approve/reject emails the business `ownerEmail` when `RESEND_API_KEY` is set on the backend. Rejected owners re-enter the queue when they update their business profile.
@@ -100,3 +107,18 @@ npx eas build --platform all --profile preview
 3. Open `{VENDOR_WEB_URL}/login` and sign in  
 4. From `www.venohq.com/login` you redirect to the dashboard origin when `VENDOR_WEB_URL` is set  
 5. Open `{ADMIN_URL}/login` and approve a pending vendor  
+6. **Per-IP login throttle (proxy IP must not collapse all users):** from one machine, forge a leftmost `X-Forwarded-For` and hit vendor login through the Next app (server action / login form posts to the API via `apiFetch`, which prefers `x-real-ip` / rightmost XFF). Eleven requests from the same machine must hit the per-IP login bucket — the **11th must return 429**. A forged leftmost XFF alone must **not** get you a fresh bucket.
+
+```bash
+# Against the public vendor-web origin (or website /login handoff). Adjust path/body to match the live login action.
+# Expect: first 10 succeed or return auth errors (401/400); 11th is 429 from the API throttle.
+for i in $(seq 1 11); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$VENDOR_WEB_URL/login" \
+    -H 'content-type: application/x-www-form-urlencoded' \
+    -H 'X-Forwarded-For: 203.0.113.99' \
+    --data 'email=throttle-smoke@example.com&password=wrong')
+  echo "$i $code"
+done
+# Confirm the 11th line is 429 (or the upstream API 429 surfaced by the action).
+```
+

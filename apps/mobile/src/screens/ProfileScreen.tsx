@@ -86,6 +86,13 @@ export function ProfileScreen({ navigation }: Props) {
 
       <ListGroup title="Account">
         <ListRow
+          icon="trash-2"
+          label="Delete account"
+          trailing="chevron"
+          danger
+          onPress={() => navigation.navigate('DeleteAccount')}
+        />
+        <ListRow
           icon="log-out"
           label="Sign out"
           trailing="none"

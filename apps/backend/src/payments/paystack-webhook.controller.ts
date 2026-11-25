@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
   type RawBodyRequest,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { BookingService } from '../booking/booking.service';
 import { PaystackService } from './paystack.service';
@@ -22,6 +23,7 @@ interface PaystackWebhookEvent {
   };
 }
 
+@SkipThrottle()
 @Controller('payments/paystack')
 export class PaystackWebhookController {
   constructor(

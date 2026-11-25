@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { hours, minutes, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import type Redis from 'ioredis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { emailTracker, skipUnlessApplied } from './common/throttling/apply-throttlers';
+import { VenoThrottlerGuard } from './common/throttling/veno-throttler.guard';
 import { DbModule } from './db/db.module';
-import { RedisModule } from './redis/redis.module';
+import { RedisModule, REDIS } from './redis/redis.module';
 import { MailModule } from './mail/mail.module';
 import { PaystackModule } from './payments/paystack.module';
 import { PaymentsModule } from './payments/payments.module';
@@ -33,6 +39,48 @@ import { InboxModule } from './inbox/inbox.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRootAsync({
+      imports: [RedisModule],
+      inject: [REDIS],
+      useFactory: (redis: Redis) => ({
+        throttlers: [
+          { name: 'default', ttl: minutes(1), limit: 300 },
+          {
+            name: 'authLoginIp',
+            ttl: minutes(1),
+            limit: 10,
+            skipIf: skipUnlessApplied('authLoginIp'),
+          },
+          {
+            name: 'authLoginEmail',
+            ttl: minutes(1),
+            limit: 5,
+            skipIf: skipUnlessApplied('authLoginEmail'),
+            getTracker: emailTracker,
+          },
+          {
+            name: 'authEmailHour',
+            ttl: hours(1),
+            limit: 5,
+            skipIf: skipUnlessApplied('authEmailHour'),
+            getTracker: emailTracker,
+          },
+          {
+            name: 'authIpHour',
+            ttl: hours(1),
+            limit: 20,
+            skipIf: skipUnlessApplied('authIpHour'),
+          },
+          {
+            name: 'authStrictIp',
+            ttl: minutes(1),
+            limit: 10,
+            skipIf: skipUnlessApplied('authStrictIp'),
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(redis),
+      }),
+    }),
     DbModule,
     RedisModule,
     MailModule,
@@ -60,6 +108,9 @@ import { InboxModule } from './inbox/inbox.module';
     InboxModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: VenoThrottlerGuard },
+  ],
 })
 export class AppModule {}

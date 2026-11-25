@@ -3,6 +3,7 @@ dist/
 build/
 .expo/
 .next/
+*.tsbuildinfo
 *.log
 .env
 .env.*

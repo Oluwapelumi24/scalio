@@ -14,7 +14,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test src/client-ip.spec.ts"
   },
   "files": [
     "dist",

@@ -19,4 +19,7 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),
+  // Soft-delete marker. JWT validation and sign-in reject rows with this set
+  // so anonymised accounts cannot keep using existing tokens.
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });

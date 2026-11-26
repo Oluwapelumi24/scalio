@@ -5,16 +5,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { VENDOR_LOGIN_URL, VENDOR_REGISTER_URL } from '@/lib/constants'
-import { WAITLIST_CTA, WAITLIST_HREF } from '@/components/site/JoinWaitlist'
 
 const LINKS = [
   { label: 'Book', href: '/app' },
-  { label: 'Users', href: '/#customers' },
-  { label: 'Partners', href: '/partners' },
-  { label: 'FAQ', href: '/#faq' },
-]
-
-const PRELAUNCH_LINKS = [
   { label: 'Users', href: '/#customers' },
   { label: 'Partners', href: '/partners' },
   { label: 'FAQ', href: '/#faq' },
@@ -30,39 +23,29 @@ export function Logo({ light = false }: { light?: boolean }) {
   )
 }
 
-/**
- * Sits solid on the pale hero so the logo and Sign in stay readable.
- * Pre-launch swaps the primary action for the waitlist.
- */
-export function Navbar({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
+/** Fixed marketing nav — solid on the pale hero so Sign in stays readable. */
+export function Navbar() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  const links = site === 'prelaunch' ? PRELAUNCH_LINKS : LINKS
   const partnersPath = '/partners'
   const isPartners = pathname === partnersPath || pathname.startsWith(`${partnersPath}/`)
   const isActive = (href: string) => !href.includes('#') && pathname.startsWith(href)
-  const homeHref = '/'
   const signInHref = isPartners ? VENDOR_LOGIN_URL : '/app/sign-in'
   const signInClass =
     'inline-flex h-12 items-center justify-center rounded-[20px] border border-slate-300 px-5 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-50'
-  const primary =
-    site === 'prelaunch'
-      ? { label: WAITLIST_CTA, href: WAITLIST_HREF }
-      : isPartners
-        ? { label: 'Register your business', href: VENDOR_REGISTER_URL }
-        : { label: 'Book a service', href: '/app' }
+  const primary = isPartners
+    ? { label: 'Register your business', href: VENDOR_REGISTER_URL }
+    : { label: 'Book a service', href: '/app' }
 
   return (
-    <header
-      className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-md"
-    >
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href={homeHref} aria-label="Veno home">
+        <Link href="/" aria-label="Veno home">
           <Logo />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
-          {links.map((link) => (
+          {LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -77,17 +60,15 @@ export function Navbar({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          {site === 'live' ? (
-            isPartners ? (
-              <a href={signInHref} className={signInClass}>
-                Sign in
-              </a>
-            ) : (
-              <Link href={signInHref} className={signInClass}>
-                Sign in
-              </Link>
-            )
-          ) : null}
+          {isPartners ? (
+            <a href={signInHref} className={signInClass}>
+              Sign in
+            </a>
+          ) : (
+            <Link href={signInHref} className={signInClass}>
+              Sign in
+            </Link>
+          )}
           <a
             href={primary.href}
             className="inline-flex h-12 items-center justify-center rounded-[20px] bg-navy px-5 text-sm font-semibold text-white transition-colors hover:bg-navy-deep"
@@ -109,7 +90,7 @@ export function Navbar({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
       {open ? (
         <div className="border-t border-slate-100 bg-white px-6 pb-6 pt-2 md:hidden">
           <nav className="flex flex-col" aria-label="Main">
-            {links.map((link) => (
+            {LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -120,17 +101,15 @@ export function Navbar({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
                 {link.label}
               </Link>
             ))}
-            {site === 'live' ? (
-              isPartners ? (
-                <a href={signInHref} className="py-3.5 text-base font-medium text-slate-700">
-                  Sign in
-                </a>
-              ) : (
-                <Link href={signInHref} onClick={() => setOpen(false)} className="py-3.5 text-base font-medium text-slate-700">
-                  Sign in
-                </Link>
-              )
-            ) : null}
+            {isPartners ? (
+              <a href={signInHref} className="py-3.5 text-base font-medium text-slate-700">
+                Sign in
+              </a>
+            ) : (
+              <Link href={signInHref} onClick={() => setOpen(false)} className="py-3.5 text-base font-medium text-slate-700">
+                Sign in
+              </Link>
+            )}
             <a
               href={primary.href}
               onClick={() => setOpen(false)}

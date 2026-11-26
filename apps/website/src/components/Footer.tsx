@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import { Logo } from './Navbar'
 import { VENDOR_LOGIN_URL, VENDOR_REGISTER_URL } from '@/lib/constants'
-import { WAITLIST_CTA } from '@/components/site/JoinWaitlist'
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -36,35 +35,6 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   },
 ]
 
-const PRELAUNCH_COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
-  {
-    title: 'For users',
-    links: [
-      { label: 'How it works', href: '/#customers' },
-      { label: 'Categories', href: '/#categories' },
-      { label: 'Questions', href: '/#faq' },
-      { label: WAITLIST_CTA, href: '/#waitlist' },
-    ],
-  },
-  {
-    title: 'For partners',
-    links: [
-      { label: 'Veno for partners', href: '/partners' },
-      { label: 'Get set up', href: '/partners#setup' },
-      { label: 'Inside the app', href: '/partners#features' },
-      { label: WAITLIST_CTA, href: '/partners#waitlist' },
-    ],
-  },
-  {
-    title: 'Legal',
-    links: [
-      { label: 'Privacy policy', href: '/privacy' },
-      { label: 'Terms and conditions', href: '/terms' },
-      { label: 'Cookie information', href: '/cookies' },
-    ],
-  },
-]
-
 // Only Nigeria today; the selector is ready for the next market.
 const COUNTRIES = [{ code: 'NG', name: 'Nigeria' }]
 
@@ -78,9 +48,8 @@ function Flag() {
   )
 }
 
-export function Footer({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
+export function Footer() {
   const [country] = useState(COUNTRIES[0])
-  const columns = site === 'prelaunch' ? PRELAUNCH_COLUMNS : COLUMNS
   return (
     <footer className="bg-[#111111] text-white">
       <div className="mx-auto max-w-7xl px-6 pb-10 pt-20">
@@ -97,7 +66,7 @@ export function Footer({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
-            {columns.map((c) => (
+            {COLUMNS.map((c) => (
               <div key={c.title}>
                 <h4 className="text-base font-semibold">{c.title}</h4>
                 <ul className="mt-6 space-y-3.5">

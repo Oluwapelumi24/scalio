@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react'
-import { WAITLIST_CTA, WAITLIST_HREF } from '@/components/site/JoinWaitlist'
+import { VENDOR_REGISTER_URL } from '@/lib/constants'
 
 const AUDIENCES = [
   {
@@ -32,7 +32,7 @@ const AUDIENCES = [
   },
 ] as const
 
-/** Photo row of who Veno is built for. Replaces The people on the pre-launch partners page. */
+/** Photo row of who Veno is built for. */
 export function BuiltFor() {
   return (
     <section id="built-for" className="bg-[#f5f6f8] px-6 py-16 sm:py-20">
@@ -45,10 +45,10 @@ export function BuiltFor() {
             </h2>
           </div>
           <a
-            href={WAITLIST_HREF}
+            href={VENDOR_REGISTER_URL}
             className="inline-flex w-fit shrink-0 items-center gap-2 rounded-[20px] bg-white px-5 text-sm font-semibold text-slate-950 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-black/5 transition-transform duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100 h-12"
           >
-            {WAITLIST_CTA}
+            Register your business
             <ArrowRight className="h-4 w-4" aria-hidden />
           </a>
         </div>

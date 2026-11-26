@@ -4,8 +4,6 @@ import { notFound } from 'next/navigation'
 import { MapPin, Star } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
-import { DesignSwitchGate } from '@/components/site/DesignSwitchGate'
-import { designMode } from '@/lib/design-preview'
 import { categoryFromSlug, listingsFor } from '@/lib/samples'
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
@@ -27,13 +25,11 @@ export default async function SampleListingsPage({
   const category = categoryFromSlug(slug)
   if (!category) notFound()
   const listings = listingsFor(category.name)
-  const mode = await designMode()
-  const prelaunch = mode === 'prelaunch'
   const place = where?.trim()
 
   return (
     <>
-      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
+      <Navbar />
       <main className="bg-white px-6 pb-24 pt-32">
         <div className="mx-auto max-w-6xl">
           <Link href="/#categories" className="text-sm font-semibold text-navy">
@@ -92,8 +88,7 @@ export default async function SampleListingsPage({
           </ul>
         </div>
       </main>
-      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
-      <DesignSwitchGate mode={mode} />
+      <Footer />
     </>
   )
 }

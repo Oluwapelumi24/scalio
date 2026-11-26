@@ -4,9 +4,7 @@ import { notFound } from 'next/navigation'
 import { MapPin, Star } from 'lucide-react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
-import { DesignSwitchGate } from '@/components/site/DesignSwitchGate'
 import { SampleBook } from '@/components/samples/SampleBook'
-import { designMode } from '@/lib/design-preview'
 import { categoryFromSlug, categorySlug, formatNaira, listingBySlug } from '@/lib/samples'
 
 export async function generateMetadata({
@@ -31,12 +29,10 @@ export default async function SampleListingPage({
   if (!category) notFound()
   const listing = listingBySlug(category.name, slug)
   if (!listing) notFound()
-  const mode = await designMode()
-  const prelaunch = mode === 'prelaunch'
 
   return (
     <>
-      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
+      <Navbar />
       <main className="bg-white px-6 pb-24 pt-32">
         <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div>
@@ -96,8 +92,7 @@ export default async function SampleListingPage({
           </div>
         </div>
       </main>
-      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
-      <DesignSwitchGate mode={mode} />
+      <Footer />
     </>
   )
 }

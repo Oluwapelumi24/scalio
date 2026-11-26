@@ -9,22 +9,17 @@ import { FeatureOrbs } from '@/components/home/Sections'
 import { Faq } from '@/components/Faq'
 import { Waitlist } from '@/components/Waitlist'
 import { Footer } from '@/components/Footer'
-import { DesignSwitchGate } from '@/components/site/DesignSwitchGate'
 import { CATEGORIES, SITE_URL } from '@/lib/constants'
-import { designMode } from '@/lib/design-preview'
 
-export async function generateMetadata(): Promise<Metadata> {
-  const prelaunch = (await designMode()) !== 'launch'
-  const title = prelaunch ? 'Veno — Opening soon. Join the waitlist.' : 'Veno — Book local services in Lagos'
-  const description = prelaunch
-    ? 'Veno is opening soon in Lagos. Join the waitlist to book spas, salons, laundry, tailors and other local services, or to list your business.'
-    : 'Book spas, salons, laundry, tailors and other local services in Lagos. See a free time and hold it.'
-  return {
-    title: { absolute: title },
-    description,
-    openGraph: { title, description },
-    twitter: { title, description },
-  }
+const title = 'Veno — Book local services in Lagos'
+const description =
+  'Book spas, salons, laundry, tailors and other local services in Lagos. See a free time and hold it.'
+
+export const metadata: Metadata = {
+  title: { absolute: title },
+  description,
+  openGraph: { title, description },
+  twitter: { title, description },
 }
 
 const STRUCTURED_DATA = {
@@ -43,30 +38,26 @@ const STRUCTURED_DATA = {
   ],
 }
 
-/** Waitlist home — the public site until booking opens. */
-export default async function Home() {
-  const mode = await designMode()
-  const prelaunch = mode === 'prelaunch'
-
+/** Live marketing home. */
+export default function Home() {
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA).replace(/</g, '\\u003c') }}
       />
-      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
+      <Navbar />
       <main>
-        <SearchHero prelaunch={prelaunch} />
-        <ServiceGrid prelaunch={prelaunch} />
-        <StandoutFeatures prelaunch={prelaunch} />
-        <FindBookShow prelaunch={prelaunch} />
-        <PayYourWay prelaunch={prelaunch} />
-        <FeatureOrbs prelaunch={prelaunch} />
-        <Faq variant={prelaunch ? 'prelaunch' : 'live'} />
-        <Waitlist purpose={prelaunch ? 'launch' : 'later'} />
+        <SearchHero />
+        <ServiceGrid />
+        <StandoutFeatures />
+        <FindBookShow />
+        <PayYourWay />
+        <FeatureOrbs />
+        <Faq />
+        <Waitlist purpose="later" />
       </main>
-      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
-      <DesignSwitchGate mode={mode} />
+      <Footer />
     </>
   )
 }

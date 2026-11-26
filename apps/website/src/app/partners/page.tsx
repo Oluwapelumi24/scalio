@@ -11,13 +11,11 @@ import { SetupSteps } from '@/components/partners/SetupSteps'
 import { FeatureTour } from '@/components/partners/FeatureTour'
 import { PartnerFaq } from '@/components/partners/PartnerFaq'
 import { PartnerFeatures } from '@/components/partners/PartnerFeatures'
-import { DesignSwitchGate } from '@/components/site/DesignSwitchGate'
-import { designMode } from '@/lib/design-preview'
 
 export const metadata: Metadata = {
-  title: 'Veno for partners — Opening soon. Join the waitlist.',
+  title: 'Veno for partners — Run your bookings in Lagos',
   description:
-    'Veno is opening soon for spas, laundromats, tailors, salons and other appointment businesses in Lagos. Join the waitlist and we will write when you can register.',
+    'Register your spa, laundromat, tailor, salon or other appointment business on Veno. Take bookings, payments and team roles in one place.',
   alternates: { canonical: '/partners' },
 }
 
@@ -36,16 +34,13 @@ const ROLES = [
   { Icon: Inbox, role: 'Front desk', sees: 'Books walk-ins and answers the inbox, without seeing your money.' },
 ]
 
-/** Waitlist partners page — the public partner pitch until registration opens. */
-export default async function PartnersPage() {
-  const mode = await designMode()
-  const prelaunch = mode === 'prelaunch'
-
+/** Live partners marketing page. */
+export default function PartnersPage() {
   return (
     <>
-      <Navbar site={prelaunch ? 'prelaunch' : 'live'} />
+      <Navbar />
       <main>
-        <BookedHero prelaunch={prelaunch} />
+        <BookedHero />
 
         <CategoryMarquee />
 
@@ -56,18 +51,14 @@ export default async function PartnersPage() {
         <section id="setup" className="scroll-mt-20 py-24">
           <div className="mx-auto max-w-6xl px-6">
             <Reveal className="mx-auto max-w-2xl text-center">
-              <span className="text-sm font-semibold uppercase tracking-wide text-navy">
-                {prelaunch ? 'When you join' : 'Get started'}
-              </span>
+              <span className="text-sm font-semibold uppercase tracking-wide text-navy">Get started</span>
               <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Booking-ready in an afternoon</h2>
               <p className="mt-4 text-lg text-slate-600">
-                {prelaunch
-                  ? 'When registration opens, the app walks you through four steps. You can take your first booking after the second.'
-                  : 'Once you are approved, the app walks you through four steps. You can take your first booking after the second.'}
+                Once you are approved, the app walks you through four steps. You can take your first booking after the second.
               </p>
             </Reveal>
             <div className="mt-12">
-              <SetupSteps prelaunch={prelaunch} />
+              <SetupSteps />
             </div>
           </div>
         </section>
@@ -158,15 +149,14 @@ export default async function PartnersPage() {
               <h2 className="text-center font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Questions from businesses</h2>
             </Reveal>
             <div className="mt-10">
-              <PartnerFaq variant={prelaunch ? 'prelaunch' : 'live'} />
+              <PartnerFaq />
             </div>
           </div>
         </section>
 
-        <Waitlist purpose={prelaunch ? 'launch' : 'later'} defaultAudience="vendor" />
+        <Waitlist purpose="later" defaultAudience="vendor" />
       </main>
-      <Footer site={prelaunch ? 'prelaunch' : 'live'} />
-      <DesignSwitchGate mode={mode} />
+      <Footer />
     </>
   )
 }

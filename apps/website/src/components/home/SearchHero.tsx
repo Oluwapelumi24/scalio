@@ -47,9 +47,9 @@ export function SearchHero({ prelaunch = false }: { prelaunch?: boolean }) {
   }
 
   return (
-    <section className={`relative isolate overflow-hidden bg-sky pt-40 sm:pt-48 ${prelaunch ? 'pb-16 sm:pb-20' : 'pb-28 sm:pb-36'}`}>
+    <section className="relative isolate overflow-hidden bg-sky pb-16 pt-40 sm:pb-20 sm:pt-48">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(90%_70%_at_0%_0%,#ffffff_0%,rgba(255,255,255,0)_56%),radial-gradient(78%_90%_at_100%_42%,#9eb4f8_0%,rgba(63,95,217,0.28)_40%,rgba(241,245,254,0)_72%),linear-gradient(180deg,#f1f5fe_0%,#e8edfa_48%,#d7e2fb_100%)]" />
-      <div className={`pointer-events-none absolute inset-x-0 bottom-0 -z-10 bg-gradient-to-b from-transparent to-white ${prelaunch ? 'h-16' : 'h-28'}`} />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-16 bg-gradient-to-b from-transparent to-white" />
 
       <div className="mx-auto max-w-5xl px-6 text-center">
         <AudienceSwitch active="individuals" surface="light" />
@@ -185,9 +185,9 @@ export function SearchHero({ prelaunch = false }: { prelaunch?: boolean }) {
             <span className="font-bold">Real free times.</span> Book in a minute, pay the way you like.
           </p>
         )}
-
       </div>
-      {prelaunch ? <HeroGallery /> : null}
+
+      <HeroGallery />
     </section>
   )
 }

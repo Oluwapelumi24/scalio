@@ -55,8 +55,8 @@ const SLIDES = [
 ] as const
 
 /**
- * Photo strip under the pre-launch hero. Two copies of the row let it loop
- * without a visible jump back to the start.
+ * Photo strip under the home hero, above the services grid. Two copies of the
+ * row let it loop without a visible jump back to the start.
  */
 export function HeroGallery() {
   const scroller = useRef<HTMLDivElement>(null)

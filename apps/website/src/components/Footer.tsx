@@ -115,8 +115,11 @@ export function Footer({ site = 'live' }: { site?: 'live' | 'prelaunch' }) {
             ))}
           </div>
         </div>
-        <div className="mt-16 flex flex-col justify-between gap-4 border-t border-white/15 pt-8 text-sm text-white/50 sm:flex-row">
-          <p>© {new Date().getFullYear()} Veno. All rights reserved.</p>
+        <div className="mt-16 flex flex-col justify-between gap-4 border-t border-white/15 pt-8 text-sm text-white/50 sm:flex-row sm:items-end">
+          <div className="space-y-1">
+            <p>© {new Date().getFullYear()} Veno. All rights reserved.</p>
+            <p>Veno is powered by Valcore Technology Ltd.</p>
+          </div>
           <p>Made in Lagos for the people who keep Lagos looking good.</p>
         </div>
       </div>

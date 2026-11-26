@@ -14,6 +14,9 @@ const cspReportOnly = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@veno/shared-types'],
+  // Railway build instances OOM during `next build` typecheck; CI still runs `tsc --noEmit`.
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [
       {

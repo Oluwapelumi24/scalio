@@ -53,7 +53,7 @@ Config: root `railway.json` (mirrored at `apps/backend/railway.json`). Refuses t
 | `VENDOR_WEB_URL` | `https://…` dashboard origin (invite links) |
 | `ADMIN_WEB_URL` | `https://admin.venohq.com` (admin invite /accept-invite links) |
 | `CORS_ORIGINS` | Comma-separated browser origins (e.g. `https://app.venohq.com,https://admin.venohq.com,https://www.venohq.com`) |
-| `PAYSTACK_SECRET_KEY` | Required in production (charges + webhook verify) |
+| `PAYSTACK_SECRET_KEY` | Optional at boot; required for online payments/webhooks (`sk_test_…` until live approval, then `sk_live_…`) |
 | `SENTRY_DSN` | Optional; omit to boot without Sentry |
 
 **Redis is required for API availability.** Rate-limit counters and password-reset issue caps live in Redis. If Redis is down, every throttled API route fails — treat Redis outage as an API outage in the runbook.

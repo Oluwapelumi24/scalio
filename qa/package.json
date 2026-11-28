@@ -1,0 +1,24 @@
+{
+  "name": "veno-qa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "End-to-end mobile responsiveness, accessibility and functional audit for Veno",
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium",
+    "test:webkit": "playwright test --project=webkit",
+    "test:firefox": "playwright test --project=firefox",
+    "test:audit": "playwright test tests/audit",
+    "test:journeys": "playwright test tests/journeys",
+    "report": "playwright show-report reports/html",
+    "generate-report": "python3 scripts/build-report.py"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.49.1",
+    "axe-core": "^4.10.2",
+    "dotenv": "^16.4.7",
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0"
+  }
+}

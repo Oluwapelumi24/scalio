@@ -1,0 +1,19 @@
+node_modules/
+playwright-report/
+test-results/
+.env
+
+# Bulky / regenerable evidence (keep confirmed-*.png and markdown reports)
+screenshots/**
+!screenshots/.gitkeep
+!screenshots/confirmed-*.png
+traces/**
+!traces/.gitkeep
+reports/html/
+
+artifacts/full-run*.log
+artifacts/smoke-run.log
+artifacts/journey-rerun.log
+artifacts/playwright-results.json
+artifacts/defects.json
+artifacts/json/

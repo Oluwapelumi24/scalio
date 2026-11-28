@@ -1,0 +1,5383 @@
+[
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "critical",
+    "title": "axe `aria-required-children` \u2014 Ensure elements with an ARIA role that require child roles contain them",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=critical; nodes=1; https://dequeuniversity.com/rules/axe/4.14/aria-required-children?application=playwright",
+    "detail": {
+      "id": "aria-required-children",
+      "impact": "critical",
+      "description": "Ensure elements with an ARIA role that require child roles contain them",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/aria-required-children?application=playwright"
+    },
+    "type": "aria-required-children",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-001",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "Partners `SetupSteps.tsx` / `FeatureTour.tsx` use `role=\"tablist\"` with `<ol><li>` wrapping `role=\"tab\"` buttons. ARIA tabs must be direct children of tablist; listitem+tab composition fails axe.",
+    "fix": "Use a `div` tablist with tab buttons as direct children + linked tabpanels (`aria-controls` / `id`), or drop tab roles and use plain buttons."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "critical",
+    "title": "axe `aria-required-parent` \u2014 Ensure elements with an ARIA role that require parent roles are contained by them",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=critical; nodes=4; https://dequeuniversity.com/rules/axe/4.14/aria-required-parent?application=playwright",
+    "detail": {
+      "id": "aria-required-parent",
+      "impact": "critical",
+      "description": "Ensure elements with an ARIA role that require parent roles are contained by them",
+      "nodes": 4,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/aria-required-parent?application=playwright"
+    },
+    "type": "aria-required-parent",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-002",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "Partners `SetupSteps.tsx` / `FeatureTour.tsx` use `role=\"tablist\"` with `<ol><li>` wrapping `role=\"tab\"` buttons. ARIA tabs must be direct children of tablist; listitem+tab composition fails axe.",
+    "fix": "Use a `div` tablist with tab buttons as direct children + linked tabpanels (`aria-controls` / `id`), or drop tab roles and use plain buttons."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/",
+    "name": "Sticky header + mobile menu",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-sticky-header-scrolled-390-fold.png",
+      "screenshots/chromium-sticky-header-scrolled-390-full.png",
+      "screenshots/chromium-mobile-menu-390-fold.png",
+      "screenshots/chromium-mobile-menu-390-full.png"
+    ],
+    "notes": [
+      "Header remains visible after scroll",
+      "Escape did not close menu (closed via button)",
+      "Header height ~73px"
+    ],
+    "http": null,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=10; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 10,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390,
+      1280
+    ],
+    "count": 6,
+    "id": "DEF-003",
+    "source": [
+      "apps/website/src/app/page.tsx",
+      "apps/website/src/components/Navbar.tsx",
+      "apps/website/src/components/home/SearchHero.tsx",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/",
+    "name": "Sticky header + mobile menu",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-sticky-header-scrolled-390-fold.png",
+      "screenshots/chromium-sticky-header-scrolled-390-full.png",
+      "screenshots/chromium-mobile-menu-390-fold.png",
+      "screenshots/chromium-mobile-menu-390-full.png"
+    ],
+    "notes": [
+      "Header remains visible after scroll",
+      "Escape did not close menu (closed via button)",
+      "Header height ~73px"
+    ],
+    "http": null,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `scrollable-region-focusable` \u2014 Ensure elements that have scrollable content are accessible by keyboard in Safari",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/scrollable-region-focusable?application=playwright",
+    "detail": {
+      "id": "scrollable-region-focusable",
+      "impact": "serious",
+      "description": "Ensure elements that have scrollable content are accessible by keyboard in Safari",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/scrollable-region-focusable?application=playwright"
+    },
+    "type": "scrollable-region-focusable",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390,
+      1280
+    ],
+    "count": 6,
+    "id": "DEF-004",
+    "source": [
+      "apps/website/src/app/page.tsx",
+      "apps/website/src/components/Navbar.tsx",
+      "apps/website/src/components/home/SearchHero.tsx",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "A scrollable region is not keyboard-focusable.",
+    "fix": "Add `tabindex=\"0\"` and an accessible name, or remove scrollable overflow."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/accept-invite",
+    "name": "Vendor accept invite",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-accept-invite-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-accept-invite-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-005",
+    "source": [
+      "apps/vendor-web/src/app/accept-invite/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app",
+    "name": "Customer home",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=3; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 3,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-006",
+    "source": [
+      "apps/website/src/app/app/page.tsx",
+      "apps/website/src/components/product/DiscoverHome.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings",
+    "name": "Bookings (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=3; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 3,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-007",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings/return",
+    "name": "Booking return",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-return-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-return-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=3; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 3,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-008",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/explore",
+    "name": "Explore",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-explore-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-explore-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=3; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 3,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-009",
+    "source": [
+      "apps/website/src/app/app/explore/page.tsx",
+      "apps/website/src/components/product/"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/profile",
+    "name": "Profile (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=3; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 3,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-010",
+    "source": [
+      "apps/website/src/app/app/profile/page.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-in",
+    "name": "Customer sign-in",
+    "browser": "chromium",
+    "viewport": {
+      "width": 568,
+      "height": 320,
+      "orientation": "landscape"
+    },
+    "screenshots": [
+      "screenshots/chromium-landscape-w568-www-venohq-com-app-sign-in-fold.png",
+      "screenshots/chromium-landscape-w568-www-venohq-com-app-sign-in-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "high",
+    "title": "4 overlapping interactive pairs detected",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "4 overlapping interactive pairs detected",
+    "detail": {
+      "samples": [
+        "INPUT: \u2229 A:Home",
+        "INPUT: \u2229 A:Explore",
+        "INPUT: \u2229 A:Bookings",
+        "INPUT: \u2229 A:Profile"
+      ]
+    },
+    "type": "overlapping",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      568,
+      667,
+      926
+    ],
+    "count": 3,
+    "id": "DEF-011",
+    "source": [
+      "apps/website/src/app/app/sign-in/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Interactive hitboxes overlap (tight headers/forms at narrow widths).",
+    "fix": "Increase gap, allow wrap, or collapse secondary actions into a menu under ~400px."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-in",
+    "name": "Sign-in focus order",
+    "browser": "chromium",
+    "viewport": {
+      "width": 360,
+      "height": 640,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-signin-focus-360-fold.png",
+      "screenshots/chromium-signin-focus-360-full.png"
+    ],
+    "notes": [
+      "Active element after 3 Tabs: {\"tag\":\"INPUT\",\"type\":\"password\",\"name\":\"password\",\"label\":\"\"}"
+    ],
+    "http": null,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=4; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 4,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      360,
+      375
+    ],
+    "count": 5,
+    "id": "DEF-012",
+    "source": [
+      "apps/website/src/app/app/sign-in/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-up",
+    "name": "Customer sign-up",
+    "browser": "chromium",
+    "viewport": {
+      "width": 360,
+      "height": 640,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w360-www-venohq-com-app-sign-up-fold.png",
+      "screenshots/chromium-portrait-w360-www-venohq-com-app-sign-up-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "high",
+    "title": "4 overlapping interactive pairs detected",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "4 overlapping interactive pairs detected",
+    "detail": {
+      "samples": [
+        "INPUT: \u2229 A:Home",
+        "INPUT: \u2229 A:Explore",
+        "INPUT: \u2229 A:Bookings",
+        "INPUT: \u2229 A:Profile"
+      ]
+    },
+    "type": "overlapping",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      568,
+      667
+    ],
+    "count": 7,
+    "id": "DEF-013",
+    "source": [
+      "apps/website/src/app/app/sign-up/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Interactive hitboxes overlap (tight headers/forms at narrow widths).",
+    "fix": "Increase gap, allow wrap, or collapse secondary actions into a menu under ~400px."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-up",
+    "name": "Customer sign-up",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-sign-up-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-sign-up-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=6; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 6,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-014",
+    "source": [
+      "apps/website/src/app/app/sign-up/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/book/serene-spa",
+    "name": "Booking page Serene Spa",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-book-serene-spa-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-book-serene-spa-full.png"
+    ],
+    "notes": [
+      "HTTP 404"
+    ],
+    "http": 404,
+    "category": "functional",
+    "severity": "high",
+    "title": "HTTP 404 loading /book/serene-spa",
+    "expected": "HTTP 200 with usable content",
+    "actual": "HTTP 404; finalUrl=https://www.venohq.com/book/serene-spa",
+    "type": "http",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440,
+      568,
+      667,
+      768,
+      844,
+      915,
+      926,
+      1024,
+      1280,
+      1440,
+      1920
+    ],
+    "count": 26,
+    "id": "DEF-015",
+    "source": [
+      "apps/website/src/app/book/[slug]/page.tsx",
+      "apps/website/src/lib/booking-page.ts",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "`/book/[slug]` resolves live vendors via API `GET /vendors/by-slug/:slug`. Marketing demos advertise `venohq.com/book/serene-spa`, but that slug is a sample, not an approved vendor \u2014 `notFound()` returns 404.",
+    "fix": "Stop advertising dead booking URLs: point demos at `/samples/...`, seed a demo vendor, or serve an explicit demo page. Keep `/book/*` for real vendors only."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/book/serene-spa",
+    "name": "Booking page Serene Spa",
+    "browser": "firefox",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/firefox-portrait-w375-www-venohq-com-book-serene-spa-fold.png",
+      "screenshots/firefox-portrait-w375-www-venohq-com-book-serene-spa-full.png"
+    ],
+    "notes": [
+      "HTTP 404"
+    ],
+    "http": 404,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `html-has-lang` \u2014 Ensure every HTML document has a lang attribute",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/html-has-lang?application=playwright",
+    "detail": {
+      "id": "html-has-lang",
+      "impact": "serious",
+      "description": "Ensure every HTML document has a lang attribute",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/html-has-lang?application=playwright"
+    },
+    "type": "html-has-lang",
+    "browsers": [
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 2,
+    "id": "DEF-016",
+    "source": [
+      "apps/website/src/app/book/[slug]/page.tsx",
+      "apps/website/src/lib/booking-page.ts",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Inspect listed source files for responsive CSS / a11y attributes.",
+    "fix": "Fix the failing rule and add a Playwright regression for the route\u00d7width."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/forgot-password",
+    "name": "Vendor forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-017",
+    "source": [
+      "apps/vendor-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/forgot-password",
+    "name": "Admin forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-018",
+    "source": [
+      "apps/admin-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/login",
+    "name": "Vendor login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-login-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=2; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 2,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 5,
+    "id": "DEF-019",
+    "source": [
+      "apps/vendor-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/login",
+    "name": "Admin login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-login-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 4,
+    "id": "DEF-020",
+    "source": [
+      "apps/admin-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=36; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 36,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-021",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `listitem` \u2014 Ensure <li> elements are used semantically",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=4; https://dequeuniversity.com/rules/axe/4.14/listitem?application=playwright",
+    "detail": {
+      "id": "listitem",
+      "impact": "serious",
+      "description": "Ensure <li> elements are used semantically",
+      "nodes": 4,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/listitem?application=playwright"
+    },
+    "type": "listitem",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-022",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "Partners `SetupSteps.tsx` / `FeatureTour.tsx` use `role=\"tablist\"` with `<ol><li>` wrapping `role=\"tab\"` buttons. ARIA tabs must be direct children of tablist; listitem+tab composition fails axe.",
+    "fix": "Use a `div` tablist with tab buttons as direct children + linked tabpanels (`aria-controls` / `id`), or drop tab roles and use plain buttons."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `scrollable-region-focusable` \u2014 Ensure elements that have scrollable content are accessible by keyboard in Safari",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=2; https://dequeuniversity.com/rules/axe/4.14/scrollable-region-focusable?application=playwright",
+    "detail": {
+      "id": "scrollable-region-focusable",
+      "impact": "serious",
+      "description": "Ensure elements that have scrollable content are accessible by keyboard in Safari",
+      "nodes": 2,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/scrollable-region-focusable?application=playwright"
+    },
+    "type": "scrollable-region-focusable",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-023",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "A scrollable region is not keyboard-focusable.",
+    "fix": "Add `tabindex=\"0\"` and an accessible name, or remove scrollable overflow."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/register",
+    "name": "Vendor register",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-register-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-register-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=2; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 2,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-024",
+    "source": [
+      "apps/vendor-web/src/app/register/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/reset-password",
+    "name": "Vendor reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-reset-password-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-025",
+    "source": [
+      "apps/vendor-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/reset-password",
+    "name": "Admin reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-reset-password-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=1; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-026",
+    "source": [
+      "apps/admin-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/samples/spa/serene-spa",
+    "name": "Sample listing Serene Spa",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-samples-spa-serene-spa-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-samples-spa-serene-spa-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "high",
+    "title": "axe `color-contrast` \u2014 Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=serious; nodes=2; https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright",
+    "detail": {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "nodes": 2,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=playwright"
+    },
+    "type": "color-contrast",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-027",
+    "source": [
+      "apps/website/src/app/samples/",
+      "apps/website/src/lib/samples.ts"
+    ],
+    "root_cause": "Text/icon colours fail WCAG contrast (muted slate/gray on white or washed fills).",
+    "fix": "Raise contrast to \u22654.5:1 for normal text / \u22653:1 for large text; re-run axe."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/",
+    "name": "Home",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-sticky-header-scrolled-390-fold.png",
+      "screenshots/chromium-sticky-header-scrolled-390-full.png",
+      "screenshots/chromium-mobile-menu-390-fold.png",
+      "screenshots/chromium-mobile-menu-390-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "INPUT",
+          "w": 192,
+          "h": 23
+        },
+        {
+          "label": "INPUT",
+          "w": 192,
+          "h": 23
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        },
+        {
+          "label": "Get set up",
+          "w": 71,
+          "h": 19
+        },
+        {
+          "label": "Inside the app",
+          "w": 97,
+          "h": 19
+        },
+        {
+          "label": "Sign in",
+          "w": 47,
+          "h": 19
+        },
+        {
+          "label": "Privacy policy",
+          "w": 94,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 13,
+    "id": "DEF-028",
+    "source": [
+      "apps/website/src/app/page.tsx",
+      "apps/website/src/components/Navbar.tsx",
+      "apps/website/src/components/home/SearchHero.tsx",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/",
+    "name": "Sticky header + mobile menu",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-sticky-header-scrolled-390-fold.png",
+      "screenshots/chromium-sticky-header-scrolled-390-full.png",
+      "screenshots/chromium-mobile-menu-390-fold.png",
+      "screenshots/chromium-mobile-menu-390-full.png"
+    ],
+    "notes": [
+      "Header remains visible after scroll",
+      "Escape did not close menu (closed via button)",
+      "Header height ~73px"
+    ],
+    "http": null,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2 overlapping interactive pairs detected",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2 overlapping interactive pairs detected",
+    "detail": {
+      "samples": [
+        "A:Veno home \u2229 BUTTON:Search",
+        "BUTTON:Open menu \u2229 BUTTON:Search"
+      ]
+    },
+    "type": "overlapping",
+    "browsers": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      390
+    ],
+    "count": 2,
+    "id": "DEF-029",
+    "source": [
+      "apps/website/src/app/page.tsx",
+      "apps/website/src/components/Navbar.tsx",
+      "apps/website/src/components/home/SearchHero.tsx",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Interactive hitboxes overlap (tight headers/forms at narrow widths).",
+    "fix": "Increase gap, allow wrap, or collapse secondary actions into a menu under ~400px."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/",
+    "name": "Home",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-sticky-header-scrolled-390-fold.png",
+      "screenshots/chromium-sticky-header-scrolled-390-full.png",
+      "screenshots/chromium-mobile-menu-390-fold.png",
+      "screenshots/chromium-mobile-menu-390-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "6+ elements extend past viewport right edge",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "6+ elements extend past viewport right edge",
+    "detail": {
+      "offenders": [
+        {
+          "tag": "figure",
+          "className": "relative aspect-[3/2] w-[min(78vw,340px)] shrink-0 overflow-hidden rounded-[1.35",
+          "right": 515,
+          "width": 250
+        },
+        {
+          "tag": "img",
+          "className": "absolute inset-0 h-full w-full object-cover object-[center_35%]",
+          "right": 515,
+          "width": 250
+        },
+        {
+          "tag": "figcaption",
+          "className": "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/25 to-trans",
+          "right": 515,
+          "width": 250
+        },
+        {
+          "tag": "div",
+          "className": "absolute right-[-8rem] top-24 h-[28rem] w-[28rem] rounded-full bg-[#a5b4fc] opac",
+          "right": 448,
+          "width": 448
+        },
+        {
+          "tag": "div",
+          "className": "absolute -bottom-16 -right-20 h-80 w-80 rounded-full bg-[#86efac] opacity-35 blu",
+          "right": 400,
+          "width": 320
+        },
+        {
+          "tag": "div",
+          "className": "pointer-events-none absolute -right-6 -top-6 h-28 w-28 rotate-12 rounded-full bo",
+          "right": 329,
+          "width": 133
+        }
+      ]
+    },
+    "type": "clipped-content",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440,
+      568,
+      667,
+      768,
+      844,
+      915,
+      926,
+      1024,
+      1280,
+      1440,
+      1920
+    ],
+    "count": 28,
+    "id": "DEF-030",
+    "source": [
+      "apps/website/src/app/page.tsx",
+      "apps/website/src/components/Navbar.tsx",
+      "apps/website/src/components/home/SearchHero.tsx",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Elements extend past the viewport right edge (fixed widths / missing `min-w-0` / uncontained horizontal media).",
+    "fix": "Contain overflow, add `min-w-0` on flex children, use responsive widths."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/",
+    "name": "Sticky header + mobile menu",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-sticky-header-scrolled-390-fold.png",
+      "screenshots/chromium-sticky-header-scrolled-390-full.png",
+      "screenshots/chromium-mobile-menu-390-fold.png",
+      "screenshots/chromium-mobile-menu-390-full.png"
+    ],
+    "notes": [
+      "Header remains visible after scroll",
+      "Escape did not close menu (closed via button)",
+      "Header height ~73px"
+    ],
+    "http": null,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `heading-order` \u2014 Ensure the order of headings is semantically correct",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+    "detail": {
+      "id": "heading-order",
+      "impact": "moderate",
+      "description": "Ensure the order of headings is semantically correct",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright"
+    },
+    "type": "heading-order",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390,
+      1280
+    ],
+    "count": 6,
+    "id": "DEF-031",
+    "source": [
+      "apps/website/src/app/page.tsx",
+      "apps/website/src/components/Navbar.tsx",
+      "apps/website/src/components/home/SearchHero.tsx",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Heading levels skip in the outline.",
+    "fix": "Restore sequential heading hierarchy (h1\u2192h2\u2192h3)."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/#faq",
+    "name": "FAQ accordion keyboard",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-faq-expand-375-fold.png",
+      "screenshots/chromium-faq-expand-375-full.png"
+    ],
+    "notes": [
+      "aria-expanded after Enter: null"
+    ],
+    "http": null,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "INPUT",
+          "w": 247,
+          "h": 23
+        },
+        {
+          "label": "INPUT",
+          "w": 247,
+          "h": 23
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        },
+        {
+          "label": "Veno for partners",
+          "w": 119,
+          "h": 19
+        },
+        {
+          "label": "Get set up",
+          "w": 71,
+          "h": 19
+        },
+        {
+          "label": "Inside the app",
+          "w": 97,
+          "h": 19
+        },
+        {
+          "label": "Sign in",
+          "w": 47,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-032",
+    "source": [
+      "apps/website/src/app/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/#faq",
+    "name": "FAQ accordion keyboard",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-faq-expand-375-fold.png",
+      "screenshots/chromium-faq-expand-375-full.png"
+    ],
+    "notes": [
+      "aria-expanded after Enter: null"
+    ],
+    "http": null,
+    "category": "layout",
+    "severity": "medium",
+    "title": "6+ elements extend past viewport right edge",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "6+ elements extend past viewport right edge",
+    "detail": {
+      "offenders": [
+        {
+          "tag": "figure",
+          "className": "relative aspect-[3/2] w-[min(78vw,340px)] shrink-0 overflow-hidden rounded-[1.35",
+          "right": 601,
+          "width": 293
+        },
+        {
+          "tag": "img",
+          "className": "absolute inset-0 h-full w-full object-cover object-[center_35%]",
+          "right": 601,
+          "width": 293
+        },
+        {
+          "tag": "figcaption",
+          "className": "absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/25 to-trans",
+          "right": 601,
+          "width": 293
+        },
+        {
+          "tag": "div",
+          "className": "absolute right-[-8rem] top-24 h-[28rem] w-[28rem] rounded-full bg-[#a5b4fc] opac",
+          "right": 503,
+          "width": 448
+        },
+        {
+          "tag": "div",
+          "className": "absolute -bottom-16 -right-20 h-80 w-80 rounded-full bg-[#86efac] opacity-35 blu",
+          "right": 455,
+          "width": 320
+        },
+        {
+          "tag": "div",
+          "className": "pointer-events-none absolute -right-6 -top-6 h-28 w-28 rotate-12 rounded-full bo",
+          "right": 384,
+          "width": 133
+        }
+      ]
+    },
+    "type": "clipped-content",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-033",
+    "source": [
+      "apps/website/src/app/page.tsx"
+    ],
+    "root_cause": "Elements extend past the viewport right edge (fixed widths / missing `min-w-0` / uncontained horizontal media).",
+    "fix": "Contain overflow, add `min-w-0` on flex children, use responsive widths."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/accept-invite",
+    "name": "Admin accept invite",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-admin-venohq-com-accept-invite-fold.png",
+      "screenshots/chromium-portrait-w390-admin-venohq-com-accept-invite-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 4,
+    "id": "DEF-034",
+    "source": [
+      "(unmapped \u2014 inspect apps/*/src/app)"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/accept-invite",
+    "name": "Vendor accept invite",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-accept-invite-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-accept-invite-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-035",
+    "source": [
+      "apps/vendor-web/src/app/accept-invite/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/accept-invite",
+    "name": "Admin accept invite",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-accept-invite-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-accept-invite-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-036",
+    "source": [
+      "(unmapped \u2014 inspect apps/*/src/app)"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/accept-invite",
+    "name": "Vendor accept invite",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-accept-invite-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-accept-invite-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-037",
+    "source": [
+      "apps/vendor-web/src/app/accept-invite/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/accept-invite",
+    "name": "Admin accept invite",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-accept-invite-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-accept-invite-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=3; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 3,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-038",
+    "source": [
+      "(unmapped \u2014 inspect apps/*/src/app)"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app",
+    "name": "Customer home",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "A",
+          "w": 92,
+          "h": 28
+        },
+        {
+          "label": "INPUT",
+          "w": 134,
+          "h": 20
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 12,
+    "id": "DEF-039",
+    "source": [
+      "apps/website/src/app/app/page.tsx",
+      "apps/website/src/components/product/DiscoverHome.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app",
+    "name": "Customer home",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-040",
+    "source": [
+      "apps/website/src/app/app/page.tsx",
+      "apps/website/src/components/product/DiscoverHome.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app",
+    "name": "Customer home",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=4; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 4,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-041",
+    "source": [
+      "apps/website/src/app/app/page.tsx",
+      "apps/website/src/components/product/DiscoverHome.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings",
+    "name": "Bookings (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 568,
+      "height": 320,
+      "orientation": "landscape"
+    },
+    "screenshots": [
+      "screenshots/chromium-landscape-w568-www-venohq-com-app-bookings-fold.png",
+      "screenshots/chromium-landscape-w568-www-venohq-com-app-bookings-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1 overlapping interactive pairs detected",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1 overlapping interactive pairs detected",
+    "detail": {
+      "samples": [
+        "A:Sign in \u2229 A:Home"
+      ]
+    },
+    "type": "overlapping",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      568,
+      667
+    ],
+    "count": 2,
+    "id": "DEF-042",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Interactive hitboxes overlap (tight headers/forms at narrow widths).",
+    "fix": "Increase gap, allow wrap, or collapse secondary actions into a menu under ~400px."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings",
+    "name": "Bookings (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-bookings-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-bookings-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "A",
+          "w": 92,
+          "h": 28
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 11,
+    "id": "DEF-043",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings",
+    "name": "Bookings (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-044",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings",
+    "name": "Bookings (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-045",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings/return",
+    "name": "Booking return",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-www-venohq-com-app-bookings-return-fold.png",
+      "screenshots/chromium-portrait-w390-www-venohq-com-app-bookings-return-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "A",
+          "w": 92,
+          "h": 28
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-046",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings/return",
+    "name": "Booking return",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-return-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-return-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-047",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/bookings/return",
+    "name": "Booking return",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-return-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-bookings-return-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-048",
+    "source": [
+      "apps/website/src/app/app/bookings/",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/explore",
+    "name": "Explore",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-explore-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-explore-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "A",
+          "w": 92,
+          "h": 28
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 9,
+    "id": "DEF-049",
+    "source": [
+      "apps/website/src/app/app/explore/page.tsx",
+      "apps/website/src/components/product/"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/explore",
+    "name": "Explore",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-explore-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-app-explore-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2 overlapping interactive pairs detected",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2 overlapping interactive pairs detected",
+    "detail": {
+      "samples": [
+        "A:Next glow \u2229 A:Home",
+        "A:Next glow \u2229 A:Explore"
+      ]
+    },
+    "type": "overlapping",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      390,
+      412,
+      430,
+      568,
+      667,
+      768,
+      844,
+      915,
+      926
+    ],
+    "count": 15,
+    "id": "DEF-050",
+    "source": [
+      "apps/website/src/app/app/explore/page.tsx",
+      "apps/website/src/components/product/"
+    ],
+    "root_cause": "Interactive hitboxes overlap (tight headers/forms at narrow widths).",
+    "fix": "Increase gap, allow wrap, or collapse secondary actions into a menu under ~400px."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/explore",
+    "name": "Explore",
+    "browser": "webkit",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/webkit-portrait-w375-www-venohq-com-app-explore-fold.png",
+      "screenshots/webkit-portrait-w375-www-venohq-com-app-explore-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "functional",
+    "severity": "medium",
+    "title": "7 browser console errors",
+    "expected": "Clean console on happy-path load",
+    "actual": "The Content Security Policy 'default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: http://localhost:3000 http://127.0.0.1:3000; frame-src 'self' https:; base-uri 'self'; form-action 'self'' was delivered in report-only mode, but does not specify a 'report-to'; the policy will have no effect. Please either add a 'report-to' directive, or deliver the policy via the 'Content-Security-Policy' header.; Cancelled load to https://backend-production-5f99dcca.up.railway.app/public/listing-media/71985668-3754-4075-b614-bf7855e62d74 because it violates the resource's Cross-Origin-Resource-Policy response header.; Cannot load image https://backend-production-5f99dcca.up.railway.app/public/listing-media/71985668-3754-4075-b614-bf7855e62d74 due to access control checks.",
+    "type": "console",
+    "browsers": [
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390,
+      768,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-051",
+    "source": [
+      "apps/website/src/app/app/explore/page.tsx",
+      "apps/website/src/components/product/"
+    ],
+    "root_cause": "Repeated browser console errors during page load.",
+    "fix": "Inspect network/API failures and client exceptions; fix or silence expected noise."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/explore",
+    "name": "Explore",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-explore-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-explore-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-052",
+    "source": [
+      "apps/website/src/app/app/explore/page.tsx",
+      "apps/website/src/components/product/"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/explore",
+    "name": "Explore",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-explore-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-explore-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-053",
+    "source": [
+      "apps/website/src/app/app/explore/page.tsx",
+      "apps/website/src/components/product/"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/profile",
+    "name": "Profile (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "A",
+          "w": 92,
+          "h": 28
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-054",
+    "source": [
+      "apps/website/src/app/app/profile/page.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/profile",
+    "name": "Profile (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-055",
+    "source": [
+      "apps/website/src/app/app/profile/page.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/profile",
+    "name": "Profile (auth gate)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-profile-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-056",
+    "source": [
+      "apps/website/src/app/app/profile/page.tsx",
+      "apps/website/src/components/product/ProductShell.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-in",
+    "name": "Customer sign-in",
+    "browser": "chromium",
+    "viewport": {
+      "width": 844,
+      "height": 390,
+      "orientation": "landscape"
+    },
+    "screenshots": [
+      "screenshots/chromium-landscape-w844-www-venohq-com-app-sign-in-fold.png",
+      "screenshots/chromium-landscape-w844-www-venohq-com-app-sign-in-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2 overlapping interactive pairs detected",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2 overlapping interactive pairs detected",
+    "detail": {
+      "samples": [
+        "INPUT: \u2229 A:Explore",
+        "INPUT: \u2229 A:Bookings"
+      ]
+    },
+    "type": "overlapping",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      844,
+      915
+    ],
+    "count": 2,
+    "id": "DEF-057",
+    "source": [
+      "apps/website/src/app/app/sign-in/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Interactive hitboxes overlap (tight headers/forms at narrow widths).",
+    "fix": "Increase gap, allow wrap, or collapse secondary actions into a menu under ~400px."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-in",
+    "name": "Sign-in focus order",
+    "browser": "chromium",
+    "viewport": {
+      "width": 360,
+      "height": 640,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-signin-focus-360-fold.png",
+      "screenshots/chromium-signin-focus-360-full.png"
+    ],
+    "notes": [
+      "Active element after 3 Tabs: {\"tag\":\"INPUT\",\"type\":\"password\",\"name\":\"password\",\"label\":\"\"}"
+    ],
+    "http": null,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "A",
+          "w": 92,
+          "h": 28
+        },
+        {
+          "label": "Create an account",
+          "w": 123,
+          "h": 18
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 13,
+    "id": "DEF-058",
+    "source": [
+      "apps/website/src/app/app/sign-in/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-in",
+    "name": "Sign-in focus order",
+    "browser": "chromium",
+    "viewport": {
+      "width": 360,
+      "height": 640,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-signin-focus-360-fold.png",
+      "screenshots/chromium-signin-focus-360-full.png"
+    ],
+    "notes": [
+      "Active element after 3 Tabs: {\"tag\":\"INPUT\",\"type\":\"password\",\"name\":\"password\",\"label\":\"\"}"
+    ],
+    "http": null,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      360,
+      375,
+      1280
+    ],
+    "count": 6,
+    "id": "DEF-059",
+    "source": [
+      "apps/website/src/app/app/sign-in/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-in",
+    "name": "Sign-in focus order",
+    "browser": "chromium",
+    "viewport": {
+      "width": 360,
+      "height": 640,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-signin-focus-360-fold.png",
+      "screenshots/chromium-signin-focus-360-full.png"
+    ],
+    "notes": [
+      "Active element after 3 Tabs: {\"tag\":\"INPUT\",\"type\":\"password\",\"name\":\"password\",\"label\":\"\"}"
+    ],
+    "http": null,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=5; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 5,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      360,
+      375,
+      1280
+    ],
+    "count": 6,
+    "id": "DEF-060",
+    "source": [
+      "apps/website/src/app/app/sign-in/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-up",
+    "name": "Customer sign-up",
+    "browser": "chromium",
+    "viewport": {
+      "width": 844,
+      "height": 390,
+      "orientation": "landscape"
+    },
+    "screenshots": [
+      "screenshots/chromium-landscape-w844-www-venohq-com-app-sign-up-fold.png",
+      "screenshots/chromium-landscape-w844-www-venohq-com-app-sign-up-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2 overlapping interactive pairs detected",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2 overlapping interactive pairs detected",
+    "detail": {
+      "samples": [
+        "INPUT: \u2229 A:Explore",
+        "INPUT: \u2229 A:Bookings"
+      ]
+    },
+    "type": "overlapping",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      844,
+      915,
+      926
+    ],
+    "count": 3,
+    "id": "DEF-061",
+    "source": [
+      "apps/website/src/app/app/sign-up/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Interactive hitboxes overlap (tight headers/forms at narrow widths).",
+    "fix": "Increase gap, allow wrap, or collapse secondary actions into a menu under ~400px."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-up",
+    "name": "Customer sign-up",
+    "browser": "chromium",
+    "viewport": {
+      "width": 360,
+      "height": 640,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w360-www-venohq-com-app-sign-up-fold.png",
+      "screenshots/chromium-portrait-w360-www-venohq-com-app-sign-up-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "A",
+          "w": 92,
+          "h": 28
+        },
+        {
+          "label": "Sign in",
+          "w": 46,
+          "h": 18
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 11,
+    "id": "DEF-062",
+    "source": [
+      "apps/website/src/app/app/sign-up/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-up",
+    "name": "Customer sign-up",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-sign-up-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-sign-up-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-063",
+    "source": [
+      "apps/website/src/app/app/sign-up/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/app/sign-up",
+    "name": "Customer sign-up",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-sign-up-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-app-sign-up-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=7; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 7,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-064",
+    "source": [
+      "apps/website/src/app/app/sign-up/page.tsx",
+      "apps/website/src/components/product/AuthForm.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/book/serene-spa",
+    "name": "Booking page Serene Spa",
+    "browser": "firefox",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/firefox-portrait-w375-www-venohq-com-book-serene-spa-fold.png",
+      "screenshots/firefox-portrait-w375-www-venohq-com-book-serene-spa-full.png"
+    ],
+    "notes": [
+      "HTTP 404"
+    ],
+    "http": 404,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 2,
+    "id": "DEF-065",
+    "source": [
+      "apps/website/src/app/book/[slug]/page.tsx",
+      "apps/website/src/lib/booking-page.ts",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/book/serene-spa",
+    "name": "Booking page Serene Spa",
+    "browser": "firefox",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/firefox-portrait-w375-www-venohq-com-book-serene-spa-fold.png",
+      "screenshots/firefox-portrait-w375-www-venohq-com-book-serene-spa-full.png"
+    ],
+    "notes": [
+      "HTTP 404"
+    ],
+    "http": 404,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `page-has-heading-one` \u2014 Ensure that the page, or at least one of its frames contains a level-one heading",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/page-has-heading-one?application=playwright",
+    "detail": {
+      "id": "page-has-heading-one",
+      "impact": "moderate",
+      "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/page-has-heading-one?application=playwright"
+    },
+    "type": "page-has-heading-one",
+    "browsers": [
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 2,
+    "id": "DEF-066",
+    "source": [
+      "apps/website/src/app/book/[slug]/page.tsx",
+      "apps/website/src/lib/booking-page.ts",
+      "apps/website/src/components/home/Sections.tsx"
+    ],
+    "root_cause": "Inspect listed source files for responsive CSS / a11y attributes.",
+    "fix": "Fix the failing rule and add a Playwright regression for the route\u00d7width."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/cookies",
+    "name": "Cookies",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-www-venohq-com-cookies-fold.png",
+      "screenshots/chromium-portrait-w390-www-venohq-com-cookies-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "Veno",
+          "w": 34,
+          "h": 18
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        },
+        {
+          "label": "Veno for partners",
+          "w": 119,
+          "h": 19
+        },
+        {
+          "label": "Get set up",
+          "w": 71,
+          "h": 19
+        },
+        {
+          "label": "Inside the app",
+          "w": 97,
+          "h": 19
+        },
+        {
+          "label": "Sign in",
+          "w": 47,
+          "h": 19
+        },
+        {
+          "label": "Privacy policy",
+          "w": 94,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-067",
+    "source": [
+      "apps/website/src/app/",
+      "apps/website/src/components/site/LegalPage.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/cookies",
+    "name": "Cookies",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-cookies-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-cookies-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `heading-order` \u2014 Ensure the order of headings is semantically correct",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+    "detail": {
+      "id": "heading-order",
+      "impact": "moderate",
+      "description": "Ensure the order of headings is semantically correct",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright"
+    },
+    "type": "heading-order",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-068",
+    "source": [
+      "apps/website/src/app/",
+      "apps/website/src/components/site/LegalPage.tsx"
+    ],
+    "root_cause": "Heading levels skip in the outline.",
+    "fix": "Restore sequential heading hierarchy (h1\u2192h2\u2192h3)."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/forgot-password",
+    "name": "Vendor forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Back to sign in",
+          "w": 95,
+          "h": 18
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-069",
+    "source": [
+      "apps/vendor-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/forgot-password",
+    "name": "Forgot password (legacy)",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-www-venohq-com-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w390-www-venohq-com-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "Back to sign in",
+          "w": 99,
+          "h": 18
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-070",
+    "source": [
+      "apps/website/src/app/",
+      "apps/website/src/components/site/LegalPage.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/forgot-password",
+    "name": "Admin forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-admin-venohq-com-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w390-admin-venohq-com-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "Back to sign in",
+          "w": 91,
+          "h": 16
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 4,
+    "id": "DEF-071",
+    "source": [
+      "apps/admin-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/forgot-password",
+    "name": "Vendor forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-072",
+    "source": [
+      "apps/vendor-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/forgot-password",
+    "name": "Admin forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-073",
+    "source": [
+      "apps/admin-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/forgot-password",
+    "name": "Vendor forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=5; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 5,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-074",
+    "source": [
+      "apps/vendor-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/forgot-password",
+    "name": "Admin forgot password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-forgot-password-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-forgot-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=5; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 5,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-075",
+    "source": [
+      "apps/admin-web/src/app/forgot-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/login",
+    "name": "Vendor login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 360,
+      "height": 640,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w360-vendor-web-production-a59cdbc0-up-railway-app-login-fold.png",
+      "screenshots/chromium-portrait-w360-vendor-web-production-a59cdbc0-up-railway-app-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "2+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "2+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Forgot password?",
+          "w": 99,
+          "h": 16
+        },
+        {
+          "label": "Register your business",
+          "w": 149,
+          "h": 18
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 11,
+    "id": "DEF-076",
+    "source": [
+      "apps/vendor-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/login",
+    "name": "Admin login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-admin-venohq-com-login-fold.png",
+      "screenshots/chromium-portrait-w390-admin-venohq-com-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "3+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "3+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "Forgot password?",
+          "w": 96,
+          "h": 14
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 5,
+    "id": "DEF-077",
+    "source": [
+      "apps/admin-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/login",
+    "name": "Vendor login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-login-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 5,
+    "id": "DEF-078",
+    "source": [
+      "apps/vendor-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/login",
+    "name": "Admin login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-login-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 4,
+    "id": "DEF-079",
+    "source": [
+      "apps/admin-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/login",
+    "name": "Vendor login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-login-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=6; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 6,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 5,
+    "id": "DEF-080",
+    "source": [
+      "apps/vendor-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/login",
+    "name": "Admin login",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-login-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-login-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=5; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 5,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 4,
+    "id": "DEF-081",
+    "source": [
+      "apps/admin-web/src/app/login/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "Learn more",
+          "w": 224,
+          "h": 20
+        },
+        {
+          "label": "Learn more",
+          "w": 224,
+          "h": 20
+        },
+        {
+          "label": "Learn more",
+          "w": 224,
+          "h": 20
+        },
+        {
+          "label": "Learn more",
+          "w": 224,
+          "h": 20
+        },
+        {
+          "label": "Learn more",
+          "w": 224,
+          "h": 20
+        },
+        {
+          "label": "Learn more",
+          "w": 224,
+          "h": 20
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 11,
+    "id": "DEF-082",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "12+ elements extend past viewport right edge",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "12+ elements extend past viewport right edge",
+    "detail": {
+      "offenders": [
+        {
+          "tag": "div",
+          "className": "grid min-w-[680px] grid-cols-[52px_repeat(4,1fr)]",
+          "right": 697,
+          "width": 680
+        },
+        {
+          "tag": "div",
+          "className": "border-b border-l border-slate-100 px-2 py-3 text-center",
+          "right": 383,
+          "width": 157
+        },
+        {
+          "tag": "p",
+          "className": "mt-1.5 text-sm font-semibold text-slate-950",
+          "right": 375,
+          "width": 140
+        },
+        {
+          "tag": "div",
+          "className": "relative border-l border-slate-100",
+          "right": 383,
+          "width": 157
+        },
+        {
+          "tag": "div",
+          "className": "absolute inset-x-1.5 overflow-hidden rounded-lg px-2 py-1.5 bg-emerald-50",
+          "right": 377,
+          "width": 144
+        },
+        {
+          "tag": "p",
+          "className": "truncate text-[11px] font-medium text-slate-500",
+          "right": 369,
+          "width": 128
+        },
+        {
+          "tag": "p",
+          "className": "truncate text-sm font-semibold text-slate-950",
+          "right": 369,
+          "width": 128
+        },
+        {
+          "tag": "p",
+          "className": "truncate text-xs text-slate-600",
+          "right": 369,
+          "width": 128
+        },
+        {
+          "tag": "div",
+          "className": "absolute inset-x-1.5 overflow-hidden rounded-lg px-2 py-1.5 bg-emerald-50",
+          "right": 377,
+          "width": 144
+        },
+        {
+          "tag": "p",
+          "className": "truncate text-[11px] font-medium text-slate-500",
+          "right": 369,
+          "width": 128
+        },
+        {
+          "tag": "p",
+          "className": "truncate text-sm font-semibold text-slate-950",
+          "right": 369,
+          "width": 128
+        },
+        {
+          "tag": "p",
+          "className": "truncate text-xs text-slate-600",
+          "right": 369,
+          "width": 128
+        }
+      ]
+    },
+    "type": "clipped-content",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440,
+      568,
+      667,
+      768,
+      844,
+      915,
+      926,
+      1024,
+      1280,
+      1440,
+      1920
+    ],
+    "count": 26,
+    "id": "DEF-083",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "Elements extend past the viewport right edge (fixed widths / missing `min-w-0` / uncontained horizontal media).",
+    "fix": "Contain overflow, add `min-w-0` on flex children, use responsive widths."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/partners",
+    "name": "Partners",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-partners-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `heading-order` \u2014 Ensure the order of headings is semantically correct",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+    "detail": {
+      "id": "heading-order",
+      "impact": "moderate",
+      "description": "Ensure the order of headings is semantically correct",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright"
+    },
+    "type": "heading-order",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-084",
+    "source": [
+      "apps/website/src/app/partners/page.tsx",
+      "apps/website/src/components/partners/SetupSteps.tsx",
+      "apps/website/src/components/partners/FeatureTour.tsx"
+    ],
+    "root_cause": "Heading levels skip in the outline.",
+    "fix": "Restore sequential heading hierarchy (h1\u2192h2\u2192h3)."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/privacy",
+    "name": "Privacy",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-www-venohq-com-privacy-fold.png",
+      "screenshots/chromium-portrait-w390-www-venohq-com-privacy-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "Veno",
+          "w": 34,
+          "h": 18
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        },
+        {
+          "label": "Veno for partners",
+          "w": 119,
+          "h": 19
+        },
+        {
+          "label": "Get set up",
+          "w": 71,
+          "h": 19
+        },
+        {
+          "label": "Inside the app",
+          "w": 97,
+          "h": 19
+        },
+        {
+          "label": "Sign in",
+          "w": 47,
+          "h": 19
+        },
+        {
+          "label": "Privacy policy",
+          "w": 94,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-085",
+    "source": [
+      "apps/website/src/app/",
+      "apps/website/src/components/site/LegalPage.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/privacy",
+    "name": "Privacy",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-privacy-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-privacy-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `heading-order` \u2014 Ensure the order of headings is semantically correct",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+    "detail": {
+      "id": "heading-order",
+      "impact": "moderate",
+      "description": "Ensure the order of headings is semantically correct",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright"
+    },
+    "type": "heading-order",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-086",
+    "source": [
+      "apps/website/src/app/",
+      "apps/website/src/components/site/LegalPage.tsx"
+    ],
+    "root_cause": "Heading levels skip in the outline.",
+    "fix": "Restore sequential heading hierarchy (h1\u2192h2\u2192h3)."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/register",
+    "name": "Vendor register",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-vendor-web-production-a59cdbc0-up-railway-app-register-fold.png",
+      "screenshots/chromium-portrait-w320-vendor-web-production-a59cdbc0-up-railway-app-register-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Sign in",
+          "w": 44,
+          "h": 18
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 9,
+    "id": "DEF-087",
+    "source": [
+      "apps/vendor-web/src/app/register/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/register",
+    "name": "Vendor register",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-register-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-register-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-088",
+    "source": [
+      "apps/vendor-web/src/app/register/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/register",
+    "name": "Vendor register",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-register-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-register-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=5; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 5,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-089",
+    "source": [
+      "apps/vendor-web/src/app/register/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/reset-password",
+    "name": "Vendor reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-vendor-web-production-a59cdbc0-up-railway-app-reset-password-fold.png",
+      "screenshots/chromium-portrait-w390-vendor-web-production-a59cdbc0-up-railway-app-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "1+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "1+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Back to sign in",
+          "w": 95,
+          "h": 18
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-090",
+    "source": [
+      "apps/vendor-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/reset-password",
+    "name": "Admin reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-admin-venohq-com-reset-password-fold.png",
+      "screenshots/chromium-portrait-w390-admin-venohq-com-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "5+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "5+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "INPUT",
+          "w": 318,
+          "h": 38
+        },
+        {
+          "label": "Back to sign in",
+          "w": 91,
+          "h": 16
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 4,
+    "id": "DEF-091",
+    "source": [
+      "apps/admin-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/reset-password",
+    "name": "Vendor reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-reset-password-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-092",
+    "source": [
+      "apps/vendor-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/reset-password",
+    "name": "Admin reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-reset-password-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `landmark-one-main` \u2014 Ensure the document has a main landmark",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright",
+    "detail": {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "description": "Ensure the document has a main landmark",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=playwright"
+    },
+    "type": "landmark-one-main",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-093",
+    "source": [
+      "apps/admin-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://vendor-web-production-a59cdbc0.up.railway.app",
+    "route": "/reset-password",
+    "name": "Vendor reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-reset-password-fold.png",
+      "screenshots/chromium-portrait-w375-vendor-web-production-a59cdbc0-up-railway-app-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=8; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 8,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 1,
+    "id": "DEF-094",
+    "source": [
+      "apps/vendor-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://admin.venohq.com",
+    "route": "/reset-password",
+    "name": "Admin reset password",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-admin-venohq-com-reset-password-fold.png",
+      "screenshots/chromium-portrait-w375-admin-venohq-com-reset-password-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `region` \u2014 Ensure all page content is contained by landmarks",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=8; https://dequeuniversity.com/rules/axe/4.14/region?application=playwright",
+    "detail": {
+      "id": "region",
+      "impact": "moderate",
+      "description": "Ensure all page content is contained by landmarks",
+      "nodes": 8,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/region?application=playwright"
+    },
+    "type": "region",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375
+    ],
+    "count": 3,
+    "id": "DEF-095",
+    "source": [
+      "apps/admin-web/src/app/reset-password/page.tsx"
+    ],
+    "root_cause": "Missing/extra landmarks \u2014 often no single `<main>`.",
+    "fix": "Wrap primary content in one `<main>`; label complementary regions."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/samples/spa",
+    "name": "Sample category Spa",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-www-venohq-com-samples-spa-fold.png",
+      "screenshots/chromium-portrait-w390-www-venohq-com-samples-spa-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "All services",
+          "w": 78,
+          "h": 18
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        },
+        {
+          "label": "Veno for partners",
+          "w": 119,
+          "h": 19
+        },
+        {
+          "label": "Get set up",
+          "w": 71,
+          "h": 19
+        },
+        {
+          "label": "Inside the app",
+          "w": 97,
+          "h": 19
+        },
+        {
+          "label": "Sign in",
+          "w": 47,
+          "h": 19
+        },
+        {
+          "label": "Privacy policy",
+          "w": 94,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-096",
+    "source": [
+      "apps/website/src/app/samples/",
+      "apps/website/src/lib/samples.ts"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/samples/spa",
+    "name": "Sample category Spa",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-samples-spa-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-samples-spa-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `heading-order` \u2014 Ensure the order of headings is semantically correct",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+    "detail": {
+      "id": "heading-order",
+      "impact": "moderate",
+      "description": "Ensure the order of headings is semantically correct",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright"
+    },
+    "type": "heading-order",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-097",
+    "source": [
+      "apps/website/src/app/samples/",
+      "apps/website/src/lib/samples.ts"
+    ],
+    "root_cause": "Heading levels skip in the outline.",
+    "fix": "Restore sequential heading hierarchy (h1\u2192h2\u2192h3)."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/samples/spa/serene-spa",
+    "name": "Sample listing Serene Spa",
+    "browser": "chromium",
+    "viewport": {
+      "width": 320,
+      "height": 568,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w320-www-venohq-com-samples-spa-serene-spa-fold.png",
+      "screenshots/chromium-portrait-w320-www-venohq-com-samples-spa-serene-spa-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "Spa listings",
+          "w": 79,
+          "h": 18
+        },
+        {
+          "label": "INPUT",
+          "w": 1,
+          "h": 1
+        },
+        {
+          "label": "INPUT",
+          "w": 1,
+          "h": 1
+        },
+        {
+          "label": "INPUT",
+          "w": 1,
+          "h": 1
+        },
+        {
+          "label": "INPUT",
+          "w": 1,
+          "h": 1
+        },
+        {
+          "label": "INPUT",
+          "w": 1,
+          "h": 1
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      320,
+      360,
+      375,
+      390,
+      412,
+      430,
+      440
+    ],
+    "count": 11,
+    "id": "DEF-098",
+    "source": [
+      "apps/website/src/app/samples/",
+      "apps/website/src/lib/samples.ts"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/samples/spa/serene-spa",
+    "name": "Sample listing Serene Spa",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-samples-spa-serene-spa-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-samples-spa-serene-spa-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `heading-order` \u2014 Ensure the order of headings is semantically correct",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+    "detail": {
+      "id": "heading-order",
+      "impact": "moderate",
+      "description": "Ensure the order of headings is semantically correct",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright"
+    },
+    "type": "heading-order",
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 4,
+    "id": "DEF-099",
+    "source": [
+      "apps/website/src/app/samples/",
+      "apps/website/src/lib/samples.ts"
+    ],
+    "root_cause": "Heading levels skip in the outline.",
+    "fix": "Restore sequential heading hierarchy (h1\u2192h2\u2192h3)."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/terms",
+    "name": "Terms",
+    "browser": "chromium",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w390-www-venohq-com-terms-fold.png",
+      "screenshots/chromium-portrait-w390-www-venohq-com-terms-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "layout",
+    "severity": "medium",
+    "title": "10+ interactive elements below 40\u00d740px",
+    "expected": "No overflow, clipping, overlap, or sub-40px tap targets on phones",
+    "actual": "10+ interactive elements below 40\u00d740px",
+    "detail": {
+      "samples": [
+        {
+          "label": "Veno home",
+          "w": 105,
+          "h": 32
+        },
+        {
+          "label": "Veno",
+          "w": 34,
+          "h": 18
+        },
+        {
+          "label": "How it works",
+          "w": 89,
+          "h": 19
+        },
+        {
+          "label": "Categories",
+          "w": 74,
+          "h": 19
+        },
+        {
+          "label": "Questions",
+          "w": 69,
+          "h": 19
+        },
+        {
+          "label": "Veno for partners",
+          "w": 119,
+          "h": 19
+        },
+        {
+          "label": "Get set up",
+          "w": 71,
+          "h": 19
+        },
+        {
+          "label": "Inside the app",
+          "w": 97,
+          "h": 19
+        },
+        {
+          "label": "Sign in",
+          "w": 47,
+          "h": 19
+        },
+        {
+          "label": "Privacy policy",
+          "w": 94,
+          "h": 19
+        }
+      ]
+    },
+    "type": "tiny-tap-target",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      390
+    ],
+    "count": 2,
+    "id": "DEF-100",
+    "source": [
+      "apps/website/src/app/",
+      "apps/website/src/components/site/LegalPage.tsx"
+    ],
+    "root_cause": "Interactive controls render below ~40\u00d740px on narrow phones.",
+    "fix": "Increase hit area (min 44\u00d744 CSS px) via padding or invisible expanded targets."
+  },
+  {
+    "host": "https://www.venohq.com",
+    "route": "/terms",
+    "name": "Terms",
+    "browser": "chromium",
+    "viewport": {
+      "width": 375,
+      "height": 667,
+      "orientation": "portrait"
+    },
+    "screenshots": [
+      "screenshots/chromium-portrait-w375-www-venohq-com-terms-fold.png",
+      "screenshots/chromium-portrait-w375-www-venohq-com-terms-full.png"
+    ],
+    "notes": [],
+    "http": 200,
+    "category": "accessibility",
+    "severity": "medium",
+    "title": "axe `heading-order` \u2014 Ensure the order of headings is semantically correct",
+    "expected": "WCAG 2.1 AA for automated axe rules",
+    "actual": "impact=moderate; nodes=1; https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright",
+    "detail": {
+      "id": "heading-order",
+      "impact": "moderate",
+      "description": "Ensure the order of headings is semantically correct",
+      "nodes": 1,
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/heading-order?application=playwright"
+    },
+    "type": "heading-order",
+    "browsers": [
+      "chromium"
+    ],
+    "viewports": [
+      375,
+      1280
+    ],
+    "count": 2,
+    "id": "DEF-101",
+    "source": [
+      "apps/website/src/app/",
+      "apps/website/src/components/site/LegalPage.tsx"
+    ],
+    "root_cause": "Heading levels skip in the outline.",
+    "fix": "Restore sequential heading hierarchy (h1\u2192h2\u2192h3)."
+  }
+]

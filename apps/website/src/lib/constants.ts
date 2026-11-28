@@ -1,7 +1,7 @@
 /**
  * Client-safe portal links (navbar / footer). Needs NEXT_PUBLIC_VENDOR_WEB_URL.
  * Server handoff uses dashboardPortalUrl() in vendor-portal.ts (VENDOR_WEB_URL).
- * Set both to the same Railway vendor-web HTTPS origin in production.
+ * Prefer https://app.venohq.com in production (Railway custom domain).
  */
 const configuredVendorWeb = process.env.NEXT_PUBLIC_VENDOR_WEB_URL?.replace(/\/$/, '') ?? ''
 
@@ -10,11 +10,12 @@ function vendorWebUrl(): string {
     return process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001'
   }
   try {
-    if (new URL(configuredVendorWeb).hostname === 'app.venohq.com') return ''
+    const url = new URL(configuredVendorWeb)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
+    return url.origin
   } catch {
     return ''
   }
-  return configuredVendorWeb
 }
 
 export const VENDOR_WEB_URL = vendorWebUrl()

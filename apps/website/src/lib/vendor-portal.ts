@@ -3,15 +3,13 @@
  *
  * Prefer server-only VENDOR_WEB_URL so production can hand off after login
  * without forcing NEXT_PUBLIC_* (which also redirects /register and /login).
- * app.venohq.com is unpublished and must never be used.
  */
 export function dashboardPortalUrl(): string {
   let raw = (process.env.VENDOR_WEB_URL || '').trim().replace(/\/$/, '')
 
   // Fall back to the public var when the server-only one is unset.
   if (!raw) {
-    const publicUrl = (process.env.NEXT_PUBLIC_VENDOR_WEB_URL || '').trim().replace(/\/$/, '')
-    if (publicUrl && !publicUrl.includes('app.venohq.com')) raw = publicUrl
+    raw = (process.env.NEXT_PUBLIC_VENDOR_WEB_URL || '').trim().replace(/\/$/, '')
   }
 
   if (!raw) {
@@ -22,7 +20,6 @@ export function dashboardPortalUrl(): string {
 
   try {
     const url = new URL(raw)
-    if (url.hostname === 'app.venohq.com') return ''
     // Bind addresses are for the container, not a browser.
     if (url.hostname === '0.0.0.0' || url.hostname === '127.0.0.1' || url.hostname === 'localhost') {
       if (process.env.NODE_ENV === 'production') return ''
